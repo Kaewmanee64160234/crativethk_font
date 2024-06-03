@@ -2,7 +2,9 @@
 import { useCourseStore } from "@/stores/course.store";
 import { ref, watch } from "vue";
 import EditCourseDialog3 from "./EditCourseDialog3.vue";
+import { useUserStore } from "@/stores/user.store";
 const courseStore = useCourseStore();
+const userStore = useUserStore();
 const selectedDate = ref(new Date());
 const showDatePicker = ref(false);
 const selectedTime = ref("00:00");
@@ -136,7 +138,7 @@ const editCourse2 = () => {
 
 const cancelEditCourse = () => {
   courseStore.closeDialog2();
-  courseStore.getCourseByTeachId("64160049");
+  courseStore.getCourseByTeachId(userStore.currentUser!.teacherId!);
 };
 </script>
 

@@ -1,8 +1,10 @@
 <script lang="ts" setup>
 import { useCourseStore } from "@/stores/course.store";
 import { useEnrollmentStore } from "@/stores/enrollment.store";
+import { useUserStore } from "@/stores/user.store";
 const courseStore = useCourseStore();
 const enrollmentStore = useEnrollmentStore();
+const userStore = useUserStore();
 const formatThaiDate = (isoDateTime: string | undefined): string => {
   if (!isoDateTime) {
     return "";
@@ -19,7 +21,7 @@ const formatThaiDate = (isoDateTime: string | undefined): string => {
 
 const saveEnrollment = async () => {
   courseStore.closeDialog();
-  await enrollmentStore.getCourseByStudentId("64160144"); ///mockup data
+  await enrollmentStore.getCourseByStudentId(userStore.currentUser!.studentId!); ///mockup data
 };
 
 const cancel = async () => {
@@ -28,7 +30,7 @@ const cancel = async () => {
       enrollmentStore.currentEnrollment!.enrollmentId!
     );
     courseStore.showDeleteDialog = false;
-    await enrollmentStore.getCourseByStudentId("64160144");
+    await enrollmentStore.getCourseByStudentId(userStore.currentUser!.studentId!);
     courseStore.closeDialog();
   }
 };

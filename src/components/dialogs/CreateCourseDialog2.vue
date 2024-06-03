@@ -2,7 +2,9 @@
 import { useCourseStore } from "@/stores/course.store";
 import { ref, watch } from "vue";
 import course from "@/services/course";
+import { useUserStore } from "@/stores/user.store";
 const courseStore = useCourseStore();
+const userStore = useUserStore();
 const selectedDate = ref(new Date());
 const showDatePicker = ref(false);
 const selectedTime = ref("00:00");
@@ -45,7 +47,6 @@ function formatISODateTime(date: Date, time: string): string {
 //     minute: "2-digit",
 //   });
 // }
-console.log(courseStore.currentCourse?.typeCourses);
 
 const updateCourse = () => {
   if (courseStore.currentCourse) {
@@ -86,13 +87,13 @@ const updateCourse = () => {
   }
   courseStore.showCreateDialog2 = false;
   courseStore.showCreateDialog = false;
-  courseStore.getCourseByTeachId("64160049");
+  courseStore.getCourseByTeachId(userStore.currentUser!.teacherId!);
 };
 
 const cancelCourse = async () => {
   if (courseStore.currentCourse) {
     await courseStore.deleteCourse(courseStore.currentCourse.coursesId);
-    await courseStore.getCourseByTeachId("64160144");
+    await courseStore.getCourseByTeachId(userStore.currentUser!.teacherId!);
     courseStore.closeDialog();
   }
   courseStore.closeDialog();

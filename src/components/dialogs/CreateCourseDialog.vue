@@ -28,7 +28,7 @@ const saveCourse = async () => {
     timeInLec: new Date(),
     timeOutLec: new Date(),
     fullScore: 0,
-    userId: 1,
+    userId: useStore.currentUser?.userId ?? 0,
     createdDate: undefined,
     updatedDate: undefined,
     deletedDate: undefined, //mockup data ข้อมูลไม่ตรงกับหลังบ้าน
