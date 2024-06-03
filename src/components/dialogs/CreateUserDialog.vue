@@ -74,7 +74,7 @@ async function processFiles(files: File[]): Promise<Float32Array[]> {
                     <!-- Image Column -->
                     <v-col cols="12" md="4" class="d-flex justify-center align-center">
                         <v-avatar size="192">
-                            <img :src="userStore.currentUser?.imageProfile" @error="onImageError" alt="User Profile">
+                            <img :src="userStore.currentUser?.profileImage" @error="onImageError" alt="User Profile">
                         </v-avatar>
                     </v-col>
                     <!-- Text Fields Column -->

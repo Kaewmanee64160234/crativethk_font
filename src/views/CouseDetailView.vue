@@ -3,15 +3,14 @@
 import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAssignmentStore } from '@/stores/assignment.store';
-import Assignment from '@/stores/types/Assignment';
 //import component CardAssigment
 import CardAssigment from '@/components/assigment/CardAssigment.vue';
 import { useCourseStore } from '@/stores/course.store';
 import { useAuthStore } from '@/stores/auth';
 import { useUserStore } from '@/stores/user.store';
 import { useAttendanceStore } from '@/stores/attendance.store';
-import Attendance from '@/stores/types/Attendances';
-import Room from '@/stores/types/Room';
+import type Attendance from '@/stores/types/Attendances';
+import type Assignment from '@/stores/types/Assignment';
 const route = useRoute();
 const id = ref(route.params.idCourse);
 const tabs = [
@@ -290,4 +289,8 @@ function getAttendanceStatus(attendances: Attendance[], userId: number, assignme
     padding: 10px 0;
     /* Provides consistent vertical spacing between rows */
 }
-</style>
+</style>import type Assignment from '@/stores/types/Assignment';
+import type Attendance from '@/stores/types/Attendances';
+import type Assignment from '@/stores/types/Assignment';
+import type Attendance from '@/stores/types/Attendances';
+

@@ -21,7 +21,7 @@ async function cancel() {
                     <!-- Image Column -->
                     <v-col cols="12" md="4" class="d-flex justify-center align-center">
                         <v-avatar size="192">
-                            <img :src="userStore.currentUser?.imageProfile" alt="User Profile">
+                            <img :src="userStore.currentUser?.profileImage" alt="User Profile">
                         </v-avatar>
                     </v-col>
 

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import Attendance from '@/stores/types/Attendances';
 import { useAttendanceStore } from '../../stores/attendance.store';
 import { onMounted } from 'vue';
 import { useRoute } from 'vue-router';
@@ -8,6 +7,7 @@ import router from '@/router';
 import { useCourseStore } from '@/stores/course.store';
 import assignment from '@/services/assignment';
 import { useAssignmentStore } from '@/stores/assignment.store';
+import type Attendance from '@/stores/types/Attendances';
 const url = 'http://localhost:3000'
 
 const route = useRoute();

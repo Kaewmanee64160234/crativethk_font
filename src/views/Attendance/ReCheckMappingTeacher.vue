@@ -2,9 +2,8 @@
 import { ref, onMounted } from 'vue';
 import { useAttendanceStore } from '../../stores/attendance.store';
 import { useRoute } from 'vue-router';
-import Attendance from '@/stores/types/Attendances';
 import { useAssignmentStore } from '@/stores/assignment.store';
-import Assignment from '@/stores/types/Assignment';
+import type Attendance from '@/stores/types/Attendances';
 
 const attendanceStore = useAttendanceStore();
 const assignmentStore = useAssignmentStore();

@@ -5,8 +5,8 @@ import DeleteEnrolmentDialog from "@/components/dialogs/DeleteEnrolmentDialog.vu
 import EditCourseDialog from "@/components/dialogs/EditCourseDialog.vue";
 import { useCourseStore } from "@/stores/course.store";
 import { useEnrollmentStore } from "@/stores/enrollment.store";
-import Course from "@/stores/types/Course";
-import Enrollment from "@/stores/types/Enrollment";
+import type Course from "@/stores/types/Course";
+import type Enrollment from "@/stores/types/Enrollment";
 import { useUserStore } from "@/stores/user.store";
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
@@ -76,16 +76,16 @@ const showDeleteDialog = (enrollment: Enrollment) => {
             <div class="text-body">กลุ่มเรียนที่ {{ item.course?.session }}</div>
             <div class="text-body">อาจารย์ {{ item.course?.user?.firstName }}</div>
             <div class="text-body">
-              เริมเรียนเลคเชอร์ {{ formatThaiDate(item.course?.timeInLec) }}
+              เริมเรียนเลคเชอร์ {{ formatThaiDate(item.course?.timeInLec?.toString()) }}
             </div>
             <div class="text-body">
-              เลิกเรียนเลคเชอร์ {{ formatThaiDate(item.course?.timeOutLec) }}
+              เลิกเรียนเลคเชอร์ {{ formatThaiDate(item.course?.timeOutLec?.toString()) }}
             </div>
             <div class="text-body" v-if="item.course?.typeCourses === 'เลคเชอร์และแลป'">
-              เริมเรียนแลป {{ formatThaiDate(item.course.timeInLab) }}
+              เริมเรียนแลป {{ formatThaiDate(item.course.timeInLab?.toString()) }}
             </div>
             <div class="text-body" v-if="item.course?.typeCourses === 'เลคเชอร์และแลป'">
-              เลิกเรียนแลป {{ formatThaiDate(item.course.timeOutLab) }}
+              เลิกเรียนแลป {{ formatThaiDate(item.course.timeOutLab?.toString()) }}
             </div>
             <div v-else>
               <div class="text-body">เริมเรียนแลป ไม่มี</div>
@@ -148,4 +148,10 @@ const showDeleteDialog = (enrollment: Enrollment) => {
   /* ปรับค่าตามที่คุณต้องการ */
   margin-bottom: 20px;
 }
-</style>
+</style>import type Course from "@/stores/types/Course";
+import type Enrollment from "@/stores/types/Enrollment";
+import type Course from "@/stores/types/Course";
+import type Enrollment from "@/stores/types/Enrollment";
+import type Course from "@/stores/types/Course";
+import type Enrollment from "@/stores/types/Enrollment";
+

@@ -12,7 +12,7 @@ import { useAssignmentStore } from "@/stores/assignment.store";
 import { useAttendanceStore } from "@/stores/attendance.store";
 import { useUserStore } from "@/stores/user.store";
 import router from "@/router";
-import { User } from "@/stores/types/User";
+import type { User } from "@/stores/types/User";
 import { useCourseStore } from "@/stores/course.store";
 
 interface CanvasRefs {

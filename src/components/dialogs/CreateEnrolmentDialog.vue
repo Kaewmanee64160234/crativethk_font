@@ -27,7 +27,7 @@ const saveEnrollment = () => {
       //วน check ว่ามี courseId ที่ตรงกับที่กรอกมาหรือไม่
       console.log("enrollment", courseStore.courses[i]);
       const newEnrollment = {
-        userId: userStore.currentUser?.userId, ///mouckup data
+        userId: userStore.currentUser?.userId ?? 0, ///mouckup data
         courseId: courseId.value,
         createdDate: undefined,
         updatedDate: undefined,

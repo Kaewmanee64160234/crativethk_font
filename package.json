@@ -11,17 +11,20 @@
     "type-check": "vue-tsc --build --force",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
   },
-  "dependencies": {
-    "@mdi/font": "^7.4.47",
-    "@vladmandic/face-api": "^1.7.13",
-    "axios": "^1.7.2",
-    "face-api.js": "^0.22.2",
-    "pinia": "^2.1.7",
-    "vue": "^3.4.21",
-    "vue-router": "^4.3.2",
-    "vue3-google-login": "^2.0.26",
-    "vuetify": "^3.6.8"
-  },
+    "dependencies": {
+      "@mdi/font": "^7.4.47",
+      "axios": "^1.6.7",
+      "canvas": "^2.11.2",
+      "core-js": "^3.8.3",
+      "face-api.js": "^0.22.2",
+      "pinia": "^2.1.7",
+      "sweetalert2": "^11.11.0",
+      "vue": "^3.2.13",
+      "vue-router": "^4.0.3",
+      "vue-sweetalert2": "^5.0.10",
+      "vue3-google-login": "^2.0.26",
+      "vuetify": "^3.5.13"
+    },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.8.0",
     "@tsconfig/node20": "^20.1.4",

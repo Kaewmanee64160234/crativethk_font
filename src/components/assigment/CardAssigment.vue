@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { defineProps } from 'vue';
-import Assignment from '../../stores/types/Assignment';
 import { useRouter } from 'vue-router';
 import { useAssignmentStore } from '@/stores/assignment.store';
+import type Assignment from '@/stores/types/Assignment';
 
 const router = useRouter();
 

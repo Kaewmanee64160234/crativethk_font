@@ -2,9 +2,9 @@
 import CreateUserDialog from '@/components/dialogs/CreateUserDialog.vue';
 import EditUserDialog from '@/components/dialogs/EditUserDialog.vue';
 import EditUserDialog2 from '@/components/dialogs/EditUserDialog2.vue';
-import { User } from '@/stores/types/User';
+import type { User } from '@/stores/types/User';
 import { useUserStore } from '@/stores/user.store';
-import { onMounted, ref, defineComponent, PropType, computed } from 'vue';
+import { onMounted, ref, defineComponent, type PropType, computed } from 'vue';
 
 const userStore = useUserStore();
 const students = computed(() => userStore.users.filter(user => user.studentId));
