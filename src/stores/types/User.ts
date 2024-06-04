@@ -18,23 +18,25 @@ export interface User {
   images?:string[];
 }
 
-export  function mapToUser(data: any): User {
+export function mapToUser(data: any): User {
   const faceDescriptions: Float32Array[] = [];
   const images: string[] = [];
 
-  for (let i = 1; i <= 4; i++) {
-    const key = `faceDescription${i}`;
-    if (data[key] && Array.isArray(data[key])) {
-      faceDescriptions.push(new Float32Array(data[key]));
+  // Populate faceDescriptions from data
+  for (let i = 1; i <= 5; i++) {
+    const faceDescriptionKey = `faceDescription${i}`;
+    if (data[faceDescriptionKey] && Array.isArray(data[faceDescriptionKey])) {
+      faceDescriptions.push(new Float32Array(data[faceDescriptionKey]));
     }
   }
-  for (let i = 1; i <= 4; i++) {
-      const key = `image${i}`;
-      if (data[key] && Array.isArray(data[key])) {
-        images.push(data.key);
-      }
-    }
 
+  // Populate images from data
+  for (let i = 1; i <= 5; i++) {
+    const imageKey = `image${i}`;
+    if (data[imageKey] && data[imageKey] !== "no-image.jpg") {
+      images.push(data[imageKey]);
+    }
+  }
 
   return {
     userId: data.userId,
@@ -48,8 +50,8 @@ export  function mapToUser(data: any): User {
     faceDescriptions: faceDescriptions,
     picture: data.picture,
     profileImage: data.profileImage,
-    createdAt: data.createdAt,
+    createdAt: data.createdAt ? new Date(data.createdAt) : undefined,
+    updatedAt: data.updatedAt ? new Date(data.updatedAt) : undefined,
     images: images,
-    updatedAt: data.updatedAt,
   };
 }

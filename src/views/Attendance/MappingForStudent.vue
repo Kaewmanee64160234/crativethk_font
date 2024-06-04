@@ -56,10 +56,22 @@ const confirmAttendance = async (attendance: Attendance) => {
 const reCheckAttendance = async (attendance: Attendance) => {
   try {
     attendance.assignment = assignmentStore.currentAssignment;
-    attendance.attendanceStatus = 'present';
+    // if click this function after 15 minutes create assignment set attdent status to late
+    const date = new Date();
+    const currentDate = date.getTime();
+    const assignmentDate = new Date(assignmentStore.currentAssignment!.createdDate!);
+    const assignmentTime = assignmentDate.getTime();
+    const diff = currentDate - assignmentTime;
+    if (diff > 900000) {
+      attendance.attendanceStatus = 'late';
+    } else {
+      attendance.attendanceStatus = 'present';
+    }
     attendance.attendanceConfirmStatus = 'recheck';
     attendance.user = userStore.currentUser;
     console.log(JSON.stringify(attendance));
+   
+
     await attendanceStore.confirmAttendance(attendance);
     // router.push('/resheckMappingTeacher/' + assignmentStore.currentAssignment?.assignmentId); // Replace '/next-page-route' with your specific route
 

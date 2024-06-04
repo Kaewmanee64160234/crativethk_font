@@ -9,8 +9,8 @@ import { useCourseStore } from '@/stores/course.store';
 import { useAuthStore } from '@/stores/auth';
 import { useUserStore } from '@/stores/user.store';
 import { useAttendanceStore } from '@/stores/attendance.store';
-import type Attendance from '@/stores/types/Attendances';
 import type Assignment from '@/stores/types/Assignment';
+import type Attendance from '@/stores/types/Attendances';
 const route = useRoute();
 const id = ref(route.params.idCourse);
 const tabs = [
@@ -84,6 +84,8 @@ const resizeAndConvertImageToBase64 = (imageUrl, maxWidth, maxHeight) => {
         img.onload = () => {
             const canvas = document.createElement("canvas");
             const ctx = canvas.getContext("2d");
+    
+
             const ratio = Math.min(maxWidth / img.width, maxHeight / img.height);
             const width = img.width * ratio;
             const height = img.height * ratio;
@@ -132,6 +134,20 @@ function getAttendanceStatus(attendances: Attendance[], userId: number, assignme
     const attendance = attendances?.find(att => att.user?.userId === userId && att.assignment?.assignmentId === assignmentId);
     return attendance ? attendance.attendanceStatus : 'No Record Found';
 }
+
+const calculateTotalScore = (userId: number, assignments: Assignment[]): number => {
+    return assignments.reduce((total, assignment) => {
+        const status = getAttendanceStatus(attendanceStore.attendances || [], userId, assignment.assignmentId!);
+        if (status === 'present') {
+            return total + 1;  // Full point for being present
+        } else if (status === 'late') {
+            return total + 0.5;  // Half point for being late
+        }
+        return total;  // No points for being absent
+    }, 0);
+};
+
+
 
 </script>
 <template>
@@ -196,7 +212,10 @@ function getAttendanceStatus(attendances: Attendance[], userId: number, assignme
                             </v-col>
                         </v-row>
                         <v-row>
+                            <v-divider></v-divider>
+
                             <v-col cols="2">
+
                                 <v-avatar size="56">
                                     <v-img
                                         :src="`${url}/users/${courseStore.currentCourse?.user?.userId}/image`"></v-img>
@@ -206,20 +225,27 @@ function getAttendanceStatus(attendances: Attendance[], userId: number, assignme
                                 <div>{{ courseStore.currentCourse?.user?.firstName + ' ' +
             courseStore.currentCourse?.user?.lastName }}</div>
                             </v-col>
+                        <v-divider></v-divider>
+
                         </v-row>
+
                     </div>
 
                     <!-- Students Section -->
                     <div>
                         <v-row>
+
                             <v-col cols="6">
                                 <h3>Students</h3>
                             </v-col>
+
                             <v-col cols="6" style="text-align: end;">
                                 <p>{{ userStore.users.length }} Members</p>
                             </v-col>
                         </v-row>
                         <v-row v-for="(member, index) in userStore.users" :key="index">
+                        <v-divider></v-divider>
+                           
                             <v-col cols="2">
                                 <v-avatar size="56">
                                     <v-img :src="`${url}/users/${member.userId}/image`"></v-img>
@@ -228,6 +254,7 @@ function getAttendanceStatus(attendances: Attendance[], userId: number, assignme
                             <v-col cols="10" style="display: flex; align-items: center;">
                                 <div>{{ member.firstName + ' ' + member.lastName }}</div>
                             </v-col>
+
                         </v-row>
                     </div>
 
@@ -251,6 +278,7 @@ function getAttendanceStatus(attendances: Attendance[], userId: number, assignme
                             <tr>
                                 <th class="text-left">Student Name</th>
                                 <th class="text-left">Full Score</th>
+                                <th class="text-left">Score</th>
                                 <th v-for="assignment in assigmentStore.assignments" :key="assignment.assignmentId">
                                     {{ assignment.nameAssignment }}
                                 </th>
@@ -260,7 +288,8 @@ function getAttendanceStatus(attendances: Attendance[], userId: number, assignme
 
                             <tr v-for="user in userStore.users" :key="user.userId">
                                 <td>{{ user.firstName + ' ' + user.lastName }}</td>
-                                <td>{{ courseStore.currentCourse?.fullScore }}%</td>
+                                <td>{{ assigmentStore.assignments.length }} </td>
+                                <td>{{ calculateTotalScore (user.userId!, assigmentStore.assignments) }}</td>
                                 <td v-for="assignment in assigmentStore.assignments" :key="assignment.assignmentId">
                                     <template
                                         v-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'present'">
@@ -290,7 +319,5 @@ function getAttendanceStatus(attendances: Attendance[], userId: number, assignme
     /* Provides consistent vertical spacing between rows */
 }
 </style>import type Assignment from '@/stores/types/Assignment';
-import type Attendance from '@/stores/types/Attendances';
-import type Assignment from '@/stores/types/Assignment';
 import type Attendance from '@/stores/types/Attendances';
 
