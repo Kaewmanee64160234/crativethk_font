@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import CreateUserDialog from '@/components/dialogs/CreateUserDialog.vue';
+import CreateUserDialog2 from '@/components/dialogs/CreateUserDialog2.vue';
 import EditUserDialog from '@/components/dialogs/EditUserDialog.vue';
 import EditUserDialog2 from '@/components/dialogs/EditUserDialog2.vue';
 import type { User } from '@/stores/types/User';
 import { useUserStore } from '@/stores/user.store';
-import { onMounted, ref, defineComponent, type PropType, computed } from 'vue';
+import { onMounted, ref, defineComponent, computed } from 'vue';
 
+const url = 'http://localhost:3000';
 const userStore = useUserStore();
 const students = computed(() => userStore.users.filter(user => user.studentId));
 const teachers = computed(() => userStore.users.filter(user => user.teacherId));
@@ -66,20 +68,33 @@ const tab = ref(0);
 <template>
   <v-container style="padding-top: 120px;">
     <v-toolbar style="background-color: white;" flat>
-      <v-toolbar-title class="mr-10" style="font-weight: bold;">การจัดการผู้ใช้งาน</v-toolbar-title>
+      <v-toolbar-title class="mr-10" style="font-weight: bold; white-space: nowrap;">การจัดการผู้ใช้งาน</v-toolbar-title>
       <v-spacer></v-spacer>
-      <v-row align="center" justify="space-between">
-        <v-col cols="10" md="8">
-          <v-text-field label="ค้นหารหัส" height="20px" hide-details="auto" density="compact" variant="solo"
-            v-model="userStore.keyword" append-inner-icon="mdi-magnify"
-            @click:append-inner="userStore.getUserBystidId"></v-text-field>
+      <v-row align="center" justify="end">
+        <v-col cols="auto">
+          <v-text-field v-model="userStore.searchQuery" 
+              label="ค้าหารหัสนิสิต" 
+              append-inner-icon="mdi-magnify"
+              hide-details 
+              dense 
+              variant="solo"
+            class="search-bar"></v-text-field>
         </v-col>
-        <v-col cols="2" md="4">
-          <v-btn color="primary" variant="elevated" @click="userStore.showDialog = true">
+        <v-col cols="auto">
+          <v-btn color="primary" variant="elevated" @click="userStore.showDialog = true" class="custom-btn">
             <v-icon left>mdi-plus</v-icon>
-            เพิ่มผู้ใช้
+            เพิ่มผู้ใช้นิสิต
             <v-dialog v-model="userStore.showDialog" persistent>
               <CreateUserDialog></CreateUserDialog>
+            </v-dialog>
+          </v-btn>
+        </v-col>
+        <v-col cols="auto">
+          <v-btn color="primary" variant="elevated" @click="userStore.showDialog2 = true" class="custom-btn">
+            <v-icon left>mdi-plus</v-icon>
+            เพิ่มผู้ใช้อาจารย์
+            <v-dialog v-model="userStore.showDialog2" persistent>
+              <CreateUserDialog2></CreateUserDialog2>
             </v-dialog>
           </v-btn>
         </v-col>
@@ -109,12 +124,12 @@ const tab = ref(0);
             <tbody>
               <tr v-for="(item, index) of students" :key="index">
                 <td>{{ index + 1 }}</td>
-                <img style ="" :src= "item.profileImage" alt="User Profile">
+                <img :src="`${url}/users/${item.userId}/image`" style="width: 100px; height: 100px;">
                 <td>{{ item.studentId }}</td>
                 <td>{{ item.firstName + " " + item.lastName }}</td>
                 <td>{{ item.role }}</td>
                 <td style="color: seagreen;">{{ item.status }}</td>
-                <td class="d-flex justify-center">
+                <td style="justify-content: center;">
                   <v-btn small class="ma-1" color="yellow darken-2" text="Button Text" @click="showEditedDialog(item)">
                     <v-icon left>mdi-pencil</v-icon>
                     แก้ไขข้อมูล
@@ -147,12 +162,12 @@ const tab = ref(0);
             <tbody>
               <tr v-for="(item, index) of teachers" :key="index">
                 <td>{{ index + 1 }}</td>
-                <img style ="" :src= "item.profileImage" alt="User Profile">
+                <img :src="`${url}/users/${item.userId}/image`" style="width: 100px; height: 100px;">
                 <td>{{ item.teacherId }}</td>
                 <td>{{ item.firstName + " " + item.lastName }}</td>
                 <td>{{ item.role }}</td>
                 <td style="color: seagreen;">{{ item.status }}</td>
-                <td class="d-flex justify-center">
+                <td style="justify-content: center;">
                   <v-btn small class="ma-1" color="yellow darken-2" text="Button Text" @click="showEditedDialog(item)">
                     <v-icon left>mdi-pencil</v-icon>
                     แก้ไขข้อมูล
@@ -191,5 +206,30 @@ const tab = ref(0);
   /* Ensure the card background is light to enhance the shadow effect */
   box-shadow: inset 0px 0px 8px rgba(0, 0, 0, 0.2);
   /* Inset shadow for embossed effect */
+}
+.search-bar {
+  max-width: 400px; /* Adjust the width as needed */
+  width: 400px;
+}
+
+.custom-btn {
+  background-color: #1976d2 !important;
+  color: white !important;
+  margin-left: 10px;
+  border-radius: 8px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  text-transform: uppercase;
+  transition: background-color 0.3s ease;
+}
+
+.custom-btn:hover {
+  background-color: #155a8a !important;
+}
+
+.custom-btn v-icon {
+  margin-right: 5px;
 }
 </style>

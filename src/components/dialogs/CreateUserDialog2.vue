@@ -81,9 +81,9 @@ async function processFiles(files: File[]): Promise<Float32Array[]> {
                     <v-col cols="12" md="8">
                         <v-row align="center">
                             <v-col cols="12">
-                                <v-text-field label="รหัสนิสิต" dense solo required
-                                    v-model="userStore.editUser.studentId"
-                                    :rules="[(v) => !!v || 'โปรดกรอกรหัสนิสิต', (v) => /^[0-9]{8}$/.test(v) || 'โปรดกรอกข้อมูลเฉพาะตัวเลข 8 หลัก']"></v-text-field>
+                                <v-text-field label="รหัสอาจารย์" dense solo required
+                                    v-model="userStore.editUser.teacherId"
+                                    :rules="[(v) => !!v || 'โปรดกรอกรหัสอาจารย์', (v) => /^[0-9]{8}$/.test(v) || 'โปรดกรอกข้อมูลเฉพาะตัวเลข 8 หลัก']"></v-text-field>
                             </v-col>
                             <v-col cols="12">
                                 <v-text-field label="ชื่อ" dense solo required v-model="userStore.editUser.firstName"
@@ -102,10 +102,10 @@ async function processFiles(files: File[]): Promise<Float32Array[]> {
                                     :rules="[(v) => !!v || 'โปรดกรอกตำแหน่ง']"></v-text-field>
                             </v-col>
                             <v-col cols="12">
-                                <v-combobox label="สถานะภาพ" :items="['กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา']" dense solo required
+                                <v-combobox label="สถานะภาพ" :items="['กำลังสอน', 'พ้นสภาพอาจารย์', 'เกษียณอายุราชการ']" dense solo required
                                     v-model="userStore.editUser.status" :rules="[
                                         v => !!v || 'โปรดเลือกสถานะภาพ',
-                                        v => ['กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา'].includes(v) || 'โปรดเลือกสถานะภาพจากรายการที่ให้ไว้'
+                                        v => ['กำลังสอน', 'พ้นสภาพอาจารย์', 'เกษียณอายุราชการ'].includes(v) || 'โปรดเลือกสถานะภาพจากรายการที่ให้ไว้'
                                     ]"></v-combobox>
                             </v-col>
                             <!-- {{ userStore.editUser.files }} -->

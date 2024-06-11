@@ -1,10 +1,11 @@
 <script lang="ts" setup>
 import { useUserStore } from '@/stores/user.store';
 const userStore = useUserStore();
-
+const url = 'http://localhost:3000';
 async function save() {
-        await userStore.saveUser();
-        userStore.resetUser();
+    await userStore.saveUser();
+    userStore.resetUser();
+    window.location.reload();
 }
 
 async function cancel() {
@@ -20,50 +21,43 @@ async function cancel() {
                 <v-row>
                     <!-- Image Column -->
                     <v-col cols="12" md="4" class="d-flex justify-center align-center">
-                        <v-avatar size="192">
-                            <img :src="userStore.currentUser?.profileImage" alt="User Profile">
-                        </v-avatar>
+                        <v-img :src="`${url}/users/image/filename/${userStore.editUser.images}`" alt="User Profile"
+                            class="mb-2" max-width="100%" max-height="auto" />
                     </v-col>
-
                     <!-- Text Fields Column -->
                     <v-col cols="12" md="8">
                         <v-row align="center">
                             <v-col cols="12">
                                 <v-text-field label="รหัสนิสิต" dense solo required
                                     v-model="userStore.editUser.studentId"
-                                    :rules="[(v) => !!v || 'โปรดกรอกรหัสนิสิต', (v) => /^[0-9]*$/.test(v) || 'โปรดกรอกข้อมูลเฉพาะตัวเลข' ]"></v-text-field>
+                                    :rules="[(v) => !!v || 'โปรดกรอกรหัสนิสิต', (v) => /^[0-9]{8}$/.test(v) || 'โปรดกรอกข้อมูลเฉพาะตัวเลข 8 หลัก']"></v-text-field>
                             </v-col>
                             <v-col cols="12">
                                 <v-text-field label="ชื่อ" dense solo required
-                                    v-model="userStore.editUser.firstName"
-                                    :rules="[(v) => !!v || 'โปรดกรอกขื่อ']"></v-text-field>
+                                    v-model="userStore.editUser.firstName"></v-text-field>
                             </v-col>
                             <v-col cols="12">
                                 <v-text-field label="นามสกุล" dense solo required
-                                    v-model="userStore.editUser.lastName"
-                                    :rules="[(v) => !!v || 'โปรดกรอกนามสกุล']"></v-text-field>
+                                    v-model="userStore.editUser.lastName"></v-text-field>
                             </v-col>
                             <v-col cols="12">
                                 <v-text-field label="ตำแหน่ง" dense solo required
-                                    v-model="userStore.editUser.role"
-                                    :rules="[(v) => !!v || 'โปรดกรอกตำแหน่ง']"></v-text-field>
+                                    v-model="userStore.editUser.role"></v-text-field>
                             </v-col>
                             <v-col cols="12">
-                                <v-combobox label="สถานะภาพ" :items="['กำลังศึกษา', 'พ้นสภาพนิสิต']" dense solo required
-                                    v-model="userStore.editUser.status"
-                                    :rules="[(v) => !!v || 'โปรดเลือกสถานะภาพ']"></v-combobox> 
+                                <v-combobox label="สถานะภาพ" :items="['กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา']"
+                                    dense solo required v-model="userStore.editUser.status"></v-combobox>
                             </v-col>
                             <v-col cols="12" md="6">
                                 <!-- File Input -->
-                                <!-- <v-file-input label="อัพโหลดรูปภาพ" prepend-icon="mdi-camera" filled
-                                    @change="handleFileChange" accept="image/*" outlined></v-file-input> -->
+                                <v-file-input label="อัพโหลดรูปภาพ" prepend-icon="mdi-camera" filled multiple
+                                    v-model="userStore.editUser.files" accept="image/*" outlined></v-file-input>
                             </v-col>
-
                         </v-row>
                     </v-col>
                 </v-row>
                 <v-card-actions class="justify-end">
-                    <v-btn color="blue" text="บันทึก" @click="save" ></v-btn>
+                    <v-btn color="blue" text="บันทึก" @click="save"></v-btn>
                     <v-btn text="ยกเลิก" @click="cancel"></v-btn>
                 </v-card-actions>
             </v-card>

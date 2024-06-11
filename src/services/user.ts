@@ -1,4 +1,5 @@
 // src/services/user.ts
+// src/services/user.ts
 import type { User } from "@/stores/types/User";
 import http from "./axios";
 import axios from "axios";
@@ -25,9 +26,9 @@ function saveUser(user:User & { files: File[] }) {
   formData.append('status', user.status!);
 
   // Append files and face descriptions
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 1; i++) {
     formData.append('files', user.files[i], user.files[i].name); // Ensure there are exactly 5 files
-    formData.append(`faceDescription${i + 1}`, JSON.stringify(user.faceDescriptions![i]));
+    // formData.append(`faceDescription${i + 1}`, JSON.stringify(user.faceDescriptions![i]));
   }
 
   return http.post("/users", formData, {
@@ -38,6 +39,7 @@ function saveUser(user:User & { files: File[] }) {
 }
 //update user
 function updateUser(user: User & { files: File[] }, userId: number) {
+  console.log(user);
   const formData = new FormData();
 
   // Append normal fields
@@ -49,17 +51,14 @@ function updateUser(user: User & { files: File[] }, userId: number) {
   formData.append('role', user.role!);
   formData.append('status', user.status!);
 
-  // Handle file uploads; append only if files are present
-  if (user.files.length > 0) {
-    formData.append('imageFile', user.files[0], user.files[0].name);
+  // Append files and face descriptions
+  for (let i = 0; i < user.files.length; i++) {
+    if (user.files[i]) {
+      formData.append('files', user.files[i], user.files[i].name);
+      // formData.append(`faceDescription${i + 1}`, JSON.stringify(user.faceDescriptions![i]));
+    }
   }
 
-  // Logging FormData contents for debugging (optional)
-  for (const [key, value] of formData.entries()) {
-    console.log(`${key}: ${JSON.stringify(value)}`);
-  }
-
-  // Make an HTTP PUT request with FormData
   return http.patch(`/users/${userId}`, formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
@@ -71,9 +70,11 @@ function updateUser(user: User & { files: File[] }, userId: number) {
 function deleteUser(id: number) {
   return http.delete(`/users/${id}`);
 }
-//find user by studentId and teacherId
-function getUserBystidId(studentId: string, teacherId: string) {
-  return http.get(`/users/find/${studentId}/${teacherId}`);
+
+function searchUsers(search: string) {
+  return http.get('/users/search', {
+    params: { search },
+  });
 }
 
 //get user imageProfile by id
@@ -88,4 +89,4 @@ function getUserByCourseId(courseId: string) {
 
 
 
-export default { getUser, getUserImage, saveUser, deleteUser, updateUser, getUserBystidId,getUserByCourseId };
+export default { getUser, getUserImage, saveUser, deleteUser, updateUser, searchUsers ,getUserByCourseId };

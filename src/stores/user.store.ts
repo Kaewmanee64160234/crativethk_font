@@ -7,6 +7,7 @@ import user from "@/services/user";
 
 export const useUserStore = defineStore("userStore", () => {
   const users = ref<User[]>([]);
+  const searchQuery = ref<string>("");
   const showDialog = ref(false);
   const showDialog2 = ref(false);
   const showDialog3 = ref(false);
@@ -28,7 +29,25 @@ export const useUserStore = defineStore("userStore", () => {
     files: [],
   });
 
-  
+  // watch for searchQuery
+  watch(searchQuery, (value) => {
+    console.log(searchQuery.value)
+    if (value === "") {
+      getUsers();
+    } else {
+      searchUser();
+    }
+  });
+
+  // searchUsers
+  const searchUser = async () => {
+    try {
+      const response = await userService.searchUsers(searchQuery.value);
+      users.value = response.data;
+    } catch (error) {
+      console.error('Error searching users:', error);
+    }
+  };
 
   const getUsers = async () => {
     try {
@@ -75,16 +94,6 @@ export const useUserStore = defineStore("userStore", () => {
     try {
       await userService.deleteUser(id);
       await getUsers();
-    } catch (e) {
-      console.log(e);
-    }
-  };
-
-  //get user by studentId and teacherId
-  const getUserBystidId = async (studentId: string, teacherId: string) => {
-    try {
-      const res = await userService.getUserBystidId(studentId, teacherId);
-      currentUser.value = res.data;
     } catch (e) {
       console.log(e);
     }
@@ -159,7 +168,7 @@ const getUserByCourseId = async (courseId: string) => {
     saveUser,
     deleteUser,
     resetUser,
-    getUserBystidId,
+    searchQuery,
     getUserByCourseId,
     
   };

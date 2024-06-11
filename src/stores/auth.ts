@@ -1,10 +1,10 @@
 // src/stores/auth.ts
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import type { User } from './types/User';
+import type Person from './types/Person';
 import auth from '../services/auth.service';
 import router from '@/router';
-import type Person from './types/Person';
-import type { User } from './types/User';
 
 export const useAuthStore = defineStore('authStore', () => {
   const currentUser = ref<User>({
@@ -13,7 +13,7 @@ export const useAuthStore = defineStore('authStore', () => {
     lastName: '',
     email: '',
     profileImage: '',
-    faceDescriptions: [],
+    // faceDescriptions: [],
   });
   const accessToken = ref('');
   const setCurrentUser = (user: User) => {
@@ -42,7 +42,7 @@ export const useAuthStore = defineStore('authStore', () => {
         console.log('Stored token:', localStorage.getItem('token'));
         localStorage.setItem('users',JSON.stringify(currentUser.value));
         console.log(response.data);
-        router.push('/enrolmentManagement');
+        router.push('/userManagement');
       }
     } catch (error) {
       if ((error as any).response && (error as any).response.status === 404) {
