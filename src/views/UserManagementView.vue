@@ -104,7 +104,7 @@ const tab = ref(0);
       <v-tabs v-model="tab" background-color="white" dark>
         <v-tab>นิสิต</v-tab>
         <v-tab>อาจารย์</v-tab>
-        <v-tab>บุคลากร</v-tab>
+        <!-- <v-tab>บุคลากร</v-tab> -->
       </v-tabs>
       <!-- Tab content for นืสิต -->
       <v-tab-item v-if="tab === 0">

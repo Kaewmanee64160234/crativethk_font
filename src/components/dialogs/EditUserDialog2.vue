@@ -49,7 +49,7 @@ async function cancel() {
                                     :rules="[(v) => !!v || 'โปรดกรอกตำแหน่ง']"></v-text-field>
                             </v-col>
                             <v-col cols="12">
-                                <v-combobox label="สถานะภาพ" :items="['กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา']" dense solo required
+                                <v-combobox label="สถานะภาพ" :items="['กำลังสอน', 'พ้นสภาพอาจารย์', 'เกษียณอายุราชการ']" dense solo required
                                     v-model="userStore.editUser.status"
                                     :rules="[(v) => !!v || 'โปรดเลือกสถานะภาพ']"></v-combobox> 
                             </v-col>
