@@ -148,10 +148,5 @@ const showDeleteDialog = (enrollment: Enrollment) => {
   /* ปรับค่าตามที่คุณต้องการ */
   margin-bottom: 20px;
 }
-</style>import type Course from "@/stores/types/Course";
-import type Enrollment from "@/stores/types/Enrollment";
-import type Course from "@/stores/types/Course";
-import type Enrollment from "@/stores/types/Enrollment";
-import type Course from "@/stores/types/Course";
-import type Enrollment from "@/stores/types/Enrollment";
+</style>
 

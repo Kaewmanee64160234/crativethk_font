@@ -1,28 +1,28 @@
 <script lang="ts" setup>
-import { useUserStore } from '@/stores/user.store';
+import { useUserStore } from "@/stores/user.store";
 
-const userSotre = useUserStore();
+const userStore = useUserStore();
 </script>
 <template>
   <v-card>
-    <v-navigation-drawer app permanent width="80">
+    <v-navigation-drawer app permanent width="80" color="#F1F1F1">
       <v-layout style="margin-top: 10%; margin-left: 5%">
         <v-list density="compact">
-          <div v-if="userSotre.currentUser?.teacherId">
-          <v-list-item link to="/courseManagement">
-            <v-icon size="40">mdi-home-circle</v-icon>
-          </v-list-item>
-        </div>
-        <div v-if="userSotre.currentUser?.studentId">
-          <v-list-item link to="/enrolmentManagement">
-            <v-icon size="40">mdi-home-circle</v-icon>
-          </v-list-item>
-        </div>
+          <div v-if="userStore.currentUser?.teacherId">
+            <v-list-item link to="/courseManagement">
+              <v-icon size="40" color="#819DA9">mdi-home-circle</v-icon>
+            </v-list-item>
+          </div>
+          <div v-if="userStore.currentUser?.studentId">
+            <v-list-item link to="/enrolmentManagement">
+              <v-icon size="40" color="#819DA9">mdi-home-circle</v-icon>
+            </v-list-item>
+          </div>
           <v-list-item link>
-            <v-icon size="40">mdi-account-circle</v-icon>
+            <v-icon size="40" color="#819DA9">mdi-account-circle</v-icon>
           </v-list-item>
           <v-list-item class="bottom-list-item" link to="/">
-            <v-icon size="40">mdi-location-exit</v-icon>
+            <v-icon size="40" color="#819DA9">mdi-location-exit</v-icon>
           </v-list-item>
         </v-list>
       </v-layout>
