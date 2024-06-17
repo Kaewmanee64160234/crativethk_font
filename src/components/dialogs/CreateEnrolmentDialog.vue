@@ -18,7 +18,7 @@ onMounted(async () => {
 
 });
 const saveEnrollment = () => {
-  if (codeCourse.value.length < 8) {
+  if (codeCourse.value.length < 10) {
     console.log("no data");
     return;
   }
@@ -75,8 +75,8 @@ const saveEnrollment = () => {
                   v-model="codeCourse"
                   :rules="[
                     (v) =>
-                    /^(?=.*[A-Za-z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,}$/.test(v) ||
-                      'โปรดกรอกรหัสห้องเรียนอย่างน้อย 8 ตัวอักษร',
+                    /^(?=.*[A-Za-z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{10,}$/.test(v) ||
+                      'โปรดกรอกรหัสห้องเรียน 10 ตัวอักษร',
                   ]"
                 ></v-text-field>
               </v-card-text>
