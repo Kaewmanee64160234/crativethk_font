@@ -2,23 +2,19 @@
 import { useUserStore } from '@/stores/user.store';
 import * as faceapi from 'face-api.js';
 import { onMounted } from 'vue';
-
 const userStore = useUserStore();
 onMounted(async () => {
-  await loadModels();
+    await loadModels();
 });
 
 async function loadModels() {
-  await faceapi.nets.ssdMobilenetv1.loadFromUri('/models');
-  await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
-  await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
+    await faceapi.nets.ssdMobilenetv1.loadFromUri('/models');
+    await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
+    await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
 }
 async function save() {
-    // loop create faceDescription
-    // const faceDescriptions = await processFiles(userStore.editUser.files);
-    // userStore.editUser.faceDescriptions = faceDescriptions;
-    await userStore.saveUser();
-   userStore.resetUser();
+        await userStore.saveUser();
+        userStore.resetUser();
 }
 
 async function cancel() {
@@ -26,42 +22,42 @@ async function cancel() {
     userStore.closeDialog();
 }
 const onImageError = (event: any) => {
-  event.target.src = 'path_to_default_image'; // Provide the path to a default image
+    event.target.src = 'path_to_default_image'; // Provide the path to a default image
 };
 async function createImageElement(file: File): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    
-    reader.onload = () => {
-      const img = new Image();
-      img.src = reader.result as string;
-      img.onload = () => resolve(img);
-      img.onerror = reject;
-    };
-    
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = () => {
+            const img = new Image();
+            img.src = reader.result as string;
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+        };
+
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
 }
 async function processFiles(files: File[]): Promise<Float32Array[]> {
-  const faceDescriptions: Float32Array[] = [];
+    const faceDescriptions: Float32Array[] = [];
 
-  for (const file of files) {
-    const imgElement = await createImageElement(file);
-    const faceDescription = await faceapi
-      .detectSingleFace(imgElement, new faceapi.SsdMobilenetv1Options())
-      .withFaceLandmarks()
-      .withFaceDescriptor();
-    
-    if (faceDescription) {
-      faceDescriptions.push(faceDescription.descriptor);
+    for (const file of files) {
+        const imgElement = await createImageElement(file);
+        const faceDescription = await faceapi
+            .detectSingleFace(imgElement, new faceapi.SsdMobilenetv1Options())
+            .withFaceLandmarks()
+            .withFaceDescriptor();
+
+        if (faceDescription) {
+            faceDescriptions.push(faceDescription.descriptor);
+        }
+
+        // Clean up the created image element
+        imgElement.remove();
     }
 
-    // Clean up the created image element
-    imgElement.remove();
-  }
-
-  return faceDescriptions;
+    return faceDescriptions;
 }
 
 </script>
@@ -102,11 +98,11 @@ async function processFiles(files: File[]): Promise<Float32Array[]> {
                                     :rules="[(v) => !!v || 'โปรดกรอกตำแหน่ง']"></v-text-field>
                             </v-col>
                             <v-col cols="12">
-                                <v-combobox label="สถานะภาพ" :items="['กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา']" dense solo required
-                                    v-model="userStore.editUser.status" :rules="[
-                                        v => !!v || 'โปรดเลือกสถานะภาพ',
-                                        v => ['กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา'].includes(v) || 'โปรดเลือกสถานะภาพจากรายการที่ให้ไว้'
-                                    ]"></v-combobox>
+                                <v-combobox label="สถานะภาพ" :items="['กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา']"
+                                    dense solo required v-model="userStore.editUser.status" :rules="[
+                                v => !!v || 'โปรดเลือกสถานะภาพ',
+                                v => ['กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา'].includes(v) || 'โปรดเลือกสถานะภาพจากรายการที่ให้ไว้'
+                            ]"></v-combobox>
                             </v-col>
                             <!-- {{ userStore.editUser.files }} -->
                             <v-col cols="12" md="6">

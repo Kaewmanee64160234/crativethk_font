@@ -3,6 +3,7 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import type Enrollment from "./types/Enrollment";
 
+
 export const useEnrollmentStore = defineStore("enrollmentStore", () => {
   const enrollments = ref<Enrollment[]>([]);
   const currentEnrollment = ref<Enrollment>();

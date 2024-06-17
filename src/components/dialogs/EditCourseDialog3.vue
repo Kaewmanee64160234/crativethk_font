@@ -2,9 +2,11 @@
 import { useCourseStore } from "@/stores/course.store";
 import { onMounted, ref } from "vue";
 import { useEnrollmentStore } from "@/stores/enrollment.store";
+import { useMessageStore } from "@/stores/message";
 const courseStore = useCourseStore();
 const enrollmentStore = useEnrollmentStore();
 const selectedEnrollment = ref<number[]>([]);
+const messageStore = useMessageStore();
 
 const deleteSelectedEnrollments = async () => {
   for (const id of selectedEnrollment.value) {
@@ -12,6 +14,7 @@ const deleteSelectedEnrollments = async () => {
   }
   selectedEnrollment.value = []; // Clear selected enrollments
   courseStore.closeDialog2();
+  messageStore.showInfo("Course has been edited successfully.");
 };
 
 onMounted(async () => {

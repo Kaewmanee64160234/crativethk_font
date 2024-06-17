@@ -1,12 +1,15 @@
 <script lang="ts" setup>
 import { useCourseStore } from "@/stores/course.store";
+import { useMessageStore } from "@/stores/message";
 import { useUserStore } from "@/stores/user.store";
 const courseStore = useCourseStore();
 const userStore = useUserStore();
+const messageStore = useMessageStore();
 
 const deleteCourse = async (idCourse: string) => {
   await courseStore.deleteCourse(idCourse);
   courseStore.showDeleteDialog = false;
+  messageStore.showInfo("Course has been deleted successfully.");
   await courseStore.getCourseByTeachId(userStore.currentUser?.teacherId ?? "");
 };
 </script>

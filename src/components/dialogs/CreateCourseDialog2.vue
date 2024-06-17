@@ -3,6 +3,7 @@ import { useCourseStore } from "@/stores/course.store";
 import { ref, watch } from "vue";
 import course from "@/services/course";
 import { useUserStore } from "@/stores/user.store";
+import { useMessageStore } from "@/stores/message";
 const courseStore = useCourseStore();
 const userStore = useUserStore();
 const selectedDate = ref(new Date());
@@ -23,6 +24,7 @@ const session = ref("");
 const credit = ref(0);
 const stdAmount = ref(0);
 const fullScore = ref(0);
+const messageStore = useMessageStore();
 
 function formatThaiDate(date: Date) {
   return date
@@ -87,6 +89,7 @@ const updateCourse = () => {
   }
   courseStore.showCreateDialog2 = false;
   courseStore.showCreateDialog = false;
+  messageStore.showInfo("Course has been created successfully.");
   courseStore.getCourseByTeachId(userStore.currentUser!.teacherId!);
 };
 

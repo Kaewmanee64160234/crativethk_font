@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { useMessageStore } from '@/stores/message';
 import { useUserStore } from '@/stores/user.store';
 const userStore = useUserStore();
 const url = 'http://localhost:3000';

@@ -3,26 +3,18 @@ import CreateUserDialog from '@/components/dialogs/CreateUserDialog.vue';
 import CreateUserDialog2 from '@/components/dialogs/CreateUserDialog2.vue';
 import EditUserDialog from '@/components/dialogs/EditUserDialog.vue';
 import EditUserDialog2 from '@/components/dialogs/EditUserDialog2.vue';
+import ConfirmDialog from '@/components/dialogs/ConfirmDialog.vue';
 import type { User } from '@/stores/types/User';
 import { useUserStore } from '@/stores/user.store';
 import { onMounted, ref, defineComponent, computed } from 'vue';
-
 const url = 'http://localhost:3000';
 const userStore = useUserStore();
 const students = computed(() => userStore.users.filter(user => user.studentId));
 const teachers = computed(() => userStore.users.filter(user => user.teacherId));
-
+const confirmDlg = ref();
 onMounted(async () => {
   await userStore.getUsers();
 })
-
-// const showEditDialog = (user: User) => {
-//   userStore.showEditDialog = true;
-//   userStore.showEditDialog2 = true;
-//   userStore.editUser = { ...user, files: [] };
-//   console.log('id user', userStore.editUser);
-// }
-
 //create showEditDialog if studentId go to showEditDialog but if teacherId go to showEditDialog2
 const showEditedDialog = (user: User) => {
   if (user.studentId) {
@@ -36,10 +28,15 @@ const showEditedDialog = (user: User) => {
   }
 }
 
-
 // function delete user
 const deleteUser = async (id: number) => {
   console.log(id);
+  await confirmDlg.value.openDialog(
+    'Please Confirm',
+    `Do you want to delete this customer?`,
+    'Accept',
+    'Cancel'
+  )
   await userStore.deleteUser(id);
 }
 const showDeleteDialog = (user: User) => {
@@ -68,17 +65,13 @@ const tab = ref(0);
 <template>
   <v-container style="padding-top: 120px;">
     <v-toolbar style="background-color: white;" flat>
-      <v-toolbar-title class="mr-10" style="font-weight: bold; white-space: nowrap;">การจัดการผู้ใช้งาน</v-toolbar-title>
+      <v-toolbar-title class="mr-10"
+        style="font-weight: bold; white-space: nowrap;">การจัดการผู้ใช้งาน</v-toolbar-title>
       <v-spacer></v-spacer>
       <v-row align="center" justify="end">
         <v-col cols="auto">
-          <v-text-field v-model="userStore.searchQuery" 
-              label="ค้าหารหัสนิสิต" 
-              append-inner-icon="mdi-magnify"
-              hide-details 
-              dense 
-              variant="solo"
-            class="search-bar"></v-text-field>
+          <v-text-field v-model="userStore.searchQuery" label="ค้าหารหัสนิสิต" append-inner-icon="mdi-magnify"
+            hide-details dense variant="solo" class="search-bar"></v-text-field>
         </v-col>
         <v-col cols="auto">
           <v-btn color="primary" variant="elevated" @click="userStore.showDialog = true" class="custom-btn">
@@ -129,15 +122,17 @@ const tab = ref(0);
                 <td>{{ item.firstName + " " + item.lastName }}</td>
                 <td>{{ item.role }}</td>
                 <td style="color: seagreen;">{{ item.status }}</td>
-                <td style="justify-content: center;">
-                  <v-btn small class="ma-1" color="yellow darken-2" text="Button Text" @click="showEditedDialog(item)">
-                    <v-icon left>mdi-pencil</v-icon>
-                    แก้ไขข้อมูล
-                  </v-btn>
-                  <v-btn small class="ma-1" color="red" text="Button Text" @click="deleteUser(item.userId!)">
-                    <v-icon left>mdi-delete</v-icon>
-                    ลบข้อมูล
-                  </v-btn>
+                <td>
+                  <div class="button-group">
+                    <v-btn small class="ma-1" color="yellow darken-2" @click="showEditedDialog(item)">
+                      <v-icon left>mdi-pencil</v-icon>
+                      แก้ไขข้อมูล
+                    </v-btn>
+                    <v-btn small class="ma-1" color="red" @click="deleteUser(item.userId!)">
+                      <v-icon left>mdi-delete</v-icon>
+                      ลบข้อมูล
+                    </v-btn>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -193,7 +188,7 @@ const tab = ref(0);
   <v-dialog v-model="userStore.showEditDialog2" persistent>
     <EditUserDialog2></EditUserDialog2>
   </v-dialog>
-
+  <ConfirmDialog ref="confirmDlg" />
 
 </template>
 <style scoped>
@@ -207,8 +202,10 @@ const tab = ref(0);
   box-shadow: inset 0px 0px 8px rgba(0, 0, 0, 0.2);
   /* Inset shadow for embossed effect */
 }
+
 .search-bar {
-  max-width: 400px; /* Adjust the width as needed */
+  max-width: 400px;
+  /* Adjust the width as needed */
   width: 400px;
 }
 
@@ -231,5 +228,17 @@ const tab = ref(0);
 
 .custom-btn v-icon {
   margin-right: 5px;
+}
+
+.d-flex {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.button-group {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 </style>

@@ -18,7 +18,7 @@ const userSotre = useUserStore();
             <v-icon size="40">mdi-home-circle</v-icon>
           </v-list-item>
         </div>
-          <v-list-item link>
+          <v-list-item link >
             <v-icon size="40">mdi-account-circle</v-icon>
           </v-list-item>
           <v-list-item class="bottom-list-item" link to="/">

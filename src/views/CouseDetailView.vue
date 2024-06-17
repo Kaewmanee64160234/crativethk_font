@@ -11,6 +11,7 @@ import { useUserStore } from '@/stores/user.store';
 import { useAttendanceStore } from '@/stores/attendance.store';
 import type Assignment from '@/stores/types/Assignment';
 import type Attendance from '@/stores/types/Attendances';
+import { useMessageStore } from '@/stores/message';
 const route = useRoute();
 const id = ref(route.params.idCourse);
 const tabs = [
@@ -36,6 +37,7 @@ const userStore = useUserStore();
 const url = 'http://localhost:3000';
 const attendanceStore = useAttendanceStore();
 const roomSelect = ref<string>();
+const messageStore = useMessageStore();
 //mounted get assigment by course id
 onMounted(async () => {
     await assigmentStore.getAssignmentByCourseId(id.value.toString());
@@ -125,6 +127,7 @@ const createPost = async () => {
         router.push({ path: '/mapping2', query: { imageUrls: imageUrlsResize.value } });
         nameAssignment.value = '';
         imageUrlsResize.value = []; // Clear the images after posting
+        messageStore.showInfo("Post has been created successfully.");
     } else {
         console.error('No images available for posting.');
     }
