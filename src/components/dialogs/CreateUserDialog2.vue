@@ -64,6 +64,11 @@ async function processFiles(files: File[]): Promise<Float32Array[]> {
   return faceDescriptions;
 }
 
+// Set the default value for role
+if (!userStore.editUser.role) {
+  userStore.editUser.role = 'อาจารย์';
+}
+
 </script>
 <template>
     <v-container>
@@ -98,7 +103,7 @@ async function processFiles(files: File[]): Promise<Float32Array[]> {
                                     :rules="[(v) => !!v || 'โปรดกรอกอีเมล']"></v-text-field>
                             </v-col>
                             <v-col cols="12">
-                                <v-text-field label="ตำแหน่ง" dense solo required v-model="userStore.editUser.role"
+                                <v-text-field label="ตำแหน่ง" dense solo required v-model="userStore.editUser.role" readonly
                                     :rules="[(v) => !!v || 'โปรดกรอกตำแหน่ง']"></v-text-field>
                             </v-col>
                             <v-col cols="12">

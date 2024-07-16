@@ -13,6 +13,12 @@ async function cancel() {
     userStore.resetUser();
     userStore.closeDialog();
 }
+
+// Set the default value for role
+if (!userStore.editUser.role) {
+  userStore.editUser.role = 'อาจารย์';
+}
+
 </script>
 <template>
     <v-container>
@@ -44,7 +50,7 @@ async function cancel() {
                                     :rules="[(v) => !!v || 'โปรดกรอกนามสกุล']"></v-text-field>
                             </v-col>
                             <v-col cols="12">
-                                <v-text-field label="ตำแหน่ง" dense solo required
+                                <v-text-field label="ตำแหน่ง" dense solo required readonly
                                     v-model="userStore.editUser.role"
                                     :rules="[(v) => !!v || 'โปรดกรอกตำแหน่ง']"></v-text-field>
                             </v-col>

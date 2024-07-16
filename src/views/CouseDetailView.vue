@@ -9,11 +9,8 @@ import { useUserStore } from "@/stores/user.store";
 import { useAttendanceStore } from "@/stores/attendance.store";
 import type Assignment from "@/stores/types/Assignment";
 import type Attendance from "@/stores/types/Attendances";
-<<<<<<< HEAD
 import { useMessageStore } from "@/stores/message";
-=======
 
->>>>>>> 2ef87b0a2405c8726ff71e7a1596d8866d7ae31b
 const route = useRoute();
 const id = ref(route.params.idCourse);
 const tabs = [
@@ -36,10 +33,9 @@ const userStore = useUserStore();
 const url = "http://localhost:3000";
 const attendanceStore = useAttendanceStore();
 const roomSelect = ref<string>();
-<<<<<<< HEAD
 const messageStore = useMessageStore();
 //mounted get assigment by course id
-=======
+
 
 // Camera related
 const videoRef = ref<HTMLVideoElement | null>(null);
@@ -47,7 +43,7 @@ const canvasRef = ref<HTMLCanvasElement | null>(null);
 const showCamera = ref(false);
 const capturedImages = ref<string[]>([]);
 
->>>>>>> 2ef87b0a2405c8726ff71e7a1596d8866d7ae31b
+
 onMounted(async () => {
   await assigmentStore.getAssignmentByCourseId(id.value.toString());
   await attendanceStore.getAttendanceByCourseId(id.value.toString());
@@ -131,14 +127,8 @@ const createPost = async () => {
     deletedDate: undefined,
   };
   await assigmentStore.createAssignment(newAssignment);
-<<<<<<< HEAD
-  if (imageUrlsResize.value.length > 0) {
-    router.push({ path: "/mapping2", query: { imageUrls: imageUrlsResize.value } });
-    messageStore.showInfo("Created post successful.");
-=======
   if (imageUrls.value.length > 0) {
     router.push({ path: "/mapping2", query: { imageUrls: imageUrls.value } });
->>>>>>> 2ef87b0a2405c8726ff71e7a1596d8866d7ae31b
     nameAssignment.value = "";
     imageUrls.value = [];
   } else {
