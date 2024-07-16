@@ -121,6 +121,7 @@ const createPost = async () => {
   await assigmentStore.createAssignment(newAssignment);
   if (imageUrlsResize.value.length > 0) {
     router.push({ path: "/mapping2", query: { imageUrls: imageUrlsResize.value } });
+    messageStore.showInfo("Created post successful.");
     nameAssignment.value = "";
     imageUrlsResize.value = []; // Clear the images after posting
   } else {

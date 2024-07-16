@@ -1,6 +1,6 @@
 <template>
   <v-app-bar scroll-behavior="elevate" color="#3051AC">
-    <v-icon style="margin-left: 1%" size="40">mdi-view-grid</v-icon>
+    <img src="../../assets/BUU_logo.png" alt="Your Image" style="margin-left: 1%; width: 40px; height: 40px;" />
     <v-app-bar-title>ระบบจัดการการเข้าเรียนของนิสิต</v-app-bar-title>
     <v-app-bar-title
       style="text-align: right; margin-right: 2%"

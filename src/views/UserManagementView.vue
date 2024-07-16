@@ -9,8 +9,27 @@ import { useUserStore } from '@/stores/user.store';
 import { onMounted, ref, defineComponent, computed } from 'vue';
 const url = 'http://localhost:3000';
 const userStore = useUserStore();
-const students = computed(() => userStore.users.filter(user => user.studentId));
-const teachers = computed(() => userStore.users.filter(user => user.teacherId));
+const sortedStudents = computed(() => {
+  return userStore.users
+    .filter(user => user.studentId)
+    .sort((a, b) => {
+      if (a.studentId && b.studentId) {
+        return a.studentId.localeCompare(b.studentId);
+      }
+      return 0;
+    });
+});
+const sortedTeachers = computed(() => {
+  return userStore.users
+    .filter(user => user.teacherId)
+    .sort((a, b) => {
+      if (a.teacherId && b.teacherId) {
+        return a.teacherId.localeCompare(b.teacherId);
+      }
+      return 0;
+    });
+});
+// const teachers = computed(() => userStore.users.filter(user => user.teacherId));
 const confirmDlg = ref();
 onMounted(async () => {
   await userStore.getUsers();
@@ -115,7 +134,7 @@ const tab = ref(0);
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(item, index) of students" :key="index">
+              <tr v-for="(item, index) of sortedStudents" :key="index">
                 <td>{{ index + 1 }}</td>
                 <img :src="`${url}/users/${item.userId}/image`" style="width: 100px; height: 100px;">
                 <td>{{ item.studentId }}</td>
@@ -155,7 +174,7 @@ const tab = ref(0);
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(item, index) of teachers" :key="index">
+              <tr v-for="(item, index) of sortedTeachers" :key="index">
                 <td>{{ index + 1 }}</td>
                 <img :src="`${url}/users/${item.userId}/image`" style="width: 100px; height: 100px;">
                 <td>{{ item.teacherId }}</td>
