@@ -35,7 +35,7 @@ const attendanceStore = useAttendanceStore();
 const roomSelect = ref<string>();
 const messageStore = useMessageStore();
 
-const isTeacher = computed(() => userStore.currentUser?.role === 'Teacher');
+const isTeacher = computed(() => userStore.currentUser?.role === 'อาจารย์');
 const showCamera = ref(false);
 const videoRef = ref<HTMLVideoElement | null>(null);
 const canvasRef = ref<HTMLCanvasElement | null>(null);
@@ -218,8 +218,8 @@ const dataURLtoFile = (dataurl: string, filename: string) => {
     <v-container>
       <!-- Tab content for posts -->
       <v-tab-item v-if="tab === 'Posts'" value="Posts">
-        <v-card
-          class="mx-auto"
+        <v-card 
+          class="mx-auto "
           color="primary"
           max-width="1200"
           outlined
@@ -242,28 +242,18 @@ const dataURLtoFile = (dataurl: string, filename: string) => {
             </v-card-title>
             <v-card-text>
               <v-container>
+                
                 <v-row>
                   <v-col cols="12" sm="12">
-                    <v-autocomplete
-                      v-model="roomSelect"
-                      :items="courseStore.rooms.map((r) => r.roomNumber)"
-                      item-text="roomNumber"
-                      item-value="roomNumber"
-                      label="Select a room"
-                      variant="outlined"
-                      outlined
-                      return-object
-                    ></v-autocomplete>
-                  </v-col>
-                </v-row>
-                <v-row>
-                  <v-col cols="12" sm="12">
-                    <v-textarea
+                    <v-text-field
+                      name="nameAssignment"
+                      label="label"
+                      id="id"
                       v-model="nameAssignment"
-                      label="Enter your post"
                       variant="outlined"
                       outlined
-                    ></v-textarea>
+                    ></v-text-field>
+                  
                   </v-col>
                 </v-row>
                 <v-row>
@@ -317,11 +307,22 @@ const dataURLtoFile = (dataurl: string, filename: string) => {
           </v-card>
         </v-dialog>
 
-        <v-row>
-          <v-col cols="12" sm="12" md="12" v-for="post in posts" :key="post.assignmentId">
-            <CardAssigment :post="post"></CardAssigment>
+        <v-row class="pt-5" v-if="posts.length>0">
+          <v-col  cols="12" sm="12" md="12" v-for="post in posts" :key="post.assignmentId">
+            <CardAssigment  :post="post"></CardAssigment>
           </v-col>
+         
         </v-row>
+        <v-row class="pt-5" v-else>
+          <v-col cols="12" sm="12" md="12">
+            <v-card outlined>
+              <v-card-text>
+                <h2>No posts available</h2>
+              </v-card-text>
+            </v-card>
+          </v-col>
+          </v-row>
+
       </v-tab-item>
 
       <!-- Tab content for Members -->
@@ -448,15 +449,15 @@ const dataURLtoFile = (dataurl: string, filename: string) => {
                   <template
                     v-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'present'"
                   >
-                    <v-icon color="green">mdi-check-circle</v-icon> Present
+                    <v-icon color="green">mdi-check-circle</v-icon> 
                   </template>
                   <template
                     v-else-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'late'"
                   >
-                    <v-icon color="orange">mdi-clock-outline</v-icon> Late
+                    <v-icon color="orange">mdi-clock-outline</v-icon> 
                   </template>
                   <template v-else>
-                    <v-icon color="red">mdi-close-circle</v-icon> Absent
+                    <v-icon color="red">mdi-close-circle</v-icon> 
                   </template>
                 </td>
               </tr>

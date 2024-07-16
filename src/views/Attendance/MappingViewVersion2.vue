@@ -278,7 +278,7 @@ const confirmAttendance = async () => {
       );
     }
   }
-  if (userStore.currentUser?.role === "teacher") {
+  if (userStore.currentUser?.role === "อาจารย์") {
     router.push("/reCheckMappingTeacher/" + assigmentStore.assignment?.assignmentId);
   } else {
     router.push("/mappingForStudent/" + assigmentStore.assignment?.assignmentId);
