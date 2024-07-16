@@ -48,7 +48,7 @@ if (!userStore.editUser.role) {
                                     v-model="userStore.editUser.lastName"></v-text-field>
                             </v-col>
                             <v-col cols="12">
-                                <v-text-field label="ตำแหน่ง" dense solo required readonly
+                                <v-text-field label="ตำแหน่ง" dense solo required 
                                     v-model="userStore.editUser.role"></v-text-field>
                             </v-col>
                             <v-col cols="12">

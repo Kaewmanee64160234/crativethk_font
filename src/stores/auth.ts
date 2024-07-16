@@ -42,7 +42,7 @@ export const useAuthStore = defineStore('authStore', () => {
         console.log('Stored token:', localStorage.getItem('token'));
         localStorage.setItem('users',JSON.stringify(currentUser.value));
         console.log(response.data);
-        router.push('/userManagement');
+        router.push('/enrolmentManagement');
       }
     } catch (error) {
       if ((error as any).response && (error as any).response.status === 404) {

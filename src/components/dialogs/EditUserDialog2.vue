@@ -50,7 +50,7 @@ if (!userStore.editUser.role) {
                                     :rules="[(v) => !!v || 'โปรดกรอกนามสกุล']"></v-text-field>
                             </v-col>
                             <v-col cols="12">
-                                <v-text-field label="ตำแหน่ง" dense solo required readonly
+                                <v-text-field label="ตำแหน่ง" dense solo required 
                                     v-model="userStore.editUser.role"
                                     :rules="[(v) => !!v || 'โปรดกรอกตำแหน่ง']"></v-text-field>
                             </v-col>
