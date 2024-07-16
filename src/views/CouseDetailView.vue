@@ -61,8 +61,6 @@ const processFile = (url: string) => {
 const handleFileChange = (event: Event) => {
   const input = event.target as HTMLInputElement;
   if (input.files && input.files.length > 0) {
-    imageUrls.value = [];
-    imageFiles.value = [];
     Array.from(input.files).forEach((file) => {
       const reader = new FileReader();
       reader.onload = async (e) => {
@@ -125,9 +123,10 @@ const createPost = async () => {
   };
   await assigmentStore.createAssignment(newAssignment);
   if (imageUrls.value.length > 0) {
-    router.push({ path: "/mapping2", query: { imageUrls: imageUrls.value } });
+    router.push({ path: "/mapping2", query: { imageUrls: imageUrls.value, capturedImages: capturedImages.value } });
     nameAssignment.value = "";
     imageUrls.value = [];
+    capturedImages.value = [];
   } else {
     console.error("No images available for posting.");
   }
@@ -302,7 +301,7 @@ const dataURLtoFile = (dataurl: string, filename: string) => {
                     cols="12"
                     sm="6"
                     md="4"
-                    v-for="(image, index) in capturedImages"
+                    v-for="(image, index) in [...capturedImages, ...imageUrls]"
                     :key="index"
                   >
                     <v-img :src="image" aspect-ratio="1" class="ma-2"></v-img>
