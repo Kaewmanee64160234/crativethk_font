@@ -1,6 +1,7 @@
 import type Assignment from "./Assignment";
 import type { User } from "./User";
 
+
 export default interface Attendance{
     attendanceId:number;
     attendanceDate:Date;
