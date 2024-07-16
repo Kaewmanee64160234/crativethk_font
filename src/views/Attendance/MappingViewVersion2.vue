@@ -2,7 +2,7 @@
 import { ref, reactive, onMounted, nextTick } from "vue";
 import * as faceapi from "face-api.js";
 import { useAuthStore } from "@/stores/auth";
-import type { FaceDetection, WithFaceLandmarks, WithFaceDescriptor } from "face-api.js"; // Import types
+import type { FaceDetection, WithFaceLandmarks, WithFaceDescriptor } from "face-api.js";
 import { useAssignmentStore } from "@/stores/assignment.store";
 import { useAttendanceStore } from "@/stores/attendance.store";
 import { useUserStore } from "@/stores/user.store";
@@ -37,11 +37,10 @@ const router = useRouter();
 
 async function processImage(image, index) {
   const canvas = canvasRefs[index] || document.createElement("canvas");
-  document.body.appendChild(canvas); // Ensure the canvas is in the DOM for manipulation
+  document.body.appendChild(canvas);
   canvas.width = image.naturalWidth;
   canvas.height = image.naturalHeight;
   const ctx = canvas.getContext("2d");
-  // ctx.drawImage(image, 0, 0, image.width, image.height);
 
   try {
     const detections = (await faceapi
@@ -108,35 +107,44 @@ function findBestUserMatch(
 }
 
 onMounted(async () => {
-  await Promise.all([
-    faceapi.nets.ssdMobilenetv1.loadFromUri("/models"),
-    faceapi.nets.faceLandmark68Net.loadFromUri("/models"),
-    faceapi.nets.faceRecognitionNet.loadFromUri("/models"),
-  ]);
+  try {
+    await Promise.all([
+      faceapi.nets.ssdMobilenetv1.loadFromUri("/models"),
+      faceapi.nets.faceLandmark68Net.loadFromUri("/models"),
+      faceapi.nets.faceRecognitionNet.loadFromUri("/models"),
+    ]);
 
-  const imagesPath = userStore.users.map((user) => user.images![0]);
-  await loadUserImagesAndDescriptors(imagesPath);
+    const imagesPath = userStore.users.map((user) => user.images![0]);
+    await loadUserImagesAndDescriptors(imagesPath);
 
-  console.log(route);
-  const urls: string[] = route.query.imageUrls || [];
-  imageUrls.value = urls;
-  imageUrls.value.forEach((url, index) => {
-    nextTick(() => loadImageAndProcess(url, index));
-  });
+    const urls: string[] = route.query.imageUrls || [];
+    console.log(urls)
+    imageUrls.value = urls;
+    imageUrls.value.forEach((url, index) => {
+      nextTick(() => loadImageAndProcess(url, index));
+    });
+  } catch (error) {
+    console.error("Error in onMounted:", error);
+    alert("Failed to load data. Please check the console for more details.");
+  }
 });
 
 async function loadUserImagesAndDescriptors(imagesPath: string[]): Promise<void> {
   for (const path of imagesPath) {
-    const img = await loadImage(`http://localhost:3000/users/image/filename/${path}`);
-    const detection = await faceapi
-      .detectSingleFace(img)
-      .withFaceLandmarks()
-      .withFaceDescriptor();
-    if (detection) {
-      userDescriptors.set(
-        userStore.users.find((u) => u.images!.includes(path))!.studentId!,
-        detection.descriptor
-      );
+    try {
+      const img = await loadImage(`http://localhost:3000/users/image/filename/${path}`);
+      const detection = await faceapi
+        .detectSingleFace(img)
+        .withFaceLandmarks()
+        .withFaceDescriptor();
+      if (detection) {
+        userDescriptors.set(
+          userStore.users.find((u) => u.images!.includes(path))!.studentId!,
+          detection.descriptor
+        );
+      }
+    } catch (error) {
+      console.error("Error loading user images and descriptors:", error);
     }
   }
 }
@@ -144,7 +152,7 @@ async function loadUserImagesAndDescriptors(imagesPath: string[]): Promise<void>
 async function loadImage(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.crossOrigin = "Anonymous"; // Necessary for loading images from different origins
+    img.crossOrigin = "Anonymous";
     img.onload = () => resolve(img);
     img.onerror = (error) =>
       reject(new Error(`Failed to load image from ${url}: ${error}`));
@@ -169,7 +177,6 @@ function resizeAndConvertToBase64(
         return;
       }
 
-      // Calculate the new dimensions of the image
       let width = img.width;
       let height = img.height;
 
@@ -189,8 +196,7 @@ function resizeAndConvertToBase64(
       canvas.height = height;
       ctx.drawImage(img, 0, 0, width, height);
 
-      // Convert to base64
-      const dataUrl = canvas.toDataURL("image/jpeg"); // You can change 'image/jpeg' to another format if needed
+      const dataUrl = canvas.toDataURL("image/jpeg");
       resolve(dataUrl);
     };
     img.onerror = (error) => {
@@ -220,13 +226,11 @@ const confirmAttendance = async () => {
   console.log("Confirming attendance for", identifications.value.length, "students");
   for (let i = 0; i < identifications.value.length; i++) {
     try {
-      // Verify image URL before processing
       if (!croppedImagesDataUrls.value[i]) {
         console.error("Image URL is missing for index:", i);
-        continue; // Skip this iteration if the URL is missing
+        continue;
       }
 
-      // Resize image and convert to Base64
       const resizedImageBase64 = await resizeAndConvertToBase64(
         croppedImagesDataUrls.value[i],
         800,
@@ -237,7 +241,6 @@ const confirmAttendance = async () => {
         type: "image/jpeg",
       });
 
-      // Determine user object based on identification
       let identifiedUser =
         identifications.value[i].name !== "Unknown"
           ? userStore.users.find(
@@ -250,8 +253,6 @@ const confirmAttendance = async () => {
               faceDescriptions: [],
             } as User);
 
-      // Log the attempt to create attendance
-      // console.log("Submitting:", attendanceData);
       await attendaceStore.createAttendance(
         {
           attendanceId: 0,
@@ -264,7 +265,6 @@ const confirmAttendance = async () => {
         },
         imageFile
       );
-      // console.log("Attendance recorded successfully for", identifications.value[i].name);
     } catch (error) {
       console.error(
         "Error recording attendance for",
@@ -285,6 +285,7 @@ const confirmAttendance = async () => {
   }
 };
 </script>
+
 <template>
   <v-container style="margin-top: 10%">
     <v-card
