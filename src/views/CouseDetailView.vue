@@ -235,7 +235,7 @@ const dataURLtoFile = (dataurl: string, filename: string) => {
           </v-card-title>
         </v-card>
 
-        <v-btn color="#6CA7FA" @click="openPost" style="margin: 10px 0; color: black">
+        <v-btn v-if="userStore.currentUser?.teacherId" color="#6CA7FA" @click="openPost" style="margin: 10px 0; color: black">
           <v-icon>mdi-plus</v-icon>สร้างการเช็คชื่อ
         </v-btn>
         <!-- Conditional text area -->
