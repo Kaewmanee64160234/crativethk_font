@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAssignmentStore } from "@/stores/assignment.store";
 import CardAssigment from "@/components/assigment/CardAssigment.vue";
@@ -26,7 +26,7 @@ const imageUrls = ref<string[]>([]);
 const imageFiles = ref<File[]>([]);
 const assigmentStore = useAssignmentStore();
 const courseStore = useCourseStore();
-const showTextArea = ref(false);
+const showDialog = ref(false);
 const nameAssignment = ref("");
 const authStore = useAuthStore();
 const userStore = useUserStore();
@@ -34,15 +34,12 @@ const url = "http://localhost:3000";
 const attendanceStore = useAttendanceStore();
 const roomSelect = ref<string>();
 const messageStore = useMessageStore();
-//mounted get assigment by course id
 
-
-// Camera related
+const isTeacher = computed(() => userStore.currentUser?.role === 'Teacher');
+const showCamera = ref(false);
 const videoRef = ref<HTMLVideoElement | null>(null);
 const canvasRef = ref<HTMLCanvasElement | null>(null);
-const showCamera = ref(false);
 const capturedImages = ref<string[]>([]);
-
 
 onMounted(async () => {
   await assigmentStore.getAssignmentByCourseId(id.value.toString());
@@ -51,6 +48,10 @@ onMounted(async () => {
   await courseStore.getCourseById(id.value.toString());
   await courseStore.getAllRooms();
   posts.value = assigmentStore.assignments;
+
+  if (isTeacher.value) {
+    showDialog.value = true;
+  }
 });
 
 const processFile = (url: string) => {
@@ -79,10 +80,6 @@ const handleFileChange = (event: Event) => {
       reader.readAsDataURL(file);
     });
   }
-};
-
-const openPost = () => {
-  showTextArea.value = !showTextArea.value;
 };
 
 const resizeAndConvertImageToBase64 = (imageUrl: string, maxWidth: number, maxHeight: number) => {
@@ -163,7 +160,6 @@ const calculateTotalScore = (userId: number, assignments: Assignment[]): number 
   }, 0);
 };
 
-// Camera related methods
 const startCamera = async () => {
   showCamera.value = true;
   const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -235,64 +231,92 @@ const dataURLtoFile = (dataurl: string, filename: string) => {
           </v-card-title>
         </v-card>
 
-        <v-btn color="#6CA7FA" @click="openPost" style="margin: 10px 0; color: black">
+        <v-btn v-if="isTeacher" color="#6CA7FA" @click="showDialog = true" style="margin: 10px 0; color: black">
           <v-icon>mdi-plus</v-icon>สร้างการเช็คชื่อ
         </v-btn>
-        <!-- Conditional text area -->
-        <v-card v-if="showTextArea" style="margin: 10px">
-          <v-container>
-            <v-autocomplete
-              v-model="roomSelect"
-              :items="courseStore.rooms.map((r) => r.roomNumber)"
-              item-text="roomNumber"
-              item-value="roomNumber"
-              label="Select a room"
-              variant="outlined"
-              outlined
-              return-object
-            ></v-autocomplete>
-            <v-textarea
-              v-model="nameAssignment"
-              label="Enter your post"
-              variant="outlined"
-              outlined
-            ></v-textarea>
-            <v-file-input
-              label="Upload Images"
-              prepend-icon="mdi-camera"
-              filled
-              @change="handleFileChange"
-              accept="image/*"
-              variant="outlined"
-              multiple
-            ></v-file-input>
-            <v-btn color="primary" @click="startCamera">Open Camera</v-btn>
-            <div v-if="showCamera">
-              <video ref="videoRef" autoplay></video>
-              <canvas ref="canvasRef" style="display: none;"></canvas>
-              <v-btn @click="captureImage">Capture Image</v-btn>
-              <v-btn @click="stopCamera">Close Camera</v-btn>
-            </div>
-            <div>
-              <v-row>
-                <v-col
-                  cols="12"
-                  sm="6"
-                  md="4"
-                  v-for="(image, index) in capturedImages"
-                  :key="index"
-                >
-                  <v-img :src="image" aspect-ratio="1" class="ma-2"></v-img>
-                </v-col>
-              </v-row>
-            </div>
-          </v-container>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn color="error" @click="showTextArea = false">ยกเลิก</v-btn>
-            <v-btn color="primary" @click="createPost()">โพสต์</v-btn>
-          </v-card-actions>
-        </v-card>
+
+        <!-- Dialog for creating post -->
+        <v-dialog v-model="showDialog" persistent max-width="600px">
+          <v-card>
+            <v-card-title>
+              <span class="headline">Create Post</span>
+            </v-card-title>
+            <v-card-text>
+              <v-container>
+                <v-row>
+                  <v-col cols="12" sm="12">
+                    <v-autocomplete
+                      v-model="roomSelect"
+                      :items="courseStore.rooms.map((r) => r.roomNumber)"
+                      item-text="roomNumber"
+                      item-value="roomNumber"
+                      label="Select a room"
+                      variant="outlined"
+                      outlined
+                      return-object
+                    ></v-autocomplete>
+                  </v-col>
+                </v-row>
+                <v-row>
+                  <v-col cols="12" sm="12">
+                    <v-textarea
+                      v-model="nameAssignment"
+                      label="Enter your post"
+                      variant="outlined"
+                      outlined
+                    ></v-textarea>
+                  </v-col>
+                </v-row>
+                <v-row>
+                  <v-col cols="12" sm="12">
+                    <v-file-input
+                      label="Upload Images"
+                      prepend-icon="mdi-camera"
+                      filled
+                      @change="handleFileChange"
+                      accept="image/*"
+                      variant="outlined"
+                      multiple
+                    ></v-file-input>
+                  </v-col>
+                </v-row>
+                <v-row>
+                  <v-col cols="12" sm="12">
+                    <v-btn color="primary" @click="startCamera">Open Camera</v-btn>
+                  </v-col>
+                </v-row>
+                <v-row v-if="showCamera">
+                  <v-col cols="12" sm="12">
+                    <video ref="videoRef" autoplay style="width: 100%;"></video>
+                    <canvas ref="canvasRef" style="display: none;"></canvas>
+                  </v-col>
+                  <v-col cols="12" sm="6">
+                    <v-btn @click="captureImage" block>Capture Image</v-btn>
+                  </v-col>
+                  <v-col cols="12" sm="6">
+                    <v-btn @click="stopCamera" block>Close Camera</v-btn>
+                  </v-col>
+                </v-row>
+                <v-row>
+                  <v-col
+                    cols="12"
+                    sm="6"
+                    md="4"
+                    v-for="(image, index) in capturedImages"
+                    :key="index"
+                  >
+                    <v-img :src="image" aspect-ratio="1" class="ma-2"></v-img>
+                  </v-col>
+                </v-row>
+              </v-container>
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn color="error" @click="showDialog = false">ยกเลิก</v-btn>
+              <v-btn color="primary" @click="createPost()">โพสต์</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
 
         <v-row>
           <v-col cols="12" sm="12" md="12" v-for="post in posts" :key="post.assignmentId">
