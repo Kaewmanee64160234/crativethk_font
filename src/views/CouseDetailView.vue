@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAssignmentStore } from "@/stores/assignment.store";
 import CardAssigment from "@/components/assigment/CardAssigment.vue";
 import { useCourseStore } from "@/stores/course.store";
+import { useAuthStore } from "@/stores/auth";
 import { useUserStore } from "@/stores/user.store";
 import { useAttendanceStore } from "@/stores/attendance.store";
 import type Assignment from "@/stores/types/Assignment";
@@ -26,6 +27,7 @@ const assigmentStore = useAssignmentStore();
 const courseStore = useCourseStore();
 const showTextArea = ref(false);
 const nameAssignment = ref("");
+const authStore = useAuthStore();
 const userStore = useUserStore();
 const url = "http://localhost:3000";
 const attendanceStore = useAttendanceStore();
@@ -35,19 +37,15 @@ const roomSelect = ref<string>();
 const videoRef = ref<HTMLVideoElement | null>(null);
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const showCamera = ref(false);
+const capturedImages = ref<string[]>([]);
 
 onMounted(async () => {
-  try {
-    await assigmentStore.getAssignmentByCourseId(id.value.toString());
-    await attendanceStore.getAttendanceByCourseId(id.value.toString());
-    await userStore.getUserByCourseId(id.value.toString());
-    await courseStore.getCourseById(id.value.toString());
-    await courseStore.getAllRooms();
-    posts.value = assigmentStore.assignments;
-  } catch (error) {
-    console.error("Error in onMounted:", error);
-    alert("Failed to load data. Please check the console for more details.");
-  }
+  await assigmentStore.getAssignmentByCourseId(id.value.toString());
+  await attendanceStore.getAttendanceByCourseId(id.value.toString());
+  await userStore.getUserByCourseId(id.value.toString());
+  await courseStore.getCourseById(id.value.toString());
+  await courseStore.getAllRooms();
+  posts.value = assigmentStore.assignments;
 });
 
 const processFile = (url: string) => {
@@ -124,18 +122,13 @@ const createPost = async () => {
     deletedDate: undefined,
   };
 
-  try {
-    await assigmentStore.createAssignment(newAssignment);
-    if (imageUrls.value.length > 0) {
-      router.push({ path: "/mapping2", query: { imageUrls: imageUrls.value } });
-      nameAssignment.value = "";
-      imageUrls.value = [];
-    } else {
-      console.error("No images available for posting.");
-    }
-  } catch (error) {
-    console.error("Error creating post:", error);
-    alert("Failed to create post. Please check the console for more details.");
+  await assigmentStore.createAssignment(newAssignment);
+  if (imageUrls.value.length > 0) {
+    router.push({ path: "/mapping2", query: { imageUrls: imageUrls.value } });
+    nameAssignment.value = "";
+    imageUrls.value = [];
+  } else {
+    console.error("No images available for posting.");
   }
 };
 
@@ -185,7 +178,7 @@ const captureImage = () => {
     const imageUrl = canvasRef.value.toDataURL("image/jpeg");
     resizeAndConvertImageToBase64(imageUrl, 800, 600)
       .then((resizedImage) => {
-        imageUrls.value.push(resizedImage);
+        capturedImages.value.push(resizedImage);
         const file = dataURLtoFile(resizedImage, `image-${Date.now()}.jpg`);
         imageFiles.value.push(file);
       })
@@ -282,7 +275,7 @@ const dataURLtoFile = (dataurl: string, filename: string) => {
                   cols="12"
                   sm="6"
                   md="4"
-                  v-for="(image, index) in imageUrls"
+                  v-for="(image, index) in capturedImages"
                   :key="index"
                 >
                   <v-img :src="image" aspect-ratio="1" class="ma-2"></v-img>
@@ -451,9 +444,10 @@ const dataURLtoFile = (dataurl: string, filename: string) => {
 <style scoped>
 .v-col {
   padding: 10px 0;
+  /* Provides consistent vertical spacing between rows */
 }
 .vertical-divider {
-  border-left: 1px solid #e0e0e0;
-  height: auto;
+  border-left: 1px solid #e0e0e0; /* สีของเส้นแบ่ง */
+  height: auto; /* ให้สูงตามความสูงของ col */
 }
 </style>
