@@ -32,6 +32,7 @@ export const useEnrollmentStore = defineStore("enrollmentStore", () => {
     try {
       const res = await enrollmentService.deleteEnrollment(id);
       currentEnrollment.value = res.data;
+      window.location.reload();
     } catch (e) {
       console.log(e);
     }

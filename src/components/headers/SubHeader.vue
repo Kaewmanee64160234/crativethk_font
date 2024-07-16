@@ -10,17 +10,19 @@ const userStore = useUserStore();
         <v-list density="compact">
           <div v-if="userStore.currentUser?.teacherId">
             <v-list-item link to="/courseManagement">
-              <v-icon size="40" color="#819DA9">mdi-home-circle</v-icon>
+              <v-icon size="40" color="#819DA9">mdi mdi-human-male-board</v-icon>
             </v-list-item>
           </div>
           <div v-if="userStore.currentUser?.studentId">
             <v-list-item link to="/enrolmentManagement">
-              <v-icon size="40" color="#819DA9">mdi-home-circle</v-icon>
+              <v-icon size="40" color="#819DA9">mdi mdi-human-male-board</v-icon>
             </v-list-item>
           </div>
-          <v-list-item link>
-            <v-icon size="40" color="#819DA9">mdi-account-circle</v-icon>
+          <div v-if="userStore.currentUser?.teacherId">
+            <v-list-item link to="/enrolmentManagement">
+            <v-icon size="40" color="#819DA9">mdi mdi-book</v-icon>
           </v-list-item>
+          </div>
           <v-list-item class="bottom-list-item" link to="/">
             <v-icon size="40" color="#819DA9">mdi-location-exit</v-icon>
           </v-list-item>
