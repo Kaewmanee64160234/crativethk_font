@@ -8,7 +8,7 @@ import { useAuthStore } from "@/stores/auth";
 import { useUserStore } from "@/stores/user.store";
 import { useAttendanceStore } from "@/stores/attendance.store";
 import type Assignment from "@/stores/types/Assignment";
-import type Attendance from "@/stores/types/Attendances";
+import type Attendance from "@/stores/types/Attendance";
 import { useMessageStore } from "@/stores/message";
 
 const route = useRoute();
@@ -24,7 +24,7 @@ const tab = ref("posts");
 const posts = ref<Assignment[]>([]);
 const imageUrls = ref<string[]>([]);
 const imageFiles = ref<File[]>([]);
-const assigmentStore = useAssignmentStore();
+const assignmentStore = useAssignmentStore();
 const courseStore = useCourseStore();
 const showDialog = ref(false);
 const nameAssignment = ref("");
@@ -42,12 +42,12 @@ const canvasRef = ref<HTMLCanvasElement | null>(null);
 const capturedImages = ref<string[]>([]);
 
 onMounted(async () => {
-  await assigmentStore.getAssignmentByCourseId(id.value.toString());
+  await assignmentStore.getAssignmentByCourseId(id.value.toString());
   await attendanceStore.getAttendanceByCourseId(id.value.toString());
   await userStore.getUserByCourseId(id.value.toString());
   await courseStore.getCourseById(id.value.toString());
   await courseStore.getAllRooms();
-  posts.value = assigmentStore.assignments;
+  posts.value = assignmentStore.assignments;
 
   if (isTeacher.value) {
     showDialog.value = true;
@@ -121,7 +121,7 @@ const createPost = async () => {
     updatedDate: undefined,
     deletedDate: undefined,
   };
-  await assigmentStore.createAssignment(newAssignment);
+  await assignmentStore.createAssignment(newAssignment);
   if (imageUrls.value.length > 0) {
     router.push({ path: "/mapping2", query: { imageUrls: imageUrls.value, capturedImages: capturedImages.value } });
     nameAssignment.value = "";
@@ -425,7 +425,7 @@ const dataURLtoFile = (dataurl: string, filename: string) => {
                 <th class="text-left vertical-divider">Score</th>
                 <th
                   class="vertical-divider"
-                  v-for="assignment in assigmentStore.assignments"
+                  v-for="assignment in assignmentStore.assignments"
                   :key="assignment.assignmentId"
                 >
                   {{ assignment.nameAssignment }}
@@ -438,12 +438,12 @@ const dataURLtoFile = (dataurl: string, filename: string) => {
                 <td class="vertical-divider">
                   {{ user.firstName + " " + user.lastName }}
                 </td>
-                <td class="vertical-divider">{{ assigmentStore.assignments.length }}</td>
+                <td class="vertical-divider">{{ assignmentStore.assignments.length }}</td>
                 <td class="vertical-divider">
-                  {{ calculateTotalScore(user.userId!, assigmentStore.assignments) }}
+                  {{ calculateTotalScore(user.userId!, assignmentStore.assignments) }}
                 </td>
                 <td
-                  v-for="assignment in assigmentStore.assignments"
+                  v-for="assignment in assignmentStore.assignments"
                   :key="assignment.assignmentId"
                   class="vertical-divider"
                 >

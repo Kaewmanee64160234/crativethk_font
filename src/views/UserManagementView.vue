@@ -147,10 +147,10 @@ const tab = ref(0);
                       <v-icon left>mdi-pencil</v-icon>
                       แก้ไขข้อมูล
                     </v-btn>
-                    <v-btn small class="ma-1" color="red" @click="deleteUser(item.userId!)">
+                    <!-- <v-btn small class="ma-1" color="red" @click="deleteUser(item.userId!)">
                       <v-icon left>mdi-delete</v-icon>
                       ลบข้อมูล
-                    </v-btn>
+                    </v-btn> -->
                   </div>
                 </td>
               </tr>
@@ -182,14 +182,16 @@ const tab = ref(0);
                 <td>{{ item.role }}</td>
                 <td style="color: seagreen;">{{ item.status }}</td>
                 <td style="justify-content: center;">
+                  <div class="button-group">
                   <v-btn small class="ma-1" color="yellow darken-2" text="Button Text" @click="showEditedDialog(item)">
                     <v-icon left>mdi-pencil</v-icon>
                     แก้ไขข้อมูล
                   </v-btn>
-                  <v-btn small class="ma-1" color="red" text="Button Text" @click="deleteUser(item.userId!)">
+                </div>
+                  <!-- <v-btn small class="ma-1" color="red" text="Button Text" @click="deleteUser(item.userId!)">
                     <v-icon left>mdi-delete</v-icon>
                     ลบข้อมูล
-                  </v-btn>
+                  </v-btn> -->
                 </td>
               </tr>
             </tbody>
