@@ -74,7 +74,7 @@ const saveEnrollment = () => {
                   variant="outlined"
                   v-model="codeCourse"
                   :rules="[
-                    (v) =>
+                    (v: string) =>
                     /^(?=.*[A-Za-z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{10,}$/.test(v) ||
                       'โปรดกรอกรหัสห้องเรียน 10 ตัวอักษร',
                   ]"

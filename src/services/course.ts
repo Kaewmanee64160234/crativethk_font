@@ -6,6 +6,14 @@ function getCourse() {
   return http.get("/courses");
 }
 
+function getFileCourse(formData: FormData) {
+  return http.post("/courses/upload", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+}
+
 function deleteCourse(id: string) {
   return http.delete(`/courses/${id}`);
 }
@@ -39,4 +47,5 @@ export default {
   createCourse,
   getCourseById,
   getAllRooms,
+  getFileCourse
 };
