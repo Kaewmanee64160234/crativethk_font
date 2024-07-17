@@ -36,7 +36,7 @@ const editCourse = () => {
               <v-card-title>
                 <h3>แก้ไขชื่อรายวิชา</h3>
               </v-card-title>
-              <v-card-text>
+              <v-card-text class="colorText">
                 <v-text-field
                   clearable
                   label="แก้ไขชื่อรายวิชา"

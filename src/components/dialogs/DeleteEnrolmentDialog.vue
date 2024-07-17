@@ -18,7 +18,7 @@ const deleteEnrollment = async (idEnrollment: number) => {
   <v-container>
     <v-row justify="center">
       <v-card class="cardText">
-        <v-card-title class="text-h4 mt-6" style="text-align: center"
+        <v-card-title class="text-h4 mt-6 cut" style="text-align: center"
           >ต้องการยกเลิกการลงทะเบียนในรายวิชา
           {{ enrollmentStore.currentEnrollment?.course?.nameCourses }}
           หรือไม่</v-card-title
@@ -50,5 +50,9 @@ const deleteEnrollment = async (idEnrollment: number) => {
 .cardText {
   width: auto;
   height: auto;
+}
+.cut {
+  word-wrap: break-word;
+  white-space: normal;
 }
 </style>

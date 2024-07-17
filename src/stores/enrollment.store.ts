@@ -35,7 +35,7 @@ export const useEnrollmentStore = defineStore("enrollmentStore", () => {
       console.log(e);
     }
   }
-  const createEnrollment = async (enrollment:Enrollment) => {
+  const createEnrollment =  async (enrollment:Enrollment) => {
     try {
       const res = await enrollmentService.createEnrollment(enrollment);
       currentEnrollment.value = res.data;

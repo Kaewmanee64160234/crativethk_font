@@ -9,6 +9,18 @@ import type Room from "./types/Room";
 export const useCourseStore = defineStore("courseStore", () => {
   const courses = ref<Course[]>([]);
   const course = ref<Course>();
+  const files = ref([] as {id:string, name:string}[]);
+  const nameCourse = ref("");
+  const courseId = ref("");
+  const typeCourse = ref("");
+  const session = ref("1");
+  const credit = ref(0);
+  const stdAmount = ref(0);
+  const fullScore = ref(0);
+  const timeInLab = new Date();
+  const timeOutLab = new Date();
+  const timeInLec = new Date();
+  const timeOutLec = new Date();
   const showCreateDialog = ref(false);
   const showCreateDialog2 = ref(false);
   const showCreateDialog3 = ref(false);
@@ -101,7 +113,31 @@ export const useCourseStore = defineStore("courseStore", () => {
     }
   };
 
+  const getFileUser = async (file: File) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await courseService.getFileCourse(formData);  // Make sure this matches the actual function that handles file uploads
+      files.value = res.data;
+      console.log("Upload successful", files.value );
+    } catch (error) {
+      console.error("Upload failed", error);
+    }
+  }
+
+
   return {
+    session,
+    credit,
+    stdAmount,
+    fullScore,
+    typeCourse,
+    courseId,
+    nameCourse,
+    timeInLab,
+    timeOutLab,
+    timeInLec,
+    timeOutLec,
     currentCourse,
     createCourse,
     courses,
@@ -122,6 +158,8 @@ export const useCourseStore = defineStore("courseStore", () => {
     updateCourse,
     getCourseById,
     getAllRooms,
-    rooms
+    rooms,
+    getFileUser,
+    files,
   };
 });

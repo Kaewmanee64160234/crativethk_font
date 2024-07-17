@@ -15,7 +15,7 @@ const deleteCourse = async (idCourse: string) => {
   <v-container>
     <v-row justify="center">
       <v-card class="cardText">
-        <v-card-title class="text-h4 mt-6" style="text-align: center"
+        <v-card-title class="text-h4 mt-6 cut" style="text-align: center"
           >ต้องการลบรายวิชา
           {{ courseStore.currentCourse?.nameCourses }} หรือไม่</v-card-title
         >
@@ -45,5 +45,9 @@ const deleteCourse = async (idCourse: string) => {
 .cardText {
   width: auto;
   height: auto;
+}
+.cut {
+  word-wrap: break-word;
+  white-space: normal;
 }
 </style>

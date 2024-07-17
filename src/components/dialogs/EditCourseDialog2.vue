@@ -163,7 +163,7 @@ const cancelEditCourse = () => {
                   <v-text-field
                     variant="outlined"
                     v-model="courseStore.currentCourse!.session"
-                    :rules="[(v) => !!v || 'โปรดกรอกกลุ่มที่เรียนให้ถูกต้อง']"
+                    :rules="[(v: any) => !!v || 'โปรดกรอกกลุ่มที่เรียนให้ถูกต้อง']"
                   ></v-text-field>
                 </v-col>
                 <v-col cols="12" sm="6">
@@ -172,7 +172,7 @@ const cancelEditCourse = () => {
                     variant="outlined"
                     v-model="courseStore.currentCourse!.coursesId"
                     :rules="[
-                      (v) =>
+                      (v: string) =>
                         /^[A-Za-z0-9]{8,}$/.test(v) ||
                         'โปรดกรอกรหัสวิชาอย่างน้อย 8 ตัวอักษร',
                     ]"
@@ -186,8 +186,8 @@ const cancelEditCourse = () => {
                     variant="outlined"
                     v-model="courseStore.currentCourse!.credit"
                     :rules="[
-                      (v) => !!v || 'โปรดกรอกจำนวนหน่วยกิตให้ถูกต้อง',
-                      (v) => /^[0-9]+$/.test(v) || 'โปรดกรอกตัวเลขเท่านั้น',
+                      (v: any) => !!v || 'โปรดกรอกจำนวนหน่วยกิตให้ถูกต้อง',
+                      (v: string) => /^[0-9]+$/.test(v) || 'โปรดกรอกตัวเลขเท่านั้น',
                     ]"
                   ></v-text-field>
                 </v-col>
@@ -197,8 +197,8 @@ const cancelEditCourse = () => {
                     variant="outlined"
                     v-model="courseStore.currentCourse!.stdAmount"
                     :rules="[
-                      (v) => !!v || 'โปรดกรอกจำนวนนักเรียนให้ถูกต้อง',
-                      (v) => /^[0-9]+$/.test(v) || 'โปรดกรอกตัวเลขเท่านั้น',
+                      (v: any) => !!v || 'โปรดกรอกจำนวนนักเรียนให้ถูกต้อง',
+                      (v: string) => /^[0-9]+$/.test(v) || 'โปรดกรอกตัวเลขเท่านั้น',
                     ]"
                   ></v-text-field>
                 </v-col>
@@ -430,8 +430,8 @@ const cancelEditCourse = () => {
                     variant="outlined"
                     v-model="courseStore.currentCourse!.fullScore"
                     :rules="[
-                      (v) => !!v || 'โปรดกรอกคะแนนเต็มให้ถูกต้อง',
-                      (v) => /^[0-9]+$/.test(v) || 'โปรดกรอกตัวเลขเท่านั้น',
+                      (v: any) => !!v || 'โปรดกรอกคะแนนเต็มให้ถูกต้อง',
+                      (v: string) => /^[0-9]+$/.test(v) || 'โปรดกรอกตัวเลขเท่านั้น',
                     ]"
                   ></v-text-field>
                 </v-col>

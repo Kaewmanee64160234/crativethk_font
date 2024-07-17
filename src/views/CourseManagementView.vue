@@ -2,15 +2,20 @@
 import CreateCourseDialog from "@/components/dialogs/CreateCourseDialog.vue";
 import DeleteCourseDialog from "@/components/dialogs/DeleteCourseDialog.vue";
 import EditCourseDialog from "@/components/dialogs/EditCourseDialog.vue";
+import CreateCourseDialog2 from "@/components/dialogs/CreateCourseDialog2.vue";
+import CreateCourseDialog3 from "@/components/dialogs/CreateCourseDialog3.vue";
 import { useAuthStore } from "@/stores/auth";
 import { useCourseStore } from "@/stores/course.store";
 import type Course from "@/stores/types/Course";
 import { useUserStore } from "@/stores/user.store";
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
+import type Enrollment from "@/stores/types/Enrollment";
+import { useEnrollmentStore } from "@/stores/enrollment.store";
 const courseStore = useCourseStore();
 const userStore = useUserStore();
-const authStore = useAuthStore();
+const enrollmentStore = useEnrollmentStore();
+const currentStep = ref(1);
 const router = useRouter();
 console.log("user", courseStore.currentCourse?.user?.firstName);
 onMounted(async () => {
@@ -48,46 +53,97 @@ const formatThaiDate = (isoDateTime: string | undefined): string => {
 
   return `${dateString} ${timeString}`;
 };
+
+const advanceStep = () => {
+  if (currentStep.value < 3) { // Assuming you have 3 steps
+    currentStep.value++;
+  }
+};
+
+const retreatStep = () => {
+  if (currentStep.value > 1) {
+    currentStep.value--;
+  }
+};
+
+const closeDialog = () => {
+  courseStore.showCreateDialog = false;
+  currentStep.value = 1;
+};
+
+const finishCreation = async () => {
+  const newCourse = {
+    coursesId: courseStore.courseId,
+    nameCourses: courseStore.nameCourse,
+    codeCourses: "",
+    typeCourses: courseStore.typeCourse,
+    credit: courseStore.credit,
+    session: courseStore.session,
+    stdAmount: courseStore.stdAmount,
+    timeInLab: courseStore.timeInLab,
+    timeOutLab: courseStore.timeOutLab,
+    timeInLec: courseStore.timeInLec,
+    timeOutLec: courseStore.timeOutLec,
+    fullScore: courseStore.fullScore,
+    userId: userStore.currentUser?.userId ?? 0,
+    createdDate: undefined,
+    updatedDate: undefined,
+    deletedDate: undefined, //mockup data ข้อมูลไม่ตรงกับหลังบ้าน
+  };
+  console.log("newCourse", newCourse);
+  try {
+    // ส่งคำขอสร้าง course
+    // await courseStore.createCourse(newCourse);
+    console.log("course", newCourse);
+    courseStore.nameCourse = "";
+    courseStore.courseId = "";
+    courseStore.typeCourse = "";
+    for (let i = 0; i < courseStore.files.length; i++) {
+      for (let j = 0; j < userStore.users.length; j++) {
+        if (courseStore.files[i].id == userStore.users[j].studentId) {
+          console.log("enrollment", courseStore.files[i].id, userStore.users[j].userId);
+          const newEnrollment: Enrollment = {
+            userId: userStore.users[j].userId ?? 0,
+            courseId: courseStore.currentCourse!.coursesId,
+            createdDate: undefined,
+            updatedDate: undefined,
+            deletedDate: undefined,
+          };
+          enrollmentStore.createEnrollment(newEnrollment);
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error creating course:", error);
+  }
+  courseStore.showCreateDialog = false;
+  currentStep.value = 1; // Close the dialog after completion
+  courseStore.getCourseByTeachId(userStore.currentUser!.teacherId!);
+};
 </script>
 <template>
   <v-container>
     <v-row>
-      <v-col
-        cols="12"
-        sm="6"
-        md="4"
-        v-for="(item, index) of courseStore.courses"
-        :key="index"
-      >
-        <v-card
-          style="margin-left: 10%; margin-top: 15%"
-          @click="goToCourseDetail(item.coursesId, item)"
-        >
-          <v-img
-            height="100"
+      <v-col cols="12" sm="6" md="4" v-for="(item, index) of courseStore.courses" :key="index">
+        <v-card style="margin-left: 10%; margin-top: 15%" @click="goToCourseDetail(item.coursesId, item)">
+          <v-img height="100"
             src="https://img.freepik.com/free-vector/realist-illustration-room-interior_52683-64752.jpg?w=1060&t=st=1714843452~exp=1714844052~hmac=e767aadc96b291547ce66a82185eb5e078cac3c31f6ca29c677e54174e142dbb"
-            cover
-          >
+            cover>
             <v-card-title style="margin-top: 5%">
               <h1 class="text-white">{{ item.nameCourses }}</h1>
             </v-card-title>
             <v-menu offset-y>
               <template #activator="{ props }">
-                <v-btn
-                  icon
-                  v-bind="props"
-                  class="ma-2"
-                  style="position: absolute; right: 0; top: 0; z-index: 2"
-                >
+                <v-btn icon v-bind="props" class="ma-2" style="position: absolute; right: 0; top: 0; z-index: 2">
                   <v-icon>mdi-dots-vertical</v-icon>
                 </v-btn>
               </template>
               <v-list>
                 <v-list-item @click="showEditDialog(item)">
-                  <v-list-item-title>Edit</v-list-item-title>
+                  <v-list-item-title>แก้ไข</v-list-item-title>
                 </v-list-item>
                 <v-list-item @click="showDeleteDialog(item)">
-                  <v-list-item-title>Delete</v-list-item-title>
+                  <v-list-item-title>ลบ</v-list-item-title>
                 </v-list-item>
               </v-list>
             </v-menu>
@@ -125,17 +181,40 @@ const formatThaiDate = (isoDateTime: string | undefined): string => {
       </v-col>
     </v-row>
   </v-container>
-  <v-btn
-    class="bottom-list-item"
-    size="60"
-    style="border-radius: 50%"
-    variant="outlined"
-    @click="courseStore.showCreateDialog = true"
-  >
+  <v-btn class="bottom-list-item" size="60" style="border-radius: 50%" variant="outlined"
+    @click="courseStore.showCreateDialog = true, courseStore.showCreateDialog2 = true">
     <v-icon icon="mdi-plus" size="40"></v-icon>
   </v-btn>
   <v-dialog v-model="courseStore.showCreateDialog" persistent>
-    <CreateCourseDialog />
+    <v-stepper v-model="currentStep" hide-actions
+      :items="['เพิ่มห้องเรียน', 'รายละเอียดห้องเรียน', 'เพิ่มรายชื่อนิสิต']" persistent>
+      <template v-slot:item.1>
+        <CreateCourseDialog />
+        <v-card-actions>
+          <v-btn @click="closeDialog">ปิด</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn @click="advanceStep">ถัดไป</v-btn>
+        </v-card-actions>
+      </template>
+      <template v-slot:item.2>
+        <CreateCourseDialog2 />
+        <v-card-actions>
+          <v-btn @click="closeDialog">ปิด</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn @click="retreatStep">ย้อนกลับ</v-btn>
+          <v-btn @click="advanceStep">ถัดไป</v-btn>
+        </v-card-actions>
+      </template>
+      <template v-slot:item.3>
+        <CreateCourseDialog3 />
+        <v-card-actions>
+          <v-btn @click="closeDialog">ปิด</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn @click="retreatStep">ย้อนกลับ</v-btn>
+          <v-btn @click="finishCreation">เสร็จสิ้น</v-btn>
+        </v-card-actions>
+      </template>
+    </v-stepper>
   </v-dialog>
 </template>
 
