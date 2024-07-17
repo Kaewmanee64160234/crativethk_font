@@ -90,14 +90,20 @@ const finishCreation = async () => {
     updatedDate: undefined,
     deletedDate: undefined, //mockup data ข้อมูลไม่ตรงกับหลังบ้าน
   };
-  console.log("newCourse", newCourse);
   try {
     // ส่งคำขอสร้าง course
-    // await courseStore.createCourse(newCourse);
+    await courseStore.createCourse(newCourse);
     console.log("course", newCourse);
     courseStore.nameCourse = "";
     courseStore.courseId = "";
     courseStore.typeCourse = "";
+    courseStore.credit = 0;
+    courseStore.session = "1";
+    courseStore.stdAmount = 0;
+    courseStore.timeInLab = new Date();
+    courseStore.timeOutLab = new Date();
+    courseStore.timeInLec = new Date();
+    courseStore.timeOutLec = new Date();
     for (let i = 0; i < courseStore.files.length; i++) {
       for (let j = 0; j < userStore.users.length; j++) {
         if (courseStore.files[i].id == userStore.users[j].studentId) {
