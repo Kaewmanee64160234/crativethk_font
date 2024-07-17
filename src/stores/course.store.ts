@@ -17,10 +17,10 @@ export const useCourseStore = defineStore("courseStore", () => {
   const credit = ref(0);
   const stdAmount = ref(0);
   const fullScore = ref(0);
-  const timeInLab = new Date();
-  const timeOutLab = new Date();
-  const timeInLec = new Date();
-  const timeOutLec = new Date();
+  const timeInLab = ref(new Date());
+  const timeOutLab = ref(new Date());
+  const timeInLec = ref(new Date());
+  const timeOutLec = ref(new Date());
   const showCreateDialog = ref(false);
   const showCreateDialog2 = ref(false);
   const showCreateDialog3 = ref(false);
