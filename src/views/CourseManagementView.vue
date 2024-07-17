@@ -158,7 +158,9 @@ const finishCreation = async () => {
             <v-img src="https://cdn.vuetifyjs.com/images/john.png"></v-img>
           </v-avatar>
           <v-card-text>
-            <div class="text-body">กลุ่มเรียนที่ {{ item.session }}</div>
+            <div class="text-body">
+              กลุ่มเรียนที่ {{ item.session }} รหัสห้อง {{ item.codeCourses }}
+            </div>
             <div class="text-body">อาจารย์ {{ item.user?.firstName }}</div>
             <div class="text-body">
               เริมเรียนเลคเชอร์ {{ formatThaiDate(item.timeInLec?.toString()) }}

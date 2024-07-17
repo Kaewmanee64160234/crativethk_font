@@ -78,7 +78,7 @@ function convertFloat32ToUint8(gallery: any) {
     <v-col cols="6">
       <h1 class = "headline" style="text-align: left; padding-top: 40pt; padding-left: 80pt;" >Student Attendance</h1><br>
       <h3 class = "text-body" style="text-align: left; font-size: larger; padding-left: 125pt; font-weight: normal; ">System Management</h3>
-      <v-img class = "image-size" src="../assets/cttk humen.png" ></v-img> 
+      <img class = "image-size" src="../assets/cttk humen.png" /> 
     </v-col>
     <v-col style="background-color: #ECEFF1;" cols="6" >
       <h2 class = "subtitle" style="text-align: right; padding-right: 45%; padding-top: 80pt; font-size: larger;" width="20vw" height="22vh">Sign in</h2><br><br>
@@ -146,9 +146,9 @@ function convertFloat32ToUint8(gallery: any) {
     align-items: center;
 }
 .image-size {
-  width: 100%;
+  width: 70%;
   height: 50%;
-  display: flex;
+  /* display: flex; */
   justify-content: center;
   align-items: center;
 }

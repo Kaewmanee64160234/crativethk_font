@@ -12,6 +12,7 @@ export const useAuthStore = defineStore('authStore', () => {
     firstName: '',
     lastName: '',
     email: '',
+    role: '',
     profileImage: '',
     // faceDescriptions: [],
   });
@@ -41,8 +42,12 @@ export const useAuthStore = defineStore('authStore', () => {
         localStorage.setItem('token', token);
         console.log('Stored token:', localStorage.getItem('token'));
         localStorage.setItem('users',JSON.stringify(currentUser.value));
-        console.log(response.data);
-        router.push('/userManagement');
+        console.log("current user" ,(currentUser.value));
+        if (currentUser.value.user.role === 'อาจารย์') {
+          router.push('/courseManagement');
+        } else{
+          router.push('/enrolmentManagement');
+        }
       }
     } catch (error) {
       if ((error as any).response && (error as any).response.status === 404) {

@@ -60,6 +60,8 @@ const router = createRouter({
         },
         meta: {
           layout: "FullLayout",
+          requiresAuth: true,
+      beforeEnter:[ezAutorized]
         }
     },
     {
@@ -102,6 +104,7 @@ const router = createRouter({
     meta: {
       layout: "FullLayout",
       requiresAuth: true,
+      beforeEnter:[ezAutorized]
     }
   },
   {

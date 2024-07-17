@@ -1,9 +1,8 @@
 <script lang="ts" setup>
 import { useCourseStore } from "@/stores/course.store";
 import { ref, watch } from "vue";
-import course from "@/services/course";
 import { useUserStore } from "@/stores/user.store";
-import CreateCourseDialog3 from "./CreateCourseDialog3.vue";
+import { useMessageStore } from "@/stores/message";
 
 const courseStore = useCourseStore();
 const userStore = useUserStore();
@@ -21,6 +20,7 @@ const showTimePicker3 = ref(false);
 const showDatePicker4 = ref(false);
 const selectedTime4 = ref("00:00");
 const showTimePicker4 = ref(false);
+const messageStore = useMessageStore();
 
 function formatThaiDate(date: Date) {
   return date

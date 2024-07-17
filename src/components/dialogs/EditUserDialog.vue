@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { useMessageStore } from '@/stores/message';
 import { useUserStore } from '@/stores/user.store';
 const userStore = useUserStore();
 const url = 'http://localhost:3000';
@@ -12,6 +13,12 @@ async function cancel() {
     userStore.resetUser();
     userStore.closeDialog();
 }
+
+// Set the default value for role
+if (!userStore.editUser.role) {
+  userStore.editUser.role = 'นิสิต';
+}
+
 </script>
 <template>
     <v-container>
@@ -41,7 +48,7 @@ async function cancel() {
                                     v-model="userStore.editUser.lastName"></v-text-field>
                             </v-col>
                             <v-col cols="12">
-                                <v-text-field label="ตำแหน่ง" dense solo required
+                                <v-text-field label="ตำแหน่ง" dense solo required 
                                     v-model="userStore.editUser.role"></v-text-field>
                             </v-col>
                             <v-col cols="12">

@@ -3,6 +3,7 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import type Enrollment from "./types/Enrollment";
 
+
 export const useEnrollmentStore = defineStore("enrollmentStore", () => {
   const enrollments = ref<Enrollment[]>([]);
   const currentEnrollment = ref<Enrollment>();
@@ -31,6 +32,7 @@ export const useEnrollmentStore = defineStore("enrollmentStore", () => {
     try {
       const res = await enrollmentService.deleteEnrollment(id);
       currentEnrollment.value = res.data;
+      window.location.reload();
     } catch (e) {
       console.log(e);
     }

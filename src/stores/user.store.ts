@@ -4,6 +4,7 @@ import { getCurrentInstance, ref, watch } from "vue";
 import userService from "@/services/user"; // Import the userService module
 import { mapToUser, type User } from "./types/User";
 import user from "@/services/user";
+import { useMessageStore } from "./message";
 
 export const useUserStore = defineStore("userStore", () => {
   const users = ref<User[]>([]);
@@ -15,6 +16,7 @@ export const useUserStore = defineStore("userStore", () => {
   const showEditDialog = ref(false);
   const showEditDialog2 = ref(false);
   const keyword = ref("");
+  const messageStore = useMessageStore()
   const currentUser = ref<User>();
 
   const editUser = ref<User & { files: File[] }>({
@@ -58,6 +60,7 @@ export const useUserStore = defineStore("userStore", () => {
       console.log("users", users.value);
     } catch (e) {
       console.error("Failed to fetch users:", e);
+      messageStore.showError("Oops!, cannot get data users.");
     }
 
   };
@@ -82,6 +85,7 @@ export const useUserStore = defineStore("userStore", () => {
         await userService.updateUser(editUser.value, editUser.value.userId);
       } else {
         await userService.saveUser(editUser.value);
+        messageStore.showInfo("User has been saved successfully.");
       }
       getUsers(); // Refresh or reload user list
       closeDialog();
@@ -93,6 +97,7 @@ export const useUserStore = defineStore("userStore", () => {
   const deleteUser = async (id: number) => {
     try {
       await userService.deleteUser(id);
+      messageStore.showInfo("User has been deleted successfully.");
       await getUsers();
     } catch (e) {
       console.log(e);
