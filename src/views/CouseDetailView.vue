@@ -122,7 +122,7 @@ const createPost = async () => {
     deletedDate: undefined,
   };
   await assignmentStore.createAssignment(newAssignment);
-  if (imageUrls.value.length > 0) {
+  if (imageUrls.value.length > 0 || capturedImages.value.length > 0) {
     router.push({ path: "/mapping2", query: { imageUrls: imageUrls.value, capturedImages: capturedImages.value } });
     nameAssignment.value = "";
     imageUrls.value = [];
@@ -230,7 +230,6 @@ const dataURLtoFile = (dataurl: string, filename: string) => {
           </v-card-title>
         </v-card>
 
-
         <v-btn v-if="isTeacher" color="#6CA7FA" @click="showDialog = true" style="margin: 10px 0; color: black">
           <v-icon>mdi-plus</v-icon>สร้างการเช็คชื่อ
         </v-btn>
@@ -254,7 +253,6 @@ const dataURLtoFile = (dataurl: string, filename: string) => {
                       variant="outlined"
                       outlined
                     ></v-text-field>
-                  
                   </v-col>
                 </v-row>
                 <v-row>
