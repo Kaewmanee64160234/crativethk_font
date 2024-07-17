@@ -22,6 +22,13 @@ const selectedTime4 = ref("00:00");
 const showTimePicker4 = ref(false);
 const messageStore = useMessageStore();
 
+// courseStore.timeInLec = new Date(formatISODateTime(selectedDate.value, selectedTime.value));
+// courseStore.timeOutLec = new Date(formatISODateTime(selectedDate.value, selectedTime2.value));
+// if (courseStore.typeCourse === "เลคเชอร์และแลป") {
+//   courseStore.timeInLab = new Date(formatISODateTime(selectedDate3.value, selectedTime3.value));
+//   courseStore.timeOutLab = new Date(formatISODateTime(selectedDate.value, selectedTime4.value));
+// }
+
 function formatThaiDate(date: Date) {
   return date
     .toLocaleDateString("th-TH", {
@@ -36,22 +43,27 @@ function formatISODateTime(date: Date, time: string): string {
   return date.toISOString();
 }
 
-  courseStore.timeInLec = new Date(
-    formatISODateTime(selectedDate.value, selectedTime.value)
-  );
-  courseStore.timeOutLec = new Date(
-    formatISODateTime(selectedDate.value, selectedTime2.value)
-  );
-  if (courseStore.typeCourse === "เลคเชอร์และแลป") {
-      courseStore.timeInLab = new Date(
-        formatISODateTime(selectedDate3.value, selectedTime3.value)
-      );
-      courseStore.timeOutLab = new Date(
-        formatISODateTime(selectedDate.value, selectedTime4.value)
-      );
-}
+// Watchers to update courseStore properties
+watch([selectedDate, selectedTime], ([newDate, newTime]) => {
+  courseStore.timeInLec = new Date(formatISODateTime(newDate, newTime));
+});
 
-console.log(selectedDate.value, selectedTime.value);
+watch([selectedDate, selectedTime2], ([newDate, newTime]) => {
+  courseStore.timeOutLec = new Date(formatISODateTime(newDate, newTime));
+});
+
+watch([selectedDate3, selectedTime3], ([newDate, newTime]) => {
+  if (courseStore.typeCourse === "เลคเชอร์และแลป") {
+    courseStore.timeInLab = new Date(formatISODateTime(newDate, newTime));
+  }
+});
+
+watch([selectedDate3, selectedTime4], ([newDate, newTime]) => {
+  if (courseStore.typeCourse === "เลคเชอร์และแลป") {
+    courseStore.timeOutLab = new Date(formatISODateTime(newDate, newTime));
+  }
+});
+
 </script>
 
 <template>
