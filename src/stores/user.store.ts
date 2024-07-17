@@ -88,6 +88,7 @@ export const useUserStore = defineStore("userStore", () => {
         messageStore.showInfo("User has been saved successfully.");
       }
       getUsers(); // Refresh or reload user list
+      // resetUser(); 
       closeDialog();
     } catch (e) {
       console.log(e);

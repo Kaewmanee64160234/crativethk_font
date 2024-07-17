@@ -107,10 +107,10 @@ if (!userStore.editUser.role) {
                                     :rules="[(v) => !!v || 'โปรดกรอกตำแหน่ง']"></v-text-field>
                             </v-col>
                             <v-col cols="12">
-                                <v-combobox label="สถานะภาพ" :items="['กำลังสอน', 'พ้นสภาพอาจารย์', 'เกษียณอายุราชการ']" dense solo required
+                                <v-combobox label="สถานะภาพ" :items="['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง']" dense solo required
                                     v-model="userStore.editUser.status" :rules="[
                                         v => !!v || 'โปรดเลือกสถานะภาพ',
-                                        v => ['กำลังสอน', 'พ้นสภาพอาจารย์', 'เกษียณอายุราชการ'].includes(v) || 'โปรดเลือกสถานะภาพจากรายการที่ให้ไว้'
+                                        v => ['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง'].includes(v) || 'โปรดเลือกสถานะภาพจากรายการที่ให้ไว้'
                                     ]"></v-combobox>
                             </v-col>
                             <!-- {{ userStore.editUser.files }} -->
