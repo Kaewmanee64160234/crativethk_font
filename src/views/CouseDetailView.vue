@@ -106,6 +106,8 @@ const resizeAndConvertImageToBase64 = (imageUrl: string, maxWidth: number, maxHe
 const createPost = async () => {
   if (nameAssignment.value === "") {
     return;
+  }else{
+    alert('The assignment has been created successfully.');
   }
 
   const room = courseStore.rooms.find((r) => r.roomNumber === roomSelect.value);

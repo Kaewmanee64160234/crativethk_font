@@ -5,8 +5,10 @@ import router from "@/router";
 import { useAssignmentStore } from "./assignment.store";
 import { useCourseStore } from "./course.store";
 import type Attendance from "./types/Attendances";
+import { useMessageStore } from "./message";
 export const useAttendanceStore = defineStore("attendanceStore", () => {
   const attendances = ref<Attendance[]>();
+  const messageStore = useMessageStore();
   const assigmentStore = useAssignmentStore();
   const currentAttendance = ref<Attendance & { files: File[] }>({
     attendanceConfirmStatus: "",
@@ -64,6 +66,7 @@ export const useAttendanceStore = defineStore("attendanceStore", () => {
   const confirmAttendance = async (attendance: Attendance) => {
     try {
       const res = await attendaceService.updateAttendance(attendance);
+       messageStore.showInfo("The information has been sent to the teacher. Please wait for confirmation..");
     } catch (error) {
       // Log the error object which might contain additional info
       console.error("Error confirming attendance:", error);

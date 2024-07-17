@@ -129,6 +129,7 @@ async function processFiles(files: File[]): Promise<Float32Array[]> {
 
 </template>
 <style>
+
 .actions {
     justify-content: flex-end;
 }
