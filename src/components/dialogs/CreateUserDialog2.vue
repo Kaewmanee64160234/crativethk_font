@@ -133,6 +133,9 @@ if (!userStore.editUser.role) {
 
 </template>
 <style>
+.swal-overlay {
+  z-index: 9999 !important; /* Set a high z-index value */
+}
 .actions {
     justify-content: flex-end;
 }

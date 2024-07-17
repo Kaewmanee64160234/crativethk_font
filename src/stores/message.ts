@@ -26,6 +26,9 @@ export const useMessageStore = defineStore("message", () => {
       color: "red",
       confirmButtonText: "Close",
       text: text,
+      customClass: {
+        container: 'swal-overlay',
+      }
     });
   }
 
@@ -36,6 +39,9 @@ export const useMessageStore = defineStore("message", () => {
       icon: 'success',
       timer: 2000,
       showConfirmButton: false,
+      customClass: {
+        container: 'swal-overlay',
+      }
     });
   }
   function showConfirm(text: string) {
@@ -45,3 +51,4 @@ export const useMessageStore = defineStore("message", () => {
   }
   return { isShow, message, showError, showInfo, CalshowError };
 });
+

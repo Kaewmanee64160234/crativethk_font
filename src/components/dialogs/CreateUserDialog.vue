@@ -129,6 +129,10 @@ async function processFiles(files: File[]): Promise<Float32Array[]> {
 
 </template>
 <style>
+.swal-overlay {
+  z-index: 9999 !important; /* Set a high z-index value */
+}
+
 .actions {
     justify-content: flex-end;
 }
