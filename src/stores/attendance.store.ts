@@ -140,7 +140,8 @@ export const useAttendanceStore = defineStore("attendanceStore", () => {
     try {
       const res = await attendaceService.checkAllAttendance(assignmentId);
       console.log(res.data);
-      router.push("/enrolmentManagement");
+   
+      router.push("/courseManagement");
     } catch (error) {
       console.log(error);
     }
