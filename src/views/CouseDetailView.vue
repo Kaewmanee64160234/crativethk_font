@@ -107,7 +107,7 @@ const createPost = async () => {
   if (nameAssignment.value === "") {
     return;
   }else{
-    messageStore.showInfo("Post has been saved successfully.");
+    alert('The assignment has been created successfully.');
   }
 
   const room = courseStore.rooms.find((r) => r.roomNumber === roomSelect.value);
@@ -471,9 +471,6 @@ const dataURLtoFile = (dataurl: string, filename: string) => {
 </template>
 
 <style scoped>
-.swal-overlay {
-  z-index: 9999 !important; /* Set a high z-index value */
-}
 .v-col {
   padding: 10px 0;
   /* Provides consistent vertical spacing between rows */

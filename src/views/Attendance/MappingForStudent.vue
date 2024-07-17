@@ -8,6 +8,7 @@ import { useCourseStore } from "@/stores/course.store";
 import assignment from "@/services/assignment";
 import { useAssignmentStore } from "@/stores/assignment.store";
 import type Attendance from "@/stores/types/Attendances";
+import { useMessageStore } from "@/stores/message";
 const url = "http://localhost:3000";
 
 const route = useRoute();
@@ -15,6 +16,7 @@ const attendanceStore = useAttendanceStore();
 const userStore = useUserStore();
 const courseStore = useCourseStore();
 const assignmentStore = useAssignmentStore();
+const messageStore = useMessageStore();
 
 onMounted(async () => {
   await userStore.getCurrentUser();
@@ -72,6 +74,7 @@ const reCheckAttendance = async (attendance: Attendance) => {
     console.log(JSON.stringify(attendance));
 
     await attendanceStore.confirmAttendance(attendance);
+    router.push("/courseDetail/" + courseStore.currentCourse?.coursesId);
     // router.push('/resheckMappingTeacher/' + assignmentStore.currentAssignment?.assignmentId); // Replace '/next-page-route' with your specific route
   } catch (error) {
     console.log(error);
