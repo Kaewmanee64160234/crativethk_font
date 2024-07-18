@@ -155,6 +155,23 @@ const getUserByCourseId = async (courseId: string) => {
     }
 }
 
+// getUserFromLocalStorage
+const getUserFromLocalStorage = () => {
+    const userString = localStorage.getItem("users");
+    if (userString !== null) {
+        try {
+            const userObject = JSON.parse(userString);
+            if (userObject.user) {
+                currentUser.value = mapToUser(userObject.user);
+            } else {
+                console.error("User data is not properly formatted.");
+            }
+        } catch (error) {
+            console.error("Error parsing user data:", error);
+        }
+    }
+  }
+
 
   return {
     getCurrentUser,
@@ -176,6 +193,7 @@ const getUserByCourseId = async (courseId: string) => {
     resetUser,
     searchQuery,
     getUserByCourseId,
+    getUserFromLocalStorage
     
   };
 });

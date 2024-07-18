@@ -6,8 +6,15 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from "vue";
 import FullLayout from "./components/layout/FullLayout.vue";
 import MainLayout from "./components/layout/MainLayout.vue";
+import { useUserStore } from "./stores/user.store";
+const userStore = useUserStore();
+// get user data fro local storage when on mounted
+onMounted(() => {
+  userStore.getUserFromLocalStorage();
+});
 </script>
 
 <style >
