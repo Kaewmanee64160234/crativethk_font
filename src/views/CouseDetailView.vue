@@ -10,6 +10,8 @@ import { useAttendanceStore } from "@/stores/attendance.store";
 import type Assignment from "@/stores/types/Assignment";
 import type Attendance from "@/stores/types/Attendance";
 import { useMessageStore } from "@/stores/message";
+import UpdateAttendantDialogView from "@/components/attendant/updateAttendantDialog.vue";
+import type { User } from "@/stores/types/User";
 
 const route = useRoute();
 const id = ref(route.params.idCourse);
@@ -123,6 +125,7 @@ const createPost = async () => {
     updatedDate: undefined,
     deletedDate: undefined,
   };
+
   await assignmentStore.createAssignment(newAssignment);
   if (imageUrls.value.length > 0) {
     // image url and captured images are available
@@ -146,6 +149,8 @@ const getAttendanceStatus = (
   );
   return attendance ? attendance.attendanceStatus : "No Record Found";
 };
+
+
 
 const calculateTotalScore = (userId: number, assignments: Assignment[]): number => {
   return assignments.reduce((total, assignment) => {
@@ -208,6 +213,18 @@ const dataURLtoFile = (dataurl: string, filename: string) => {
     u8arr[n] = bstr.charCodeAt(n);
   }
   return new File([u8arr], filename, { type: mime });
+};
+
+// open show dialog and set value editAttendance
+const openDialog = (assigment:Assignment,user:User) => {
+  //filter attdent from assignments
+  const attendance = attendanceStore.attendances?.findIndex(
+    (att) => att.user?.userId === user.userId && att.assignment
+    ?.assignmentId === assigment.assignmentId);
+
+  attendanceStore.editAttendance = attendanceStore.attendances![attendance!];
+  attendanceStore.userAttendance = user;
+  attendanceStore.showDialog = true;
 };
 </script>
 
@@ -451,18 +468,37 @@ const dataURLtoFile = (dataurl: string, filename: string) => {
                   :key="assignment.assignmentId"
                   class="vertical-divider"
                 >
+
                   <template
                     v-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'present'"
                   >
-                    <v-icon color="green">mdi-check-circle</v-icon> 
+                  
+                    <!-- <v-btn v-icon color="green">mdi-check-circle</v-btn>  -->
+                    <v-btn density="compact" color="green" icon="mdi-check-circles" @click="openDialog(assignment,user)">
+                      <v-icon>mdi-check-circle</v-icon>
+                    </v-btn>
                   </template>
                   <template
                     v-else-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'late'"
                   >
-                    <v-icon color="orange">mdi-clock-outline</v-icon> 
+                    <!-- <v-icon color="orange">mdi-clock-outline</v-icon>  -->
+                    <v-btn density="compact" color="orange" icon="mdi-check-circles" @click="openDialog(
+                      assignment,
+                      user
+                    )">
+                      <v-icon>mdi-clock-outline</v-icon>
+
+                    </v-btn>
                   </template>
                   <template v-else>
-                    <v-icon color="red">mdi-close-circle</v-icon> 
+                    <!-- <v-icon color="red">mdi-close-circle</v-icon>  -->
+                    <v-btn density="compact" color="red" icon="mdi-check-circles" @click="
+                    openDialog(
+                      assignment,
+                      user
+                    ) ">
+                      <v-icon>mdi-close-circle</v-icon>
+                    </v-btn>
                   </template>
                 </td>
               </tr>
@@ -472,6 +508,7 @@ const dataURLtoFile = (dataurl: string, filename: string) => {
       </v-tab-item>
     </v-container>
   </div>
+  <UpdateAttendantDialogView/>
 </template>
 
 <style scoped>

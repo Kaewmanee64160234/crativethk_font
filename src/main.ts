@@ -1,6 +1,5 @@
 import { createApp } from "vue";
 import App from "./App.vue";
-// import './assets/swal-custom.css'; 
 import router from "./router";
 import { createPinia } from "pinia";
 import vue3GoogleLogin from "vue3-google-login";
@@ -9,10 +8,18 @@ import 'vuetify/styles';
 import { createVuetify } from 'vuetify';
 import * as vuetifyComponents from 'vuetify/components';
 import * as vuetifyDirectives from 'vuetify/directives';
-import '@mdi/font/css/materialdesignicons.css';
-import { VTimePicker } from "vuetify/lib/labs/components.mjs";
+import '@mdi/font/css/materialdesignicons.css';  // Ensure this is correctly imported
+import { aliases, mdi } from 'vuetify/iconsets/mdi';
+import { VTimePicker } from "vuetify/labs/VTimePicker";
 
 const vuetify = createVuetify({
+  icons: {
+    defaultSet: 'mdi',
+    aliases,
+    sets: {
+      mdi,
+    },
+  },
   components: {
     ...vuetifyComponents,
     VTimePicker,

@@ -61,6 +61,12 @@ function getAttendanceByUserId(userId: string) {
 function updateAttendance(attendance: Attendance) {
   return http.patch(`/attendances/${attendance.attendanceId}`, attendance);
 }
+// updateAttendanceTeacher
+
+function  updateAttendanceTeacher(attdentTeacher:Attendance){
+  return http.patch(`/attendances/teacher/${attdentTeacher.attendanceId}`, attdentTeacher);
+}
+
 // getAttendanceByStatusInAssignment
 
 function getAttendanceByStatusInAssignment(assignmentId: string) {
@@ -98,5 +104,6 @@ export default {
   getAttendanceByStatusInAssignment,
   confirmAttendance,
   rejectAttendance,
-  checkAllAttendance
+  checkAllAttendance,
+  updateAttendanceTeacher
 };

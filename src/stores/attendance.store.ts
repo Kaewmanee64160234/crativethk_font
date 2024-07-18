@@ -6,9 +6,29 @@ import { useAssignmentStore } from "./assignment.store";
 import { useCourseStore } from "./course.store";
 import type Attendance from "./types/Attendances";
 import { useMessageStore } from "./message";
+import type { User } from "./types/User";
 export const useAttendanceStore = defineStore("attendanceStore", () => {
   const attendances = ref<Attendance[]>();
+  const showDialog = ref(false);
+  const userAttendance = ref<User>({
+    userId: 0,
+    firstName: "",
+    lastName: "",
+    email: "",
+    studentId: "",
+    teacherId: "",
+    role: "",
+    status: "",
+    profileImage: "",
+  });
   const messageStore = useMessageStore();
+  const editAttendance = ref<Attendance >({
+    attendanceConfirmStatus: "",
+    attendanceDate: new Date(),
+    attendanceId: 0,
+    attendanceImage: "",
+    attendanceStatus: "",
+  });
   const assigmentStore = useAssignmentStore();
   const currentAttendance = ref<Attendance & { files: File[] }>({
     attendanceConfirmStatus: "",
@@ -63,6 +83,18 @@ export const useAttendanceStore = defineStore("attendanceStore", () => {
       console.log(error);
     }
   };
+  // updateAttendanceTeacher
+  const updateAttendanceTeacher = async (attendance: Attendance) => {
+    try {
+      const res = await attendaceService.updateAttendanceTeacher(attendance);
+      if (res.status) {
+        console.log(res.data);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const confirmAttendance = async (attendance: Attendance) => {
     try {
       const res = await attendaceService.updateAttendance(attendance);
@@ -163,5 +195,9 @@ export const useAttendanceStore = defineStore("attendanceStore", () => {
     rejectAttendanceByTeacher,
     getAttendanceByCourseId,
     checkAllAttendance,
+    showDialog,
+    editAttendance,
+    userAttendance,
+    updateAttendanceTeacher
   };
 });
