@@ -22,7 +22,7 @@ const tabs = [
 ];
 
 const router = useRouter();
-const tab = ref("posts");
+const tab = ref("Posts");
 const posts = ref<Assignment[]>([]);
 const imageUrls = ref<string[]>([]);
 const imageFiles = ref<File[]>([]);
@@ -108,7 +108,7 @@ const resizeAndConvertImageToBase64 = (imageUrl: string, maxWidth: number, maxHe
 const createPost = async () => {
   if (nameAssignment.value === "") {
     return;
-  }else{
+  } else {
     alert('The assignment has been created successfully.');
   }
 
@@ -130,7 +130,7 @@ const createPost = async () => {
   if (imageUrls.value.length > 0) {
     // image url and captured images are available
     imageUrls.value.push(...capturedImages.value);
-    router.push({ path: "/mapping2", query: { imageUrls: imageUrls.value} });
+    router.push({ path: "/mapping2", query: { imageUrls: imageUrls.value } });
     nameAssignment.value = "";
     imageUrls.value = [];
     capturedImages.value = [];
@@ -144,13 +144,11 @@ const getAttendanceStatus = (
   userId: number,
   assignmentId: number
 ): string => {
-  const attendance = attendances?.find(
-    (att) => att.user?.userId === userId && att.assignment?.assignmentId === assignmentId
+  const attendanceIndex = attendances?.findIndex(
+    (att:Attendance) => att.user?.userId === userId && att.assignment?.assignmentId === assignmentId
   );
-  return attendance ? attendance.attendanceStatus : "No Record Found";
+  return attendances[attendanceIndex!] ? attendances[attendanceIndex!].attendanceStatus : "absent";
 };
-
-
 
 const calculateTotalScore = (userId: number, assignments: Assignment[]): number => {
   return assignments.reduce((total, assignment) => {
@@ -216,11 +214,10 @@ const dataURLtoFile = (dataurl: string, filename: string) => {
 };
 
 // open show dialog and set value editAttendance
-const openDialog = (assigment:Assignment,user:User) => {
-  //filter attdent from assignments
+const openDialog = (assignment: Assignment, user: User) => {
+  //filter attendance from assignments
   const attendance = attendanceStore.attendances?.findIndex(
-    (att) => att.user?.userId === user.userId && att.assignment
-    ?.assignmentId === assigment.assignmentId);
+    (att) => att.user?.userId === user.userId && att.assignment?.assignmentId === assignment.assignmentId);
 
   attendanceStore.editAttendance = attendanceStore.attendances![attendance!];
   attendanceStore.userAttendance = user;
@@ -422,19 +419,13 @@ const openDialog = (assigment:Assignment,user:User) => {
 
       <!-- Tab content for Assignments -->
       <!-- Tab Item for Users -->
-      <v-tab-item v-else>
-        <v-card
-          class="mx-auto"
-          color="primary"
-          max-width="1200"
-          outlined
-          style="padding: 20px"
-        >
+   <!-- Tab content for Assignment Attendance -->
+   <v-tab-item v-else>
+        <v-card class="mx-auto" color="primary" max-width="1200" outlined style="padding: 20px">
           <v-card-title>
             <h1 class="text-h5">{{ courseStore.currentCourse?.nameCourses }}</h1>
           </v-card-title>
         </v-card>
-        <!-- Tab Item for Assignment Attendance -->
         <v-card class="mx-auto" outlined style="padding: 20px; margin-top: 10px">
           <v-card-title>Assignment Attendance Details</v-card-title>
           <v-table>
@@ -444,11 +435,7 @@ const openDialog = (assigment:Assignment,user:User) => {
                 <th class="text-left vertical-divider">Student Name</th>
                 <th class="text-left vertical-divider">Full Score</th>
                 <th class="text-left vertical-divider">Score</th>
-                <th
-                  class="vertical-divider"
-                  v-for="assignment in assignmentStore.assignments"
-                  :key="assignment.assignmentId"
-                >
+                <th class="vertical-divider" v-for="assignment in assignmentStore.assignments" :key="assignment.assignmentId">
                   {{ assignment.nameAssignment }}
                 </th>
               </tr>
@@ -456,49 +443,27 @@ const openDialog = (assigment:Assignment,user:User) => {
             <tbody>
               <tr v-for="user in userStore.users" :key="user.userId">
                 <td class="vertical-divider">{{ user.studentId }}</td>
-                <td class="vertical-divider">
-                  {{ user.firstName + " " + user.lastName }}
-                </td>
+                <td class="vertical-divider">{{ user.firstName + " " + user.lastName }}</td>
                 <td class="vertical-divider">{{ assignmentStore.assignments.length }}</td>
-                <td class="vertical-divider">
-                  {{ calculateTotalScore(user.userId!, assignmentStore.assignments) }}
-                </td>
-                <td
-                  v-for="assignment in assignmentStore.assignments"
-                  :key="assignment.assignmentId"
-                  class="vertical-divider"
-                >
-
-                  <template
-                    v-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'present'"
-                  >
-                  
-                    <!-- <v-btn v-icon color="green">mdi-check-circle</v-btn>  -->
-                    <v-btn density="compact" color="green" icon="mdi-check-circles" @click="openDialog(assignment,user)">
+                <td class="vertical-divider">{{ calculateTotalScore(user.userId!, assignmentStore.assignments) }}</td>
+                <td v-for="assignment in assignmentStore.assignments" :key="assignment.assignmentId" class="vertical-divider">
+                  <template v-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'present'">
+                    <v-btn density="compact" color="green" icon="mdi-check-circles" v-if="isTeacher" @click="openDialog(assignment, user)">
                       <v-icon>mdi-check-circle</v-icon>
                     </v-btn>
+                    <v-icon color="green" v-else>mdi-check-circle</v-icon>
                   </template>
-                  <template
-                    v-else-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'late'"
-                  >
-                    <!-- <v-icon color="orange">mdi-clock-outline</v-icon>  -->
-                    <v-btn density="compact" color="orange" icon="mdi-check-circles" @click="openDialog(
-                      assignment,
-                      user
-                    )">
+                  <template v-else-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'late'">
+                    <v-btn density="compact" color="orange" icon="mdi-check-circles" v-if="isTeacher" @click="openDialog(assignment, user)">
                       <v-icon>mdi-clock-outline</v-icon>
-
                     </v-btn>
+                    <v-icon color="orange" v-else>mdi-clock-outline</v-icon>
                   </template>
                   <template v-else>
-                    <!-- <v-icon color="red">mdi-close-circle</v-icon>  -->
-                    <v-btn density="compact" color="red" icon="mdi-check-circles" @click="
-                    openDialog(
-                      assignment,
-                      user
-                    ) ">
+                    <v-btn density="compact" color="red" icon="mdi-check-circles" v-if="isTeacher" @click="openDialog(assignment, user)">
                       <v-icon>mdi-close-circle</v-icon>
                     </v-btn>
+                    <v-icon color="red" v-else>mdi-close-circle</v-icon>
                   </template>
                 </td>
               </tr>
