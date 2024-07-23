@@ -18,11 +18,6 @@ const uploadFile = async () => {
   }
 };
 
-const closeDialog = async () => {
-  courseStore.closeDialog();
-  courseStore.files = [];
-};
-
 onMounted(async () => {
   await userStore.getUsers();
 
@@ -31,7 +26,6 @@ onMounted(async () => {
 </script>
 
 <template>                   
-      <v-card>
         <v-card-title class="title">
           <v-row>
             <!-- <v-col cols="6">
@@ -70,7 +64,6 @@ onMounted(async () => {
           <v-btn @click="closeDialog()">ยกเลิก</v-btn>
           <v-btn @click="saveFileInCourse" class="colorText">เสร็จสิ้น</v-btn>
         </v-card-actions> -->
-      </v-card>
 </template>
 
 <style scoped>

@@ -5,7 +5,6 @@ const courseStore = useCourseStore();
 
 <template>
       <v-col>
-        <v-card>
           <!-- <v-card-title>
             <h2>เพิ่มห้องเรียน</h2>
           </v-card-title> -->
@@ -58,7 +57,6 @@ const courseStore = useCourseStore();
               </v-card-text>
             </v-card>
           </v-card-text>
-        </v-card>
       </v-col>
 </template>
 

@@ -22,7 +22,7 @@ const formatThaiDate = (isoDateTime: string | undefined): string => {
 };
 
 const saveEnrollment = async () => {
-  courseStore.closeDialog();
+  courseStore.showCreateDialog = false;
   await enrollmentStore.getCourseByStudentId(userStore.currentUser!.studentId!); ///mockup data
   messageStore.showInfo("Successfully joined the course.");
 };
@@ -34,7 +34,7 @@ const cancel = async () => {
     );
     courseStore.showDeleteDialog = false;
     await enrollmentStore.getCourseByStudentId(userStore.currentUser!.studentId!);
-    courseStore.closeDialog();
+    courseStore.showCreateDialog = false;
   }
 };
 </script>

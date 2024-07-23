@@ -24,10 +24,7 @@ const editCourse = () => {
 </script>
 
 <template>
-  <v-container>
-    <v-row justify="center">
-      <v-col cols="12" md="6" lg="4">
-        <v-card>
+      <v-col>
           <v-card-title>
             <h2>แก้ไขห้องเรียน</h2>
           </v-card-title>
@@ -42,7 +39,7 @@ const editCourse = () => {
                   label="แก้ไขชื่อรายวิชา"
                   variant="outlined"
                   v-model="courseStore.currentCourse!.nameCourses"
-                  :rules="[(v) => !!v || 'โปรดกรอกชื่อรายวิชา']"
+                  :rules="[(v: any) => !!v || 'โปรดกรอกชื่อรายวิชา']"
                 ></v-text-field>
               </v-card-text>
             </v-card>
@@ -56,22 +53,19 @@ const editCourse = () => {
                   :items="['เลคเชอร์', 'เลคเชอร์และแลป']"
                   v-model="courseStore.currentCourse!.typeCourses"
                   variant="outlined"
-                  :rules="[(v) => !!v || 'โปรดเลือกประเภทรายวิชา']"
+                  :rules="[(v: any) => !!v || 'โปรดเลือกประเภทรายวิชา']"
                 ></v-select>
               </v-card-text>
             </v-card>
           </v-card-text>
-          <v-card-actions class="d-flex justify-end">
+          <!-- <v-card-actions class="d-flex justify-end">
             <v-btn @click="courseStore.closeDialog2">ยกเลิก</v-btn>
             <v-btn @click="editCourse" class="colorText">ต่อไป</v-btn>
           </v-card-actions>
           <v-dialog v-model="courseStore.showEditDialog2" persistent>
             <EditCourseDialog2 />
-          </v-dialog>
-        </v-card>
+          </v-dialog> -->
       </v-col>
-    </v-row>
-  </v-container>
 </template>
 
 <style scoped>

@@ -7,6 +7,7 @@ import type Enrollment from "./types/Enrollment";
 export const useEnrollmentStore = defineStore("enrollmentStore", () => {
   const enrollments = ref<Enrollment[]>([]);
   const currentEnrollment = ref<Enrollment>();
+  const selectedEnrollment = ref<number[]>([]);
 
   const getCourseByStudentId = async (userId: string) => {
     try {
@@ -48,6 +49,6 @@ export const useEnrollmentStore = defineStore("enrollmentStore", () => {
   };
 
   return {
-    enrollments, getCourseByStudentId ,currentEnrollment , deleteEnrollment , createEnrollment, getStudentByCourseId
+    enrollments, getCourseByStudentId ,currentEnrollment , deleteEnrollment , createEnrollment, getStudentByCourseId,selectedEnrollment
   };
 });
