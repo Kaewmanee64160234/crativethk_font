@@ -87,6 +87,17 @@ function getUserByCourseId(courseId: string) {
   return http.get(`/users/course/${courseId}`);
 }
 
+function getFileStd(formData: FormData) {
+  return http.post("/users/upload", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+}
 
 
-export default { getUser, getUserImage, saveUser, deleteUser, updateUser, searchUsers ,getUserByCourseId };
+
+
+
+
+export default { getUser, getUserImage, saveUser, deleteUser, updateUser, searchUsers ,getUserByCourseId, getFileStd};

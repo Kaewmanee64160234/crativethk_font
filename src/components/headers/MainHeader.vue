@@ -20,6 +20,15 @@
         userStore.currentUser?.firstName + " " + userStore.currentUser?.lastName
       }}</v-app-bar-title
     >
+    <v-app-bar-title
+    style="text-align: right; margin-right: 2%"
+    v-if="userStore.currentUser?.role === 'แอดมิน'"
+  >
+    แอดมิน:
+    {{
+      userStore.currentUser?.firstName + " " + userStore.currentUser?.lastName
+    }}</v-app-bar-title
+  >
   </v-app-bar>
 </template>
 <script lang="ts" setup>

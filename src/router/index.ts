@@ -17,7 +17,40 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: HomeView
-    },
+    }
+    ,
+    {
+        //registerView
+        path: '/register',
+        name: 'register',
+        components: {
+          default: () => import('../views/Register/RegisterView.vue'),
+          header: () => import('../components/headers/MainHeader.vue'),
+          menu: () => import('../components/headers/SubHeader.vue'),
+        },
+        meta: {
+          layout: "FullLayout",
+          // requiresAuth: true,
+          // beforeEnter:[ ezAutorized]
+        }
+      }
+    ,
+    {
+        //uploadImageView
+        path: '/uploadImage',
+        name: 'uploadImage',
+        components: {
+          default: () => import('../views/Register/UploadImageView.vue'),
+          header: () => import('../components/headers/MainHeader.vue'),
+          menu: () => import('../components/headers/SubHeader.vue'),
+        },
+        meta: {
+          layout: "FullLayout",
+          // requiresAuth: true,
+          // beforeEnter:[ ezAutorized]
+        }
+      }
+      ,
     {
       path: '/about',
       name: 'about',

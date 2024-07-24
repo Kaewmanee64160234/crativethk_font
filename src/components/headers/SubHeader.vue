@@ -18,9 +18,19 @@ const userStore = useUserStore();
               <v-icon size="40" color="#819DA9">mdi mdi-human-male-board</v-icon>
             </v-list-item>
           </div>
+          <div v-if="userStore.currentUser?.role === 'แอดมิน'">
+            <v-list-item link to="/userManagement">
+              <v-icon size="40" color="#819DA9">mdi mdi-account-edit</v-icon>
+            </v-list-item>
+          </div>
           <div v-if="userStore.currentUser?.teacherId">
             <v-list-item link to="/enrolmentManagement">
             <v-icon size="40" color="#819DA9">mdi mdi-book</v-icon>
+          </v-list-item>
+          </div>
+          <div v-if="userStore.currentUser?.role === 'แอดมิน'">
+            <v-list-item link to="/register">
+            <v-icon size="40" color="#819DA9">mdi mdi-book-plus</v-icon>
           </v-list-item>
           </div>
           <v-list-item class="bottom-list-item" link to="/">

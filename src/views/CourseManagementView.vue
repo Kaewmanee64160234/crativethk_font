@@ -14,6 +14,7 @@ import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import type Enrollment from "@/stores/types/Enrollment";
 import { useEnrollmentStore } from "@/stores/enrollment.store";
+import Swal from "sweetalert2";
 const courseStore = useCourseStore();
 const userStore = useUserStore();
 const enrollmentStore = useEnrollmentStore();
@@ -60,7 +61,24 @@ const advanceStep = () => {
   if (currentStep.value < 3) { // Assuming you have 3 steps
     currentStep.value++;
   }
-};
+  if (currentStep.value === 1) {
+    if (courseStore.nameCourse === "" || courseStore.typeCourse === "" || courseStore.courseId.length >= 8) {
+      alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+    }
+    currentStep.value = 1;
+  }
+  if (currentStep.value === 2) {
+    if (
+      courseStore.credit <= 0 ||
+      courseStore.session === "" ||
+      courseStore.stdAmount <= 0 ||
+      courseStore.fullScore <= 0
+    ) {
+      alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+    }
+    currentStep.value = 2;
+  }
+}
 
 const retreatStep = () => {
   if (currentStep.value > 1) {
@@ -134,7 +152,7 @@ const updateCourse = () => {
   courseStore.updateCourse(courseStore.currentCourse!.coursesId, courseStore.currentCourse!);
   currentStep.value = 1;
   courseStore.showEditDialog = false;
-  if(enrollmentStore.selectedEnrollment.length > 0){
+  if (enrollmentStore.selectedEnrollment.length > 0) {
     for (const id of enrollmentStore.selectedEnrollment) {
       enrollmentStore.deleteEnrollment(id);
     }
@@ -179,7 +197,7 @@ const updateCourse = () => {
             <div class="text-body">
               กลุ่มเรียนที่ {{ item.session }}
             </div>
-            <div class="text-body">อาจารย์ {{ item.user?.firstName}}</div>
+            <div class="text-body">อาจารย์ {{ item.user?.firstName }}</div>
             <div class="text-body"> รหัสห้อง {{ item.codeCourses }}</div>
             <div class="text-body">
               เริมเรียนเลคเชอร์ {{ formatThaiDate(item.timeInLec?.toString()) }}

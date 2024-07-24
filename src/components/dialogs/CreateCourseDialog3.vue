@@ -8,9 +8,7 @@ import { on } from "events";
 import { onMounted, ref } from "vue";
 const courseStore = useCourseStore();
 const userStore = useUserStore();
-const enrollmentStore = useEnrollmentStore();
 const selectedFile = ref(null);
-const file = ref([] as { id: string, name: string }[]);
 
 const uploadFile = async () => {
   if (selectedFile.value) {

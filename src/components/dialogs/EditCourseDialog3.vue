@@ -7,15 +7,6 @@ const courseStore = useCourseStore();
 const enrollmentStore = useEnrollmentStore();
 const messageStore = useMessageStore();
 
-// const deleteSelectedEnrollments = async () => {
-//   for (const id of selectedEnrollment.value) {
-//     await enrollmentStore.deleteEnrollment(id);
-//   }
-//   selectedEnrollment.value = []; // Clear selected enrollments
-//   courseStore.closeDialog2();
-//   messageStore.showInfo("Course has been edited successfully.");
-// };
-
 onMounted(async () => {
   await enrollmentStore.getStudentByCourseId(courseStore.currentCourse!.coursesId);
 });
