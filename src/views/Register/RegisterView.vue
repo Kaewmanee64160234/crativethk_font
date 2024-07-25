@@ -34,8 +34,8 @@ const cancel = () => {
     selectedFile.value = null;
 };
 
-const goToUploadImage = () => {
-  router.push(`/uploadImage`);
+const goToUploadImage = (idUser:number) => {
+  router.push(`/uploadImage/${idUser}`);
 };
 </script>
 <template>

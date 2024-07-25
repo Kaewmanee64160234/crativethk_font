@@ -37,10 +37,26 @@ const router = createRouter({
     ,
     {
         //uploadImageView
-        path: '/uploadImage',
+        path: '/uploadImage/:userId',
         name: 'uploadImage',
         components: {
           default: () => import('../views/Register/UploadImageView.vue'),
+          header: () => import('../components/headers/MainHeader.vue'),
+          menu: () => import('../components/headers/SubHeader.vue'),
+        },
+        meta: {
+          layout: "FullLayout",
+          // requiresAuth: true,
+          // beforeEnter:[ ezAutorized]
+        }
+      }
+      ,
+      {
+        //registerHistoryView
+        path: '/registerHistoryView',
+        name: 'registerHistoryView',
+        components: {
+          default: () => import('../views/Register/RegisterHistoryView.vue'),
           header: () => import('../components/headers/MainHeader.vue'),
           menu: () => import('../components/headers/SubHeader.vue'),
         },
