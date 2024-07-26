@@ -9,7 +9,7 @@ import { useMessageStore } from "./message";
 export const useUserStore = defineStore("userStore", () => {
   const users = ref<User[]>([]);
   const searchQuery = ref<string>("");
-  const files = ref([] as {id:string, name:string,major:string,year:string}[]);
+  const file_ = ref([] as {id:string, name:string,major:string,year:string}[]);
   const showDialog = ref(false);
   const showDialog2 = ref(false);
   const showDialog3 = ref(false);
@@ -28,6 +28,8 @@ export const useUserStore = defineStore("userStore", () => {
     teacherId: "",
     role: "",
     status: "",
+    year: "",
+    major: "",
     profileImage: "",
     files: [],
   });
@@ -74,6 +76,8 @@ export const useUserStore = defineStore("userStore", () => {
       lastName: "",
       role: "",
       status: "",
+      year: "",
+      major: "",
       profileImage: "",
       files: [],
     };
@@ -178,8 +182,8 @@ const getUserFromLocalStorage = () => {
       const formData = new FormData();
       formData.append("file", file);
       const res = await userService.getFileStd(formData);  // Make sure this matches the actual function that handles file uploads
-      files.value = res.data;
-      console.log("Upload successful", files.value );
+      file_.value = res.data;
+      console.log("Upload successful", file_.value );
     } catch (error) {
       console.error("Upload failed", error);
     }
@@ -208,6 +212,6 @@ const getUserFromLocalStorage = () => {
     getUserByCourseId,
     getUserFromLocalStorage,
     getFileUser,
-    files
+    file_
   };
 });

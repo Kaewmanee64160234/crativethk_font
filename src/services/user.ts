@@ -12,8 +12,8 @@ function getUser() {
     
   }
 //create user
-function saveUser(user:User & { files: File[] }) {
- console.log(user);
+function saveUser(user: User & { files: File[] }) {
+  console.log(user);
   const formData = new FormData();
 
   // Append normal fields
@@ -24,19 +24,25 @@ function saveUser(user:User & { files: File[] }) {
   formData.append('teacherId', user.teacherId!);
   formData.append('role', user.role!);
   formData.append('status', user.status!);
+  formData.append('major', user.major!);
+  formData.append('year', user.year!);
 
-  // Append files and face descriptions
-  for (let i = 0; i < 1; i++) {
-    formData.append('files', user.files[i], user.files[i].name); // Ensure there are exactly 5 files
-    // formData.append(`faceDescription${i + 1}`, JSON.stringify(user.faceDescriptions![i]));
+  // Check if files are available
+  if (user.files && user.files.length > 0) {
+      // Append the first file if it exists
+      formData.append('files', user.files[0], user.files[0].name);
+  } else {
+      console.error("No files found in the user object.");
+      // Optional: Handle the case where no files are provided
   }
 
   return http.post("/users", formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    }
+      headers: {
+          'Content-Type': 'multipart/form-data',
+      }
   });
 }
+
 //update user
 function updateUser(user: User & { files: File[] }, userId: number) {
   console.log(user);

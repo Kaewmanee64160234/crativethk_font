@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import router from '@/router';
+import type { User } from '@/stores/types/User';
 import { useUserStore } from '@/stores/user.store';
 import { computed, onMounted, ref } from 'vue';
 
@@ -22,20 +23,38 @@ onMounted(async () => {
 const paginatedFiles = computed(() => {
     const start = (page.value - 1) * itemsPerPage;
     const end = start + itemsPerPage;
-    return userStore.files.slice(start, end);
+    return userStore.file_.slice(start, end);
 });
 
 const pageCount = computed(() => {
-    return Math.ceil(userStore.files.length / itemsPerPage);
+    return Math.ceil(userStore.file_.length / itemsPerPage);
 });
 
 const cancel = () => {
-    userStore.files = [];
+    userStore.file_ = [];
     selectedFile.value = null;
 };
 
 const goToUploadImage = (idUser:number) => {
   router.push(`/uploadImage/${idUser}`);
+};
+
+const saveUser = () => {
+    for (let i = 0; i < userStore.file_.length; i++) {
+        const nameParts = userStore.file_[i].name.split(' ');
+        const firstName = nameParts[0];
+        const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
+        userStore.editUser.studentId = userStore.file_[i].id;
+        userStore.editUser.firstName = firstName;
+        userStore.editUser.lastName = lastName;
+        userStore.editUser.major = userStore.file_[i].major;
+        userStore.editUser.year = userStore.file_[i].year;
+        userStore.editUser.email = userStore.file_[i].id + "@go.buu.ac.th";
+        userStore.editUser.role = "นิสิต";
+        userStore.editUser.status = "กำลังศึกษา";
+        userStore.saveUser();
+        console.log("User saved", userStore.editUser);
+    }
 };
 </script>
 <template>
@@ -54,7 +73,7 @@ const goToUploadImage = (idUser:number) => {
                     <v-card-title>
                         <div>รายชื่อนิสิตทั้งหมด</div>
                     </v-card-title>
-                    <div v-if="userStore.files.length > 0">
+                    <div v-if="userStore.file_.length > 0">
                         <v-row v-for="(item, index) in paginatedFiles" :key="index">
                             <v-col style="padding-left: 5%;">
                                 <h3>รหัสนิสิต: {{ item.id }}</h3>
@@ -72,7 +91,7 @@ const goToUploadImage = (idUser:number) => {
                 <v-card-actions class="actions">
                     <v-btn color="error" variant="elevated" @click="cancel">ยกเลิก</v-btn>
                     <v-spacer></v-spacer>
-                    <v-btn color="success" variant="elevated" @click="goToUploadImage">เสร็จสิ้น</v-btn>
+                    <v-btn color="success" variant="elevated" @click="saveUser()">เสร็จสิ้น</v-btn>
                 </v-card-actions>
             </v-col>
         </v-row>
