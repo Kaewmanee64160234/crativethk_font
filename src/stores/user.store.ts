@@ -9,6 +9,7 @@ import { useMessageStore } from "./message";
 export const useUserStore = defineStore("userStore", () => {
   const users = ref<User[]>([]);
   const searchQuery = ref<string>("");
+  const files = ref([] as {id:string, name:string,major:string,year:string}[]);
   const showDialog = ref(false);
   const showDialog2 = ref(false);
   const showDialog3 = ref(false);
@@ -172,6 +173,18 @@ const getUserFromLocalStorage = () => {
     }
   }
 
+  const getFileUser = async (file: File) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await userService.getFileStd(formData);  // Make sure this matches the actual function that handles file uploads
+      files.value = res.data;
+      console.log("Upload successful", files.value );
+    } catch (error) {
+      console.error("Upload failed", error);
+    }
+  }
+
 
   return {
     getCurrentUser,
@@ -193,7 +206,8 @@ const getUserFromLocalStorage = () => {
     resetUser,
     searchQuery,
     getUserByCourseId,
-    getUserFromLocalStorage
-    
+    getUserFromLocalStorage,
+    getFileUser,
+    files
   };
 });

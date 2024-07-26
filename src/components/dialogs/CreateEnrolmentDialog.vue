@@ -37,7 +37,7 @@ const saveEnrollment = () => {
         // ส่งคำขอสร้าง enrollment
         enrollmentStore.createEnrollment(newEnrollment);
         console.log("enrollment", newEnrollment);
-        courseStore.showCreateDialog2 = true;
+        courseStore.showCreateDialog= true;
         codeCourse.value = "";
       } catch (error) {
         console.error("Error creating enrollment:", error);
@@ -83,10 +83,10 @@ const saveEnrollment = () => {
             </v-card>
           </v-card-text>
           <v-card-actions class="d-flex justify-end">
-            <v-btn @click="courseStore.closeDialog">ยกเลิก</v-btn>
+            <v-btn @click="courseStore.showCreateDialog = false">ยกเลิก</v-btn>
             <v-btn @click="saveEnrollment" class="colorText">ต่อไป</v-btn>
           </v-card-actions>
-          <v-dialog v-model="courseStore.showCreateDialog2" persistent>
+          <v-dialog v-model="courseStore.showCreateDialog" persistent>
             <CreateEnrolmentDialog2 />
           </v-dialog>
         </v-card>

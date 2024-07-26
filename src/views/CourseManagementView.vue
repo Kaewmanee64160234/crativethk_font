@@ -2,6 +2,8 @@
 import CreateCourseDialog from "@/components/dialogs/CreateCourseDialog.vue";
 import DeleteCourseDialog from "@/components/dialogs/DeleteCourseDialog.vue";
 import EditCourseDialog from "@/components/dialogs/EditCourseDialog.vue";
+import EditCourseDialog2 from "@/components/dialogs/EditCourseDialog2.vue";
+import EditCourseDialog3 from "@/components/dialogs/EditCourseDialog3.vue";
 import CreateCourseDialog2 from "@/components/dialogs/CreateCourseDialog2.vue";
 import CreateCourseDialog3 from "@/components/dialogs/CreateCourseDialog3.vue";
 import { useAuthStore } from "@/stores/auth";
@@ -12,6 +14,7 @@ import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import type Enrollment from "@/stores/types/Enrollment";
 import { useEnrollmentStore } from "@/stores/enrollment.store";
+import Swal from "sweetalert2";
 const courseStore = useCourseStore();
 const userStore = useUserStore();
 const enrollmentStore = useEnrollmentStore();
@@ -58,7 +61,24 @@ const advanceStep = () => {
   if (currentStep.value < 3) { // Assuming you have 3 steps
     currentStep.value++;
   }
-};
+  if (currentStep.value === 1) {
+    if (courseStore.nameCourse === "" || courseStore.typeCourse === "" || courseStore.courseId.length >= 8) {
+      alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+    }
+    currentStep.value = 1;
+  }
+  if (currentStep.value === 2) {
+    if (
+      courseStore.credit <= 0 ||
+      courseStore.session === "" ||
+      courseStore.stdAmount <= 0 ||
+      courseStore.fullScore <= 0
+    ) {
+      alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+    }
+    currentStep.value = 2;
+  }
+}
 
 const retreatStep = () => {
   if (currentStep.value > 1) {
@@ -68,6 +88,7 @@ const retreatStep = () => {
 
 const closeDialog = () => {
   courseStore.showCreateDialog = false;
+  courseStore.showEditDialog = false;
   currentStep.value = 1;
 };
 
@@ -126,6 +147,18 @@ const finishCreation = async () => {
   currentStep.value = 1; // Close the dialog after completion
   courseStore.getCourseByTeachId(userStore.currentUser!.teacherId!);
 };
+
+const updateCourse = () => {
+  courseStore.updateCourse(courseStore.currentCourse!.coursesId, courseStore.currentCourse!);
+  currentStep.value = 1;
+  courseStore.showEditDialog = false;
+  if (enrollmentStore.selectedEnrollment.length > 0) {
+    for (const id of enrollmentStore.selectedEnrollment) {
+      enrollmentStore.deleteEnrollment(id);
+    }
+    enrollmentStore.selectedEnrollment = [];
+  }
+}
 </script>
 <template>
   <v-container>
@@ -153,9 +186,6 @@ const finishCreation = async () => {
                 </v-list-item>
               </v-list>
             </v-menu>
-            <v-dialog v-model="courseStore.showEditDialog" persistent>
-              <EditCourseDialog />
-            </v-dialog>
             <v-dialog v-model="courseStore.showDeleteDialog" persistent>
               <DeleteCourseDialog />
             </v-dialog>
@@ -165,9 +195,10 @@ const finishCreation = async () => {
           </v-avatar>
           <v-card-text>
             <div class="text-body">
-              กลุ่มเรียนที่ {{ item.session }} รหัสห้อง {{ item.codeCourses }}
+              กลุ่มเรียนที่ {{ item.session }}
             </div>
             <div class="text-body">อาจารย์ {{ item.user?.firstName }}</div>
+            <div class="text-body"> รหัสห้อง {{ item.codeCourses }}</div>
             <div class="text-body">
               เริมเรียนเลคเชอร์ {{ formatThaiDate(item.timeInLec?.toString()) }}
             </div>
@@ -190,7 +221,7 @@ const finishCreation = async () => {
     </v-row>
   </v-container>
   <v-btn class="bottom-list-item" size="60" style="border-radius: 50%" variant="outlined"
-    @click="courseStore.showCreateDialog = true, courseStore.showCreateDialog2 = true">
+    @click="courseStore.showCreateDialog = true">
     <v-icon icon="mdi-plus" size="40"></v-icon>
   </v-btn>
   <v-dialog v-model="courseStore.showCreateDialog" persistent>
@@ -199,27 +230,59 @@ const finishCreation = async () => {
       <template v-slot:item.1>
         <CreateCourseDialog />
         <v-card-actions>
-          <v-btn @click="closeDialog">ปิด</v-btn>
+          <v-btn color="error" @click="closeDialog">ปิด</v-btn>
           <v-spacer></v-spacer>
-          <v-btn @click="advanceStep">ถัดไป</v-btn>
+          <v-btn color="primary" @click="advanceStep">ถัดไป</v-btn>
         </v-card-actions>
       </template>
       <template v-slot:item.2>
         <CreateCourseDialog2 />
         <v-card-actions>
-          <v-btn @click="closeDialog">ปิด</v-btn>
+          <v-btn color="error" @click="closeDialog">ปิด</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="retreatStep">ย้อนกลับ</v-btn>
-          <v-btn @click="advanceStep">ถัดไป</v-btn>
+          <v-btn color="primary" @click="advanceStep">ถัดไป</v-btn>
         </v-card-actions>
       </template>
       <template v-slot:item.3>
         <CreateCourseDialog3 />
         <v-card-actions>
-          <v-btn @click="closeDialog">ปิด</v-btn>
+          <v-btn color="error" @click="closeDialog">ปิด</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="retreatStep">ย้อนกลับ</v-btn>
-          <v-btn @click="finishCreation">เสร็จสิ้น</v-btn>
+          <v-btn color="primary" @click="finishCreation">เสร็จสิ้น</v-btn>
+        </v-card-actions>
+      </template>
+    </v-stepper>
+  </v-dialog>
+
+  <v-dialog v-model="courseStore.showEditDialog" persistent>
+    <v-stepper v-model="currentStep" hide-actions
+      :items="['แก้ไขห้องเรียน', 'แก้ไขรายละเอียดห้องเรียน', 'แก้ไขรายชื่อนิสิต']" persistent>
+      <template v-slot:item.1>
+        <EditCourseDialog />
+        <v-card-actions>
+          <v-btn color="error" @click="closeDialog">ปิด</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" @click="advanceStep">ถัดไป</v-btn>
+        </v-card-actions>
+      </template>
+      <template v-slot:item.2>
+        <EditCourseDialog2 />
+        <v-card-actions>
+          <v-btn color="error" @click="closeDialog">ปิด</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn @click="retreatStep">ย้อนกลับ</v-btn>
+          <v-btn color="primary" @click="advanceStep">ถัดไป</v-btn>
+        </v-card-actions>
+      </template>
+      <template v-slot:item.3>
+        <EditCourseDialog3 />
+        <v-card-actions>
+          <v-btn color="error" @click="closeDialog">ปิด</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn @click="retreatStep">ย้อนกลับ</v-btn>
+          <v-btn color="primary" @click="updateCourse">เสร็จสิ้น</v-btn>
         </v-card-actions>
       </template>
     </v-stepper>

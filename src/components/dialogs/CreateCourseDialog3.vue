@@ -8,19 +8,12 @@ import { on } from "events";
 import { onMounted, ref } from "vue";
 const courseStore = useCourseStore();
 const userStore = useUserStore();
-const enrollmentStore = useEnrollmentStore();
 const selectedFile = ref(null);
-const file = ref([] as { id: string, name: string }[]);
 
 const uploadFile = async () => {
   if (selectedFile.value) {
     await courseStore.getFileUser(selectedFile.value);
   }
-};
-
-const closeDialog = async () => {
-  courseStore.closeDialog();
-  courseStore.files = [];
 };
 
 onMounted(async () => {
@@ -31,7 +24,6 @@ onMounted(async () => {
 </script>
 
 <template>                   
-      <v-card>
         <v-card-title class="title">
           <v-row>
             <!-- <v-col cols="6">
@@ -70,7 +62,6 @@ onMounted(async () => {
           <v-btn @click="closeDialog()">ยกเลิก</v-btn>
           <v-btn @click="saveFileInCourse" class="colorText">เสร็จสิ้น</v-btn>
         </v-card-actions> -->
-      </v-card>
 </template>
 
 <style scoped>

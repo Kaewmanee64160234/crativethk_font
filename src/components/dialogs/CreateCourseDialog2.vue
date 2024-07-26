@@ -67,7 +67,6 @@ watch([selectedDate3, selectedTime4], ([newDate, newTime]) => {
 </script>
 
 <template>
-  <v-card>
     <!-- <v-card-title>
                 <h3>รายละเอียดวิชา</h3>
               </v-card-title> -->
@@ -228,7 +227,6 @@ watch([selectedDate3, selectedTime4], ([newDate, newTime]) => {
         </v-col>
       </v-row>
     </v-card-text>
-  </v-card>
 </template>
 
 <style scoped>
