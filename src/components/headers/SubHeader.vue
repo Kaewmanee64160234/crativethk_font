@@ -28,18 +28,18 @@ const userStore = useUserStore();
             <v-icon size="40" color="#819DA9">mdi mdi-book</v-icon>
           </v-list-item>
           </div>
-<<<<<<< HEAD
+
           <v-list-item link to="/userProfile">
             <v-icon size="40" color="#819DA9">mdi mdi-account</v-icon>
           </v-list-item>
         </v-list>
-=======
+
           <div v-if="userStore.currentUser?.role === 'แอดมิน'">
             <v-list-item link to="/register">
             <v-icon size="40" color="#819DA9">mdi mdi-book-plus</v-icon>
           </v-list-item>
           </div>
->>>>>>> 08324e5a9459d6acc3b1f95ce3864fa21c50ea86
+
           <v-list-item class="bottom-list-item" link to="/">
             <v-icon size="40" color="#819DA9">mdi-location-exit</v-icon>
           </v-list-item>

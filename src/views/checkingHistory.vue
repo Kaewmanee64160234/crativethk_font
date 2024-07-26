@@ -9,6 +9,7 @@ import { useEnrollmentStore } from "@/stores/enrollment.store";
 import type Attendance from "@/stores/types/Attendance";
 import type Assignment from "@/stores/types/Assignment";
 import type { User } from "@/stores/types/User";
+import UpdateAttendantDialogView from "@/components/attendant/updateAttendantDialog.vue";
 
 const router = useRouter();
 const courseName = ref("OOAD 2023");
@@ -181,6 +182,7 @@ const isStudent = computed(() => userStore.currentUser?.role === 'นิสิ�
           </v-table>
         </v-card>
   </v-container>
+  <UpdateAttendantDialogView/>
 </template>
 
 <style scoped>
