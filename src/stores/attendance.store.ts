@@ -181,8 +181,24 @@ export const useAttendanceStore = defineStore("attendanceStore", () => {
       console.log(error);
     }
   };
+  //getAttendanceByCourseandStudentId
+  const getAttendanceByCourseandStudentId = async (
+    courseId: string,
+    studentId: string
+  ) => {
+    try {
+      const res = await attendaceService.getAttendanceByCourseandStudentId(
+        courseId,
+        studentId
+      );
+      attendances.value = res.data;
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return {
+    getAttendanceByCourseandStudentId,
     attendances,
     currentAttendance,
     createAttendance,

@@ -23,10 +23,13 @@ const userStore = useUserStore();
             <v-icon size="40" color="#819DA9">mdi mdi-book</v-icon>
           </v-list-item>
           </div>
+          <v-list-item link to="/userProfile">
+            <v-icon size="40" color="#819DA9">mdi mdi-account</v-icon>
+          </v-list-item>
+        </v-list>
           <v-list-item class="bottom-list-item" link to="/">
             <v-icon size="40" color="#819DA9">mdi-location-exit</v-icon>
           </v-list-item>
-        </v-list>
       </v-layout>
       <RouterView name="menu"></RouterView>
       <!-- แสดงเมนูที่เป็น dynamic component -->

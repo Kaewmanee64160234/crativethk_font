@@ -141,6 +141,35 @@ const router = createRouter({
       menu: () => import('../components/headers/SubHeader.vue'),
     },
   },
+  // profileView
+  {
+    path: '/userProfile',
+    name: 'userProfile',
+    components: {
+      default: () => import('../views/ProfileView.vue'),
+      header: () => import('../components/headers/MainHeader.vue'),
+      menu: () => import('../components/headers/SubHeader.vue'),
+    }, 
+  }, 
+  // chekinghistory
+  {
+    path: '/checkingHistory',
+    name: 'checkingHistory',
+    components: {
+      default: () => import('../views/checkingHistory.vue'),
+      header: () => import('../components/headers/MainHeader.vue'),
+      menu: () => import('../components/headers/SubHeader.vue'),
+    }, 
+  },
+  {
+  path: '/checkingHistory/:courseId',
+  name: 'checkingHistory',
+  components: {
+    default: () => import('../views/checkingHistory.vue'),
+    header: () => import('../components/headers/MainHeader.vue'),
+    menu: () => import('../components/headers/SubHeader.vue'),
+  }
+}
   ]
 })
 
