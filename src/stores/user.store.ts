@@ -19,6 +19,7 @@ export const useUserStore = defineStore("userStore", () => {
   const keyword = ref("");
   const messageStore = useMessageStore()
   const currentUser = ref<User>();
+  const register = ref<User[]>([]);
 
   const editUser = ref<User & { files: File[] }>({
     firstName: "",
@@ -191,6 +192,7 @@ const getUserFromLocalStorage = () => {
 
 
   return {
+    register,
     getCurrentUser,
     currentUser,
     getUserImage,

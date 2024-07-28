@@ -17,7 +17,6 @@ const uploadFile = async () => {
 
 onMounted(async () => {
     await userStore.getUsers();
-
 });
 
 const paginatedFiles = computed(() => {
@@ -35,26 +34,29 @@ const cancel = () => {
     selectedFile.value = null;
 };
 
-const goToUploadImage = (idUser:number) => {
-  router.push(`/uploadImage/${idUser}`);
-};
-
-const saveUser = () => {
-    for (let i = 0; i < userStore.file_.length; i++) {
-        const nameParts = userStore.file_[i].name.split(' ');
-        const firstName = nameParts[0];
-        const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
-        userStore.editUser.studentId = userStore.file_[i].id;
-        userStore.editUser.firstName = firstName;
-        userStore.editUser.lastName = lastName;
-        userStore.editUser.major = userStore.file_[i].major;
-        userStore.editUser.year = userStore.file_[i].year;
-        userStore.editUser.email = userStore.file_[i].id + "@go.buu.ac.th";
-        userStore.editUser.role = "นิสิต";
-        userStore.editUser.status = "กำลังศึกษา";
-        userStore.saveUser();
-        console.log("User saved", userStore.editUser);
+const saveUser = async () => {
+    userStore.register = [];
+        for (let i = 0; i < userStore.file_.length; i++) {
+            const nameParts = userStore.file_[i].name.split(' ');
+            const firstName = nameParts[0];
+            const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
+            userStore.editUser.studentId = userStore.file_[i].id;
+            userStore.editUser.firstName = firstName;
+            userStore.editUser.lastName = lastName;
+            userStore.editUser.major = userStore.file_[i].major;
+            userStore.editUser.year = userStore.file_[i].year;
+            userStore.editUser.email = userStore.file_[i].id + "@go.buu.ac.th";
+            userStore.editUser.role = "นิสิต";
+            userStore.editUser.status = "กำลังศึกษา";
+            const newUser = userStore.editUser;
+            userStore.register.push({ ...newUser });
+            await userStore.saveUser();
+            console.log("New User",i +" "+ userStore.register);
+        }
+        if (userStore.register.length > 0) {
+            router.push(`/uploadImage/${userStore.register[0].studentId}`);
     }
+    userStore.file_ = [];
 };
 </script>
 <template>
