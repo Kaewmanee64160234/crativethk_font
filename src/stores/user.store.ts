@@ -29,6 +29,8 @@ export const useUserStore = defineStore("userStore", () => {
     role: "",
     status: "",
     profileImage: "",
+    faceDescriptions:[],
+    
     files: [],
   });
 
