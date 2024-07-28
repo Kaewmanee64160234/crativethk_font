@@ -19,16 +19,16 @@ export interface User {
 }
 
 export function mapToUser(data: any): User {
-  // const faceDescriptions: Float32Array[] = [];
+  const faceDescriptions: string[] = [];
   const images: string[] = [];
 
   // Populate faceDescriptions from data
-  // for (let i = 1; i <= 5; i++) {
-  //   const faceDescriptionKey = `faceDescription${i}`;
-  //   if (data[faceDescriptionKey] && Array.isArray(data[faceDescriptionKey])) {
-  //     faceDescriptions.push(new Float32Array(data[faceDescriptionKey]));
-  //   }
-  // }
+  for (let i = 1; i <= 1; i++) {
+    const faceDescriptionKey = `faceDescription${i}`;
+    if (data[faceDescriptionKey]) {
+      faceDescriptions.push(data[faceDescriptionKey]);
+    }
+  }
 
   // Populate images from data
   for (let i = 1; i <= 1; i++) {
@@ -47,6 +47,9 @@ export function mapToUser(data: any): User {
     status: data.status,
     studentId: data.studentId,
     teacherId: data.teacherId,
+    year: data.year,
+    major: data.major,
+    faceDescriptions: faceDescriptions,
     // faceDescriptions: faceDescriptions,
     picture: data.picture,
     profileImage: data.profileImage,
