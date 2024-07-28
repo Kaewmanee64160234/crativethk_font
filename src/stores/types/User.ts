@@ -3,13 +3,15 @@ export interface User {
   firstName: string;
   lastName: string;
   email?: string;
+  year?: string;
+  major?: string;
   role?: string;
   status?: string;
   picture?: string;
   teacherId?: string;
   studentId?: string;
   profileImage?: string;
-  // faceDescriptions?: Float32Array[];
+  faceDescriptions?: string[];
   createdAt?: Date;
   updatedAt?: Date;
   access_token?: string;
