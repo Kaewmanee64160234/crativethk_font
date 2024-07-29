@@ -4,11 +4,13 @@ import assignmentService from "@/services/assignment";
 import type Assignment from "./types/Assignment";
 
 export const useAssignmentStore = defineStore("assignmentStore", () => {
-  const assignments = ref<Assignment[]>([
+  const assignments = ref<Assignment[] >([
     {
       assignmentId: 0,
 
       assignmentTime: new Date(),
+      imageAssignments: [""],
+      statusAssignment: "",
       nameAssignment: "",
       course: {
         userId: -1,
@@ -56,9 +58,9 @@ export const useAssignmentStore = defineStore("assignmentStore", () => {
     }
   };
   //create Assignment
-  const createAssignment = async (data: Assignment) => {
+  const createAssignment = async (data: Assignment,files:File[]) => {
     try {
-      const res = await assignmentService.createAssignment(data);
+      const res = await assignmentService.createAssignment(data,files);
       if (res.data) {
         assignment.value = res.data;
         console.log("assignment created", res.data);

@@ -120,6 +120,7 @@ const createPost = async () => {
     course: { ...courseStore.currentCourse! },
     assignmentId: 0,
     attdances: [],
+    
     status:"no data",
     room: room,
     createdDate: new Date(),
@@ -132,7 +133,7 @@ const createPost = async () => {
     newAssignment.nameAssignment = new Date().toLocaleString();
   }
 
-  await assignmentStore.createAssignment(newAssignment);
+  await assignmentStore.createAssignment(newAssignment,imageFiles.value);
   if (imageUrls.value.length > 0) {
     // image url and captured images are available
     imageUrls.value.push(...capturedImages.value);

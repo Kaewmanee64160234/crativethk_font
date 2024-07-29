@@ -10,9 +10,21 @@ function getAssignmentById(id:string) {
     return http.get(`/assignments/${id}`);
 }
 // createAssignment
-function createAssignment(data:Assignment) {
+function createAssignment(data:Assignment,files:File[]) {
     console.log("data",JSON.stringify(data));
-    return http.post("/assignments", {...data,date:new Date()});
+    const formData = new FormData();
+    files.forEach((file) => {
+        formData.append("files", file, file.name);
+    });
+    formData.append("nameAssignment", data.nameAssignment);
+    formData.append("assignmentTime", data.assignmentTime.toISOString());
+    formData.append("statusAssignment", data.statusAssignment);
+    formData.append("coursesId", data.course.coursesId);
+    // formData.append("room", data.room);
+
+
+
+    return http.post("/assignments", formData);
 }
 //get Assignment by course id
 function getAssignmentByCourseId(id:string) {
