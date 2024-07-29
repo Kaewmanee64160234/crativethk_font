@@ -19,4 +19,9 @@ function getAssignmentByCourseId(id:string) {
     return http.get(`/assignments/course/${id}`);
 }
 
-export default { getAssignment,createAssignment,getAssignmentById,getAssignmentByCourseId };
+// update Assignment
+function updateAssignment(id:string,data:Assignment) {
+    return http.patch(`/assignments/${id}`, data);
+}
+
+export default { getAssignment,createAssignment,getAssignmentById,getAssignmentByCourseId,updateAssignment };

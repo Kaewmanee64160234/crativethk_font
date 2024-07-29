@@ -80,6 +80,22 @@ export const useAssignmentStore = defineStore("assignmentStore", () => {
     }
   };
 
+  // update Assignment
+  const updateAssignment = async (id: string, data: Assignment) => {
+    try {
+      const res = await assignmentService.updateAssignment(id, data);
+      if (res.data) {
+        console.log("assignment updated", res.data);
+        await getAssignmentByCourseId(data.course.coursesId);
+      } else {
+        alert("Error updating assignment");
+      }
+    } catch (e) {
+      console.error("Error updating assignment:", e);
+    }
+  };
+
+
   // assignments.value.push(res.data);
 
   return {
@@ -90,5 +106,6 @@ export const useAssignmentStore = defineStore("assignmentStore", () => {
     createAssignment,
     currentAssignment,
     getAssignmentById,
+    updateAssignment
   };
 });

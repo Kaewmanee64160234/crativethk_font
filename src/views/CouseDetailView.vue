@@ -120,11 +120,17 @@ const createPost = async () => {
     course: { ...courseStore.currentCourse! },
     assignmentId: 0,
     attdances: [],
+    status:"no data",
     room: room,
     createdDate: new Date(),
     updatedDate: undefined,
     deletedDate: undefined,
   };
+
+  // if assignment.name is empty, set to currnet date time
+  if (newAssignment.nameAssignment === "") {
+    newAssignment.nameAssignment = new Date().toLocaleString();
+  }
 
   await assignmentStore.createAssignment(newAssignment);
   if (imageUrls.value.length > 0) {
