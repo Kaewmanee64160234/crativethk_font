@@ -138,6 +138,10 @@ onMounted(async () => {
       faceapi.nets.faceRecognitionNet.loadFromUri("/models"),
     ]);
 
+    console.log("Models loaded successfully");
+    console.log("Current Assignment:",  userStore.users);
+    
+
     const faceDescriptions = userStore.users.map((user) => user.faceDescriptions![0]);
     faceDescriptions.forEach((description, index) => {
       if (description) {
@@ -145,6 +149,11 @@ onMounted(async () => {
           const float32Array = base64ToFloat32Array(description);
           const user = userStore.users[index];
           userDescriptors.set(user.studentId!, float32Array);
+
+          // Added logging for debugging
+          console.log(`User: ${user.email}, Student ID: ${user.studentId}`);
+          console.log(`Face Description: ${description}`);
+          console.log(`Float32Array: ${float32Array}`);
         } catch (error) {
           console.error("Error decoding face description for user:", userStore.users[index].email, error);
         }
@@ -314,7 +323,6 @@ const confirmAttendance = async () => {
       outlined
       style="padding: 20px"
     >
-    {{  }}
       <v-card-title>
         <h1 class="text-h5">{{ courseStore.currentCourse?.nameCourses }}</h1>
       </v-card-title>
