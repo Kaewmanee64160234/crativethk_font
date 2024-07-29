@@ -36,6 +36,7 @@ export const useAssignmentStore = defineStore("assignmentStore", () => {
   ]);
   const assignment = ref<Assignment>();
   const currentAssignment = ref<Assignment>();
+  const dialogAssignmentTag = ref(false);
 
   //get
   const getAssignments = async () => {
@@ -108,6 +109,7 @@ export const useAssignmentStore = defineStore("assignmentStore", () => {
     createAssignment,
     currentAssignment,
     getAssignmentById,
-    updateAssignment
+    updateAssignment,
+    dialogAssignmentTag
   };
 });

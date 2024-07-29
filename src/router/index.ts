@@ -216,6 +216,16 @@ const router = createRouter({
       },
       // create page  not found
     },
+    // tagging face 
+    {
+      path: "/taggingFace/course/:courseId/assignment/:assignmentId",
+      name: "taggingFace",
+      components: {
+        default: () => import("../views/Attendance/ConfirmTaggingFaceView.vue"),
+        header: () => import("../components/headers/MainHeader.vue"),
+        menu: () => import("../components/headers/SubHeader.vue"),
+      },
+    },
     {
       // pagenot foun
       path: "/:catchAll(.*)",

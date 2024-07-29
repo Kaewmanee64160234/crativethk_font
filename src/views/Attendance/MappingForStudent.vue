@@ -88,8 +88,13 @@ const reCheckAttendance = async (attendance: Attendance) => {
 const goBackToCourseDetail = () => {
   router.push("/courseDetail/" + queryCourseId);
 };
+
+const confirmTagging = () => {
+  router.push("/taggingFace/course/" + queryCourseId+"/assignment/"+route.params.assignmentId);
+};
 </script>
 <template>
+  
   <v-container class="fill-height" style="margin-top: 5%">
     <v-card class="mx-auto card-style" outlined color="primary">
       <v-card-title class="card-title">
@@ -182,7 +187,7 @@ const goBackToCourseDetail = () => {
               <div class="subtitle-1 bold-text mt-2">
                 ไม่สามารถตรวจจับการเข้าร่วมของคุณได้
               </div>
-              <v-btn class="mt-3" color="primary" @click="confirmAttendance">
+              <v-btn class="mt-3" color="primary" @click="confirmTagging()">
                 ยืนยันว่าคุณอยู่ในห้องเรียน
               </v-btn>
             </div>
