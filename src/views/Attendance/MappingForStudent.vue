@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useAttendanceStore } from "../../stores/attendance.store";
-import { onMounted } from "vue";
+import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import { useUserStore } from "@/stores/user.store";
 import router from "@/router";
@@ -17,6 +17,7 @@ const userStore = useUserStore();
 const courseStore = useCourseStore();
 const assignmentStore = useAssignmentStore();
 const messageStore = useMessageStore();
+const attdent = ref<Attendance[]>([]);
 
 onMounted(async () => {
   await userStore.getCurrentUser();
@@ -25,6 +26,7 @@ onMounted(async () => {
   console.log(JSON.stringify(assignmentStore.currentAssignment));
   await attendanceStore.getAttendanceByAssignmentId(route.params.assignmentId.toString());
   await userStore.getUserByCourseId(courseStore.currentCourse!.coursesId!);
+   attdent.value = attendanceStore.attendances?.filter((attdent) => attdent.user?.studentId === userStore.currentUser?.studentId);
 });
 
 //confirm attendance
@@ -86,21 +88,21 @@ const goBackToCourseDetail = () => {
 };
 </script>
 <template>
-  <v-container style="margin-top: 5%">
-    <v-card
-      class="mx-auto"
-      color="primary"
-      max-width="1200"
-      outlined
-      style="padding: 20px"
-    >
-      <v-card-title>
-        <h1 class="text-h5">{{ courseStore.currentCourse?.nameCourses }}</h1>
-      </v-card-title>
-    </v-card>
-    <h1>ตรวจสอบการเข้าเรียน</h1>
+  <v-container class="fill-height" style="margin-top: 5%">
+    <v-card 
+          class="mx-auto card-style"
+          color="primary"
+          max-width="1200"
+          outlined
+          style="padding: 20px"
+        >
+          <v-card-title>
+            <h1 class="text-h5">{{ courseStore.currentCourse?.nameCourses }}</h1>
+          </v-card-title>
+        </v-card>
+    <h1 class="title mt-5">ตรวจสอบการเข้าเรียน</h1>
 
-    <v-btn
+    <!-- <v-btn
       fab
       dark
       icon
@@ -109,71 +111,203 @@ const goBackToCourseDetail = () => {
       right
       color="blue"
       @click="goBackToCourseDetail"
-      style="top: 0; right: 0"
+      class="back-btn"
       :to="`/courseDetail/${courseStore.currentCourse?.coursesId!}`"
     >
       <v-icon>mdi-arrow-left</v-icon>
-    </v-btn>
+    </v-btn> -->
 
-    <!-- Main content layout -->
-    <v-row>
-      <v-col
-        v-for="student in attendanceStore.attendances"
-        :key="student.attendanceId"
-        cols="12"
-        sm="6"
-        md="4"
-      >
-        <v-card class="pa-3" outlined color="#D9D9D9">
-          <!-- Student Information -->
-          <v-row justify="center" align="center">
-            <div class="d-flex flex-column">
-              <div v-if="student.user">
-                <div class="subtitle-1 bold-text mt-2">
-                  <v-icon small>mdi-circle-small</v-icon>
-                  {{ student.user.studentId + " " + student.user.firstName }}
+    <!-- Conditional rendering for attendance data -->
+     <!-- {{ userStore.currentUser?.role }} -->
+    <v-row v-if="userStore.currentUser?.role == 'อาจารย์'" style="width: 100%;">
+        <v-col style="width: 100%;"
+          v-for="student in attendanceStore.attendances"
+          :key="student.attendanceId"
+          cols="12"
+          sm="6"
+          md="4"
+          lg="3"
+        >
+          <v-card class="pa-3 student-card" outlined>
+            <!-- Student Information -->
+            <v-row justify="center" align="center">
+              <div class="d-flex flex-column align-items-center">
+                <div v-if="student.user">
+                  <div class="subtitle-1 bold-text mt-2">
+                    <v-icon small class="mr-1">mdi-account-circle</v-icon>
+                    {{ student.user.studentId + " " + student.user.firstName }}
+                  </div>
+                </div>
+                <div v-else class="text-center red--text bold-text mt-2">
+                  <v-icon small class="mr-1">mdi-alert-circle</v-icon>ระบุไม่ได้
                 </div>
               </div>
-              <div v-else class="text-center red--text bold-text mt-2">
-                <v-icon small>mdi-circle-small</v-icon>ระบุไม่ได้
-              </div>
-            </div>
-          </v-row>
-          <v-row>
-            <!-- Student Image -->
-            <v-img
-              :src="`${url}/attendances/image/${student.attendanceImage}`"
-              height="200px"
-              width="140px"
-              class="mr-3 rounded-lg"
-              :alt="`Student Image for ${
-                student.user ? student.user.firstName : 'Unknown'
-              }`"
-            ></v-img>
-          </v-row>
+            </v-row>
+            <v-row justify="center">
+              <!-- Student Image -->
+              <v-img
+                :src="`${url}/attendances/image/${student.attendanceImage}`"
+                height="200px"
+                width="140px"
+                class="rounded-lg"
+                :alt="`Student Image for ${
+                  student.user ? student.user.firstName : 'Unknown'
+                }`"
+              ></v-img>
+            </v-row>
 
-          <!-- Re-check Button -->
-          <v-row class="mt-3">
-            <v-col cols="12">
-              <v-btn block color="#F6BB49" @click="reCheckAttendance(student)">
-                ตรวจสอบอีกครั้ง
+            <!-- Re-check Button -->
+            <v-row class="mt-3">
+              <v-col cols="12">
+                <v-btn block color="#F6BB49" @click="reCheckAttendance(student)">
+                  ตรวจสอบอีกครั้ง
+                </v-btn>
+              </v-col>
+            </v-row>
+          </v-card>
+        </v-col>
+      
+    
+    </v-row>
+
+    <!-- No attendance detected -->
+    <v-row v-else>
+      <v-col v-if="attdent.length>0" cols="12">
+        <v-col style="width: 100%;"
+          v-for="student in attdent"
+          :key="student.attendanceId"
+          cols="12"
+          sm="6"
+          md="4"
+          lg="3"
+        >
+          <v-card class="pa-3 student-card" outlined>
+            <!-- Student Information -->
+            <v-row justify="center" align="center">
+              <div class="d-flex flex-column align-items-center">
+                <div v-if="student.user">
+                  <div class="subtitle-1 bold-text mt-2">
+                    <v-icon small class="mr-1">mdi-account-circle</v-icon>
+                    {{ student.user.studentId + " " + student.user.firstName }}
+                  </div>
+                </div>
+                <div v-else class="text-center red--text bold-text mt-2">
+                  <v-icon small class="mr-1">mdi-alert-circle</v-icon>ระบุไม่ได้
+                </div>
+              </div>
+            </v-row>
+            <v-row justify="center">
+              <!-- Student Image -->
+              <v-img
+                :src="`${url}/attendances/image/${student.attendanceImage}`"
+                height="200px"
+                width="140px"
+                class="rounded-lg"
+                :alt="`Student Image for ${
+                  student.user ? student.user.firstName : 'Unknown'
+                }`"
+              ></v-img>
+            </v-row>
+
+            <!-- Re-check Button -->
+            <v-row class="mt-3">
+              <v-col cols="12">
+                <v-btn block color="#F6BB49" @click="reCheckAttendance(student)">
+                  ตรวจสอบอีกครั้ง
+                </v-btn>
+              </v-col>
+            </v-row>
+          </v-card>
+        </v-col>
+         
+      </v-col>
+      <v-col v-if="attdent.length==0" cols="12">
+        <v-card class="pa-3 student-card" outlined>
+          <v-row class="align-center justify-center">
+            <div class="text-center">
+              <div class="subtitle-1 bold-text mt-2">
+                ไม่สามารถตรวจจับการเข้าร่วมของคุณได้
+              </div>
+              <v-btn class="mt-3" color="primary" @click="confirmAttendance">
+                ยืนยันว่าคุณอยู่ในห้องเรียน
               </v-btn>
-            </v-col>
+            </div>
           </v-row>
         </v-card>
       </v-col>
     </v-row>
-
-    <!-- Floating 'Back to Course Details' Button -->
   </v-container>
 </template>
 
-<style>
+<style scoped>
+.fill-height {
+  min-width: 80;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.card-style {
+
+  border-radius: 12px;
+  padding: 24px;
+  width: 100%;
+}
+
+.card-title {
+  text-align: center;
+  color: white;
+}
+
+.title {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.back-btn {
+  top: 0;
+  right: 0;
+  z-index: 10;
+  margin-top: 20px;
+}
+
 .v-btn--active {
   background-color: #4caf50 !important;
   /* Active state color for 'เข้าเรียน' button when active */
 }
+
 .bold-text {
   font-weight: bold;
 }
+
+.pa-3 {
+  padding: 24px !important;
+}
+
+.subtitle-1 {
+  font-size: 1.25rem;
+}
+
+.student-card {
+  background-color: #ffffff;
+  border-radius: 8px;
+  transition: box-shadow 0.3s;
+  width: 100%;
+}
+
+.student-card:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.v-img {
+  object-fit: cover;
+}
+
+.v-btn {
+  text-transform: none;
+}
 </style>
+
