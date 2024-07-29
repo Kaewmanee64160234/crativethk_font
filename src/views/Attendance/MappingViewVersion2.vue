@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, nextTick } from "vue";
 import * as faceapi from "face-api.js";
-import { useAuthStore } from "@/stores/auth";
-import type { FaceDetection, WithFaceLandmarks, WithFaceDescriptor } from "face-api.js";
-import { useAssignmentStore } from "@/stores/assignment.store";
-import { useAttendanceStore } from "@/stores/attendance.store";
 import { useUserStore } from "@/stores/user.store";
-import type { User } from "@/stores/types/User";
-import { useCourseStore } from "@/stores/course.store";
 import { useRoute, useRouter } from "vue-router";
+import type { FaceDetection, WithFaceLandmarks, WithFaceDescriptor } from "face-api.js";
+import type { User } from "@/stores/types/User";
+import assignment from "@/services/assignment";
+import { useAssignmentStore } from "@/stores/assignment.store";
+import { useCourseStore } from "@/stores/course.store";
+import { useAttendanceStore } from "@/stores/attendance.store";
 
 interface CanvasRefs {
   [key: number]: HTMLCanvasElement;
@@ -17,6 +17,30 @@ interface CanvasRefs {
 interface Identification {
   name: string;
   studentId: string;
+  imageUrl: string;
+}
+function float32ArrayToBase64(float32Array: Float32Array): string {
+  const uint8Array = new Uint8Array(float32Array.buffer);
+  let binary = '';
+  for (let i = 0; i < uint8Array.byteLength; i++) {
+    binary += String.fromCharCode(uint8Array[i]);
+  }
+  return btoa(binary);
+}
+
+function base64ToFloat32Array(base64: string): Float32Array {
+  try {
+    const binaryString = atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return new Float32Array(bytes.buffer);
+  } catch (error) {
+    console.error("Failed to decode base64 string:", base64, error);
+    throw error;
+  }
 }
 
 const setCanvasRef = (index) => (el) => {
@@ -29,11 +53,11 @@ const croppedImagesDataUrls = ref<string[]>([]);
 const canvasRefs = reactive<CanvasRefs>({});
 const userDescriptors = new Map<string, Float32Array>();
 const userStore = useUserStore();
-const courseStore = useCourseStore();
 const route = useRoute();
-const assigmentStore = useAssignmentStore();
-const attendaceStore = useAttendanceStore();
+const courseStore = useCourseStore();
 const router = useRouter();
+const assignmentStore = useAssignmentStore();
+const attendaceStore = useAttendanceStore();
 
 async function processImage(image, index) {
   const canvas = canvasRefs[index] || document.createElement("canvas");
@@ -59,7 +83,7 @@ async function processImage(image, index) {
 
       cropCanvas.width = width;
       cropCanvas.height = height;
-      cropCtx.drawImage(image, x, y, width, height, 0, 0, width, height);
+      cropCtx!.drawImage(image, x, y, width, height, 0, 0, width, height);
 
       const croppedDataURL = cropCanvas.toDataURL();
       croppedImagesDataUrls.value.push(croppedDataURL);
@@ -114,11 +138,23 @@ onMounted(async () => {
       faceapi.nets.faceRecognitionNet.loadFromUri("/models"),
     ]);
 
-    const imagesPath = userStore.users.map((user) => user.images![0]);
-    await loadUserImagesAndDescriptors(imagesPath);
+    const faceDescriptions = userStore.users.map((user) => user.faceDescriptions![0]);
+    faceDescriptions.forEach((description, index) => {
+      if (description) {
+        try {
+          const float32Array = base64ToFloat32Array(description);
+          const user = userStore.users[index];
+          userDescriptors.set(user.studentId!, float32Array);
+        } catch (error) {
+          console.error("Error decoding face description for user:", userStore.users[index].email, error);
+        }
+      } else {
+        console.warn("No face description found for user:", userStore.users[index].email);
+      }
+    });
 
     const urls: string[] = route.query.imageUrls || [];
-    console.log(urls)
+    console.log(urls);
     imageUrls.value = urls;
     imageUrls.value.forEach((url, index) => {
       nextTick(() => loadImageAndProcess(url, index));
@@ -129,26 +165,7 @@ onMounted(async () => {
   }
 });
 
-async function loadUserImagesAndDescriptors(imagesPath: string[]): Promise<void> {
-  for (const path of imagesPath) {
-    try {
-      const img = await loadImage(`http://localhost:3000/users/image/filename/${path}`);
-      const detection = await faceapi
-        .detectSingleFace(img)
-        .withFaceLandmarks()
-        .withFaceDescriptor();
-      if (detection) {
-        userDescriptors.set(
-          userStore.users.find((u) => u.images!.includes(path))!.studentId!,
-          detection.descriptor
-        );
-      }
-    } catch (error) {
-      console.error("Error loading user images and descriptors:", error);
-    }
-  }
-}
-
+// Existing functions
 async function loadImage(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -259,7 +276,7 @@ const confirmAttendance = async () => {
           attendanceDate: new Date(),
           attendanceStatus: "present",
           attendanceConfirmStatus: identifiedUser ? "confirmed" : "notConfirmed",
-          assignment: assigmentStore.assignment,
+          assignment: assignmentStore.assignment,
           user: identifiedUser,
           attendanceImage: "",
         },
@@ -279,12 +296,14 @@ const confirmAttendance = async () => {
     }
   }
   if (userStore.currentUser?.role === "อาจารย์") {
-    router.push("/reCheckMappingTeacher/" + assigmentStore.assignment?.assignmentId);
+    router.push("/reCheckMappingTeacher/" + assignmentStore.assignment?.assignmentId);
   } else {
-    router.push("/mappingForStudent/" + assigmentStore.assignment?.assignmentId);
+    router.push("/mappingForStudent/" + assignmentStore.assignment?.assignmentId);
   }
 };
 </script>
+
+
 
 <template>
   <v-container style="margin-top: 10%">
@@ -295,6 +314,7 @@ const confirmAttendance = async () => {
       outlined
       style="padding: 20px"
     >
+    {{  }}
       <v-card-title>
         <h1 class="text-h5">{{ courseStore.currentCourse?.nameCourses }}</h1>
       </v-card-title>

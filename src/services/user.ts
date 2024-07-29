@@ -58,10 +58,11 @@ function updateUser(user: User & { files: File[] }, userId: number) {
   formData.append("status", user.status!);
 
   // Append files and face descriptions
-  for (let i = 0; i < user.files.length; i++) {
-    if (user.files[i]) {
-      formData.append("files", user.files[i], user.files[i].name);
-      // formData.append(`faceDescription${i + 1}`, JSON.stringify(user.faceDescriptions![i]));
+  if (user.faceDescriptions!.length > 0) {
+    // Append files and face descriptions
+    for (let i = 0; i < user.faceDescriptions!.length; i++) {
+      formData.append("files", user.files[i], user.files[i].name); // Ensure there are exactly 5 files
+      formData.append(`faceDescription${i + 1}`, user.faceDescriptions![i]);
     }
   }
 

@@ -69,14 +69,13 @@ async function processFiles(files: File[]): Promise<Float32Array[]> {
 
     return faceDescriptions;
 }
-function float32ArrayToBase64(float32Array:Float32Array) {
+function float32ArrayToBase64(float32Array) {
+  const uint8Array = new Uint8Array(float32Array.buffer);
   let binary = '';
-  const bytes = new Uint8Array(float32Array.buffer);
-  const len = bytes.byteLength;
-  for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i]);
+  for (let i = 0; i < uint8Array.byteLength; i++) {
+    binary += String.fromCharCode(uint8Array[i]);
   }
-  return window.btoa(binary);
+  return btoa(binary);
 }
 </script>
 <template>
