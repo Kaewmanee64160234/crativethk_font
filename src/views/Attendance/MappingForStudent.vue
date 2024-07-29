@@ -18,6 +18,7 @@ const courseStore = useCourseStore();
 const assignmentStore = useAssignmentStore();
 const messageStore = useMessageStore();
 const attdent = ref<Attendance[]>([]);
+const queryCourseId = route.params.courseId;
 
 onMounted(async () => {
   await userStore.getCurrentUser();
@@ -25,9 +26,9 @@ onMounted(async () => {
   await assignmentStore.getAssignmentById(route.params.assignmentId.toString());
   console.log(JSON.stringify(assignmentStore.currentAssignment));
   await attendanceStore.getAttendanceByAssignmentId(route.params.assignmentId.toString());
-  await userStore.getUserByCourseId(courseStore.currentCourse!.coursesId!);
+  await userStore.getUserByCourseId(queryCourseId+'');
   attdent.value = [];
-  attdent.value.push(...attendanceStore.attendances!.filter((attend: Attendance) => (attend.user?.studentId === userStore.currentUser?.studentId) && (attend.attendanceImage != null)));
+  attdent.value.push(...attendanceStore.attendances!.filter((attend: Attendance) => (attend.user?.studentId === userStore.currentUser?.studentId) && (attend.attendanceImage !== '')));
 });
 
 //confirm attendance
@@ -77,7 +78,7 @@ const reCheckAttendance = async (attendance: Attendance) => {
     console.log(JSON.stringify(attendance));
 
     await attendanceStore.confirmAttendance(attendance);
-    router.push("/courseDetail/" + courseStore.currentCourse?.coursesId);
+    router.push("/courseDetail/" + queryCourseId);
     // router.push('/resheckMappingTeacher/' + assignmentStore.currentAssignment?.assignmentId); // Replace '/next-page-route' with your specific route
   } catch (error) {
     console.log(error);
@@ -85,7 +86,7 @@ const reCheckAttendance = async (attendance: Attendance) => {
 };
 
 const goBackToCourseDetail = () => {
-  router.push("/courseDetail/" + courseStore.currentCourse?.coursesId);
+  router.push("/courseDetail/" + queryCourseId);
 };
 </script>
 <template>
@@ -101,7 +102,6 @@ const goBackToCourseDetail = () => {
       :to="`/courseDetail/${courseStore.currentCourse?.coursesId!}`">
       <v-icon>mdi-arrow-left</v-icon>
     </v-btn>
-    {{ attdent }}
     <!-- Conditional rendering for attendance data -->
     <v-row v-if="userStore.currentUser?.role == 'อาจารย์'" style="width: 100%;">
       <v-col v-for="student in attendanceStore.attendances" :key="student.attendanceId" cols="12" sm="6" md="4" lg="3">
