@@ -1,14 +1,29 @@
 <script lang="ts" setup>
 import { useMessageStore } from '@/stores/message';
 import { useUserStore } from '@/stores/user.store';
+import * as faceapi from 'face-api.js';
+import { onMounted } from 'vue';
+onMounted(async () => {
+    await loadModels();
+});
+
 const userStore = useUserStore();
 const url = 'http://localhost:3000';
 async function save() {
+    const faceDescriptions = await processFiles(userStore.editUser.files);
+    const dataFaceBase64 = faceDescriptions.map( (faceDescription) => float32ArrayToBase64(faceDescription));
+    userStore.editUser.faceDescriptions = dataFaceBase64;
+    console.log(userStore.editUser.faceDescriptions);
+    
     await userStore.saveUser();
     userStore.resetUser();
-    window.location.reload();
+    // window.location.reload();
 }
-
+async function loadModels() {
+    await faceapi.nets.ssdMobilenetv1.loadFromUri('/models');
+    await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
+    await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
+}
 async function cancel() {
     userStore.resetUser();
     userStore.closeDialog();
@@ -18,7 +33,50 @@ async function cancel() {
 if (!userStore.editUser.role) {
   userStore.editUser.role = 'นิสิต';
 }
+async function createImageElement(file: File): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
 
+        reader.onload = () => {
+            const img = new Image();
+            img.src = reader.result as string;
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+        };
+
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+async function processFiles(files: File[]): Promise<Float32Array[]> {
+    const faceDescriptions: Float32Array[] = [];
+    
+
+    for (const file of files) {
+        const imgElement = await createImageElement(file);
+        const faceDescription = await faceapi
+            .detectSingleFace(imgElement, new faceapi.SsdMobilenetv1Options())
+            .withFaceLandmarks()
+            .withFaceDescriptor();
+
+        if (faceDescription) {
+            faceDescriptions.push(faceDescription.descriptor);
+        }
+
+        // Clean up the created image element
+        imgElement.remove();
+    }
+
+    return faceDescriptions;
+}
+function float32ArrayToBase64(float32Array) {
+  const uint8Array = new Uint8Array(float32Array.buffer);
+  let binary = '';
+  for (let i = 0; i < uint8Array.byteLength; i++) {
+    binary += String.fromCharCode(uint8Array[i]);
+  }
+  return btoa(binary);
+}
 </script>
 <template>
     <v-container>

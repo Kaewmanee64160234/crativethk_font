@@ -32,6 +32,8 @@ export const useUserStore = defineStore("userStore", () => {
     year: "",
     major: "",
     profileImage: "",
+    faceDescriptions:[],
+    
     files: [],
   });
 

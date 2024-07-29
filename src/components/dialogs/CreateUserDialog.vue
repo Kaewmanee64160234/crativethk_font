@@ -18,8 +18,12 @@ async function loadModels() {
     await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
 }
 async function save() {
-        await userStore.saveUser();
-        userStore.resetUser();
+    const faceDescriptions = await processFiles(userStore.editUser.files);
+    const dataFaceBase64 = faceDescriptions.map( (faceDescription) => float32ArrayToBase64(faceDescription));
+    console.log(dataFaceBase64);
+    userStore.editUser.faceDescriptions = dataFaceBase64;
+    await userStore.saveUser();
+        // userStore.resetUser();
 }
 
 async function cancel() {
@@ -46,6 +50,7 @@ async function createImageElement(file: File): Promise<HTMLImageElement> {
 }
 async function processFiles(files: File[]): Promise<Float32Array[]> {
     const faceDescriptions: Float32Array[] = [];
+    
 
     for (const file of files) {
         const imgElement = await createImageElement(file);
@@ -64,10 +69,18 @@ async function processFiles(files: File[]): Promise<Float32Array[]> {
 
     return faceDescriptions;
 }
-
+function float32ArrayToBase64(float32Array) {
+  const uint8Array = new Uint8Array(float32Array.buffer);
+  let binary = '';
+  for (let i = 0; i < uint8Array.byteLength; i++) {
+    binary += String.fromCharCode(uint8Array[i]);
+  }
+  return btoa(binary);
+}
 </script>
 <template>
     <v-container>
+         1
         <v-row justify="center">
             <v-card class="mx-auto" style="width: 70vw; padding: 30px;">
                 <v-card-title class="pb-0">เพิ่มผู้ใช้</v-card-title>

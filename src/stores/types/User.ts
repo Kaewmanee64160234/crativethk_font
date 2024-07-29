@@ -3,6 +3,8 @@ export interface User {
   firstName: string;
   lastName: string;
   email?: string;
+  year?: string;
+  major?: string;
   role?: string;
   status?: string;
   picture?: string;
@@ -11,7 +13,7 @@ export interface User {
   teacherId?: string;
   studentId?: string;
   profileImage?: string;
-  // faceDescriptions?: Float32Array[];
+  faceDescriptions?: string[];
   createdAt?: Date;
   updatedAt?: Date;
   access_token?: string;
@@ -19,16 +21,16 @@ export interface User {
 }
 
 export function mapToUser(data: any): User {
-  // const faceDescriptions: Float32Array[] = [];
+  const faceDescriptions: string[] = [];
   const images: string[] = [];
 
   // Populate faceDescriptions from data
-  // for (let i = 1; i <= 5; i++) {
-  //   const faceDescriptionKey = `faceDescription${i}`;
-  //   if (data[faceDescriptionKey] && Array.isArray(data[faceDescriptionKey])) {
-  //     faceDescriptions.push(new Float32Array(data[faceDescriptionKey]));
-  //   }
-  // }
+  for (let i = 1; i <= 1; i++) {
+    const faceDescriptionKey = `faceDescriptor${i}`;
+    if (data[faceDescriptionKey]) {
+      faceDescriptions.push(data[faceDescriptionKey]);
+    }
+  }
 
   // Populate images from data
   for (let i = 1; i <= 1; i++) {
@@ -49,6 +51,9 @@ export function mapToUser(data: any): User {
     major: data.major,
     studentId: data.studentId,
     teacherId: data.teacherId,
+    year: data.year,
+    major: data.major,
+    faceDescriptions: faceDescriptions,
     // faceDescriptions: faceDescriptions,
     picture: data.picture,
     profileImage: data.profileImage,
