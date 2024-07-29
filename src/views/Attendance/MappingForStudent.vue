@@ -26,7 +26,8 @@ onMounted(async () => {
   console.log(JSON.stringify(assignmentStore.currentAssignment));
   await attendanceStore.getAttendanceByAssignmentId(route.params.assignmentId.toString());
   await userStore.getUserByCourseId(courseStore.currentCourse!.coursesId!);
-  attdent.value = attendanceStore.attendances?.filter((attdent) => attdent.user?.studentId === userStore.currentUser?.studentId);
+  attdent.value = [];
+  attdent.value.push(...attendanceStore.attendances!.filter((attend: Attendance) => (attend.user?.studentId === userStore.currentUser?.studentId) && (attend.attendanceImage != null)));
 });
 
 //confirm attendance
@@ -96,21 +97,11 @@ const goBackToCourseDetail = () => {
     </v-card>
     <h1 class="title mt-5">ตรวจสอบการเข้าเรียน</h1>
 
-    <v-btn
-      fab
-      dark
-      icon
-      absolute
-      top
-      right
-      color="blue"
-      @click="goBackToCourseDetail"
-      class="back-btn"
-      :to="`/courseDetail/${courseStore.currentCourse?.coursesId!}`"
-    >
+    <v-btn fab dark icon absolute top right color="blue" @click="goBackToCourseDetail" class="back-btn"
+      :to="`/courseDetail/${courseStore.currentCourse?.coursesId!}`">
       <v-icon>mdi-arrow-left</v-icon>
     </v-btn>
-
+    {{ attdent }}
     <!-- Conditional rendering for attendance data -->
     <v-row v-if="userStore.currentUser?.role == 'อาจารย์'" style="width: 100%;">
       <v-col v-for="student in attendanceStore.attendances" :key="student.attendanceId" cols="12" sm="6" md="4" lg="3">
@@ -131,15 +122,9 @@ const goBackToCourseDetail = () => {
           </v-row>
           <v-row justify="center">
             <!-- Student Image -->
-            <v-img
-              :src="`${url}/attendances/image/${student.attendanceImage}`"
-              height="200px"
-              width="140px"
-              class="rounded-lg"
-              :alt="`Student Image for ${
-                student.user ? student.user.firstName : 'Unknown'
-              }`"
-            ></v-img>
+            <v-img :src="`${url}/attendances/image/${student.attendanceImage}`" height="200px" width="140px"
+              class="rounded-lg" :alt="`Student Image for ${student.user ? student.user.firstName : 'Unknown'
+                }`"></v-img>
           </v-row>
 
           <!-- Re-check Button -->
@@ -156,7 +141,8 @@ const goBackToCourseDetail = () => {
 
     <!-- No attendance detected -->
     <v-row v-else style="width: 100%;">
-      <v-col v-if="attdent.length > 0" v-for="student in attdent" :key="student.attendanceId" cols="12" sm="6" md="4" lg="3">
+      <v-col v-if="attdent.length > 0" v-for="student in attdent" :key="student.attendanceId" cols="12" sm="6" md="4"
+        lg="3">
         <v-card class="pa-3 student-card" outlined>
           <!-- Student Information -->
           <v-row justify="center" align="center">
@@ -174,15 +160,9 @@ const goBackToCourseDetail = () => {
           </v-row>
           <v-row justify="center">
             <!-- Student Image -->
-            <v-img
-              :src="`${url}/attendances/image/${student.attendanceImage}`"
-              height="200px"
-              width="140px"
-              class="rounded-lg"
-              :alt="`Student Image for ${
-                student.user ? student.user.firstName : 'Unknown'
-              }`"
-            ></v-img>
+            <v-img :src="`${url}/attendances/image/${student.attendanceImage}`" height="200px" width="140px"
+              class="rounded-lg" :alt="`Student Image for ${student.user ? student.user.firstName : 'Unknown'
+                }`"></v-img>
           </v-row>
 
           <!-- Re-check Button -->
@@ -282,4 +262,3 @@ const goBackToCourseDetail = () => {
   text-transform: none;
 }
 </style>
-
