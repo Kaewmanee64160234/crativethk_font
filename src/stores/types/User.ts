@@ -31,7 +31,7 @@ export function mapToUser(data: any): User {
   }
 
   // Populate images from data
-  for (let i = 1; i <= 1; i++) {
+  for (let i = 1; i <= 5; i++) {
     const imageKey = `image${i}`;
     if (data[imageKey] && data[imageKey] !== "no-image.jpg") {
       images.push(data[imageKey]);

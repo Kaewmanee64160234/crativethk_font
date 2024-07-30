@@ -11,6 +11,7 @@ export const useUserStore = defineStore("userStore", () => {
   const searchQuery = ref<string>("");
   const files = ref([] as {id:string, name:string,major:string,year:string}[]);
   const showDialog = ref(false);
+  const showImageDialog = ref(false);
   const showDialog2 = ref(false);
   const showDialog3 = ref(false);
   const showDeleteDialog = ref(false);
@@ -125,6 +126,11 @@ export const useUserStore = defineStore("userStore", () => {
     showEditDialog.value = false;
     showEditDialog2.value = false;
   };
+
+  const closeImageDialog = () => {
+    showImageDialog.value = false;
+  }
+
   //create function to get current user from local storage
   const getCurrentUser = async () => {
     const userString = localStorage.getItem("users");
@@ -210,6 +216,8 @@ const getUserFromLocalStorage = () => {
     getUserByCourseId,
     getUserFromLocalStorage,
     getFileUser,
-    files
+    files,
+    showImageDialog,
+    closeImageDialog,
   };
 });

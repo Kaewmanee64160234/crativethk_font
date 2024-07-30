@@ -4,6 +4,7 @@ import { useUserStore } from '@/stores/user.store';
 import { useCourseStore } from "@/stores/course.store";
 import { useEnrollmentStore } from "@/stores/enrollment.store";
 import { useRouter } from 'vue-router'; // Import the 'useRouter' function from the 'vue-router' package
+import ImageDialog from '@/components/dialogs/ImageDialog.vue';
 import type Course from '../stores/types/Course';
 const tab = ref(0);
 const userStore = useUserStore();
@@ -21,6 +22,7 @@ const isTeacher = computed(() => userStore.currentUser?.role === 'อาจา�
 const showChekingHistory = (course: Course) => {
     router.push('/checkingHistory/' + course.coursesId);
 };
+
 
 onMounted(async () => {
   await courseStore.getCourseByTeachId(userStore.currentUser!.teacherId!);
@@ -44,18 +46,28 @@ onMounted(async () => {
                             </v-col>
                             <v-col cols="12" md="8" v-if="userStore.currentUser">
                                 <v-row>
-                                    <v-col cols="12">
-                                        <strong v-if="isStudent">รหัสนิสิต: </strong>{{ userStore.currentUser?.studentId
+                                    <v-col cols="12"  v-if="isStudent">
+                                        <strong>รหัสนิสิต: </strong>{{ userStore.currentUser?.studentId
                                         }}
-                                        <strong v-if="isTeacher">รหัสอาจารย์: </strong>{{
-                                        userStore.currentUser?.teacherId }}
                                     </v-col>
                                     <v-col cols="12">
                                         <strong>ชื่อ-นามสกุล: </strong>{{ userStore.currentUser?.firstName }} {{
                                         userStore.currentUser?.lastName }}
                                     </v-col>
+                                    <v-col cols="12" v-if="isStudent">
+                                        <strong>ชั้นปี: </strong>{{ userStore.currentUser?.year }}
+                                    </v-col>
+                                    <v-col cols="12" v-if="isStudent">
+                                        <strong>สาขา: </strong>{{ userStore.currentUser?.major }} 
+                                    </v-col>
+                                    <v-col cols="12" v-if="isTeacher">
+                                        <strong>ตำแหน่ง: </strong>{{ userStore.currentUser?.role }}
+                                    </v-col>
+                                    <v-col cols="12" v-if="isTeacher">
+                                        <strong>สถานะภาพ: </strong>{{ userStore.currentUser?.status }}
+                                    </v-col>
                                     <v-col cols="12">
-                                        <v-btn color="blue">แสดงรูปภาพทั้งหมด</v-btn>
+                                        <v-btn color="blue" @click="userStore.showImageDialog = true">แสดงรูปภาพทั้งหมด</v-btn>
                                     </v-col>
                                 </v-row>
                             </v-col>
@@ -112,6 +124,9 @@ onMounted(async () => {
             </v-col>
         </v-row>
     </v-container>
+    <v-dialog v-model="userStore.showImageDialog" persistent>
+        <ImageDialog></ImageDialog>
+    </v-dialog>
 </template>
 
 <style scoped>

@@ -80,7 +80,6 @@ function float32ArrayToBase64(float32Array) {
 </script>
 <template>
     <v-container>
-         1
         <v-row justify="center">
             <v-card class="mx-auto" style="width: 70vw; padding: 30px;">
                 <v-card-title class="pb-0">เพิ่มผู้ใช้</v-card-title>
