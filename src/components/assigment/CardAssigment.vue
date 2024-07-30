@@ -3,8 +3,10 @@ import { defineProps } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAssignmentStore } from '@/stores/assignment.store';
 import type Assignment from '@/stores/types/Assignment';
+import { useCourseStore } from '@/stores/course.store';
 
 const router = useRouter();
+const courseStore = useCourseStore();
 
 const props = defineProps<{
     post: Assignment
@@ -26,7 +28,7 @@ const goToMapping2 = () => {
 
 const gotoMappinfForStudent = () => {
     assignmentStore.currentAssignment = props.post;
-    router.push('/mappingForStudent/'+props.post.assignmentId);
+    router.push("/mappingForStudent/course/"+ courseStore.currentCourse?.coursesId+"/assignment/"+props.post.assignmentId);
 }
 
 </script>

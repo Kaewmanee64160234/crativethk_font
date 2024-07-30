@@ -7,7 +7,8 @@ import ConfirmDialog from '@/components/dialogs/ConfirmDialog.vue';
 import type { User } from '@/stores/types/User';
 import { useUserStore } from '@/stores/user.store';
 import { onMounted, ref, defineComponent, computed } from 'vue';
-const url = 'http://localhost:3000';
+const url = import.meta.env.VITE_API_URL;
+
 const userStore = useUserStore();
 const sortedStudents = computed(() => {
   return userStore.users

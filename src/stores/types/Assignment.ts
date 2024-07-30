@@ -8,6 +8,8 @@ export default interface Assignment{
     nameAssignment:string;
     assignmentTime:Date;
     attdances?:Attendance[];
+    assignmentImages?:string[];
+    statusAssignment:string;
     room?:Room;
     course:Course;
     createdDate?:Date;

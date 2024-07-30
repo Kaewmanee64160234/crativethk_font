@@ -304,10 +304,12 @@ const confirmAttendance = async () => {
       );
     }
   }
+  assignmentStore.assignment!.statusAssignment = 'completed';
+  await assignmentStore.updateAssignment(assignmentStore.assignment!.assignmentId+'',assignmentStore.assignment!);
   if (userStore.currentUser?.role === "อาจารย์") {
-    router.push("/reCheckMappingTeacher/" + assignmentStore.assignment?.assignmentId);
+    router.push("/reCheckMappingTeacher/course/"+ courseStore.currentCourse?.coursesId+"/assignment/" + assignmentStore.assignment?.assignmentId);
   } else {
-    router.push("/mappingForStudent/" + assignmentStore.assignment?.assignmentId);
+    router.push("/mappingForStudent/course/"+ courseStore.currentCourse?.coursesId+"/assignment/" + assignmentStore.assignment?.assignmentId);
   }
 };
 </script>

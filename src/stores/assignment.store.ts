@@ -4,11 +4,13 @@ import assignmentService from "@/services/assignment";
 import type Assignment from "./types/Assignment";
 
 export const useAssignmentStore = defineStore("assignmentStore", () => {
-  const assignments = ref<Assignment[]>([
+  const assignments = ref<Assignment[] >([
     {
       assignmentId: 0,
 
       assignmentTime: new Date(),
+      imageAssignments: [""],
+      statusAssignment: "",
       nameAssignment: "",
       course: {
         userId: -1,
@@ -34,6 +36,7 @@ export const useAssignmentStore = defineStore("assignmentStore", () => {
   ]);
   const assignment = ref<Assignment>();
   const currentAssignment = ref<Assignment>();
+  const dialogAssignmentTag = ref(false);
 
   //get
   const getAssignments = async () => {
@@ -56,9 +59,9 @@ export const useAssignmentStore = defineStore("assignmentStore", () => {
     }
   };
   //create Assignment
-  const createAssignment = async (data: Assignment) => {
+  const createAssignment = async (data: Assignment,files:File[]) => {
     try {
-      const res = await assignmentService.createAssignment(data);
+      const res = await assignmentService.createAssignment(data,files);
       if (res.data) {
         assignment.value = res.data;
         console.log("assignment created", res.data);
@@ -80,6 +83,22 @@ export const useAssignmentStore = defineStore("assignmentStore", () => {
     }
   };
 
+  // update Assignment
+  const updateAssignment = async (id: string, data: Assignment) => {
+    try {
+      const res = await assignmentService.updateAssignment(id, data);
+      if (res.data) {
+        console.log("assignment updated", res.data);
+        await getAssignmentByCourseId(data.course.coursesId);
+      } else {
+        alert("Error updating assignment");
+      }
+    } catch (e) {
+      console.error("Error updating assignment:", e);
+    }
+  };
+
+
   // assignments.value.push(res.data);
 
   return {
@@ -90,5 +109,7 @@ export const useAssignmentStore = defineStore("assignmentStore", () => {
     createAssignment,
     currentAssignment,
     getAssignmentById,
+    updateAssignment,
+    dialogAssignmentTag
   };
 });
