@@ -17,13 +17,23 @@ function saveUser(user: User & { files: File[] }) {
   const formData = new FormData();
 
   // Append normal fields
-  formData.append("firstName", user.firstName);
-  formData.append("lastName", user.lastName);
-  formData.append("email", user.email!);
-  formData.append("studentId", user.studentId!);
-  formData.append("teacherId", user.teacherId!);
-  formData.append("role", user.role!);
-  formData.append("status", user.status!);
+  formData.append('firstName', user.firstName);
+  formData.append('lastName', user.lastName);
+  formData.append('email', user.email!);
+  formData.append('studentId', user.studentId!);
+  formData.append('teacherId', user.teacherId!);
+  formData.append('role', user.role!);
+  formData.append('status', user.status!);
+  formData.append('major', user.major!);
+  formData.append('year', user.year!);
+
+  // Check if files are available
+  // if (user.files && user.files.length > 0) {
+      // Append the first file if it exists
+      // formData.append('files', user.files[0], user.files[0].name);
+  // } else {
+  //     console.error("No files found in the user object.");
+      // Optional: Handle the case where no files are provided
 
   if (user.faceDescriptions!.length > 0) {
     // Append files and face descriptions
@@ -43,6 +53,7 @@ function saveUser(user: User & { files: File[] }) {
     },
   });
 }
+
 //update user
 function updateUser(user: User & { files: File[] }, userId: number) {
   console.log(user);
@@ -56,6 +67,8 @@ function updateUser(user: User & { files: File[] }, userId: number) {
   formData.append("teacherId", user.teacherId!);
   formData.append("role", user.role!);
   formData.append("status", user.status!);
+  formData.append('major', user.major!);
+  formData.append('year', user.year!);
 
   // Append files and face descriptions
   if (user.faceDescriptions!.length > 0) {
@@ -94,6 +107,11 @@ function getUserByCourseId(courseId: string) {
   return http.get(`/users/course/${courseId}`);
 }
 
+// getUserById
+function getUserById(id: number) {
+  return http.get(`/users/${id}`);
+}
+
 function getFileStd(formData: FormData) {
   return http.post("/users/upload", formData, {
     headers: {
@@ -103,6 +121,7 @@ function getFileStd(formData: FormData) {
 }
 
 export default {
+  getUserById,
   getUser,
   getUserImage,
   saveUser,

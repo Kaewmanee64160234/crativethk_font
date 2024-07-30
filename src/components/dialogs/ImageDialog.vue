@@ -1,20 +1,95 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import { useUserStore } from '@/stores/user.store';
+import * as faceapi from 'face-api.js';
 
 const userStore = useUserStore();
 const showDialog = ref(true);
 const url = "http://localhost:3000";
 const imageUrls = ref<string[]>([]);
 const imageFiles = ref<File[]>([]);
+const fileInputKey = ref(Date.now()); // Key to reset the file input field
 
 async function close() {
   userStore.closeImageDialog();
 }
 
+onMounted(async () => {
+  await userStore.getUsersById(userStore.currentUser?.userId!);
+  await loadModels();
+});
+
+async function loadModels() {
+  await userStore.getUsersById(userStore.currentUser?.userId!);
+  await faceapi.nets.ssdMobilenetv1.loadFromUri('/models');
+  await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
+  await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
+}
+
+function float32ArrayToBase64(float32Array) {
+  const uint8Array = new Uint8Array(float32Array.buffer);
+  let binary = '';
+  for (let i = 0; i < uint8Array.byteLength; i++) {
+    binary += String.fromCharCode(uint8Array[i]);
+  }
+  return btoa(binary);
+}
+
+async function createImageElement(file: File): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const img = new Image();
+      img.src = reader.result as string;
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+    };
+
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function processFiles(files: File[]): Promise<Float32Array[]> {
+  const faceDescriptions: Float32Array[] = [];
+
+  for (const file of files) {
+    const imgElement = await createImageElement(file);
+    const faceDescription = await faceapi
+      .detectSingleFace(imgElement, new faceapi.SsdMobilenetv1Options())
+      .withFaceLandmarks()
+      .withFaceDescriptor();
+
+    if (faceDescription) {
+      faceDescriptions.push(faceDescription.descriptor);
+    }
+
+    // Clean up the created image element
+    imgElement.remove();
+  }
+
+  return faceDescriptions;
+}
+
 async function save() {
+  userStore.editUser = {
+    ...userStore.currentUser,
+    firstName: userStore.currentUser!.firstName || '',
+    lastName: userStore.currentUser!.lastName || '',
+    files: imageFiles.value,
+  };
+  const faceDescriptions = await processFiles(userStore.editUser.files);
+  const dataFaceBase64 = faceDescriptions.map(faceDescription => float32ArrayToBase64(faceDescription));
+  console.log(dataFaceBase64);
+  userStore.editUser.faceDescriptions = dataFaceBase64;
+
   await userStore.saveUser();
-  userStore.resetUser();
+  await userStore.closeImageDialog();
+  window.location.reload();
+  console.log(userStore.editUser);
+  await userStore.getCurrentUser();
+  await userStore.getUsersById(userStore.currentUser?.userId!);
 }
 
 const handleFileChange = (event: Event) => {
@@ -71,11 +146,14 @@ function removeImage(index: number) {
   userStore.currentUser.images = images.value.map(image => image.replace(`${url}/users/image/filename/`, ''));
 }
 
-function removeUploadeImage(index: number) {
-  imageUrls.value.splice(index, 1);
-  imageFiles.value.splice(index, 1); 
-}
+// function removeUploadedImage(index: number) {
+//   imageUrls.value.splice(index, 1);
+//   imageFiles.value.splice(index, 1);
+//   fileInputKey.value = Date.now(); // Reset the file input field
+// }
 
+// Computed property to check if there are uploaded images
+const hasUploadedImages = computed(() => imageUrls.value.length > 0);
 
 </script>
 
@@ -98,10 +176,13 @@ function removeUploadeImage(index: number) {
               </v-btn>
             </v-col>
           </v-row>
-          <v-row>
-            <v-col  cols="6" md="4" lg="3" class="image-container" v-for="(image, index) in [...imageUrls]" :key="index">
+          <v-row v-if="hasUploadedImages">
+            <v-col cols="12">
+              <v-text>รูปภาพที่อัปโหลด</v-text>
+            </v-col>
+            <v-col cols="6" md="4" lg="3" class="image-container" v-for="(image, index) in [...imageUrls]" :key="index">
               <v-img :src="image" aspect-ratio="1" class="ma-2"></v-img>
-              <v-btn icon small @click="removeUploadeImage(index)" class="close-button">
+              <v-btn icon small @click="removeImage(index)" class="close-button">
                 <v-icon color="red">mdi-close</v-icon>
               </v-btn>
             </v-col>
@@ -109,7 +190,7 @@ function removeUploadeImage(index: number) {
           <v-row>
             <v-col cols="12" md="12">
               <!-- File Input -->
-              <v-file-input label="Upload Images" prepend-icon="mdi-camera" filled @change="handleFileChange"
+              <v-file-input :key="fileInputKey" label="อัปโหลดรูปภาพ" multiple prepend-icon="mdi-camera" filled @change="handleFileChange"
                 accept="image/*" variant="outlined"></v-file-input>
             </v-col>
           </v-row>

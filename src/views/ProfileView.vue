@@ -25,8 +25,12 @@ const showChekingHistory = (course: Course) => {
 
 
 onMounted(async () => {
-  await courseStore.getCourseByTeachId(userStore.currentUser!.teacherId!);
-  await enrollmentStore.getCourseByStudentId(userStore.currentUser!.studentId!);
+    if (isTeacher.value && userStore.currentUser!.teacherId) {
+        await courseStore.getCourseByTeachId(userStore.currentUser!.teacherId!);
+    }
+    if (isStudent.value && userStore.currentUser!.studentId) {
+        await enrollmentStore.getCourseByStudentId(userStore.currentUser!.studentId!);
+    }
 });
 
 
@@ -67,7 +71,7 @@ onMounted(async () => {
                                         <strong>สถานะภาพ: </strong>{{ userStore.currentUser?.status }}
                                     </v-col>
                                     <v-col cols="12">
-                                        <v-btn color="blue" @click="userStore.showImageDialog = true">แสดงรูปภาพทั้งหมด</v-btn>
+                                        <v-btn color="blue" @click="userStore.showImageDialog = true" v-if="isStudent">แสดงรูปภาพทั้งหมด</v-btn>
                                     </v-col>
                                 </v-row>
                             </v-col>

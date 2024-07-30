@@ -21,6 +21,7 @@ function updateCourse(id: string, course: Course) {
   return http.patch(`/courses/${id}`, course);
 }
 
+// Ensure the teachId is a string
 function getCourseByTeachId(teachId: string) {
   return http.get(`/courses/teach/${teachId}`);
 }
