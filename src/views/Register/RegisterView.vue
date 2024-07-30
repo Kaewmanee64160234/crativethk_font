@@ -49,8 +49,8 @@ const saveUser = async () => {
             userStore.editUser.role = "นิสิต";
             userStore.editUser.status = "กำลังศึกษา";
             const newUser = userStore.editUser;
-            userStore.register.push({ ...newUser });
             await userStore.saveUser();
+            userStore.register.push({ ...newUser });            
             console.log("New User",i +" "+ userStore.register);
         }
         if (userStore.register.length > 0) {

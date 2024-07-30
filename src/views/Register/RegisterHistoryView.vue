@@ -29,11 +29,11 @@ const userStore = useUserStore();
                 </thead>
                 <tbody>
                     <tr v-for="(item, index) in userStore.register" :key="index">
-                        <td>{{ item.studentId }}</td>
-                        <td>{{ item.firstName + " " + item.lastName }}</td>
-                        <td>{{ item.year }}</td>
-                        <td>{{ item.major }}</td>
-                        <td></td>
+                        <td class="text-center vertical-divider">{{ item.studentId }}</td>
+                        <td class="text-center vertical-divider">{{ item.firstName + " " + item.lastName }}</td>
+                        <td class="text-center vertical-divider">{{ item.year }}</td>
+                        <td class="text-center vertical-divider">{{ item.major }}</td>
+                        <td class="text-center vertical-divider"></td>
                     </tr>
                 </tbody>
             </v-table>

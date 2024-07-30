@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import router from '@/router';
+import user from '@/services/user';
 import { useUserStore } from '@/stores/user.store';
 import { onMounted, ref } from 'vue';
 
@@ -16,12 +17,25 @@ const goToRegister = () => {
   router.push(`/register`);
 };
 
-const nextUserId = () => {
+const nextUserId = async () => {
+  userStore.editUser.images = capturedImages.value;
+  await userStore.saveUser();
+  console.log("User images updated:", userStore.editUser.images);
   currentUserIdIndex.value++;
   if (currentUserIdIndex.value < userStore.register.length) {
+    navigateToNextUser();
+  } else {
+    console.log("All users updated");
+  }
+};
+
+const navigateToNextUser = () => {
+  if (currentUserIdIndex.value < userStore.register.length) {
     router.push(`/uploadImage/${userStore.register[currentUserIdIndex.value].studentId}`);
+    resetState();
   } else {
     router.push(`/registerHistoryView`);
+    resetState();
   }
 };
 
@@ -102,6 +116,13 @@ onMounted(async () => {
   await userStore.getUsers();
 
 });
+
+const resetState = () => {
+  capturedImages.value = [];
+  imageFiles.value = [];
+  imageUrls.value = [];
+  stopCamera(); // Ensure camera is stopped if open
+};
 </script>
 <template>
   <v-container style="padding-top: 120px;">

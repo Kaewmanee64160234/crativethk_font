@@ -22,6 +22,7 @@ export const useUserStore = defineStore("userStore", () => {
   const register = ref<User[]>([]);
 
   const editUser = ref<User & { files: File[] }>({
+    userId: 0,
     firstName: "",
     lastName: "",
     email: "",
@@ -29,11 +30,9 @@ export const useUserStore = defineStore("userStore", () => {
     teacherId: "",
     role: "",
     status: "",
-    year: "",
-    major: "",
     profileImage: "",
     faceDescriptions:[],
-    
+    images:[],
     files: [],
   });
 
@@ -79,8 +78,6 @@ export const useUserStore = defineStore("userStore", () => {
       lastName: "",
       role: "",
       status: "",
-      year: "",
-      major: "",
       profileImage: "",
       files: [],
     };
@@ -194,7 +191,6 @@ const getUserFromLocalStorage = () => {
 
 
   return {
-    register,
     getCurrentUser,
     currentUser,
     getUserImage,
@@ -216,6 +212,7 @@ const getUserFromLocalStorage = () => {
     getUserByCourseId,
     getUserFromLocalStorage,
     getFileUser,
-    file_
+    file_,
+    register
   };
 });
