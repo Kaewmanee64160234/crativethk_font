@@ -85,20 +85,22 @@ export const useUserStore = defineStore("userStore", () => {
   //save user
   const saveUser = async () => {
     try {
-      console.log("save user", editUser.value);
-      if (editUser.value.userId && editUser.value.userId !== 0) {
-        await userService.updateUser(editUser.value, editUser.value.userId);
-      } else {
-        await userService.saveUser(editUser.value);
-        messageStore.showInfo("User has been saved successfully.");
-      }
-      getUsers(); // Refresh or reload user list
-      // resetUser(); 
-      closeDialog();
+        console.log("save user", editUser.value);
+        if (editUser.value.userId && editUser.value.userId !== 0) {
+            await userService.updateUser(editUser.value, editUser.value.userId);
+            messageStore.showInfo("User updated successfully.");
+        } else {
+            const newUser = await userService.saveUser(editUser.value);
+            register.value.push(newUser.data); 
+            messageStore.showInfo("New user created successfully.");
+        }
+
+        await getUsers(); // Refresh or reload user list
+        closeDialog();  // Close the dialog
     } catch (e) {
-      console.log(e);
+        console.log(e);
     }
-  };
+};
   //delete user by id
   const deleteUser = async (id: number) => {
     try {

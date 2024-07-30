@@ -3,6 +3,7 @@ import router from '@/router';
 import user from '@/services/user';
 import { useUserStore } from '@/stores/user.store';
 import { onMounted, ref } from 'vue';
+import * as faceapi from 'face-api.js';
 
 const userStore = useUserStore();
 const showCamera = ref(false);
@@ -18,16 +19,69 @@ const goToRegister = () => {
 };
 
 const nextUserId = async () => {
-  userStore.editUser.images = capturedImages.value;
-  await userStore.saveUser();
-  console.log("User images updated:", userStore.editUser.images);
-  currentUserIdIndex.value++;
-  if (currentUserIdIndex.value < userStore.register.length) {
-    navigateToNextUser();
-  } else {
-    console.log("All users updated");
+  try {
+    const currentUser = userStore.register[currentUserIdIndex.value];
+    if (!currentUser) {
+      throw new Error("No user found at the current index");
+    }
+    const currentUserId = currentUser.userId;
+    if (!currentUserId) {
+      throw new Error("Invalid user ID");
+    }
+    console.log("user id", currentUserId);
+    userStore.editUser = {
+      ...currentUser,
+      files: imageFiles.value,
+    };
+
+    const faceDescriptions = await processFiles(userStore.editUser.files);
+    const dataFaceBase64 = faceDescriptions.map( (faceDescription) => float32ArrayToBase64(faceDescription));
+    console.log(dataFaceBase64);
+    userStore.editUser.faceDescriptions = dataFaceBase64;
+
+    await userStore.saveUser();
+    console.log("User images updated:", userStore.editUser.images);
+    currentUserIdIndex.value++;
+    if (currentUserIdIndex.value < userStore.register.length) {
+      navigateToNextUser();
+    } else {
+      console.log("All users updated");
+    }
+  } catch (error) {
+    console.error("Failed to update user images:", error);
   }
 };
+
+async function processFiles(files: File[]): Promise<Float32Array[]> {
+    const faceDescriptions: Float32Array[] = [];
+    
+
+    for (const file of files) {
+        const imgElement = await createImageElement(file);
+        const faceDescription = await faceapi
+            .detectSingleFace(imgElement, new faceapi.SsdMobilenetv1Options())
+            .withFaceLandmarks()
+            .withFaceDescriptor();
+
+        if (faceDescription) {
+            faceDescriptions.push(faceDescription.descriptor);
+        }
+
+        // Clean up the created image element
+        imgElement.remove();
+    }
+
+    return faceDescriptions;
+}
+
+function float32ArrayToBase64(float32Array) {
+  const uint8Array = new Uint8Array(float32Array.buffer);
+  let binary = '';
+  for (let i = 0; i < uint8Array.byteLength; i++) {
+    binary += String.fromCharCode(uint8Array[i]);
+  }
+  return btoa(binary);
+}
 
 const navigateToNextUser = () => {
   if (currentUserIdIndex.value < userStore.register.length) {
@@ -38,7 +92,21 @@ const navigateToNextUser = () => {
     resetState();
   }
 };
+async function createImageElement(file: File): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
 
+        reader.onload = () => {
+            const img = new Image();
+            img.src = reader.result as string;
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+        };
+
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
 const resizeAndConvertImageToBase64 = (imageUrl: string, maxWidth: number, maxHeight: number) => {
   return new Promise<string>((resolve, reject) => {
     const img = new Image();
@@ -114,8 +182,15 @@ const removeImage = (index: number) => {
 
 onMounted(async () => {
   await userStore.getUsers();
+  await loadModels();
 
 });
+
+async function loadModels() {
+    await faceapi.nets.ssdMobilenetv1.loadFromUri('/models');
+    await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
+    await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
+}
 
 const resetState = () => {
   capturedImages.value = [];

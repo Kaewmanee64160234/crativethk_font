@@ -35,28 +35,34 @@ const cancel = () => {
 };
 
 const saveUser = async () => {
-    userStore.register = [];
-        for (let i = 0; i < userStore.file_.length; i++) {
-            const nameParts = userStore.file_[i].name.split(' ');
-            const firstName = nameParts[0];
-            const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
-            userStore.editUser.studentId = userStore.file_[i].id;
-            userStore.editUser.firstName = firstName;
-            userStore.editUser.lastName = lastName;
-            userStore.editUser.major = userStore.file_[i].major;
-            userStore.editUser.year = userStore.file_[i].year;
-            userStore.editUser.email = userStore.file_[i].id + "@go.buu.ac.th";
-            userStore.editUser.role = "นิสิต";
-            userStore.editUser.status = "กำลังศึกษา";
-            const newUser = userStore.editUser;
+    userStore.register = [];  // Clears existing register array
+    for (let i = 0; i < userStore.file_.length; i++) {
+        const nameParts = userStore.file_[i].name.split(' ');
+        const firstName = nameParts[0];
+        const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
+        userStore.editUser = {
+            ...userStore.editUser,  // Spread existing editable user properties if any
+            studentId: userStore.file_[i].id,
+            firstName: firstName,
+            lastName: lastName,
+            major: userStore.file_[i].major,
+            year: userStore.file_[i].year,
+            email: userStore.file_[i].id + "@go.buu.ac.th",
+            role: "นิสิต",
+            status: "กำลังศึกษา"
+        };
+
+        try {
             await userStore.saveUser();
-            userStore.register.push({ ...newUser });            
-            console.log("New User",i +" "+ userStore.register);
+            console.log("New User Registered:", userStore.register);
+        } catch (error) {
+            console.error("Failed to save user:", error);
         }
-        if (userStore.register.length > 0) {
-            router.push(`/uploadImage/${userStore.register[0].studentId}`);
     }
-    userStore.file_ = [];
+    if (userStore.register.length > 0) {
+        router.push(`/uploadImage/${userStore.register[0].studentId}`);
+    }
+    userStore.file_ = [];  // Clear the file list after processing
 };
 </script>
 <template>
