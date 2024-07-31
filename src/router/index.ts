@@ -49,9 +49,9 @@ const router = createRouter({
       },
     },
     {
-      //registerHistoryView
-      path: "/registerHistoryView",
-      name: "registerHistoryView",
+      //registerHistory
+      path: "/registerHistory",
+      name: "registerHistory",
       components: {
         default: () => import("../views/Register/RegisterHistoryView.vue"),
         header: () => import("../components/headers/MainHeader.vue"),

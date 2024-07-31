@@ -1,7 +1,13 @@
 <script lang="ts" setup>
+import type { User } from '@/stores/types/User';
 import { useUserStore } from '@/stores/user.store';
 
+
 const userStore = useUserStore();
+const getStatus = (item: any) => {
+    return item.image1 != null ? 'ลงทะเบียนเสร็จสิ้น' : 'ยังไม่ลงทะเบียน';
+};
+
 </script>
 <template>
     <v-container style="padding-top: 120px;">
@@ -33,7 +39,9 @@ const userStore = useUserStore();
                         <td class="text-center vertical-divider">{{ item.firstName + " " + item.lastName }}</td>
                         <td class="text-center vertical-divider">{{ item.year }}</td>
                         <td class="text-center vertical-divider">{{ item.major }}</td>
-                        <td class="text-center vertical-divider"></td>
+                        <td :class="[getStatus(item) === 'ลงทะเบียนเสร็จสิ้น' ? 'registered' : 'not-registered']" class="text-center vertical-divider">
+                            {{ getStatus(item) }}
+                        </td>
                     </tr>
                 </tbody>
             </v-table>
@@ -51,5 +59,12 @@ const userStore = useUserStore();
     /* สีของเส้นแบ่ง */
     height: auto;
     /* ให้สูงตามความสูงของ col */
+}
+.registered {
+    color: green;
+}
+
+.not-registered {
+    color: red;
 }
 </style>
