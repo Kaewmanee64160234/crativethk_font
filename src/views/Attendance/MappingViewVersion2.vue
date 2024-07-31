@@ -80,7 +80,6 @@ async function processImage(image, index) {
       const cropCanvas = document.createElement("canvas");
       const cropCtx = cropCanvas.getContext("2d");
       const { x, y, width, height } = detection.detection.box;
-
       cropCanvas.width = width;
       cropCanvas.height = height;
       cropCtx!.drawImage(image, x, y, width, height, 0, 0, width, height);
