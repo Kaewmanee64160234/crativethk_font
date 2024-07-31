@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted, nextTick, watch } from "vue";
+import { ref, reactive, onMounted, nextTick } from "vue";
 import * as faceapi from "face-api.js";
 import { useRoute, useRouter } from "vue-router";
 import { useAssignmentStore } from "@/stores/assignment.store";
-import type { FaceDetection, WithFaceLandmarks, WithFaceDescriptor } from "face-api.js";
 import { useAttendanceStore } from "@/stores/attendance.store";
 import { useUserStore } from "@/stores/user.store";
 import type Attendance from "@/stores/types/Attendances";
@@ -21,8 +20,8 @@ const queryCourseId = route.params.courseId;
 const showDialog = ref(false);
 const attendanceStore = useAttendanceStore();
 const userStore = useUserStore();
-
 const router = useRouter();
+
 const loadModels = async () => {
   await faceapi.nets.ssdMobilenetv1.loadFromUri("/models");
   await faceapi.nets.faceLandmark68Net.loadFromUri("/models");
@@ -106,6 +105,18 @@ const handleBoxClick = (img: HTMLImageElement, box: faceapi.Box) => {
   }
 };
 
+const dataURLToFile = (dataurl: string, filename: string) => {
+  const arr = dataurl.split(',');
+  const mime = arr[0].match(/:(.*?);/)![1];
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new File([u8arr], filename, { type: mime });
+};
+
 onMounted(async () => {
   await loadModels();
   await fetchImages();
@@ -128,40 +139,41 @@ onMounted(async () => {
 
 const reCheckAttendance = async (attendance: Attendance) => {
   try {
+    console.log('Attendance:Ging', attendance);
+    
     attendance.assignment = assignmentStore.currentAssignment;
-    // if click this function after 15 minutes create assignment set attdent status to late
     const date = new Date();
     const currentDate = date.getTime();
     const assignmentDate = new Date(assignmentStore.currentAssignment!.createdDate!);
     const assignmentTime = assignmentDate.getTime();
     const diff = currentDate - assignmentTime;
-    if (diff > 900000) {
-      attendance.attendanceStatus = "late";
-    } else {
-      attendance.attendanceStatus = "present";
-    }
+    attendance.attendanceStatus = diff > 900000 ? "late" : "present";
     attendance.attendanceConfirmStatus = "recheck";
     attendance.user = userStore.currentUser;
-    console.log(JSON.stringify(attendance));
 
-    await attendanceStore.confirmAttendance(attendance);
+    if (croppedImage.value) {
+      const imageFile = dataURLToFile(croppedImage.value, 'rechecked-image.jpg');
+     
+      await attendanceStore.confirmAttendance(attendance,imageFile);
+    } 
+
     router.push("/courseDetail/" + queryCourseId);
-    // close the dialog
     showDialog.value = false;
-    // router.push('/resheckMappingTeacher/' + assignmentStore.currentAssignment?.assignmentId); // Replace '/next-page-route' with your specific route
   } catch (error) {
     console.log(error);
   }
 };
 
 const confirmRecheck = async () => {
+  console.log('assignmentStore.currentAssignment!.assignmentId',assignmentStore.currentAssignment!.assignmentId);
+  console.log('userStore.currentUser!.studentId',userStore.currentUser!.studentId);
+  
   await attendanceStore.getAttendanceByAssignmentAndStudent(assignmentStore.currentAssignment!.assignmentId!+'', userStore.currentUser!.studentId!);
-  // close the dialog
+  console.log('editAttendance',attendanceStore.editAttendance);
+  
   await reCheckAttendance(attendanceStore.editAttendance);
   showDialog.value = false;
 };
-
-
 </script>
 
 <template>

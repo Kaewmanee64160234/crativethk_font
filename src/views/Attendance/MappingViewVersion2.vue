@@ -317,7 +317,7 @@ const confirmAttendance = async () => {
         {
           attendanceId: 0,
           attendanceDate: new Date(),
-          attendanceStatus: "present",
+          attendanceStatus: "absent",
           attendanceConfirmStatus: "notConfirmed",
           assignment: assignmentStore.assignment,
           user: usersCreateUnkow[i],

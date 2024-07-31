@@ -95,9 +95,9 @@ export const useAttendanceStore = defineStore("attendanceStore", () => {
     }
   };
 
-  const confirmAttendance = async (attendance: Attendance) => {
+  const confirmAttendance = async (attendance: Attendance,file:File) => {
     try {
-      const res = await attendaceService.updateAttendance(attendance);
+      const res = await attendaceService.updateAttendance(attendance,file);
       await messageStore.showInfo("The information has been sent to the teacher. Please wait for confirmation..");
     } catch (error) {
       // Log the error object which might contain additional info
@@ -207,6 +207,8 @@ export const useAttendanceStore = defineStore("attendanceStore", () => {
         studentId
       );
       editAttendance.value = res.data;
+      console.log('Attendance updated successfully', editAttendance.value);
+      
     } catch (error) {
       console.log(error);
     }
