@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted, nextTick } from "vue";
+import { ref, reactive, onMounted, nextTick, watch } from "vue";
 import * as faceapi from "face-api.js";
 import { useRoute } from "vue-router";
 import { useAssignmentStore } from "@/stores/assignment.store";
@@ -7,12 +7,6 @@ import type { FaceDetection, WithFaceLandmarks, WithFaceDescriptor } from "face-
 
 interface CanvasRefs {
   [key: number]: HTMLCanvasElement;
-}
-
-interface Identification {
-  name: string;
-  studentId: string;
-  imageUrl: string;
 }
 
 const assignmentStore = useAssignmentStore();
@@ -36,37 +30,51 @@ const fetchImages = async () => {
 };
 
 const processImage = async (image: HTMLImageElement, index: number) => {
-  const canvas = canvasRefs[index] || document.createElement("canvas");
-  document.body.appendChild(canvas);
-  canvas.width = image.naturalWidth;
-  canvas.height = image.naturalHeight;
+  const canvas = canvasRefs[index];
+  if (!canvas) return;
 
   const detections = await faceapi.detectAllFaces(image);
   const displaySize = { width: image.naturalWidth, height: image.naturalHeight };
   faceapi.matchDimensions(canvas, displaySize);
   const resizedDetections = faceapi.resizeResults(detections, displaySize);
 
-  resizedDetections.forEach(detection => {
-    const { x, y, width, height } = detection.box;
+  const context = canvas.getContext('2d');
+  if (context) {
+    context.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas first
+    context.strokeStyle = 'red';
+    context.lineWidth = 2;
 
-    const boxElement = document.createElement('div');
-    boxElement.style.position = 'absolute';
-    boxElement.style.border = '2px solid red';
-    boxElement.style.top = `${y}px`;
-    boxElement.style.left = `${x}px`;
-    boxElement.style.width = `${width}px`;
-    boxElement.style.height = `${height}px`;
-    boxElement.style.cursor = 'pointer';
-    boxElement.dataset.index = index.toString();
-    boxElement.dataset.x = x.toString();
-    boxElement.dataset.y = y.toString();
-    boxElement.dataset.width = width.toString();
-    boxElement.dataset.height = height.toString();
+    resizedDetections.forEach(detection => {
+      const { x, y, width, height } = detection.box;
 
-    boxElement.addEventListener('click', () => handleBoxClick(image, detection.box));
+      const boxElement = document.createElement('div');
+      boxElement.style.position = 'absolute';
+      boxElement.style.border = '2px solid red';
+      boxElement.style.cursor = 'pointer';
+      boxElement.dataset.index = index.toString();
+      boxElement.dataset.x = x.toString();
+      boxElement.dataset.y = y.toString();
+      boxElement.dataset.width = width.toString();
+      boxElement.dataset.height = height.toString();
 
-    canvas.parentElement?.appendChild(boxElement);
-  });
+      const updateBoxStyle = () => {
+        const scaleX = canvas.clientWidth / displaySize.width;
+        const scaleY = canvas.clientHeight / displaySize.height;
+        boxElement.style.top = `${y * scaleY}px`;
+        boxElement.style.left = `${x * scaleX}px`;
+        boxElement.style.width = `${width * scaleX}px`;
+        boxElement.style.height = `${height * scaleY}px`;
+      };
+
+      updateBoxStyle();
+
+      boxElement.addEventListener('click', () => handleBoxClick(image, detection.box));
+      canvas.parentElement?.appendChild(boxElement);
+
+      // Update the box position and size on window resize
+      window.addEventListener('resize', updateBoxStyle);
+    });
+  }
 };
 
 const handleBoxClick = (img: HTMLImageElement, box: faceapi.Box) => {
@@ -100,7 +108,13 @@ onMounted(async () => {
   imageUrls.value.forEach((url, index) => {
     const img = new Image();
     img.crossOrigin = "anonymous";
-    img.onload = () => processImage(img, index);
+    img.onload = () => {
+      canvasRefs[index].width = img.naturalWidth;
+      canvasRefs[index].height = img.naturalHeight;
+      canvasRefs[index].style.width = img.width + 'px';
+      canvasRefs[index].style.height = img.height + 'px';
+      processImage(img, index);
+    };
     img.src = url;
   });
 });
@@ -108,41 +122,21 @@ onMounted(async () => {
 
 <template>
   <v-container>
-    <v-card class="mx-auto" color="primary" max-width="1200" outlined style="padding: 20px">
-      <v-card-title>
-        <h1 class="text-h5">Assignment Images</h1>
-      </v-card-title>
-    </v-card>
-    <v-row class="mt-5">
-      <v-col cols="12" md="6" class="text-right">
-        <v-btn color="#CFEBFB">
-          <v-icon size="30">mdi-clipboard-check-outline</v-icon>
-          ตรวจสอบการเช็คชื่อ
-        </v-btn>
-      </v-col>
-    </v-row>
-
     <v-row>
       <v-col cols="12" md="6">
         <div v-for="(imageUrl, index) in imageUrls" :key="index" class="position-relative mb-3">
-          <img :src="imageUrl" class="w-100 rounded-lg" />
+          <img :src="imageUrl" class="w-100 rounded-lg"
+            @load="(event) => { 
+              const img = event.target; 
+              canvasRefs[index].width = img!.naturalWidth; 
+              canvasRefs[index].height = img!.naturalHeight; 
+              canvasRefs[index].style.width = img!.width + 'px'; 
+              canvasRefs[index].style.height = img!.height + 'px'; 
+              processImage(img, index); 
+            }" 
+            style="object-fit: contain;" />
           <canvas :ref="el => canvasRefs[index] = el" class="position-absolute top-0 left-0 w-100 h-100"></canvas>
         </div>
-      </v-col>
-
-      <v-col cols="12" md="6">
-        <v-card style="overflow-y: scroll">
-          <v-row>
-            <v-col cols="12" sm="6" v-for="(url, index) in croppedImagesDataUrls" :key="'cropped-' + index">
-              <v-card outlined color="#EDEDED" class="rounded-lg">
-                <v-card-title>
-                  <v-icon small>mdi-circle-small</v-icon> Cropped Image
-                </v-card-title>
-                <v-img :src="url" aspect-ratio="1.5" class="rounded-lg"></v-img>
-              </v-card>
-            </v-col>
-          </v-row>
-        </v-card>
       </v-col>
     </v-row>
   </v-container>
@@ -168,13 +162,12 @@ onMounted(async () => {
 img {
   width: 100%;
   height: auto;
+  object-fit: contain;
 }
 
 canvas {
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
 }
 </style>
