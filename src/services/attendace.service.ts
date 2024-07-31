@@ -58,13 +58,43 @@ function getAttendanceByUserId(userId: string) {
 
 // updateAttendance
 
-function updateAttendance(attendance: Attendance) {
-  return http.patch(`/attendances/${attendance.attendanceId}`, attendance);
+function updateAttendance(attendance: Attendance, file: File) {
+  const formData = new FormData();
+  if (attendance.user!.studentId === undefined) {
+    formData.append("studentId", "null");
+  } else {
+    formData.append("studentId", attendance.user!.studentId!);
+  }
+  formData.append(
+    "assignmentId",
+    attendance.assignment!.assignmentId!.toString()
+  );
+  // user Id
+  formData.append("userId",attendance.user!.studentId!.toString());
+  formData.append("file", file, file.name);
+  // assignMentTime
+  const assignMentTime = new Date();
+  formData.append("assignmentMentTime", assignMentTime.toISOString());
+  formData.append(
+    "attendanceConfirmStatus",
+    attendance.attendanceConfirmStatus
+  );
+  formData.append("date", attendance.attendanceDate.toString());
+  formData.append("attendanceStatus", attendance.attendanceStatus);
+  formData.append("confirmStatus", attendance.attendanceConfirmStatus);
+  return http.patch(`attendances/${attendance.attendanceId}`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
 }
 // updateAttendanceTeacher
 
-function  updateAttendanceTeacher(attdentTeacher:Attendance){
-  return http.patch(`/attendances/teacher/${attdentTeacher.attendanceId}`, attdentTeacher);
+function updateAttendanceTeacher(attdentTeacher: Attendance) {
+  return http.patch(
+    `/attendances/teacher/${attdentTeacher.attendanceId}`,
+    attdentTeacher
+  );
 }
 
 // getAttendanceByStatusInAssignment
@@ -74,7 +104,10 @@ function getAttendanceByStatusInAssignment(assignmentId: string) {
 }
 
 // get attendance by course and studentId
-function getAttendanceByCourseandStudentId(courseId: string, studentId: string){
+function getAttendanceByCourseandStudentId(
+  courseId: string,
+  studentId: string
+) {
   return http.get(`/attendances/courses/${courseId}/students/${studentId}`);
 }
 // confirmAttendance function
@@ -88,14 +121,22 @@ function rejectAttendance(attendaceId: string) {
 }
 // checkAllAttendance
 
-function checkAllAttendance(assigmentId:string){
+function checkAllAttendance(assigmentId: string) {
   // '/checkAllAttendance/:courseId
   console.log(assigmentId);
   return http.get(`/attendances/checkAllAttendance/${assigmentId}`);
 }
 
-
-
+// getAttendanceByAssignmentAndStudent
+// /assignment/:assignmentId/student/:studentId
+function getAttendanceByAssignmentAndStudent(
+  assignmentId: string,
+  studentId: string
+) {
+  return http.get(
+    `/attendances/assignment/${assignmentId}/student/${studentId}`
+  );
+}
 
 export default {
   getAttendance,
@@ -110,5 +151,6 @@ export default {
   rejectAttendance,
   checkAllAttendance,
   updateAttendanceTeacher,
-  getAttendanceByCourseandStudentId
+  getAttendanceByCourseandStudentId,
+  getAttendanceByAssignmentAndStudent,
 };

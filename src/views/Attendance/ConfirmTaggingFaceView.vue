@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted, nextTick, watch } from "vue";
+import { ref, reactive, onMounted, nextTick } from "vue";
 import * as faceapi from "face-api.js";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useAssignmentStore } from "@/stores/assignment.store";
-import type { FaceDetection, WithFaceLandmarks, WithFaceDescriptor } from "face-api.js";
+import { useAttendanceStore } from "@/stores/attendance.store";
+import { useUserStore } from "@/stores/user.store";
+import type Attendance from "@/stores/types/Attendances";
 
 interface CanvasRefs {
   [key: number]: HTMLCanvasElement;
@@ -14,7 +16,11 @@ const route = useRoute();
 const canvasRefs = reactive<CanvasRefs>({});
 const imageUrls = ref<string[]>([]);
 const croppedImage = ref<string | null>(null);
+const queryCourseId = route.params.courseId;
 const showDialog = ref(false);
+const attendanceStore = useAttendanceStore();
+const userStore = useUserStore();
+const router = useRouter();
 
 const loadModels = async () => {
   await faceapi.nets.ssdMobilenetv1.loadFromUri("/models");
@@ -99,6 +105,18 @@ const handleBoxClick = (img: HTMLImageElement, box: faceapi.Box) => {
   }
 };
 
+const dataURLToFile = (dataurl: string, filename: string) => {
+  const arr = dataurl.split(',');
+  const mime = arr[0].match(/:(.*?);/)![1];
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new File([u8arr], filename, { type: mime });
+};
+
 onMounted(async () => {
   await loadModels();
   await fetchImages();
@@ -118,6 +136,44 @@ onMounted(async () => {
     img.src = url;
   });
 });
+
+const reCheckAttendance = async (attendance: Attendance) => {
+  try {
+    console.log('Attendance:Ging', attendance);
+    
+    attendance.assignment = assignmentStore.currentAssignment;
+    const date = new Date();
+    const currentDate = date.getTime();
+    const assignmentDate = new Date(assignmentStore.currentAssignment!.createdDate!);
+    const assignmentTime = assignmentDate.getTime();
+    const diff = currentDate - assignmentTime;
+    attendance.attendanceStatus = diff > 900000 ? "late" : "present";
+    attendance.attendanceConfirmStatus = "recheck";
+    attendance.user = userStore.currentUser;
+
+    if (croppedImage.value) {
+      const imageFile = dataURLToFile(croppedImage.value, 'rechecked-image.jpg');
+     
+      await attendanceStore.confirmAttendance(attendance,imageFile);
+    } 
+
+    router.push("/courseDetail/" + queryCourseId);
+    showDialog.value = false;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const confirmRecheck = async () => {
+  console.log('assignmentStore.currentAssignment!.assignmentId',assignmentStore.currentAssignment!.assignmentId);
+  console.log('userStore.currentUser!.studentId',userStore.currentUser!.studentId);
+  
+  await attendanceStore.getAttendanceByAssignmentAndStudent(assignmentStore.currentAssignment!.assignmentId!+'', userStore.currentUser!.studentId!);
+  console.log('editAttendance',attendanceStore.editAttendance);
+  
+  await reCheckAttendance(attendanceStore.editAttendance);
+  showDialog.value = false;
+};
 </script>
 
 <template>
@@ -151,7 +207,7 @@ onMounted(async () => {
         <p>Is this you?</p>
       </v-card-text>
       <v-card-actions>
-        <v-btn color="primary" @click="showDialog = false">Yes</v-btn>
+        <v-btn color="primary" @click="confirmRecheck()">Yes</v-btn>
         <v-btn color="secondary" @click="showDialog = false">No</v-btn>
       </v-card-actions>
     </v-card>

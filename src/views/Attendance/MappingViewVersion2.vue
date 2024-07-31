@@ -303,6 +303,41 @@ const confirmAttendance = async () => {
       );
     }
   }
+  // filter user from identifications and create user unknow 
+  await userStore.getUserByCourseId(assignmentStore.assignment?.course.coursesId+'')
+  const usersCreateUnkow = userStore.users.filter((user) => {
+    return !identifications.value.some((identification) => identification.studentId === user.studentId);
+  });
+  console.log("Create user unknow", usersCreateUnkow);
+  
+  // create user unknow
+  for (let i = 0; i < usersCreateUnkow.length; i++) {
+    try {
+      await attendaceStore.createAttendance(
+        {
+          attendanceId: 0,
+          attendanceDate: new Date(),
+          attendanceStatus: "absent",
+          attendanceConfirmStatus: "notConfirmed",
+          assignment: assignmentStore.assignment,
+          user: usersCreateUnkow[i],
+          attendanceImage: "",
+        },
+        new File([], "")
+      );
+    } catch (error) {
+      console.error(
+        "Error recording attendance for",
+        usersCreateUnkow[i].firstName,
+        ":",
+        error
+      );
+      console.error(
+        "Detailed Error:",
+        error instanceof Event ? "DOM Event error, check network or permissions." : error
+      );
+    }
+  }
   assignmentStore.assignment!.statusAssignment = 'completed';
   await assignmentStore.updateAssignment(assignmentStore.assignment!.assignmentId+'',assignmentStore.assignment!);
   if (userStore.currentUser?.role === "อาจารย์") {
