@@ -94,6 +94,11 @@ function checkAllAttendance(assigmentId:string){
   return http.get(`/attendances/checkAllAttendance/${assigmentId}`);
 }
 
+// getAttendanceByAssignmentAndStudent
+function getAttendanceByAssignmentAndStudent(assignmentId: string, studentId: string){
+  return http.get(`/attendances/assignments/${assignmentId}/students/${studentId}`);
+}
+
 
 
 
@@ -110,5 +115,6 @@ export default {
   rejectAttendance,
   checkAllAttendance,
   updateAttendanceTeacher,
-  getAttendanceByCourseandStudentId
+  getAttendanceByCourseandStudentId,
+  getAttendanceByAssignmentAndStudent
 };

@@ -196,6 +196,21 @@ export const useAttendanceStore = defineStore("attendanceStore", () => {
       console.log(error);
     }
   };
+  // getAttendanceByAssignmentAndStudent
+  const getAttendanceByAssignmentAndStudent = async (
+    assignmentId: string,
+    studentId: string
+  ) => {
+    try {
+      const res = await attendaceService.getAttendanceByAssignmentAndStudent(
+        assignmentId,
+        studentId
+      );
+      editAttendance.value = res.data;
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return {
     getAttendanceByCourseandStudentId,
@@ -214,6 +229,7 @@ export const useAttendanceStore = defineStore("attendanceStore", () => {
     showDialog,
     editAttendance,
     userAttendance,
-    updateAttendanceTeacher
+    updateAttendanceTeacher,
+    getAttendanceByAssignmentAndStudent
   };
 });

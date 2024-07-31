@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, nextTick, watch } from "vue";
 import * as faceapi from "face-api.js";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useAssignmentStore } from "@/stores/assignment.store";
 import type { FaceDetection, WithFaceLandmarks, WithFaceDescriptor } from "face-api.js";
+import { useAttendanceStore } from "@/stores/attendance.store";
+import { useUserStore } from "@/stores/user.store";
+import type Attendance from "@/stores/types/Attendances";
 
 interface CanvasRefs {
   [key: number]: HTMLCanvasElement;
@@ -14,8 +17,12 @@ const route = useRoute();
 const canvasRefs = reactive<CanvasRefs>({});
 const imageUrls = ref<string[]>([]);
 const croppedImage = ref<string | null>(null);
+const queryCourseId = route.params.courseId;
 const showDialog = ref(false);
+const attendanceStore = useAttendanceStore();
+const userStore = useUserStore();
 
+const router = useRouter();
 const loadModels = async () => {
   await faceapi.nets.ssdMobilenetv1.loadFromUri("/models");
   await faceapi.nets.faceLandmark68Net.loadFromUri("/models");
@@ -118,6 +125,43 @@ onMounted(async () => {
     img.src = url;
   });
 });
+
+const reCheckAttendance = async (attendance: Attendance) => {
+  try {
+    attendance.assignment = assignmentStore.currentAssignment;
+    // if click this function after 15 minutes create assignment set attdent status to late
+    const date = new Date();
+    const currentDate = date.getTime();
+    const assignmentDate = new Date(assignmentStore.currentAssignment!.createdDate!);
+    const assignmentTime = assignmentDate.getTime();
+    const diff = currentDate - assignmentTime;
+    if (diff > 900000) {
+      attendance.attendanceStatus = "late";
+    } else {
+      attendance.attendanceStatus = "present";
+    }
+    attendance.attendanceConfirmStatus = "recheck";
+    attendance.user = userStore.currentUser;
+    console.log(JSON.stringify(attendance));
+
+    await attendanceStore.confirmAttendance(attendance);
+    router.push("/courseDetail/" + queryCourseId);
+    // close the dialog
+    showDialog.value = false;
+    // router.push('/resheckMappingTeacher/' + assignmentStore.currentAssignment?.assignmentId); // Replace '/next-page-route' with your specific route
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const confirmRecheck = async () => {
+  await attendanceStore.getAttendanceByAssignmentAndStudent(assignmentStore.currentAssignment!.assignmentId!+'', userStore.currentUser!.studentId!);
+  // close the dialog
+  await reCheckAttendance(attendanceStore.editAttendance);
+  showDialog.value = false;
+};
+
+
 </script>
 
 <template>
@@ -151,7 +195,7 @@ onMounted(async () => {
         <p>Is this you?</p>
       </v-card-text>
       <v-card-actions>
-        <v-btn color="primary" @click="showDialog = false">Yes</v-btn>
+        <v-btn color="primary" @click="confirmRecheck()">Yes</v-btn>
         <v-btn color="secondary" @click="showDialog = false">No</v-btn>
       </v-card-actions>
     </v-card>
