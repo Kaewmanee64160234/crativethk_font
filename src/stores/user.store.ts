@@ -9,7 +9,7 @@ import { useMessageStore } from "./message";
 export const useUserStore = defineStore("userStore", () => {
   const users = ref<User[]>([]);
   const searchQuery = ref<string>("");
-  const files = ref([] as {id:string, name:string,major:string,year:string}[]);
+  const file_ = ref([] as {id:string, name:string,major:string,year:string}[]);
   const showDialog = ref(false);
   const showDialog2 = ref(false);
   const showDialog3 = ref(false);
@@ -19,8 +19,10 @@ export const useUserStore = defineStore("userStore", () => {
   const keyword = ref("");
   const messageStore = useMessageStore()
   const currentUser = ref<User>();
+  const register = ref<User[]>([]);
 
   const editUser = ref<User & { files: File[] }>({
+    userId: 0,
     firstName: "",
     lastName: "",
     email: "",
@@ -30,7 +32,7 @@ export const useUserStore = defineStore("userStore", () => {
     status: "",
     profileImage: "",
     faceDescriptions:[],
-    
+    images:[],
     files: [],
   });
 
@@ -83,20 +85,22 @@ export const useUserStore = defineStore("userStore", () => {
   //save user
   const saveUser = async () => {
     try {
-      console.log("save user", editUser.value);
-      if (editUser.value.userId && editUser.value.userId !== 0) {
-        await userService.updateUser(editUser.value, editUser.value.userId);
-      } else {
-        await userService.saveUser(editUser.value);
-        messageStore.showInfo("User has been saved successfully.");
-      }
-      getUsers(); // Refresh or reload user list
-      // resetUser(); 
-      closeDialog();
+        console.log("save user", editUser.value);
+        if (editUser.value.userId && editUser.value.userId !== 0) {
+            await userService.updateUser(editUser.value, editUser.value.userId);
+            messageStore.showInfo("User updated successfully.");
+        } else {
+            const newUser = await userService.saveUser(editUser.value);
+            register.value.push(newUser.data); 
+            messageStore.showInfo("New user created successfully.");
+        }
+
+        await getUsers(); // Refresh or reload user list
+        closeDialog();  // Close the dialog
     } catch (e) {
-      console.log(e);
+        console.log(e);
     }
-  };
+};
   //delete user by id
   const deleteUser = async (id: number) => {
     try {
@@ -180,8 +184,8 @@ const getUserFromLocalStorage = () => {
       const formData = new FormData();
       formData.append("file", file);
       const res = await userService.getFileStd(formData);  // Make sure this matches the actual function that handles file uploads
-      files.value = res.data;
-      console.log("Upload successful", files.value );
+      file_.value = res.data;
+      console.log("Upload successful", file_.value );
     } catch (error) {
       console.error("Upload failed", error);
     }
@@ -210,6 +214,7 @@ const getUserFromLocalStorage = () => {
     getUserByCourseId,
     getUserFromLocalStorage,
     getFileUser,
-    files
+    file_,
+    register
   };
 });

@@ -1,22 +1,112 @@
 <script lang="ts" setup>
 import router from '@/router';
-import { ref } from 'vue';
+import user from '@/services/user';
+import { useUserStore } from '@/stores/user.store';
+import { onMounted, ref } from 'vue';
+import * as faceapi from 'face-api.js';
 
+const userStore = useUserStore();
 const showCamera = ref(false);
 const videoRef = ref<HTMLVideoElement | null>(null);
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const capturedImages = ref<string[]>([]);
 const imageFiles = ref<File[]>([]);
 const imageUrls = ref<string[]>([]);
+const currentUserIdIndex = ref(0);
 
 const goToRegister = () => {
   router.push(`/register`);
 };
 
-const goToRegisterHis = () => {
-  router.push(`/registerHistoryView`);
+const nextUserId = async () => {
+  try {
+    const currentUser = userStore.register[currentUserIdIndex.value];
+    if (!currentUser) {
+      throw new Error("No user found at the current index");
+    }
+    const currentUserId = currentUser.userId;
+    if (!currentUserId) {
+      throw new Error("Invalid user ID");
+    }
+    console.log("user id", currentUserId);
+    userStore.editUser = {
+      ...currentUser,
+      files: imageFiles.value,
+    };
+
+    const faceDescriptions = await processFiles(userStore.editUser.files);
+    const dataFaceBase64 = faceDescriptions.map( (faceDescription) => float32ArrayToBase64(faceDescription));
+    console.log(dataFaceBase64);
+    userStore.editUser.faceDescriptions = dataFaceBase64;
+
+    await userStore.saveUser();
+    console.log("User images updated:", userStore.editUser.images);
+    currentUserIdIndex.value++;
+    if (currentUserIdIndex.value < userStore.register.length) {
+      navigateToNextUser();
+    } else {
+      console.log("All users updated");
+    }
+  } catch (error) {
+    console.error("Failed to update user images:", error);
+  }
 };
 
+async function processFiles(files: File[]): Promise<Float32Array[]> {
+    const faceDescriptions: Float32Array[] = [];
+    
+
+    for (const file of files) {
+        const imgElement = await createImageElement(file);
+        const faceDescription = await faceapi
+            .detectSingleFace(imgElement, new faceapi.SsdMobilenetv1Options())
+            .withFaceLandmarks()
+            .withFaceDescriptor();
+
+        if (faceDescription) {
+            faceDescriptions.push(faceDescription.descriptor);
+        }
+
+        // Clean up the created image element
+        imgElement.remove();
+    }
+
+    return faceDescriptions;
+}
+
+function float32ArrayToBase64(float32Array) {
+  const uint8Array = new Uint8Array(float32Array.buffer);
+  let binary = '';
+  for (let i = 0; i < uint8Array.byteLength; i++) {
+    binary += String.fromCharCode(uint8Array[i]);
+  }
+  return btoa(binary);
+}
+
+const navigateToNextUser = () => {
+  if (currentUserIdIndex.value < userStore.register.length) {
+    router.push(`/uploadImage/${userStore.register[currentUserIdIndex.value].studentId}`);
+    resetState();
+  } else {
+    router.push(`/registerHistoryView`);
+    resetState();
+  }
+};
+async function createImageElement(file: File): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = () => {
+            const img = new Image();
+            img.src = reader.result as string;
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+        };
+
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
 const resizeAndConvertImageToBase64 = (imageUrl: string, maxWidth: number, maxHeight: number) => {
   return new Promise<string>((resolve, reject) => {
     const img = new Image();
@@ -89,47 +179,65 @@ const stopCamera = () => {
 const removeImage = (index: number) => {
   capturedImages.value.splice(index, 1);
 };
+
+onMounted(async () => {
+  await userStore.getUsers();
+  await loadModels();
+
+});
+
+async function loadModels() {
+    await faceapi.nets.ssdMobilenetv1.loadFromUri('/models');
+    await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
+    await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
+}
+
+const resetState = () => {
+  capturedImages.value = [];
+  imageFiles.value = [];
+  imageUrls.value = [];
+  stopCamera(); // Ensure camera is stopped if open
+};
 </script>
 <template>
-    <v-container style="padding-top: 120px;">
-        <v-row></v-row>
-        <v-row>
-          <v-col style="text-align: center;">
-            <v-btn color="primary" @click="startCamera">Open Camera</v-btn>
-          </v-col>
-        </v-row>
-        <v-row v-if="showCamera">
-          <v-col cols="12" sm="12">
-            <video ref="videoRef" autoplay style="width: 100%;"></video>
-            <canvas ref="canvasRef" style="display: none;"></canvas>
-          </v-col>
-          <v-col cols="12" sm="6">
-            <v-btn @click="captureImage" block>Capture Image</v-btn>
-          </v-col>
-          <v-col cols="12" sm="6">
-            <v-btn @click="stopCamera" block>Close Camera</v-btn>
-          </v-col>
-        </v-row>
-        <v-row>
-          <v-col
-            cols="12"
-            sm="6"
-            md="4"
-            v-for="(image, index) in [...capturedImages, ...imageUrls]"
-            :key="index"
-            class="position-relative"
-          >
-          <v-img :src="image" aspect-ratio="1" class="ma-2">
-              <v-icon class="remove-btn" color="red" @click="removeImage(index)" size="40">mdi mdi-close-circle-outline</v-icon>
-          </v-img>
-          </v-col>
-        </v-row>
-        <v-card-actions class="actions">
-            <v-btn color="error" @click="goToRegister">ย้อนกลับ<v-icon>mdi mdi-arrow-left-thin</v-icon></v-btn>
-            <v-spacer></v-spacer>
-            <v-btn color="success" @click="goToRegisterHis">ถัดไป<v-icon>mdi mdi-arrow-right-thin</v-icon></v-btn>
-        </v-card-actions>
-    </v-container>
+  <v-container style="padding-top: 120px;">
+    <v-row>
+      <v-col style="text-align: center;">{{ userStore.register[currentUserIdIndex].studentId + " " +
+        userStore.register[currentUserIdIndex].firstName + " " + userStore.register[currentUserIdIndex].lastName
+        }}</v-col>
+    </v-row>
+    <v-row>
+      <v-col style="text-align: center;">
+        <v-btn color="primary" @click="startCamera">Open Camera</v-btn>
+      </v-col>
+    </v-row>
+    <v-row v-if="showCamera">
+      <v-col cols="12" sm="12">
+        <video ref="videoRef" autoplay style="width: 100%;"></video>
+        <canvas ref="canvasRef" style="display: none;"></canvas>
+      </v-col>
+      <v-col cols="12" sm="6">
+        <v-btn @click="captureImage" block>Capture Image</v-btn>
+      </v-col>
+      <v-col cols="12" sm="6">
+        <v-btn @click="stopCamera" block>Close Camera</v-btn>
+      </v-col>
+    </v-row>
+    <v-row>
+      <v-col cols="12" sm="6" md="4" v-for="(image, index) in [...capturedImages, ...imageUrls]" :key="index"
+        class="position-relative">
+        <v-img :src="image" aspect-ratio="1" class="ma-2">
+          <v-icon class="remove-btn" color="red" @click="removeImage(index)" size="40">mdi
+            mdi-close-circle-outline</v-icon>
+        </v-img>
+      </v-col>
+    </v-row>
+    <v-card-actions class="actions">
+      <!-- <v-btn color="error" @click="goToRegister">ย้อนกลับ<v-icon>mdi mdi-arrow-left-thin</v-icon></v-btn> -->
+      <v-spacer></v-spacer>
+      <v-btn color="success" @click="nextUserId">ถัดไป<v-icon>mdi mdi-arrow-right-thin</v-icon></v-btn>
+    </v-card-actions>
+  </v-container>
 </template>
 
 <style>
