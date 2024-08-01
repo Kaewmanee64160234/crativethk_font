@@ -28,7 +28,7 @@
           </v-card-title>
           <v-card-text>
             <v-row>
-              <v-col v-for="(image, index) in images" :key="index" cols="6" md="4" lg="3">
+              <v-col v-for="(image, index) in images" :key="index" cols="6" md="4" lg="3" class="image-container">
                 <v-img :src="image" aspect-ratio="1"></v-img>
               </v-col>
             </v-row>

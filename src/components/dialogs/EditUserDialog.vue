@@ -87,7 +87,9 @@ function float32ArrayToBase64(float32Array) {
                 <v-row>
                     <!-- Image Column -->
                     <v-col cols="12" md="4" class="d-flex justify-center align-center">
-                        <v-img :src="`${url}/users/image/filename/${userStore.editUser.images[0] ?? ''}`" alt="User Profile"
+                        <v-img
+                            v-if="userStore.editUser && userStore.editUser.images && userStore.editUser.images.length > 0"
+                            :src="`${url}/users/image/filename/${userStore.editUser.images[0]}`" alt="User Profile"
                             class="mb-2" max-width="100%" max-height="auto" />
                     </v-col>
                     <!-- Text Fields Column -->

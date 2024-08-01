@@ -10,12 +10,17 @@ const imageUrls = ref<string[]>([]);
 const imageFiles = ref<File[]>([]);
 const fileInputKey = ref(Date.now()); // Key to reset the file input field
 
+// Fetching existing images from the user store
+const images = ref<string[]>(userStore.currentUser?.images?.map((image: string) => `${url}/users/image/filename/${image}`) ?? []);
+
 async function close() {
   userStore.closeImageDialog();
 }
 
 onMounted(async () => {
   await userStore.getUsersById(userStore.currentUser?.userId!);
+  images.value = userStore.currentUser?.images?.map((image: string) => `${url}/users/image/filename/${image}`) ?? [];
+
   await loadModels();
 });
 
@@ -26,7 +31,7 @@ async function loadModels() {
   await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
 }
 
-function float32ArrayToBase64(float32Array) {
+function float32ArrayToBase64(float32Array: Float32Array) {
   const uint8Array = new Uint8Array(float32Array.buffer);
   let binary = '';
   for (let i = 0; i < uint8Array.byteLength; i++) {
@@ -79,17 +84,19 @@ async function save() {
     lastName: userStore.currentUser!.lastName || '',
     files: imageFiles.value,
   };
+
   const faceDescriptions = await processFiles(userStore.editUser.files);
   const dataFaceBase64 = faceDescriptions.map(faceDescription => float32ArrayToBase64(faceDescription));
   console.log(dataFaceBase64);
   userStore.editUser.faceDescriptions = dataFaceBase64;
 
   await userStore.saveUser();
+  showDialog.value = false;
   await userStore.closeImageDialog();
   window.location.reload();
-  console.log(userStore.editUser);
-  await userStore.getCurrentUser();
+
   await userStore.getUsersById(userStore.currentUser?.userId!);
+  showDialog.value = true;
 }
 
 const handleFileChange = (event: Event) => {
@@ -102,8 +109,13 @@ const handleFileChange = (event: Event) => {
         if (result) {
           try {
             const resizedImage = await resizeAndConvertImageToBase64(result, 800, 600);
-            imageUrls.value.push(resizedImage);
-            imageFiles.value.push(file);
+            
+            // Check for duplicate images
+            const isDuplicate = checkDuplicateImage(resizedImage);
+            if (!isDuplicate) {
+              imageUrls.value.push(resizedImage);
+              imageFiles.value.push(file);
+            }
           } catch (error) {
             console.error("Error resizing image:", error);
           }
@@ -137,8 +149,14 @@ const resizeAndConvertImageToBase64 = (imageUrl: string, maxWidth: number, maxHe
   });
 };
 
-// Example images array, replace with actual image sources from your store
-const images = ref<string[]>(userStore.currentUser?.images?.map((image: string) => `${url}/users/image/filename/${image}`) ?? []);
+function checkDuplicateImage(newImageBase64: string): boolean {
+  // Check if the new image base64 string is already in the list
+  return images.value.some((existingImage) => {
+    // Extract the base64 part from the data URL
+    const existingImageBase64 = existingImage.split(',')[1];
+    return existingImageBase64 === newImageBase64.split(',')[1];
+  });
+}
 
 function removeImage(index: number) {
   images.value.splice(index, 1);
@@ -146,11 +164,11 @@ function removeImage(index: number) {
   userStore.currentUser.images = images.value.map(image => image.replace(`${url}/users/image/filename/`, ''));
 }
 
-// function removeUploadedImage(index: number) {
-//   imageUrls.value.splice(index, 1);
-//   imageFiles.value.splice(index, 1);
-//   fileInputKey.value = Date.now(); // Reset the file input field
-// }
+function removeUploadedImage(index: number) {
+  imageUrls.value.splice(index, 1);
+  imageFiles.value.splice(index, 1);
+  fileInputKey.value = Date.now(); // Reset the file input field
+}
 
 // Computed property to check if there are uploaded images
 const hasUploadedImages = computed(() => imageUrls.value.length > 0);
@@ -159,7 +177,7 @@ const hasUploadedImages = computed(() => imageUrls.value.length > 0);
 
 <template>
   <v-container style="padding-top: 120px;">
-    <v-dialog v-model="showDialog" max-width="800px">
+    <v-dialog v-model="showDialog" max-width="800px" persistent>
       <v-card>
         <v-card-title class="headline" style="display: flex; justify-content: space-between;">
           รูปภาพทั้งหมด
@@ -182,7 +200,7 @@ const hasUploadedImages = computed(() => imageUrls.value.length > 0);
             </v-col>
             <v-col cols="6" md="4" lg="3" class="image-container" v-for="(image, index) in [...imageUrls]" :key="index">
               <v-img :src="image" aspect-ratio="1" class="ma-2"></v-img>
-              <v-btn icon small @click="removeImage(index)" class="close-button">
+              <v-btn icon small @click="removeUploadedImage(index)" class="close-button">
                 <v-icon color="red">mdi-close</v-icon>
               </v-btn>
             </v-col>
