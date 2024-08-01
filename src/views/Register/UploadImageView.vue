@@ -4,8 +4,10 @@ import user from '@/services/user';
 import { useUserStore } from '@/stores/user.store';
 import { onMounted, ref } from 'vue';
 import * as faceapi from 'face-api.js';
+import { useMessageStore } from '@/stores/message';
 
 const userStore = useUserStore();
+const messageStore = useMessageStore();
 const showCamera = ref(false);
 const videoRef = ref<HTMLVideoElement | null>(null);
 const canvasRef = ref<HTMLCanvasElement | null>(null);
@@ -13,10 +15,6 @@ const capturedImages = ref<string[]>([]);
 const imageFiles = ref<File[]>([]);
 const imageUrls = ref<string[]>([]);
 const currentUserIdIndex = ref(0);
-
-const goToRegister = () => {
-  router.push(`/register`);
-};
 
 const nextUserId = async () => {
   try {
@@ -35,46 +33,53 @@ const nextUserId = async () => {
     };
 
     const faceDescriptions = await processFiles(userStore.editUser.files);
-    const dataFaceBase64 = faceDescriptions.map( (faceDescription) => float32ArrayToBase64(faceDescription));
+    const dataFaceBase64 = faceDescriptions.map(faceDescription => float32ArrayToBase64(faceDescription));
     console.log(dataFaceBase64);
     userStore.editUser.faceDescriptions = dataFaceBase64;
 
-    await userStore.saveUser();
-    console.log("User images updated:", userStore.editUser.images);
-    currentUserIdIndex.value++;
-    if (currentUserIdIndex.value < userStore.register.length) {
-      navigateToNextUser();
+    if (userStore.editUser.faceDescriptions.length > 0) {
+      await userStore.saveUser();
+      currentUserIdIndex.value++;
+      navigateToNextUserOrHistory();
     } else {
-      console.log("All users updated");
+      messageStore.showError("Please upload at least one image");
     }
   } catch (error) {
     console.error("Failed to update user images:", error);
   }
 };
 
+const navigateToNextUserOrHistory = () => {
+  if (currentUserIdIndex.value < userStore.register.length) {
+    router.push(`/uploadImage/${userStore.register[currentUserIdIndex.value].studentId}`);
+    } else {
+    router.push('/registerHistory');
+    }
+  resetState();
+};
+
 async function processFiles(files: File[]): Promise<Float32Array[]> {
-    const faceDescriptions: Float32Array[] = [];
-    
+  const faceDescriptions: Float32Array[] = [];
 
-    for (const file of files) {
-        const imgElement = await createImageElement(file);
-        const faceDescription = await faceapi
-            .detectSingleFace(imgElement, new faceapi.SsdMobilenetv1Options())
-            .withFaceLandmarks()
-            .withFaceDescriptor();
+  for (const file of files) {
+    const imgElement = await createImageElement(file);
+    const faceDescription = await faceapi
+      .detectSingleFace(imgElement, new faceapi.SsdMobilenetv1Options())
+      .withFaceLandmarks()
+      .withFaceDescriptor();
 
-        if (faceDescription) {
-            faceDescriptions.push(faceDescription.descriptor);
-        }
-
-        // Clean up the created image element
-        imgElement.remove();
+    if (faceDescription) {
+      faceDescriptions.push(faceDescription.descriptor);
     }
 
-    return faceDescriptions;
+    // Clean up the created image element
+    imgElement.remove();
+  }
+
+  return faceDescriptions;
 }
 
-function float32ArrayToBase64(float32Array) {
+function float32ArrayToBase64(float32Array: Float32Array): string {
   const uint8Array = new Uint8Array(float32Array.buffer);
   let binary = '';
   for (let i = 0; i < uint8Array.byteLength; i++) {
@@ -83,30 +88,22 @@ function float32ArrayToBase64(float32Array) {
   return btoa(binary);
 }
 
-const navigateToNextUser = () => {
-  if (currentUserIdIndex.value < userStore.register.length) {
-    router.push(`/uploadImage/${userStore.register[currentUserIdIndex.value].studentId}`);
-    resetState();
-  } else {
-    router.push(`/registerHistoryView`);
-    resetState();
-  }
-};
 async function createImageElement(file: File): Promise<HTMLImageElement> {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
 
-        reader.onload = () => {
-            const img = new Image();
-            img.src = reader.result as string;
-            img.onload = () => resolve(img);
-            img.onerror = reject;
-        };
+    reader.onload = () => {
+      const img = new Image();
+      img.src = reader.result as string;
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+    };
 
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-    });
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
+
 const resizeAndConvertImageToBase64 = (imageUrl: string, maxWidth: number, maxHeight: number) => {
   return new Promise<string>((resolve, reject) => {
     const img = new Image();
@@ -149,6 +146,7 @@ const startCamera = async () => {
     videoRef.value.srcObject = stream;
   }
 };
+
 const captureImage = () => {
   if (videoRef.value && canvasRef.value) {
     const ctx = canvasRef.value.getContext("2d");
@@ -182,14 +180,16 @@ const removeImage = (index: number) => {
 
 onMounted(async () => {
   await userStore.getUsers();
+  if (userStore.register.length === 0) {
+    messageStore.showError("No users found.");
+  }
   await loadModels();
-
 });
 
 async function loadModels() {
-    await faceapi.nets.ssdMobilenetv1.loadFromUri('/models');
-    await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
-    await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
+  await faceapi.nets.ssdMobilenetv1.loadFromUri('/models');
+  await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
+  await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
 }
 
 const resetState = () => {
@@ -198,13 +198,25 @@ const resetState = () => {
   imageUrls.value = [];
   stopCamera(); // Ensure camera is stopped if open
 };
+
+const skipUser = () => {
+  currentUserIdIndex.value++;
+  navigateToNextUserOrHistory();
+};
 </script>
 <template>
   <v-container style="padding-top: 120px;">
     <v-row>
-      <v-col style="text-align: center;">{{ userStore.register[currentUserIdIndex].studentId + " " +
-        userStore.register[currentUserIdIndex].firstName + " " + userStore.register[currentUserIdIndex].lastName
-        }}</v-col>
+      <v-col style="text-align: center;">
+        <div v-if="currentUserIdIndex < userStore.register.length">
+          {{ userStore.register[currentUserIdIndex].studentId + " " +
+          userStore.register[currentUserIdIndex].firstName + " " + userStore.register[currentUserIdIndex].lastName }}
+          <v-btn style="margin-left: 3%;" color="secondary" @click="skipUser">Skip</v-btn>
+        </div>
+        <div v-else>
+          <span>No more users to process</span>
+        </div>
+      </v-col>
     </v-row>
     <v-row>
       <v-col style="text-align: center;">
@@ -233,7 +245,6 @@ const resetState = () => {
       </v-col>
     </v-row>
     <v-card-actions class="actions">
-      <!-- <v-btn color="error" @click="goToRegister">ย้อนกลับ<v-icon>mdi mdi-arrow-left-thin</v-icon></v-btn> -->
       <v-spacer></v-spacer>
       <v-btn color="success" @click="nextUserId">ถัดไป<v-icon>mdi mdi-arrow-right-thin</v-icon></v-btn>
     </v-card-actions>

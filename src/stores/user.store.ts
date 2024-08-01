@@ -88,18 +88,24 @@ export const useUserStore = defineStore("userStore", () => {
     try {
         console.log("save user", editUser.value);
         if (editUser.value.userId && editUser.value.userId !== 0) {
-            await userService.updateUser(editUser.value, editUser.value.userId);
-            messageStore.showInfo("User updated successfully.");
+            const updatedUser = await userService.updateUser(editUser.value, editUser.value.userId);
+            // Update user in the register array
+            const index = register.value.findIndex(user => user.userId === editUser.value.userId);
+            if (index !== -1) {
+                register.value[index] = { ...register.value[index], ...updatedUser.data };
+                messageStore.showInfo("User updated successfully.");
+            }
         } else {
             const newUser = await userService.saveUser(editUser.value);
-            register.value.push(newUser.data); 
+            register.value.push(newUser.data); // Add new user to register
             messageStore.showInfo("New user created successfully.");
         }
 
         await getUsers(); // Refresh or reload user list
         closeDialog();  // Close the dialog
     } catch (e) {
-        console.log(e);
+        console.error("Failed to save user:", e);
+        messageStore.showError("Failed to save user.");
     }
 };
   //delete user by id

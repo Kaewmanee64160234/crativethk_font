@@ -28,7 +28,7 @@ onMounted(async () => {
   await attendanceStore.getAttendanceByAssignmentId(route.params.assignmentId.toString());
   await userStore.getUserByCourseId(queryCourseId+'');
   attdent.value = [];
-  attdent.value.push(...attendanceStore.attendances!.filter((attend: Attendance) => (attend.user?.studentId === userStore.currentUser?.studentId) && (attend.attendanceImage !== '')));
+  attdent.value.push(...attendanceStore.attendances!.filter((attend: Attendance) => (attend.user?.studentId === userStore.currentUser?.studentId) && (attend.attendanceImage !== 'noimage.jpg')));
 });
 
 //confirm attendance

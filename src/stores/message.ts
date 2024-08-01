@@ -43,6 +43,6 @@ export const useMessageStore = defineStore("message", () => {
     message.value = text;
     isShow.value = true;
   }
-  return { isShow, message, showError, showInfo, CalshowError };
+  return { isShow, message, showError, showInfo, CalshowError,showConfirm };
 });
 
