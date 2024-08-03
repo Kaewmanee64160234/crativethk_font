@@ -4,7 +4,6 @@ import { useAttendanceStore } from '../../stores/attendance.store';
 
 const attendanceStore = useAttendanceStore();
 const selectedStatus = ref(attendanceStore.editAttendance.attendanceStatus || '');
-
 // closeDialog
 const closeDialog = () => {
   attendanceStore.showDialog = false;
@@ -12,6 +11,10 @@ const closeDialog = () => {
 
 // updateAttendanceStatus
 const updateAttendanceStatus = () => {
+  if (!attendanceStore.editAttendance) {
+    console.error("No attendance data available.");
+    return;
+  }
   attendanceStore.editAttendance.attendanceStatus = selectedStatus.value;
   attendanceStore.updateAttendanceTeacher(attendanceStore.editAttendance);
   closeDialog();
@@ -30,7 +33,7 @@ const updateAttendanceStatus = () => {
         <!-- Display user's name and current attendance status -->
         <div>
           <p><strong>User:</strong> {{attendanceStore.userAttendance.studentId+' '+ attendanceStore.userAttendance.firstName +" "+attendanceStore.userAttendance.lastName }}</p>
-          <p><strong>Current Status:</strong> {{ attendanceStore.editAttendance.attendanceStatus }}</p>
+          <p><strong>Current Status:</strong> {{ attendanceStore.editAttendance?.attendanceStatus }}</p>
         </div>
         <v-select
           v-model="selectedStatus"

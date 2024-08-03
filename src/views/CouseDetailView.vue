@@ -8,7 +8,7 @@ import { useAuthStore } from "@/stores/auth";
 import { useUserStore } from "@/stores/user.store";
 import { useAttendanceStore } from "@/stores/attendance.store";
 import type Assignment from "@/stores/types/Assignment";
-import type Attendance from "@/stores/types/Attendance";
+import type Attendance from "@/stores/types/Attendances";
 import { useMessageStore } from "@/stores/message";
 import UpdateAttendantDialogView from "@/components/attendant/updateAttendantDialog.vue";
 import type { User } from "@/stores/types/User";
@@ -225,7 +225,8 @@ const openDialog = (assignment: Assignment, user: User) => {
   //filter attendance from assignments
   const attendance = attendanceStore.attendances?.findIndex(
     (att) => att.user?.userId === user.userId && att.assignment?.assignmentId === assignment.assignmentId);
-
+  console.log("show",attendance)
+  console.log("show",assignment)
   attendanceStore.editAttendance = attendanceStore.attendances![attendance!];
   attendanceStore.userAttendance = user;
   attendanceStore.showDialog = true;

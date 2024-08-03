@@ -120,6 +120,10 @@ function getFileStd(formData: FormData) {
   });
 }
 
+function getStdQR(stdId: number) {
+  return http.get(`/users/${stdId}/qr`);
+}
+
 export default {
   getUserById,
   getUser,
@@ -130,4 +134,5 @@ export default {
   searchUsers,
   getUserByCourseId,
   getFileStd,
+  getStdQR,
 };

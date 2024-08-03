@@ -19,6 +19,8 @@ export const useAttendanceStore = defineStore("attendanceStore", () => {
     teacherId: "",
     role: "",
     status: "",
+    major: "",
+    year: "",
     profileImage: "",
   });
   const messageStore = useMessageStore();

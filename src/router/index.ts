@@ -49,6 +49,21 @@ const router = createRouter({
       },
     },
     {
+      //confirmRegisterView
+      path: "/confirmRegister/:stdId",
+      name: "confirmRegister",
+      components: {
+        default: () => import("../views/Register/ConfirmRegisterView.vue"),
+        header: () => import("../components/headers/MainHeader.vue"),
+        menu: () => import("../components/headers/SubHeader.vue"),
+      },
+      meta: {
+        layout: "FullLayout",
+        // requiresAuth: true,
+        // beforeEnter:[ ezAutorized]
+      },
+    },
+    {
       //registerHistory
       path: "/registerHistory",
       name: "registerHistory",

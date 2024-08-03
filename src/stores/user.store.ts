@@ -17,6 +17,7 @@ export const useUserStore = defineStore("userStore", () => {
   const showDeleteDialog = ref(false);
   const showEditDialog = ref(false);
   const showEditDialog2 = ref(false);
+  const QR = ref("");
   const keyword = ref("");
   const messageStore = useMessageStore()
   const currentUser = ref<User>();
@@ -29,6 +30,8 @@ export const useUserStore = defineStore("userStore", () => {
     email: "",
     studentId: "",
     teacherId: "",
+    major: "",
+    year: "",
     role: "",
     status: "",
     profileImage: "",
@@ -79,6 +82,8 @@ export const useUserStore = defineStore("userStore", () => {
       lastName: "",
       role: "",
       status: "",
+      major: "",
+      year: "",
       profileImage: "",
       files: [],
     };
@@ -213,8 +218,20 @@ const getUserFromLocalStorage = () => {
     }
   }
 
+  async function createQrByStdId(stdId: number) {
+    try {
+      const res = await userService.getStdQR(stdId);
+      const imageDataUrl = `${res.data}`;
+      QR.value = imageDataUrl;
+      console.log("found", QR.value);
+    } catch (error) {
+      console.error("Error while fetching QR code:", error);
+    }
+  }
+
 
   return {
+    createQrByStdId,
     getCurrentUser,
     currentUser,
     getUserImage,
@@ -240,6 +257,7 @@ const getUserFromLocalStorage = () => {
     closeImageDialog,
     file_,
     register,
-    getUsersById
+    getUsersById,
+    QR
   };
 });
