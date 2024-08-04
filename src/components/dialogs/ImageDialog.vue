@@ -24,13 +24,21 @@ async function close() {
 
 onMounted(async () => {
   await userStore.getUsersById(userStore.currentUser!?.userId!);
+
+  // Initialize images
   images.value =
     userStore.currentUser!?.images?.map(
       (image: string) => `${url}/users/image/filename/${image}`
     ) ?? [];
 
+  // Ensure faceDescriptions are initialized
+  if (!userStore.currentUser!.faceDescriptions) {
+    userStore.currentUser!.faceDescriptions = [];
+  }
+
   await loadModels();
 });
+
 
 async function loadModels() {
   await userStore.getUsersById(userStore.currentUser!?.userId!);
@@ -201,17 +209,16 @@ function removeUploadedImage(index: number) {
 // Computed property to check if there are uploaded images
 const hasUploadedImages = computed(() => imageUrls.value.length > 0);
 
-function handleUpdate(event: any) {
-  const oldIndex = event.oldIndex;
-  const newIndex = event.newIndex;
+function handleUpdate(evt: any) {
+  const { oldIndex, newIndex } = evt;
 
-  // Use the move function to reorder images array and face descriptions array
-  if (oldIndex !== undefined && newIndex !== undefined) {
+  // Ensure indices are defined and valid
+  if (oldIndex !== undefined && newIndex !== undefined && oldIndex !== newIndex) {
     // Move image in images array
     const movedImage = images.value.splice(oldIndex, 1)[0];
     images.value.splice(newIndex, 0, movedImage);
 
-    // Move corresponding face description
+    // Move corresponding face descriptor
     if (userStore.currentUser!.faceDescriptions) {
       const movedFaceDescriptor = userStore.currentUser!.faceDescriptions.splice(oldIndex, 1)[0];
       userStore.currentUser!.faceDescriptions.splice(newIndex, 0, movedFaceDescriptor);
@@ -223,6 +230,7 @@ function handleUpdate(event: any) {
     );
   }
 }
+
 
 </script>
 
