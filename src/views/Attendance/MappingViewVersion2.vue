@@ -1,3 +1,81 @@
+<template>
+  <v-container style="margin-top: 10%">
+    <v-card
+      class="mx-auto"
+      color="primary"
+      max-width="1200"
+      outlined
+      style="padding: 20px"
+    >
+      <v-card-title>
+        <h1 class="text-h5">{{ courseStore.currentCourse?.nameCourses }}</h1>
+      </v-card-title>
+    </v-card>
+    <!-- Display Controls and Image Upload -->
+    <v-row class="mt-5">
+      <v-col cols="12" md="6"></v-col>
+      <v-col cols="12" md="6" class="text-right">
+        <v-btn color="#CFEBFB" @click="confirmAttendance()">
+          <v-icon size="30">mdi-clipboard-check-outline</v-icon>ตรวจสอบการเช็คชื่อ
+        </v-btn>
+      </v-col>
+    </v-row>
+
+    <!-- Loading Spinner -->
+    <v-row justify="center" v-if="isLoading">
+      <v-col cols="12" md="6" class="text-center">
+        <v-progress-circular
+          :size="70"
+          :width="7"
+          indeterminate
+          color="primary"
+        ></v-progress-circular>
+        <div>Processing images...</div>
+      </v-col>
+    </v-row>
+
+    <!-- Layout Row for Image Display and Identifications -->
+    <v-row v-if="!isLoading">
+      <!-- Column for Original Images with Canvas Overlay -->
+      <v-col cols="12" md="6">
+        <div
+          v-for="(imageUrl, index) in imageUrls"
+          :key="'orig-image-' + index"
+          class="position-relative mb-3"
+        >
+          <img :src="imageUrl" alt="Uploaded Image" class="w-90 rounded-lg" />
+        </div>
+      </v-col>
+
+      <!-- Column for Identification and Cropped Images Display -->
+      <v-col cols="12" md="6">
+        <v-card style="overflow-y: scroll">
+          <v-row>
+            <v-col
+              cols="12"
+              sm="6"
+              v-for="(identification, index) in identifications"
+              :key="'id-' + index"
+            >
+              <v-card outlined color="#EDEDED" class="rounded-lg">
+                <v-card-title>
+                  <v-icon small>mdi-circle-small</v-icon>{{ identification.studentId }} |
+                  {{ identification.name }} - Score: {{ (identification.score * 100).toFixed(2) }}%
+                </v-card-title>
+                <v-img
+                  :src="croppedImagesDataUrls[index]"
+                  aspect-ratio="1.5"
+                  class="rounded-lg"
+                ></v-img>
+              </v-card>
+            </v-col>
+          </v-row>
+        </v-card>
+      </v-col>
+    </v-row>
+  </v-container>
+</template>
+
 <script setup lang="ts">
 import { ref, reactive, onMounted, nextTick } from "vue";
 import * as faceapi from "face-api.js";
@@ -18,7 +96,9 @@ interface Identification {
   name: string;
   studentId: string;
   imageUrl: string;
+  score: number;
 }
+
 function float32ArrayToBase64(float32Array: Float32Array): string {
   const uint8Array = new Uint8Array(float32Array.buffer);
   let binary = '';
@@ -43,7 +123,7 @@ function base64ToFloat32Array(base64: string): Float32Array {
   }
 }
 
-const setCanvasRef = (index) => (el) => {
+const setCanvasRef = (index: number) => (el: HTMLCanvasElement) => {
   canvasRefs[index] = el;
 };
 
@@ -51,15 +131,62 @@ const imageUrls = ref<string[]>([]);
 const identifications = ref<Identification[]>([]);
 const croppedImagesDataUrls = ref<string[]>([]);
 const canvasRefs = reactive<CanvasRefs>({});
-const userDescriptors = new Map<string, Float32Array>();
+const userDescriptors = new Map<string, Float32Array[]>();
 const userStore = useUserStore();
 const route = useRoute();
 const courseStore = useCourseStore();
 const router = useRouter();
 const assignmentStore = useAssignmentStore();
-const attendaceStore = useAttendanceStore();
+const attendanceStore = useAttendanceStore();
+const isLoading = ref(true); // Add a loading state
 
-async function processImage(image, index) {
+onMounted(async () => {
+  try {
+    isLoading.value = true;
+    await Promise.all([
+      faceapi.nets.ssdMobilenetv1.loadFromUri("/models"),
+      faceapi.nets.faceLandmark68Net.loadFromUri("/models"),
+      faceapi.nets.faceRecognitionNet.loadFromUri("/models"),
+    ]);
+
+    console.log("Models loaded successfully");
+    console.log("Current Assignment:", userStore.users);
+
+    const faceDescriptions = userStore.users.map((user) => user.faceDescriptions![0]);
+    faceDescriptions.forEach((description, index) => {
+      if (description) {
+        try {
+          const float32Array = base64ToFloat32Array(description);
+          const user = userStore.users[index];
+          userDescriptors.set(user.studentId!, [float32Array]);
+
+          // Added logging for debugging
+          console.log(`User: ${user.email}, Student ID: ${user.studentId}`);
+          console.log(`Face Description: ${description}`);
+          console.log(`Float32Array: ${float32Array}`);
+        } catch (error) {
+          console.error("Error decoding face description for user:", userStore.users[index].email, error);
+        }
+      } else {
+        console.warn("No face description found for user:", userStore.users[index].email);
+      }
+    });
+
+    const urls: string[] = route.query.imageUrls || [];
+    console.log(urls);
+    imageUrls.value = urls;
+    await Promise.all(
+      imageUrls.value.map((url, index) => nextTick(() => loadImageAndProcess(url, index)))
+    );
+  } catch (error) {
+    console.error("Error in onMounted:", error);
+    alert("Failed to load data. Please check the console for more details.");
+  } finally {
+    isLoading.value = false; // Disable loading after processing
+  }
+});
+
+async function processImage(image: HTMLImageElement, index: number) {
   const canvas = canvasRefs[index] || document.createElement("canvas");
   document.body.appendChild(canvas);
   canvas.width = image.naturalWidth;
@@ -92,17 +219,21 @@ async function processImage(image, index) {
           name: bestMatch.user.firstName,
           studentId: bestMatch.user.studentId!,
           imageUrl: croppedDataURL!,
+          score: 1 - bestMatch.score, // Higher score is better
         });
       } else {
         identifications.value.push({
           name: "Unknown",
           studentId: "N/A",
           imageUrl: croppedDataURL!,
+          score: 0, // Unknown score
         });
       }
     });
   } catch (error) {
     console.error("Failed to process face detection:", error);
+  } finally {
+    document.body.removeChild(canvas);
   }
 }
 
@@ -117,8 +248,20 @@ function findBestUserMatch(
   descriptor: Float32Array
 ): { user: User | null; score: number } {
   let bestMatch = { user: null, score: 0.7 };
-  userDescriptors.forEach((userDescriptor, studentId) => {
-    const distance = faceapi.euclideanDistance(descriptor, userDescriptor);
+  userDescriptors.forEach((descriptors, studentId) => {
+    // Calculate the average descriptor
+    const avgDescriptor = averageDescriptor(descriptors);
+
+    // Check if descriptor lengths match
+    if (descriptor.length !== avgDescriptor.length) {
+      console.error(
+        `Descriptor length mismatch for user ${studentId}:`,
+        `descriptor length: ${descriptor.length}, avgDescriptor length: ${avgDescriptor.length}`
+      );
+      return;
+    }
+
+    const distance = faceapi.euclideanDistance(descriptor, avgDescriptor);
     if (distance < bestMatch.score) {
       bestMatch = {
         user: userStore.users.find((u) => u.studentId === studentId)!,
@@ -129,49 +272,20 @@ function findBestUserMatch(
   return bestMatch;
 }
 
-onMounted(async () => {
-  try {
-    await Promise.all([
-      faceapi.nets.ssdMobilenetv1.loadFromUri("/models"),
-      faceapi.nets.faceLandmark68Net.loadFromUri("/models"),
-      faceapi.nets.faceRecognitionNet.loadFromUri("/models"),
-    ]);
-
-    console.log("Models loaded successfully");
-    console.log("Current Assignment:",  userStore.users);
-    
-
-    const faceDescriptions = userStore.users.map((user) => user.faceDescriptions![0]);
-    faceDescriptions.forEach((description, index) => {
-      if (description) {
-        try {
-          const float32Array = base64ToFloat32Array(description);
-          const user = userStore.users[index];
-          userDescriptors.set(user.studentId!, float32Array);
-
-          // Added logging for debugging
-          console.log(`User: ${user.email}, Student ID: ${user.studentId}`);
-          console.log(`Face Description: ${description}`);
-          console.log(`Float32Array: ${float32Array}`);
-        } catch (error) {
-          console.error("Error decoding face description for user:", userStore.users[index].email, error);
-        }
-      } else {
-        console.warn("No face description found for user:", userStore.users[index].email);
-      }
-    });
-
-    const urls: string[] = route.query.imageUrls || [];
-    console.log(urls);
-    imageUrls.value = urls;
-    imageUrls.value.forEach((url, index) => {
-      nextTick(() => loadImageAndProcess(url, index));
-    });
-  } catch (error) {
-    console.error("Error in onMounted:", error);
-    alert("Failed to load data. Please check the console for more details.");
+function averageDescriptor(descriptors: Float32Array[]): Float32Array {
+  if (descriptors.length === 0) return new Float32Array(0);
+  const length = descriptors[0].length;
+  const avgDescriptor = new Float32Array(length);
+  descriptors.forEach((descriptor) => {
+    for (let i = 0; i < length; i++) {
+      avgDescriptor[i] += descriptor[i];
+    }
+  });
+  for (let i = 0; i < length; i++) {
+    avgDescriptor[i] /= descriptors.length;
   }
-});
+  return avgDescriptor;
+}
 
 // Existing functions
 async function loadImage(url: string): Promise<HTMLImageElement> {
@@ -278,7 +392,7 @@ const confirmAttendance = async () => {
               faceDescriptions: [],
             } as User);
 
-      await attendaceStore.createAttendance(
+      await attendanceStore.createAttendance(
         {
           attendanceId: 0,
           attendanceDate: new Date(),
@@ -303,24 +417,25 @@ const confirmAttendance = async () => {
       );
     }
   }
-  // filter user from identifications and create user unknow 
-  await userStore.getUserByCourseId(assignmentStore.assignment?.course.coursesId+'')
-  const usersCreateUnkow = userStore.users.filter((user) => {
+
+  // Filter users from identifications and create unknown users
+  await userStore.getUserByCourseId(assignmentStore.assignment?.course.coursesId + '')
+  const usersCreateUnknown = userStore.users.filter((user) => {
     return !identifications.value.some((identification) => identification.studentId === user.studentId);
   });
-  console.log("Create user unknow", usersCreateUnkow);
-  
-  // create user unknow
-  for (let i = 0; i < usersCreateUnkow.length; i++) {
+  console.log("Create unknown users", usersCreateUnknown);
+
+  // Create unknown users
+  for (let i = 0; i < usersCreateUnknown.length; i++) {
     try {
-      await attendaceStore.createAttendance(
+      await attendanceStore.createAttendance(
         {
           attendanceId: 0,
           attendanceDate: new Date(),
           attendanceStatus: "absent",
           attendanceConfirmStatus: "notConfirmed",
           assignment: assignmentStore.assignment,
-          user: usersCreateUnkow[i],
+          user: usersCreateUnknown[i],
           attendanceImage: "",
         },
         new File([], "")
@@ -328,7 +443,7 @@ const confirmAttendance = async () => {
     } catch (error) {
       console.error(
         "Error recording attendance for",
-        usersCreateUnkow[i].firstName,
+        usersCreateUnknown[i].firstName,
         ":",
         error
       );
@@ -339,80 +454,11 @@ const confirmAttendance = async () => {
     }
   }
   assignmentStore.assignment!.statusAssignment = 'completed';
-  await assignmentStore.updateAssignment(assignmentStore.assignment!.assignmentId+'',assignmentStore.assignment!);
+  await assignmentStore.updateAssignment(assignmentStore.assignment!.assignmentId + '', assignmentStore.assignment!);
   if (userStore.currentUser?.role === "อาจารย์") {
-    router.push("/reCheckMappingTeacher/course/"+ courseStore.currentCourse?.coursesId+"/assignment/" + assignmentStore.assignment?.assignmentId);
+    router.push("/reCheckMappingTeacher/course/" + courseStore.currentCourse?.coursesId + "/assignment/" + assignmentStore.assignment?.assignmentId);
   } else {
-    router.push("/mappingForStudent/course/"+ courseStore.currentCourse?.coursesId+"/assignment/" + assignmentStore.assignment?.assignmentId);
+    router.push("/mappingForStudent/course/" + courseStore.currentCourse?.coursesId + "/assignment/" + assignmentStore.assignment?.assignmentId);
   }
 };
 </script>
-
-
-
-<template>
-  <v-container style="margin-top: 10%">
-    <v-card
-      class="mx-auto"
-      color="primary"
-      max-width="1200"
-      outlined
-      style="padding: 20px"
-    >
-      <v-card-title>
-        <h1 class="text-h5">{{ courseStore.currentCourse?.nameCourses }}</h1>
-      </v-card-title>
-    </v-card>
-    <!-- Display Controls and Image Upload -->
-    <v-row class="mt-5">
-      <v-col cols="12" md="6"></v-col>
-      <v-col cols="12" md="6" class="text-right">
-        <v-btn color="#CFEBFB" @click="confirmAttendance()"
-          ><v-icon size="30">mdi-clipboard-check-outline</v-icon>ตรวจสอบการเช็คชื่อ</v-btn
-        >
-      </v-col>
-    </v-row>
-
-    <!-- Layout Row for Image Display and Identifications -->
-    <v-row>
-      <!-- Column for Original Images with Canvas Overlay -->
-      <v-col cols="12" md="6">
-        <div
-          v-for="(imageUrl, index) in imageUrls"
-          :key="'orig-image-' + index"
-          class="position-relative mb-3"
-        >
-          <img :src="imageUrl" alt="Uploaded Image" class="w-90 rounded-lg" />
-        </div>
-      </v-col>
-
-      <!-- Column for Identification and Cropped Images Display -->
-      <v-col cols="12" md="6">
-        <v-card style="overflow-y: scroll">
-          <v-row>
-            <v-col
-              cols="12"
-              sm="6"
-              v-for="(name, index) in identifications"
-              :key="'id-' + index"
-            >
-              <v-card outlined color="#EDEDED" class="rounded-lg">
-                <v-card-title>
-                  <v-icon small>mdi-circle-small</v-icon>{{ name.studentId }} |
-                  {{ name.name }}</v-card-title
-                >
-                <v-img
-                  :src="croppedImagesDataUrls[index]"
-                  aspect-ratio="1.5"
-                  class="rounded-lg"
-                ></v-img>
-              </v-card>
-            </v-col>
-          </v-row>
-        </v-card>
-      </v-col>
-    </v-row>
-  </v-container>
-</template>
-
-<style scoped></style>
