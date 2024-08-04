@@ -2,9 +2,12 @@
 import { onMounted, ref, computed } from 'vue';
 import { useUserStore } from '@/stores/user.store';
 import * as faceapi from 'face-api.js';
+import Swal from 'sweetalert2';
 
 const userStore = useUserStore();
 const showDialog = ref(true);
+const alertDialog = ref(false);
+const alertMessage = ref('');
 const url = "http://localhost:3000";
 const imageUrls = ref<string[]>([]);
 const imageFiles = ref<File[]>([]);
@@ -25,10 +28,13 @@ onMounted(async () => {
 });
 
 async function loadModels() {
-  await userStore.getUsersById(userStore.currentUser?.userId!);
-  await faceapi.nets.ssdMobilenetv1.loadFromUri('/models');
-  await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
-  await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
+  try {
+    await faceapi.nets.ssdMobilenetv1.loadFromUri('/models');
+    await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
+    await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
+  } catch (error) {
+    console.error("Error loading face-api models:", error);
+  }
 }
 
 function float32ArrayToBase64(float32Array: Float32Array) {
@@ -58,45 +64,74 @@ async function createImageElement(file: File): Promise<HTMLImageElement> {
 
 async function processFiles(files: File[]): Promise<Float32Array[]> {
   const faceDescriptions: Float32Array[] = [];
+  const failedFiles: string[] = [];
 
   for (const file of files) {
-    const imgElement = await createImageElement(file);
-    const faceDescription = await faceapi
-      .detectSingleFace(imgElement, new faceapi.SsdMobilenetv1Options())
-      .withFaceLandmarks()
-      .withFaceDescriptor();
+    try {
+      const imgElement = await createImageElement(file);
+      const faceDescription = await faceapi
+        .detectSingleFace(imgElement, new faceapi.SsdMobilenetv1Options())
+        .withFaceLandmarks()
+        .withFaceDescriptor();
 
-    if (faceDescription) {
-      faceDescriptions.push(faceDescription.descriptor);
+      if (faceDescription) {
+        faceDescriptions.push(faceDescription.descriptor);
+      } else {
+        // close dialog
+        showDialog.value = false;
+        userStore.showImageDialog = false;
+        // console.warn(`No face detected in file: ${file.name}`);
+        Swal.fire("No face detected", `No face detected in file: ${file.name}`, "error");
+        failedFiles.push(file.name);
+
+      }
+
+      // Clean up the created image element
+      imgElement.remove();
+    } catch (error) {
+      console.error(`Error processing file ${file.name}:`, error);
+      failedFiles.push(file.name);
     }
+  }
 
-    // Clean up the created image element
-    imgElement.remove();
+  if (failedFiles.length > 0) {
+    alertMessage.value = `No face detected in the following files: ${failedFiles.join(', ')}`;
+    alertDialog.value = true;
+    return [];
   }
 
   return faceDescriptions;
 }
 
 async function save() {
-  userStore.editUser = {
-    ...userStore.currentUser,
-    firstName: userStore.currentUser!.firstName || '',
-    lastName: userStore.currentUser!.lastName || '',
-    files: imageFiles.value,
-  };
+  if (canUpload.value) {
+    userStore.editUser = {
+      ...userStore.currentUser,
+      firstName: userStore.currentUser!.firstName || '',
+      lastName: userStore.currentUser!.lastName || '',
+      files: imageFiles.value,
+    };
 
-  const faceDescriptions = await processFiles(userStore.editUser.files);
-  const dataFaceBase64 = faceDescriptions.map(faceDescription => float32ArrayToBase64(faceDescription));
-  console.log(dataFaceBase64);
-  userStore.editUser.faceDescriptions = dataFaceBase64;
+    const faceDescriptions = await processFiles(userStore.editUser.files);
+    if (faceDescriptions.length !== 5) {
+      // Do not proceed if any face detection fails
+      return;
+    }
+    const dataFaceBase64 = faceDescriptions.map(faceDescription => float32ArrayToBase64(faceDescription));
+    console.log("Number of face descriptors:", faceDescriptions.length);
+    userStore.editUser.faceDescriptions = dataFaceBase64;
 
-  await userStore.saveUser();
-  showDialog.value = false;
-  await userStore.closeImageDialog();
-  window.location.reload();
+    console.log(userStore.editUser);
 
-  await userStore.getUsersById(userStore.currentUser?.userId!);
-  showDialog.value = true;
+    // Uncomment these lines once the issue is resolved
+    await userStore.saveUser();
+    showDialog.value = false;
+    await userStore.closeImageDialog();
+    window.location.reload();
+
+    await userStore.getUsersById(userStore.currentUser?.userId!);
+    showDialog.value = true;
+  }
 }
 
 const handleFileChange = (event: Event) => {
@@ -151,16 +186,14 @@ const resizeAndConvertImageToBase64 = (imageUrl: string, maxWidth: number, maxHe
 
 function checkDuplicateImage(newImageBase64: string): boolean {
   // Check if the new image base64 string is already in the list
-  return images.value.some((existingImage) => {
-    // Extract the base64 part from the data URL
-    const existingImageBase64 = existingImage.split(',')[1];
-    return existingImageBase64 === newImageBase64.split(',')[1];
+  return imageUrls.value.some((uploadedImage) => {
+    const uploadedImageBase64 = uploadedImage.split(',')[1];
+    return uploadedImageBase64 === newImageBase64.split(',')[1];
   });
 }
 
 function removeImage(index: number) {
   images.value.splice(index, 1);
-  // Optionally, update the user store with the new images list
   userStore.currentUser.images = images.value.map(image => image.replace(`${url}/users/image/filename/`, ''));
 }
 
@@ -170,16 +203,18 @@ function removeUploadedImage(index: number) {
   fileInputKey.value = Date.now(); // Reset the file input field
 }
 
-// Computed property to check if there are uploaded images
+// Computed properties
 const hasUploadedImages = computed(() => imageUrls.value.length > 0);
+
+const canUpload = computed(() => imageUrls.value.length === 5);
 
 </script>
 
 <template>
-  <v-container style="padding-top: 120px;">
+  <v-container class="pt-12">
     <v-dialog v-model="showDialog" max-width="800px" persistent>
       <v-card>
-        <v-card-title class="headline" style="display: flex; justify-content: space-between;">
+        <v-card-title class="headline">
           รูปภาพทั้งหมด
           <v-btn icon @click="close">
             <v-icon color="red">mdi-close</v-icon>
@@ -187,34 +222,62 @@ const hasUploadedImages = computed(() => imageUrls.value.length > 0);
         </v-card-title>
         <v-card-text>
           <v-row>
-            <v-col v-for="(image, index) in images" :key="index" cols="6" md="4" lg="3" class="image-container">
-              <v-img :src="image" aspect-ratio="1"></v-img>
+            <v-col v-for="(image, index) in images" :key="'existing-' + index" cols="6" md="4" lg="3" class="image-container">
+              <v-img :src="image" aspect-ratio="1" class="rounded-lg"></v-img>
               <v-btn icon small @click="removeImage(index)" class="close-button">
                 <v-icon color="red">mdi-close</v-icon>
               </v-btn>
             </v-col>
           </v-row>
+
           <v-row v-if="hasUploadedImages">
             <v-col cols="12">
-              <v-text>รูปภาพที่อัปโหลด</v-text>
+              <v-text class="font-weight-bold">รูปภาพที่อัปโหลด</v-text>
             </v-col>
-            <v-col cols="6" md="4" lg="3" class="image-container" v-for="(image, index) in [...imageUrls]" :key="index">
-              <v-img :src="image" aspect-ratio="1" class="ma-2"></v-img>
+            <v-col v-for="(image, index) in imageUrls" :key="'uploaded-' + index" cols="6" md="4" lg="3" class="image-container">
+              <v-img :src="image" aspect-ratio="1" class="rounded-lg ma-2"></v-img>
               <v-btn icon small @click="removeUploadedImage(index)" class="close-button">
                 <v-icon color="red">mdi-close</v-icon>
               </v-btn>
             </v-col>
           </v-row>
+
           <v-row>
-            <v-col cols="12" md="12">
+            <v-col cols="12">
               <!-- File Input -->
-              <v-file-input :key="fileInputKey" label="อัปโหลดรูปภาพ" multiple prepend-icon="mdi-camera" filled @change="handleFileChange"
-                accept="image/*" variant="outlined"></v-file-input>
+              <v-file-input
+                :key="fileInputKey"
+                label="อัปโหลดรูปภาพ"
+                multiple
+                prepend-icon="mdi-camera"
+                filled
+                @change="handleFileChange"
+                accept="image/*"
+                variant="outlined"
+                :rules="[() => canUpload || imageUrls.length < 5 ? true : 'ต้องอัปโหลดรูปภาพให้ครบ 5 รูป']"
+              ></v-file-input>
             </v-col>
           </v-row>
-          <v-row justify="end">
+
+          <v-row justify="end" class="mt-4">
             <v-col cols="auto">
-              <v-btn color="primary" @click="save">อัปโหลด</v-btn>
+              <v-btn
+                :disabled="!canUpload"
+                color="primary"
+                @click="save"
+                v-tooltip="'กรุณาอัปโหลดรูปภาพ 5 รูปก่อนอัปเดต'"
+              >
+                อัปโหลด
+              </v-btn>
+            </v-col>
+          </v-row>
+
+          <v-row v-if="!canUpload" class="mt-2">
+            <v-col cols="12" class="text-center">
+              <v-alert type="info" class="mt-3" border="left">
+                <v-icon left>mdi-information-outline</v-icon>
+                กรุณาอัปโหลดรูปภาพให้ครบ 5 รูป
+              </v-alert>
             </v-col>
           </v-row>
         </v-card-text>
@@ -232,11 +295,20 @@ const hasUploadedImages = computed(() => imageUrls.value.length > 0);
 
 .image-container {
   position: relative;
+  margin-bottom: 1rem;
 }
 
 .close-button {
   position: absolute;
   top: 5px;
   right: 5px;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+}
+
+.v-alert {
+  background-color: #e3f2fd;
+  border-color: #1976d2;
 }
 </style>
