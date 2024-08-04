@@ -6,6 +6,8 @@ import { useEnrollmentStore } from "@/stores/enrollment.store";
 import { useRouter } from 'vue-router'; // Import the 'useRouter' function from the 'vue-router' package
 import ImageDialog from '@/components/dialogs/ImageDialog.vue';
 import type Course from '../stores/types/Course';
+import user from '@/services/user';
+import type { User } from '@/stores/types/User';
 const tab = ref(0);
 const userStore = useUserStore();
 const courseStore = useCourseStore();
@@ -14,11 +16,10 @@ const url = 'http://localhost:3000';
 
 const router = useRouter(); // Create a 'router' object using the 'useRouter' function
 
-
 const isStudent = computed(() => userStore.currentUser?.role === 'นิสิต');
 const isTeacher = computed(() => userStore.currentUser?.role === 'อาจารย์');
 
-
+console.log(userStore.currentUser)
 const showChekingHistory = (course: Course) => {
     router.push('/checkingHistory/' + course.coursesId);
 };
@@ -29,11 +30,14 @@ onMounted(async () => {
         await courseStore.getCourseByTeachId(userStore.currentUser!.teacherId!);
     }
     if (isStudent.value && userStore.currentUser!.studentId) {
+        // await userStore.createQrByStdId(userStore.currentUser!.studentId);
         await enrollmentStore.getCourseByStudentId(userStore.currentUser!.studentId!);
     }
 });
-
-
+console.log(userStore.currentUser)
+if(userStore.currentUser?.registerStatus == 'notConfirmed') {
+    userStore.createQrByStdId(userStore.currentUser?.studentId!);
+}
 </script>
 <template>
     <v-container style="padding-top: 120px;">
@@ -44,11 +48,11 @@ onMounted(async () => {
                 <v-card>
                     <v-card-text>
                         <v-row>
-                            <v-col cols="12" md="4" class="d-flex justify-center align-center">
+                            <v-col class="d-flex justify-center align-center">
                                 <img style="width: 200px; height: 200px; object-fit: cover; border-radius: 50%;"
                                     :src="`${url}/users/${userStore.currentUser!.userId}/image`">
                             </v-col>
-                            <v-col cols="12" md="8" v-if="userStore.currentUser">
+                            <v-col v-if="userStore.currentUser">
                                 <v-row>
                                     <v-col cols="12"  v-if="isStudent">
                                         <strong>รหัสนิสิต: </strong>{{ userStore.currentUser?.studentId
@@ -74,6 +78,9 @@ onMounted(async () => {
                                         <v-btn color="blue" @click="userStore.showImageDialog = true" v-if="isStudent">แสดงรูปภาพทั้งหมด</v-btn>
                                     </v-col>
                                 </v-row>
+                            </v-col>
+                            <v-col>
+                                <v-img :src="userStore.QR" style="width: 200px; height: 200px; object-fit: cover;"></v-img>
                             </v-col>
                         </v-row>
                     </v-card-text>

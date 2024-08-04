@@ -26,6 +26,7 @@ function saveUser(user: User & { files: File[] }) {
   formData.append('status', user.status!);
   formData.append('major', user.major!);
   formData.append('year', user.year!);
+  formData.append('registerStatus', user.registerStatus!);
 
   // Check if files are available
   // if (user.files && user.files.length > 0) {
@@ -69,6 +70,7 @@ function updateUser(user: User & { files: File[] }, userId: number) {
   formData.append("status", user.status!);
   formData.append('major', user.major!);
   formData.append('year', user.year!);
+  formData.append('registerStatus', user.registerStatus!);
 
   // Append files and face descriptions
   if (user.faceDescriptions!.length > 0) {
@@ -120,7 +122,7 @@ function getFileStd(formData: FormData) {
   });
 }
 
-function getStdQR(stdId: number) {
+function getStdQR(stdId: string) {
   return http.get(`/users/${stdId}/qr`);
 }
 

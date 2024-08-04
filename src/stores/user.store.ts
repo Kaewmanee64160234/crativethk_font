@@ -34,6 +34,7 @@ export const useUserStore = defineStore("userStore", () => {
     year: "",
     role: "",
     status: "",
+    registerStatus: "",
     profileImage: "",
     faceDescriptions:[],
     images:[],
@@ -84,6 +85,7 @@ export const useUserStore = defineStore("userStore", () => {
       status: "",
       major: "",
       year: "",
+      registerStatus: "",
       profileImage: "",
       files: [],
     };
@@ -91,18 +93,11 @@ export const useUserStore = defineStore("userStore", () => {
   //save user
   const saveUser = async () => {
     try {
-        console.log("save user", editUser.value);
         if (editUser.value.userId && editUser.value.userId !== 0) {
-            const updatedUser = await userService.updateUser(editUser.value, editUser.value.userId);
+            await userService.updateUser(editUser.value, editUser.value.userId);
             // Update user in the register array
-            const index = register.value.findIndex(user => user.userId === editUser.value.userId);
-            if (index !== -1) {
-                register.value[index] = { ...register.value[index], ...updatedUser.data };
-                messageStore.showInfo("User updated successfully.");
-            }
         } else {
-            const newUser = await userService.saveUser(editUser.value);
-            register.value.push(newUser.data); // Add new user to register
+            await userService.saveUser(editUser.value);
             messageStore.showInfo("New user created successfully.");
         }
 
@@ -218,7 +213,7 @@ const getUserFromLocalStorage = () => {
     }
   }
 
-  async function createQrByStdId(stdId: number) {
+  async function createQrByStdId(stdId: string) {
     try {
       const res = await userService.getStdQR(stdId);
       const imageDataUrl = `${res.data}`;
