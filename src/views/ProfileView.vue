@@ -3,26 +3,24 @@ import { computed, onMounted, ref } from 'vue';
 import { useUserStore } from '@/stores/user.store';
 import { useCourseStore } from "@/stores/course.store";
 import { useEnrollmentStore } from "@/stores/enrollment.store";
-import { useRouter } from 'vue-router'; // Import the 'useRouter' function from the 'vue-router' package
+import { useRouter } from 'vue-router';
 import ImageDialog from '@/components/dialogs/ImageDialog.vue';
 import type Course from '../stores/types/Course';
+
 const tab = ref(0);
 const userStore = useUserStore();
 const courseStore = useCourseStore();
 const enrollmentStore = useEnrollmentStore();
 const url = 'http://localhost:3000';
 
-const router = useRouter(); // Create a 'router' object using the 'useRouter' function
-
+const router = useRouter();
 
 const isStudent = computed(() => userStore.currentUser?.role === 'นิสิต');
 const isTeacher = computed(() => userStore.currentUser?.role === 'อาจารย์');
 
-
 const showChekingHistory = (course: Course) => {
     router.push('/checkingHistory/' + course.coursesId);
 };
-
 
 onMounted(async () => {
     if (isTeacher.value && userStore.currentUser!.teacherId) {
@@ -32,9 +30,8 @@ onMounted(async () => {
         await enrollmentStore.getCourseByStudentId(userStore.currentUser!.studentId!);
     }
 });
-
-
 </script>
+
 <template>
     <v-container style="padding-top: 120px;">
         <v-text style="font-size: 24px; font-weight: bold;">ประวัติผู้ใช้งาน</v-text>
@@ -50,19 +47,18 @@ onMounted(async () => {
                             </v-col>
                             <v-col cols="12" md="8" v-if="userStore.currentUser">
                                 <v-row>
-                                    <v-col cols="12"  v-if="isStudent">
-                                        <strong>รหัสนิสิต: </strong>{{ userStore.currentUser?.studentId
-                                        }}
+                                    <v-col cols="12" v-if="isStudent">
+                                        <strong>รหัสนิสิต: </strong>{{ userStore.currentUser?.studentId }}
                                     </v-col>
                                     <v-col cols="12">
                                         <strong>ชื่อ-นามสกุล: </strong>{{ userStore.currentUser?.firstName }} {{
-                                        userStore.currentUser?.lastName }}
+                                            userStore.currentUser?.lastName }}
                                     </v-col>
                                     <v-col cols="12" v-if="isStudent">
                                         <strong>ชั้นปี: </strong>{{ userStore.currentUser?.year }}
                                     </v-col>
                                     <v-col cols="12" v-if="isStudent">
-                                        <strong>สาขา: </strong>{{ userStore.currentUser?.major }} 
+                                        <strong>สาขา: </strong>{{ userStore.currentUser?.major }}
                                     </v-col>
                                     <v-col cols="12" v-if="isTeacher">
                                         <strong>ตำแหน่ง: </strong>{{ userStore.currentUser?.role }}
@@ -71,7 +67,8 @@ onMounted(async () => {
                                         <strong>สถานะภาพ: </strong>{{ userStore.currentUser?.status }}
                                     </v-col>
                                     <v-col cols="12">
-                                        <v-btn color="blue" @click="userStore.showImageDialog = true" v-if="isStudent">แสดงรูปภาพทั้งหมด</v-btn>
+                                        <v-btn color="blue" @click="userStore.showImageDialog = true"
+                                            v-if="isStudent">แสดงรูปภาพทั้งหมด</v-btn>
                                     </v-col>
                                 </v-row>
                             </v-col>
@@ -99,27 +96,27 @@ onMounted(async () => {
                                         </tr>
                                     </thead>
                                     <tbody v-if="isStudent">
-                                        <tr  v-for="(item, index) of enrollmentStore.enrollments" :key="index">
-                                            <td >{{ item.course?.nameCourses }}</td>
+                                        <tr v-for="(item, index) of enrollmentStore.enrollments" :key="index">
+                                            <td>{{ item.course?.nameCourses }}</td>
                                             <td class="text-center">
-                                                <v-btn size="small" color="primary" @click="showChekingHistory(item.course!)" class="ma-2">
+                                                <v-btn size="small" color="primary"
+                                                    @click="showChekingHistory(item.course!)" class="ma-2">
                                                     ดูประวัติการเช็คชื่อ
-                                                 </v-btn>
+                                                </v-btn>
                                             </td>
                                         </tr>
                                     </tbody>
-                                    <!-- tbody -->
                                     <tbody v-if="isTeacher">
-                                        <tr  v-for="(item, index) of courseStore.courses" :key="index">
-                                            <td >{{ item.nameCourses }}</td>
+                                        <tr v-for="(item, index) of courseStore.courses" :key="index">
+                                            <td>{{ item.nameCourses }}</td>
                                             <td class="text-center">
-                                                 <v-btn size="small" color="primary" @click="showChekingHistory(item)" class="ma-2">
+                                                <v-btn size="small" color="primary" @click="showChekingHistory(item)"
+                                                    class="ma-2">
                                                     ดูรายวิชา
-                                                 </v-btn>
+                                                </v-btn>
                                             </td>
                                         </tr>
                                     </tbody>
-
                                 </template>
                             </v-table>
                         </v-tab-item>
@@ -128,7 +125,9 @@ onMounted(async () => {
             </v-col>
         </v-row>
     </v-container>
-    <v-dialog v-model="userStore.showImageDialog" persistent>
+
+    <!-- Image Dialog -->
+    <v-dialog v-model="userStore.showImageDialog" persistent max-width="800px">
         <ImageDialog></ImageDialog>
     </v-dialog>
 </template>
@@ -150,5 +149,15 @@ onMounted(async () => {
 
 .v-btn {
     margin-top: 10px;
+}
+
+.v-dialog {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+img {
+    border-radius: 50%;
 }
 </style>
