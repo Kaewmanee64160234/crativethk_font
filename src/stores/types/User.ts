@@ -24,7 +24,7 @@ export function mapToUser(data: any): User {
   const images: string[] = [];
 
   // Populate faceDescriptions from data
-  for (let i = 1; i <= 1; i++) {
+  for (let i = 1; i <= 5; i++) {
     const faceDescriptionKey = `faceDescriptor${i}`;
     if (data[faceDescriptionKey]) {
       faceDescriptions.push(data[faceDescriptionKey]);

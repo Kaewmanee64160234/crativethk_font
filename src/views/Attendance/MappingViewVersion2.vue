@@ -18,7 +18,10 @@ interface Identification {
   name: string;
   studentId: string;
   imageUrl: string;
+  score: number;
+  user: User;
 }
+
 function float32ArrayToBase64(float32Array: Float32Array): string {
   const uint8Array = new Uint8Array(float32Array.buffer);
   let binary = '';
@@ -43,7 +46,7 @@ function base64ToFloat32Array(base64: string): Float32Array {
   }
 }
 
-const setCanvasRef = (index) => (el) => {
+const setCanvasRef = (index: number) => (el: HTMLCanvasElement) => {
   canvasRefs[index] = el;
 };
 
@@ -51,15 +54,74 @@ const imageUrls = ref<string[]>([]);
 const identifications = ref<Identification[]>([]);
 const croppedImagesDataUrls = ref<string[]>([]);
 const canvasRefs = reactive<CanvasRefs>({});
-const userDescriptors = new Map<string, Float32Array>();
+const userDescriptors = new Map<string, Float32Array[]>();
 const userStore = useUserStore();
 const route = useRoute();
 const courseStore = useCourseStore();
 const router = useRouter();
 const assignmentStore = useAssignmentStore();
-const attendaceStore = useAttendanceStore();
+const attendanceStore = useAttendanceStore();
+const isLoading = ref(true); // Add a loading state
+const url = import.meta.env.VITE_API_URL as string;
+onMounted(async () => {
+  try {
+    isLoading.value = true;
+    await Promise.all([
+      faceapi.nets.ssdMobilenetv1.loadFromUri("/models"),
+      faceapi.nets.faceLandmark68Net.loadFromUri("/models"),
+      faceapi.nets.faceRecognitionNet.loadFromUri("/models"),
+    ]);
+    // get user by caourse id
+    await userStore.getUserByCourseId(courseStore.currentCourse?.coursesId + '');
 
-async function processImage(image, index) {
+    console.log("Models loaded successfully");
+    console.log("Current Assignment:", userStore.users);
+
+    // Process all face descriptions for each user
+    userStore.users.forEach((user) => {
+      const descriptors: Float32Array[] = [];
+
+      // Iterate over each face description field
+      const faceDescriptionFields = user.faceDescriptions || [];
+      console.log("Face Descriptions Lenght:", user.faceDescriptions!.length);
+
+
+      faceDescriptionFields.forEach((description, idx) => {
+        if (description) {
+          try {
+            const float32Array = base64ToFloat32Array(description);
+            descriptors.push(float32Array);
+            console.log(`User: ${user.firstName}, Student ID: ${user.studentId}, Descriptor Index: ${idx}`);
+          } catch (error) {
+            console.error(`Error decoding face description ${idx + 1} for user: ${user.email}`, error);
+          }
+        } else {
+          console.warn(`No face description found for user: ${user.email}, Descriptor Index: ${idx}`);
+        }
+      });
+
+      // Store descriptors in the map with the student ID as the key
+      if (descriptors.length > 0) {
+        userDescriptors.set(user.studentId!, descriptors);
+      }
+    });
+
+    const urls: string[] = route.query.imageUrls || [];
+    console.log(urls);
+    imageUrls.value = urls;
+    await Promise.all(
+      imageUrls.value.map((url, index) => nextTick(() => loadImageAndProcess(url, index)))
+    );
+  } catch (error) {
+    console.error("Error in onMounted:", error);
+    alert("Failed to load data. Please check the console for more details.");
+  } finally {
+    isLoading.value = false; // Disable loading after processing
+  }
+});
+
+
+async function processImage(image: HTMLImageElement, index: number) {
   const canvas = canvasRefs[index] || document.createElement("canvas");
   document.body.appendChild(canvas);
   canvas.width = image.naturalWidth;
@@ -71,9 +133,9 @@ async function processImage(image, index) {
       .detectAllFaces(image, new faceapi.SsdMobilenetv1Options())
       .withFaceLandmarks()
       .withFaceDescriptors()) as WithFaceLandmarks<
-      { detection: FaceDetection },
-      WithFaceDescriptor
-    >[];
+        { detection: FaceDetection },
+        WithFaceDescriptor
+      >[];
 
     detections.forEach((detection) => {
       const bestMatch = findBestUserMatch(detection.descriptor);
@@ -92,17 +154,23 @@ async function processImage(image, index) {
           name: bestMatch.user.firstName,
           studentId: bestMatch.user.studentId!,
           imageUrl: croppedDataURL!,
+          score: 1 - bestMatch.score, // Higher score is better
+          user: bestMatch.user,
         });
       } else {
         identifications.value.push({
           name: "Unknown",
           studentId: "N/A",
           imageUrl: croppedDataURL!,
+          score: 0, // Unknown score
+          user: null, //
         });
       }
     });
   } catch (error) {
     console.error("Failed to process face detection:", error);
+  } finally {
+    document.body.removeChild(canvas);
   }
 }
 
@@ -116,62 +184,45 @@ function loadImageAndProcess(dataUrl: string, index: number): void {
 function findBestUserMatch(
   descriptor: Float32Array
 ): { user: User | null; score: number } {
-  let bestMatch = { user: null, score: 0.7 };
-  userDescriptors.forEach((userDescriptor, studentId) => {
-    const distance = faceapi.euclideanDistance(descriptor, userDescriptor);
-    if (distance < bestMatch.score) {
-      bestMatch = {
-        user: userStore.users.find((u) => u.studentId === studentId)!,
-        score: distance,
-      };
-    }
-  });
-  return bestMatch;
-}
+  const threshold = 0.6; // Set the threshold for best match
+  let bestMatch = { user: null, score: threshold }; // Initialize best match with threshold score
 
-onMounted(async () => {
-  try {
-    await Promise.all([
-      faceapi.nets.ssdMobilenetv1.loadFromUri("/models"),
-      faceapi.nets.faceLandmark68Net.loadFromUri("/models"),
-      faceapi.nets.faceRecognitionNet.loadFromUri("/models"),
-    ]);
+  // Iterate over each user's descriptors
+  userDescriptors.forEach((descriptors, studentId) => {
+    // Iterate over each descriptor for the current user
+    console.log("Student ID:", studentId, 'Descriptors:', descriptors.length);
 
-    console.log("Models loaded successfully");
-    console.log("Current Assignment:",  userStore.users);
-    
+    descriptors.forEach((userDescriptor) => {
+      // Ensure descriptor lengths match to avoid calculation errors
+      if (descriptor.length !== userDescriptor.length) {
+        console.error(
+          `Descriptor length mismatch for user ${studentId}:`,
+          `descriptor length: ${descriptor.length}, userDescriptor length: ${userDescriptor.length}`
+        );
+        return; // Skip this descriptor if there's a length mismatch
+      }
 
-    const faceDescriptions = userStore.users.map((user) => user.faceDescriptions![0]);
-    faceDescriptions.forEach((description, index) => {
-      if (description) {
-        try {
-          const float32Array = base64ToFloat32Array(description);
-          const user = userStore.users[index];
-          userDescriptors.set(user.studentId!, float32Array);
+      // Calculate Euclidean distance between the input descriptor and the user's descriptor
+      const distance = faceapi.euclideanDistance(descriptor, userDescriptor);
 
-          // Added logging for debugging
-          console.log(`User: ${user.email}, Student ID: ${user.studentId}`);
-          console.log(`Face Description: ${description}`);
-          console.log(`Float32Array: ${float32Array}`);
-        } catch (error) {
-          console.error("Error decoding face description for user:", userStore.users[index].email, error);
-        }
-      } else {
-        console.warn("No face description found for user:", userStore.users[index].email);
+      // Debug logging to trace values
+      console.log("Distance:", distance, "Threshold:", threshold, "Match Score:", bestMatch.score, "Student ID:", studentId);
+
+      // Update best match if the current distance is lower than the current best score
+      if (distance < bestMatch.score) {
+        console.log("Best match updated:", studentId, distance);
+
+        bestMatch = {
+          user: userStore.users.find((u) => u.studentId === studentId)!, // Find the matching user by student ID
+          score: distance, // Update the score with the new best distance
+        };
       }
     });
+  });
 
-    const urls: string[] = route.query.imageUrls || [];
-    console.log(urls);
-    imageUrls.value = urls;
-    imageUrls.value.forEach((url, index) => {
-      nextTick(() => loadImageAndProcess(url, index));
-    });
-  } catch (error) {
-    console.error("Error in onMounted:", error);
-    alert("Failed to load data. Please check the console for more details.");
-  }
-});
+  return bestMatch; // Return the best match found
+}
+
 
 // Existing functions
 async function loadImage(url: string): Promise<HTMLImageElement> {
@@ -269,16 +320,16 @@ const confirmAttendance = async () => {
       let identifiedUser =
         identifications.value[i].name !== "Unknown"
           ? userStore.users.find(
-              (user) => user.firstName === identifications.value[i].name
-            )
+            (user) => user.firstName === identifications.value[i].name
+          )
           : ({
-              studentId: i + "",
-              firstName: "Unknown",
-              lastName: "Unknown",
-              faceDescriptions: [],
-            } as User);
+            studentId: i + "",
+            firstName: "Unknown",
+            lastName: "Unknown",
+            faceDescriptions: [],
+          } as User);
 
-      await attendaceStore.createAttendance(
+      await attendanceStore.createAttendance(
         {
           attendanceId: 0,
           attendanceDate: new Date(),
@@ -303,24 +354,25 @@ const confirmAttendance = async () => {
       );
     }
   }
-  // filter user from identifications and create user unknow 
-  await userStore.getUserByCourseId(assignmentStore.assignment?.course.coursesId+'')
-  const usersCreateUnkow = userStore.users.filter((user) => {
+
+  // Filter users from identifications and create unknown users
+  await userStore.getUserByCourseId(assignmentStore.assignment?.course.coursesId + '')
+  const usersCreateUnknown = userStore.users.filter((user) => {
     return !identifications.value.some((identification) => identification.studentId === user.studentId);
   });
-  console.log("Create user unknow", usersCreateUnkow);
-  
-  // create user unknow
-  for (let i = 0; i < usersCreateUnkow.length; i++) {
+  console.log("Create unknown users", usersCreateUnknown);
+
+  // Create unknown users
+  for (let i = 0; i < usersCreateUnknown.length; i++) {
     try {
-      await attendaceStore.createAttendance(
+      await attendanceStore.createAttendance(
         {
           attendanceId: 0,
           attendanceDate: new Date(),
           attendanceStatus: "absent",
           attendanceConfirmStatus: "notConfirmed",
           assignment: assignmentStore.assignment,
-          user: usersCreateUnkow[i],
+          user: usersCreateUnknown[i],
           attendanceImage: "",
         },
         new File([], "")
@@ -328,7 +380,7 @@ const confirmAttendance = async () => {
     } catch (error) {
       console.error(
         "Error recording attendance for",
-        usersCreateUnkow[i].firstName,
+        usersCreateUnknown[i].firstName,
         ":",
         error
       );
@@ -339,16 +391,14 @@ const confirmAttendance = async () => {
     }
   }
   assignmentStore.assignment!.statusAssignment = 'completed';
-  await assignmentStore.updateAssignment(assignmentStore.assignment!.assignmentId+'',assignmentStore.assignment!);
+  await assignmentStore.updateAssignment(assignmentStore.assignment!.assignmentId + '', assignmentStore.assignment!);
   if (userStore.currentUser?.role === "อาจารย์") {
-    router.push("/reCheckMappingTeacher/course/"+ courseStore.currentCourse?.coursesId+"/assignment/" + assignmentStore.assignment?.assignmentId);
+    router.push("/reCheckMappingTeacher/course/" + courseStore.currentCourse?.coursesId + "/assignment/" + assignmentStore.assignment?.assignmentId);
   } else {
-    router.push("/mappingForStudent/course/"+ courseStore.currentCourse?.coursesId+"/assignment/" + assignmentStore.assignment?.assignmentId);
+    router.push("/mappingForStudent/course/" + courseStore.currentCourse?.coursesId + "/assignment/" + assignmentStore.assignment?.assignmentId);
   }
 };
 </script>
-
-
 
 <template>
   <v-container style="margin-top: 10%">
@@ -363,56 +413,107 @@ const confirmAttendance = async () => {
         <h1 class="text-h5">{{ courseStore.currentCourse?.nameCourses }}</h1>
       </v-card-title>
     </v-card>
+
     <!-- Display Controls and Image Upload -->
     <v-row class="mt-5">
       <v-col cols="12" md="6"></v-col>
       <v-col cols="12" md="6" class="text-right">
-        <v-btn color="#CFEBFB" @click="confirmAttendance()"
-          ><v-icon size="30">mdi-clipboard-check-outline</v-icon>ตรวจสอบการเช็คชื่อ</v-btn
-        >
+        <v-btn color="#CFEBFB" @click="confirmAttendance()">
+          <v-icon size="30">mdi-clipboard-check-outline</v-icon>ตรวจสอบการเช็คชื่อ
+        </v-btn>
+      </v-col>
+    </v-row>
+
+    <!-- Loading Spinner -->
+    <v-row justify="center" v-if="isLoading">
+      <v-col cols="12" md="6" class="text-center">
+        <v-progress-circular
+          :size="70"
+          :width="7"
+          indeterminate
+          color="primary"
+        ></v-progress-circular>
+        <div>Processing images...</div>
       </v-col>
     </v-row>
 
     <!-- Layout Row for Image Display and Identifications -->
-    <v-row>
-      <!-- Column for Original Images with Canvas Overlay -->
-      <v-col cols="12" md="6">
-        <div
-          v-for="(imageUrl, index) in imageUrls"
-          :key="'orig-image-' + index"
-          class="position-relative mb-3"
+    <v-row v-if="!isLoading">
+      <!-- Column for Attendance Cards -->
+      <v-row>
+        <v-col
+          cols="6"
+          style="text-align: center; font-weight: bold"
+        >มา</v-col>
+        <v-divider vertical></v-divider>
+        <v-col
+          cols="6"
+          class="vertical-divider"
+          style="text-align: center; font-weight: bold"
+        >รอดำเนินการ</v-col>
+        <v-divider vertical></v-divider>
+      </v-row>
+      <v-row>
+        <v-col
+          v-for="(attendee, index) in identifications "
+          :key="index"
+          cols="12"
+          sm="6"
+          md="4"
+          lg="3"
         >
-          <img :src="imageUrl" alt="Uploaded Image" class="w-90 rounded-lg" />
-        </div>
-      </v-col>
-
-      <!-- Column for Identification and Cropped Images Display -->
-      <v-col cols="12" md="6">
-        <v-card style="overflow-y: scroll">
-          <v-row>
-            <v-col
-              cols="12"
-              sm="6"
-              v-for="(name, index) in identifications"
-              :key="'id-' + index"
-            >
-              <v-card outlined color="#EDEDED" class="rounded-lg">
-                <v-card-title>
-                  <v-icon small>mdi-circle-small</v-icon>{{ name.studentId }} |
-                  {{ name.name }}</v-card-title
-                >
+          <v-card
+            class="mb-2"
+            style="padding: 20px; background-color: rgb(237, 237, 237)"
+          >
+            <v-row justify="center">
+              <v-card-title class="bold-text mt-2">
+                <v-icon small>mdi-circle-small</v-icon>
+                {{ attendee.user?.studentId + " " + attendee.user?.firstName }}
+              </v-card-title>
+            </v-row>
+            <v-row>
+              <v-col cols="6">
                 <v-img
-                  :src="croppedImagesDataUrls[index]"
-                  aspect-ratio="1.5"
-                  class="rounded-lg"
+                  :src="attendee.imageUrl"
+                  height="200px"
                 ></v-img>
-              </v-card>
-            </v-col>
-          </v-row>
-        </v-card>
-      </v-col>
+              </v-col>
+              <v-col cols="6">
+                <v-img
+                  :src="`${url}/users/${attendee.user?.userId}/image`"
+                  height="200px"
+                ></v-img>
+              </v-col>
+            </v-row>
+            <v-card-text>
+              <div>Score: {{ (attendee.score*100).toFixed(2) }}%</div>
+            </v-card-text>
+            <v-card-actions>
+              <v-btn
+                variant="flat"
+                color="warning"
+                style="color: black"
+                @click="reCheckAttendance(attendee)"
+                >Recheck</v-btn
+              >
+              <v-spacer></v-spacer>
+              <v-btn
+                variant="flat"
+                color="success"
+                @click="confirmAttendance(attendee)"
+                >Confirm</v-btn
+              >
+            </v-card-actions>
+          </v-card>
+        </v-col>
+      </v-row>
     </v-row>
   </v-container>
 </template>
 
-<style scoped></style>
+<style scoped>
+.bold-text {
+  font-weight: bold;
+}
+</style>
