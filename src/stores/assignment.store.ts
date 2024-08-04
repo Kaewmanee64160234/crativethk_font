@@ -41,6 +41,7 @@ export const useAssignmentStore = defineStore("assignmentStore", () => {
       },
     },
   ]);
+  const EditAssignment = ref(false);
   const assignment = ref<Assignment>();
   const currentAssignment = ref<Assignment>();
   const dialogAssignmentTag = ref(false);
@@ -104,8 +105,21 @@ export const useAssignmentStore = defineStore("assignmentStore", () => {
       console.error("Error updating assignment:", e);
     }
   };
-
-
+  const deleteAssignment = async (id: string) => {
+    try {
+      const response = await assignmentService.deleteAssignment(id);
+      if (response.status === 200) {
+        // Remove the deleted assignment from the assignments list
+        assignments.value = assignments.value.filter(assignment => assignment.assignmentId !== parseInt(id));
+        console.log('Assignment deleted successfully');
+      }
+    } catch (error) {
+      console.error('Error deleting assignment:', error);
+    }
+  };
+  const closeEditDialog = () => {
+    EditAssignment.value = false;
+  }
   // assignments.value.push(res.data);
 
   return {
@@ -117,6 +131,9 @@ export const useAssignmentStore = defineStore("assignmentStore", () => {
     currentAssignment,
     getAssignmentById,
     updateAssignment,
-    dialogAssignmentTag
+    dialogAssignmentTag,
+    deleteAssignment,
+    EditAssignment,
+    closeEditDialog
   };
 });

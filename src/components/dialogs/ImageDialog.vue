@@ -25,13 +25,12 @@ onMounted(async () => {
 });
 
 async function loadModels() {
-  await userStore.getUsersById(userStore.currentUser?.userId!);
   await faceapi.nets.ssdMobilenetv1.loadFromUri('/models');
   await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
   await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
 }
 
-function float32ArrayToBase64(float32Array: Float32Array) {
+function float32ArrayToBase64(float32Array: Float32Array): string {
   const uint8Array = new Uint8Array(float32Array.buffer);
   let binary = '';
   for (let i = 0; i < uint8Array.byteLength; i++) {
@@ -85,18 +84,27 @@ async function save() {
     files: imageFiles.value,
   };
 
+  // Process images and get face descriptors
   const faceDescriptions = await processFiles(userStore.editUser.files);
+
+  // Convert face descriptors to Base64
   const dataFaceBase64 = faceDescriptions.map(faceDescription => float32ArrayToBase64(faceDescription));
-  console.log(dataFaceBase64);
   userStore.editUser.faceDescriptions = dataFaceBase64;
 
-  await userStore.saveUser();
-  showDialog.value = false;
-  await userStore.closeImageDialog();
-  window.location.reload();
+  try {
+    // Save user data including face descriptors
+    await userStore.saveUser();
+    showDialog.value = false;
+    await userStore.closeImageDialog();
+    window.location.reload();
 
-  await userStore.getUsersById(userStore.currentUser?.userId!);
-  showDialog.value = true;
+    // Refresh user data
+    await userStore.getUsersById(userStore.currentUser?.userId!);
+    showDialog.value = true;
+  } catch (error) {
+    console.error("Error saving user:", error);
+    // Handle error gracefully here
+  }
 }
 
 const handleFileChange = (event: Event) => {

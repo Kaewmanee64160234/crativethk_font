@@ -35,5 +35,8 @@ function getAssignmentByCourseId(id:string) {
 function updateAssignment(id:string,data:Assignment) {
     return http.patch(`/assignments/${id}`, data);
 }
-
-export default { getAssignment,createAssignment,getAssignmentById,getAssignmentByCourseId,updateAssignment };
+// delete Assignment
+function deleteAssignment(id:string) {
+    return http.delete(`/assignments/${id}`);
+}
+export default { getAssignment,createAssignment,getAssignmentById,getAssignmentByCourseId,updateAssignment, deleteAssignment };
