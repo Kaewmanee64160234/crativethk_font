@@ -1,12 +1,6 @@
 <template>
   <v-container style="margin-top: 10%">
-    <v-card
-      class="mx-auto"
-      color="primary"
-      max-width="1200"
-      outlined
-      style="padding: 20px"
-    >
+    <v-card class="mx-auto" color="primary" max-width="1200" outlined style="padding: 20px">
       <v-card-title>
         <h1 class="text-h5">{{ courseStore.currentCourse?.nameCourses }}</h1>
       </v-card-title>
@@ -24,12 +18,7 @@
     <!-- Loading Spinner -->
     <v-row justify="center" v-if="isLoading">
       <v-col cols="12" md="6" class="text-center">
-        <v-progress-circular
-          :size="70"
-          :width="7"
-          indeterminate
-          color="primary"
-        ></v-progress-circular>
+        <v-progress-circular :size="70" :width="7" indeterminate color="primary"></v-progress-circular>
         <div>Processing images...</div>
       </v-col>
     </v-row>
@@ -38,11 +27,7 @@
     <v-row v-if="!isLoading">
       <!-- Column for Original Images with Canvas Overlay -->
       <v-col cols="12" md="6">
-        <div
-          v-for="(imageUrl, index) in imageUrls"
-          :key="'orig-image-' + index"
-          class="position-relative mb-3"
-        >
+        <div v-for="(imageUrl, index) in imageUrls" :key="'orig-image-' + index" class="position-relative mb-3">
           <img :src="imageUrl" alt="Uploaded Image" class="w-90 rounded-lg" />
         </div>
       </v-col>
@@ -51,22 +36,13 @@
       <v-col cols="12" md="6">
         <v-card style="overflow-y: scroll">
           <v-row>
-            <v-col
-              cols="12"
-              sm="6"
-              v-for="(identification, index) in identifications"
-              :key="'id-' + index"
-            >
+            <v-col cols="12" sm="6" v-for="(identification, index) in identifications" :key="'id-' + index">
               <v-card outlined color="#EDEDED" class="rounded-lg">
                 <v-card-title>
                   <v-icon small>mdi-circle-small</v-icon>{{ identification.studentId }} |
                   {{ identification.name }} - Score: {{ (identification.score * 100).toFixed(2) }}%
                 </v-card-title>
-                <v-img
-                  :src="croppedImagesDataUrls[index]"
-                  aspect-ratio="1.5"
-                  class="rounded-lg"
-                ></v-img>
+                <v-img :src="croppedImagesDataUrls[index]" aspect-ratio="1.5" class="rounded-lg"></v-img>
               </v-card>
             </v-col>
           </v-row>
@@ -148,27 +124,38 @@ onMounted(async () => {
       faceapi.nets.faceLandmark68Net.loadFromUri("/models"),
       faceapi.nets.faceRecognitionNet.loadFromUri("/models"),
     ]);
+    // get user by caourse id
+    await userStore.getUserByCourseId(courseStore.currentCourse?.coursesId + '');
 
     console.log("Models loaded successfully");
     console.log("Current Assignment:", userStore.users);
 
-    const faceDescriptions = userStore.users.map((user) => user.faceDescriptions![0]);
-    faceDescriptions.forEach((description, index) => {
-      if (description) {
-        try {
-          const float32Array = base64ToFloat32Array(description);
-          const user = userStore.users[index];
-          userDescriptors.set(user.studentId!, [float32Array]);
+    // Process all face descriptions for each user
+    userStore.users.forEach((user) => {
+      const descriptors: Float32Array[] = [];
 
-          // Added logging for debugging
-          console.log(`User: ${user.email}, Student ID: ${user.studentId}`);
-          console.log(`Face Description: ${description}`);
-          console.log(`Float32Array: ${float32Array}`);
-        } catch (error) {
-          console.error("Error decoding face description for user:", userStore.users[index].email, error);
+      // Iterate over each face description field
+      const faceDescriptionFields = user.faceDescriptions || [];
+      console.log("Face Descriptions Lenght:", user.faceDescriptions!.length);
+      
+
+      faceDescriptionFields.forEach((description, idx) => {
+        if (description) {
+          try {
+            const float32Array = base64ToFloat32Array(description);
+            descriptors.push(float32Array);
+            console.log(`User: ${user.firstName}, Student ID: ${user.studentId}, Descriptor Index: ${idx}`);
+          } catch (error) {
+            console.error(`Error decoding face description ${idx + 1} for user: ${user.email}`, error);
+          }
+        } else {
+          console.warn(`No face description found for user: ${user.email}, Descriptor Index: ${idx}`);
         }
-      } else {
-        console.warn("No face description found for user:", userStore.users[index].email);
+      });
+
+      // Store descriptors in the map with the student ID as the key
+      if (descriptors.length > 0) {
+        userDescriptors.set(user.studentId!, descriptors);
       }
     });
 
@@ -186,6 +173,7 @@ onMounted(async () => {
   }
 });
 
+
 async function processImage(image: HTMLImageElement, index: number) {
   const canvas = canvasRefs[index] || document.createElement("canvas");
   document.body.appendChild(canvas);
@@ -198,9 +186,9 @@ async function processImage(image: HTMLImageElement, index: number) {
       .detectAllFaces(image, new faceapi.SsdMobilenetv1Options())
       .withFaceLandmarks()
       .withFaceDescriptors()) as WithFaceLandmarks<
-      { detection: FaceDetection },
-      WithFaceDescriptor
-    >[];
+        { detection: FaceDetection },
+        WithFaceDescriptor
+      >[];
 
     detections.forEach((detection) => {
       const bestMatch = findBestUserMatch(detection.descriptor);
@@ -247,45 +235,45 @@ function loadImageAndProcess(dataUrl: string, index: number): void {
 function findBestUserMatch(
   descriptor: Float32Array
 ): { user: User | null; score: number } {
-  let bestMatch = { user: null, score: 0.7 };
+  const threshold = 0.6; // Set the threshold for best match
+  let bestMatch = { user: null, score: threshold }; // Initialize best match with threshold score
+
+  // Iterate over each user's descriptors
   userDescriptors.forEach((descriptors, studentId) => {
-    // Calculate the average descriptor
-    const avgDescriptor = averageDescriptor(descriptors);
+    // Iterate over each descriptor for the current user
+    console.log("Student ID:", studentId,'Descriptors:', descriptors.length);
+    
+    descriptors.forEach((userDescriptor) => {
+      // Ensure descriptor lengths match to avoid calculation errors
+      if (descriptor.length !== userDescriptor.length) {
+        console.error(
+          `Descriptor length mismatch for user ${studentId}:`,
+          `descriptor length: ${descriptor.length}, userDescriptor length: ${userDescriptor.length}`
+        );
+        return; // Skip this descriptor if there's a length mismatch
+      }
 
-    // Check if descriptor lengths match
-    if (descriptor.length !== avgDescriptor.length) {
-      console.error(
-        `Descriptor length mismatch for user ${studentId}:`,
-        `descriptor length: ${descriptor.length}, avgDescriptor length: ${avgDescriptor.length}`
-      );
-      return;
-    }
+      // Calculate Euclidean distance between the input descriptor and the user's descriptor
+      const distance = faceapi.euclideanDistance(descriptor, userDescriptor);
 
-    const distance = faceapi.euclideanDistance(descriptor, avgDescriptor);
-    if (distance < bestMatch.score) {
-      bestMatch = {
-        user: userStore.users.find((u) => u.studentId === studentId)!,
-        score: distance,
-      };
-    }
+      // Debug logging to trace values
+      console.log("Distance:", distance, "Threshold:", threshold, "Match Score:", bestMatch.score, "Student ID:", studentId);
+
+      // Update best match if the current distance is lower than the current best score
+      if (distance < bestMatch.score) {
+        console.log("Best match updated:", studentId, distance);
+
+        bestMatch = {
+          user: userStore.users.find((u) => u.studentId === studentId)!, // Find the matching user by student ID
+          score: distance, // Update the score with the new best distance
+        };
+      }
+    });
   });
-  return bestMatch;
+
+  return bestMatch; // Return the best match found
 }
 
-function averageDescriptor(descriptors: Float32Array[]): Float32Array {
-  if (descriptors.length === 0) return new Float32Array(0);
-  const length = descriptors[0].length;
-  const avgDescriptor = new Float32Array(length);
-  descriptors.forEach((descriptor) => {
-    for (let i = 0; i < length; i++) {
-      avgDescriptor[i] += descriptor[i];
-    }
-  });
-  for (let i = 0; i < length; i++) {
-    avgDescriptor[i] /= descriptors.length;
-  }
-  return avgDescriptor;
-}
 
 // Existing functions
 async function loadImage(url: string): Promise<HTMLImageElement> {
@@ -383,14 +371,14 @@ const confirmAttendance = async () => {
       let identifiedUser =
         identifications.value[i].name !== "Unknown"
           ? userStore.users.find(
-              (user) => user.firstName === identifications.value[i].name
-            )
+            (user) => user.firstName === identifications.value[i].name
+          )
           : ({
-              studentId: i + "",
-              firstName: "Unknown",
-              lastName: "Unknown",
-              faceDescriptions: [],
-            } as User);
+            studentId: i + "",
+            firstName: "Unknown",
+            lastName: "Unknown",
+            faceDescriptions: [],
+          } as User);
 
       await attendanceStore.createAttendance(
         {
