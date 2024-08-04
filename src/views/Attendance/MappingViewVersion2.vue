@@ -1,57 +1,3 @@
-<template>
-  <v-container style="margin-top: 10%">
-    <v-card class="mx-auto" color="primary" max-width="1200" outlined style="padding: 20px">
-      <v-card-title>
-        <h1 class="text-h5">{{ courseStore.currentCourse?.nameCourses }}</h1>
-      </v-card-title>
-    </v-card>
-    <!-- Display Controls and Image Upload -->
-    <v-row class="mt-5">
-      <v-col cols="12" md="6"></v-col>
-      <v-col cols="12" md="6" class="text-right">
-        <v-btn color="#CFEBFB" @click="confirmAttendance()">
-          <v-icon size="30">mdi-clipboard-check-outline</v-icon>ตรวจสอบการเช็คชื่อ
-        </v-btn>
-      </v-col>
-    </v-row>
-
-    <!-- Loading Spinner -->
-    <v-row justify="center" v-if="isLoading">
-      <v-col cols="12" md="6" class="text-center">
-        <v-progress-circular :size="70" :width="7" indeterminate color="primary"></v-progress-circular>
-        <div>Processing images...</div>
-      </v-col>
-    </v-row>
-
-    <!-- Layout Row for Image Display and Identifications -->
-    <v-row v-if="!isLoading">
-      <!-- Column for Original Images with Canvas Overlay -->
-      <v-col cols="12" md="6">
-        <div v-for="(imageUrl, index) in imageUrls" :key="'orig-image-' + index" class="position-relative mb-3">
-          <img :src="imageUrl" alt="Uploaded Image" class="w-90 rounded-lg" />
-        </div>
-      </v-col>
-
-      <!-- Column for Identification and Cropped Images Display -->
-      <v-col cols="12" md="6">
-        <v-card style="overflow-y: scroll">
-          <v-row>
-            <v-col cols="12" sm="6" v-for="(identification, index) in identifications" :key="'id-' + index">
-              <v-card outlined color="#EDEDED" class="rounded-lg">
-                <v-card-title>
-                  <v-icon small>mdi-circle-small</v-icon>{{ identification.studentId }} |
-                  {{ identification.name }} - Score: {{ (identification.score * 100).toFixed(2) }}%
-                </v-card-title>
-                <v-img :src="croppedImagesDataUrls[index]" aspect-ratio="1.5" class="rounded-lg"></v-img>
-              </v-card>
-            </v-col>
-          </v-row>
-        </v-card>
-      </v-col>
-    </v-row>
-  </v-container>
-</template>
-
 <script setup lang="ts">
 import { ref, reactive, onMounted, nextTick } from "vue";
 import * as faceapi from "face-api.js";
@@ -73,6 +19,7 @@ interface Identification {
   studentId: string;
   imageUrl: string;
   score: number;
+  user: User;
 }
 
 function float32ArrayToBase64(float32Array: Float32Array): string {
@@ -115,7 +62,7 @@ const router = useRouter();
 const assignmentStore = useAssignmentStore();
 const attendanceStore = useAttendanceStore();
 const isLoading = ref(true); // Add a loading state
-
+const url = import.meta.env.VITE_API_URL as string;
 onMounted(async () => {
   try {
     isLoading.value = true;
@@ -137,7 +84,7 @@ onMounted(async () => {
       // Iterate over each face description field
       const faceDescriptionFields = user.faceDescriptions || [];
       console.log("Face Descriptions Lenght:", user.faceDescriptions!.length);
-      
+
 
       faceDescriptionFields.forEach((description, idx) => {
         if (description) {
@@ -208,6 +155,7 @@ async function processImage(image: HTMLImageElement, index: number) {
           studentId: bestMatch.user.studentId!,
           imageUrl: croppedDataURL!,
           score: 1 - bestMatch.score, // Higher score is better
+          user: bestMatch.user,
         });
       } else {
         identifications.value.push({
@@ -215,6 +163,7 @@ async function processImage(image: HTMLImageElement, index: number) {
           studentId: "N/A",
           imageUrl: croppedDataURL!,
           score: 0, // Unknown score
+          user: null, //
         });
       }
     });
@@ -241,8 +190,8 @@ function findBestUserMatch(
   // Iterate over each user's descriptors
   userDescriptors.forEach((descriptors, studentId) => {
     // Iterate over each descriptor for the current user
-    console.log("Student ID:", studentId,'Descriptors:', descriptors.length);
-    
+    console.log("Student ID:", studentId, 'Descriptors:', descriptors.length);
+
     descriptors.forEach((userDescriptor) => {
       // Ensure descriptor lengths match to avoid calculation errors
       if (descriptor.length !== userDescriptor.length) {
@@ -450,3 +399,121 @@ const confirmAttendance = async () => {
   }
 };
 </script>
+
+<template>
+  <v-container style="margin-top: 10%">
+    <v-card
+      class="mx-auto"
+      color="primary"
+      max-width="1200"
+      outlined
+      style="padding: 20px"
+    >
+      <v-card-title>
+        <h1 class="text-h5">{{ courseStore.currentCourse?.nameCourses }}</h1>
+      </v-card-title>
+    </v-card>
+
+    <!-- Display Controls and Image Upload -->
+    <v-row class="mt-5">
+      <v-col cols="12" md="6"></v-col>
+      <v-col cols="12" md="6" class="text-right">
+        <v-btn color="#CFEBFB" @click="confirmAttendance()">
+          <v-icon size="30">mdi-clipboard-check-outline</v-icon>ตรวจสอบการเช็คชื่อ
+        </v-btn>
+      </v-col>
+    </v-row>
+
+    <!-- Loading Spinner -->
+    <v-row justify="center" v-if="isLoading">
+      <v-col cols="12" md="6" class="text-center">
+        <v-progress-circular
+          :size="70"
+          :width="7"
+          indeterminate
+          color="primary"
+        ></v-progress-circular>
+        <div>Processing images...</div>
+      </v-col>
+    </v-row>
+
+    <!-- Layout Row for Image Display and Identifications -->
+    <v-row v-if="!isLoading">
+      <!-- Column for Attendance Cards -->
+      <v-row>
+        <v-col
+          cols="6"
+          style="text-align: center; font-weight: bold"
+        >มา</v-col>
+        <v-divider vertical></v-divider>
+        <v-col
+          cols="6"
+          class="vertical-divider"
+          style="text-align: center; font-weight: bold"
+        >รอดำเนินการ</v-col>
+        <v-divider vertical></v-divider>
+      </v-row>
+      <v-row>
+        <v-col
+          v-for="(attendee, index) in identifications "
+          :key="index"
+          cols="12"
+          sm="6"
+          md="4"
+          lg="3"
+        >
+          <v-card
+            class="mb-2"
+            style="padding: 20px; background-color: rgb(237, 237, 237)"
+          >
+            <v-row justify="center">
+              <v-card-title class="bold-text mt-2">
+                <v-icon small>mdi-circle-small</v-icon>
+                {{ attendee.user?.studentId + " " + attendee.user?.firstName }}
+              </v-card-title>
+            </v-row>
+            <v-row>
+              <v-col cols="6">
+                <v-img
+                  :src="attendee.imageUrl"
+                  height="200px"
+                ></v-img>
+              </v-col>
+              <v-col cols="6">
+                <v-img
+                  :src="`${url}/users/${attendee.user?.userId}/image`"
+                  height="200px"
+                ></v-img>
+              </v-col>
+            </v-row>
+            <v-card-text>
+              <div>Score: {{ (attendee.score*100).toFixed(2) }}%</div>
+            </v-card-text>
+            <v-card-actions>
+              <v-btn
+                variant="flat"
+                color="warning"
+                style="color: black"
+                @click="reCheckAttendance(attendee)"
+                >Recheck</v-btn
+              >
+              <v-spacer></v-spacer>
+              <v-btn
+                variant="flat"
+                color="success"
+                @click="confirmAttendance(attendee)"
+                >Confirm</v-btn
+              >
+            </v-card-actions>
+          </v-card>
+        </v-col>
+      </v-row>
+    </v-row>
+  </v-container>
+</template>
+
+<style scoped>
+.bold-text {
+  font-weight: bold;
+}
+</style>
