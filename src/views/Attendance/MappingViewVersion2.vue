@@ -102,9 +102,10 @@ onMounted(async () => {
     await Promise.all(
       imageUrls.value.map((url, index) => loadImageAndProcess(url, index))
     );
+    console.log("Confirming attendance for", identifications.value, "students");
 
     // Call createAttendance after all images have been processed
-    // await createAttendance();
+    await createAttendance();
 
   } catch (error) {
     console.error("Error in onMounted:", error);
@@ -304,7 +305,7 @@ function base64ToBlob(base64: string, mimeType: string): Blob {
 
 const createAttendance = async () => {
   attendanceStore.attendances = [];
-  console.log("Confirming attendance for", identifications.value.length, "students");
+  console.log("Confirming attendance for", identifications.value, "students");
   for (let i = 0; i < identifications.value.length; i++) {
     try {
       if (!croppedImagesDataUrls.value[i]) {
@@ -343,6 +344,7 @@ const createAttendance = async () => {
           assignment: assignmentStore.assignment,
           user: identifiedUser,
           attendanceImage: "",
+          attendanceScore: parseInt((identifications.value[i].score*100).toFixed(2)),
         },
         imageFile
       );
@@ -379,6 +381,7 @@ const createAttendance = async () => {
           assignment: assignmentStore.assignment,
           user: usersCreateUnknown[i],
           attendanceImage: "",
+          attendanceScore: 0
         },
         new File([], "")
       );
@@ -498,6 +501,7 @@ const reCheckAttendance = async (attendance: Attendance) => {
                 <v-icon small>mdi-circle-small</v-icon>
                 {{ attendee.user?.studentId + " " + attendee.user?.firstName }}
               </v-card-title>
+              <p>Confident value : {{ attendee.attendanceScore }}%</p>
             </v-row>
             <v-row>
               <v-col cols="6">
