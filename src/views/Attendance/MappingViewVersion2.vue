@@ -62,6 +62,7 @@ onMounted(async () => {
     ]);
     // get user by course id
     await userStore.getUserByCourseId(courseStore.currentCourse?.coursesId + '');
+    await assignmentStore.getAssignmentById(route.params.assignmentId.toString());
 
     console.log("Models loaded successfully");
     console.log("Current Assignment:", userStore.users);
@@ -405,57 +406,33 @@ const createAttendance = async () => {
   console.log("Attendance confirmed successfully");
 };
 
-//confirm attendance
-const confirmAttendance_ = async (attendance: Attendance) => {
-  // Show a confirmation dialog
+const confirmAttendance = async (attendance: Attendance) => {
   if (confirm("Do you want to confirm this attendance?")) {
     try {
-      // Set attendance status
-      attendance.assignment = assignmentStore.currentAssignment;
       attendance.attendanceStatus = "present";
       attendance.attendanceConfirmStatus = "confirmed";
-      if (attendance.user === null) {
-        attendance.user = userStore.currentUser;
-      }
-
-      // Call store method to confirm attendance
-      await attendanceStore.confirmAttendance(attendance);
-
-      // Notify user of success
+      await attendanceStore.confirmAttendanceByTeacher(attendance.attendanceId + "");
       alert("Attendance has been confirmed.");
+  await attendanceStore.getAttendanceByAssignmentId(route.params.assignmentId.toString());
 
-      // Redirect after successful confirmation
-      // router.push('/resheckMappingTeacher/' + assignmentStore.currentAssignment?.assignmentId); // Replace '/next-page-route' with your specific route
     } catch (error) {
       console.error("Error recording attendance:", error);
-      alert("Failed to confirm attendance."); // Show error alert
+      alert("Failed to confirm attendance.");
     }
   }
 };
-
+//reject student
 const reCheckAttendance = async (attendance: Attendance) => {
   try {
-    attendance.assignment = assignmentStore.currentAssignment;
-    // if click this function after 15 minutes create assignment set attdent status to late
-    const date = new Date();
-    const currentDate = date.getTime();
-    const assignmentDate = new Date(assignmentStore.currentAssignment!.createdDate!);
-    const assignmentTime = assignmentDate.getTime();
-    const diff = currentDate - assignmentTime;
-    if (diff > 900000) {
-      attendance.attendanceStatus = "late";
-    } else {
-      attendance.attendanceStatus = "present";
-    }
+    attendance.attendanceStatus = "present";
     attendance.attendanceConfirmStatus = "recheck";
-    attendance.user = userStore.currentUser;
-    console.log(JSON.stringify(attendance));
+    await attendanceStore.rejectAttendanceByTeacher(attendance.attendanceId + "");
+    alert("Attendance has been recheck.");
+  await attendanceStore.getAttendanceByAssignmentId(route.params.assignmentId.toString());
 
-    await attendanceStore.confirmAttendance(attendance);
-    router.push("/courseDetail/" + queryCourseId);
-    // router.push('/resheckMappingTeacher/' + assignmentStore.currentAssignment?.assignmentId); // Replace '/next-page-route' with your specific route
   } catch (error) {
-    console.log(error);
+    console.error("Error recording attendance:", error);
+    alert("Failed to recheck attendance.");
   }
 };
 
@@ -519,7 +496,7 @@ const reCheckAttendance = async (attendance: Attendance) => {
               <v-btn variant="flat" color="warning" style="color: black"
                 @click="reCheckAttendance(attendee)">Recheck</v-btn>
               <v-spacer></v-spacer>
-              <v-btn variant="flat" color="success" @click="confirmAttendance_(attendee)">Confirm</v-btn>
+              <v-btn variant="flat" color="success" @click="confirmAttendance(attendee)">Confirm</v-btn>
             </v-card-actions>
           </v-card>
         </v-col>
