@@ -96,7 +96,7 @@ const router = createRouter({
     },
     {
       //mappingView
-      path: "/mapping2",
+      path: "/mapping2/assignment/:assignmentId",
       name: "mapping2",
       components: {
         default: () => import("../views/Attendance/MappingViewVersion2.vue"),
