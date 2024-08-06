@@ -69,14 +69,7 @@ const reCheckAttendance = async (attendance: Attendance) => {
           <h1 class="text-h5">{{ courseStore.currentCourse?.nameCourses }}</h1>
         </v-card-title>
       </v-card>
-      <v-row style="padding: 10px; margin-top: 5px" justify="end">
-        <v-btn
-          color="#CFEBFB"
-          @click="attendanceStore.checkAllAttendance(route.params.assignmentId + '')"
-          >สิ้นสุดการเช็คชื่อ</v-btn
-        >
-        <!-- recheck all -->
-      </v-row>
+     
       <v-row>
         <!-- Left column for student list (2/5 of the screen) -->
         <v-col cols="12" md="5">

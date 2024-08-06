@@ -106,7 +106,7 @@ onMounted(async () => {
     console.log("Confirming attendance for", identifications.value, "students");
 
     // Call createAttendance after all images have been processed
-    // await createAttendance();
+    await createAttendance();
 
   } catch (error) {
     console.error("Error in onMounted:", error);
@@ -426,6 +426,8 @@ const reCheckAttendance = async (attendance: Attendance) => {
   try {
     // attendance.attendanceStatus = "present";
     // attendance.attendanceConfirmStatus = "recheck";
+    console.log("Attendance:Ging", attendance);
+    
     await attendanceStore.removeAttendance(attendance.attendanceId + "");
     alert("Attendance has been recheck.");
     await attendanceStore.getAttendanceByAssignmentId(route.params.assignmentId.toString());
