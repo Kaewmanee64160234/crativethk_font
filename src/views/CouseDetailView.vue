@@ -137,7 +137,7 @@ const createPost = async () => {
   if (imageUrls.value.length > 0) {
     // image url and captured images are available
     imageUrls.value.push(...capturedImages.value);
-    router.push({ path: "/mapping2", query: { imageUrls: imageUrls.value } });
+    router.push({ path: `/mapping2/assignment/${assignmentStore.assignment?.assignmentId}`, query: { imageUrls: imageUrls.value } });
     nameAssignment.value = "";
     imageUrls.value = [];
     capturedImages.value = [];

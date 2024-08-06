@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import { defineProps } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useAssignmentStore } from '@/stores/assignment.store';
 import type Assignment from '@/stores/types/Assignment';
 import { useCourseStore } from '@/stores/course.store';
+import { useUserStore } from '@/stores/user.store';
 
 const router = useRouter();
 const courseStore = useCourseStore();
+const userStore = useUserStore();
+const route = useRoute();
+const courseId = route.params.courseId;
 
 const props = defineProps<{
     post: Assignment
@@ -23,7 +27,7 @@ function formatThaiDate(date: Date) {
 //create function goto mapping 2
 const goToMapping2 = () => {
     assignmentStore.currentAssignment = props.post;
-    router.push('/mapping2');
+    router.push(`/reCheckMappingTeacher/course/${courseId}/assignment/${props.post.assignmentId}`);
 }
 
 const gotoMappinfForStudent = () => {
@@ -44,7 +48,7 @@ const gotoMappinfForStudent = () => {
                 <v-spacer></v-spacer>
                 <v-btn @click="gotoMappinfForStudent()" > <v-icon size="30">mdi-card-account-mail</v-icon>
                 </v-btn>
-                <!-- <v-btn @click="goToMapping2()" ><v-icon size="30">mdi-account-file-text-outline</v-icon></v-btn> -->
+               <v-btn v-if="userStore.currentUser?.role == 'อาจารย์'" @click="goToMapping2()" ><v-icon size="30">mdi-account-file-text-outline</v-icon></v-btn>
             </v-card-actions>
         </v-card>
     </div>

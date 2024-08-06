@@ -13,4 +13,5 @@ export default interface Attendance{
     createdDate?:Date;
     updatedDate?:Date;
     deletedDate?:Date;
+    attendanceScore?:number;
 }

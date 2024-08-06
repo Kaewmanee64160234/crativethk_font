@@ -150,6 +150,7 @@ const reCheckAttendance = async (attendance: Attendance) => {
     attendance.attendanceStatus = diff > 900000 ? "late" : "present";
     attendance.attendanceConfirmStatus = "recheck";
     attendance.user = userStore.currentUser;
+    attendance.attendanceScore = 100;
 
     if (croppedImage.value) {
       const imageFile = dataURLToFile(croppedImage.value, 'rechecked-image.jpg');
@@ -168,9 +169,11 @@ const confirmRecheck = async () => {
   console.log('assignmentStore.currentAssignment!.assignmentId',assignmentStore.currentAssignment!.assignmentId);
   console.log('userStore.currentUser!.studentId',userStore.currentUser!.studentId);
   
-  await attendanceStore.getAttendanceByAssignmentAndStudent(assignmentStore.currentAssignment!.assignmentId!+'', userStore.currentUser!.studentId!);
-  console.log('editAttendance',attendanceStore.editAttendance);
-  
+  // console.log('editAttendance',attendanceStore.editAttendance);
+
+  await attendanceStore.getAttendanceByAssignmentAndStudent(route.params.assignmentId.toString(), userStore.currentUser!.studentId);
+ console.log('editAttendance',attendanceStore.editAttendance);
+ 
   await reCheckAttendance(attendanceStore.editAttendance);
   showDialog.value = false;
 };
