@@ -106,7 +106,7 @@ onMounted(async () => {
     console.log("Confirming attendance for", identifications.value, "students");
 
     // Call createAttendance after all images have been processed
-    await createAttendance();
+    // await createAttendance();
 
   } catch (error) {
     console.error("Error in onMounted:", error);
@@ -345,7 +345,7 @@ const createAttendance = async () => {
           assignment: assignmentStore.assignment,
           user: identifiedUser,
           attendanceImage: "",
-          attendanceScore: parseInt((identifications.value[i].score*100).toFixed(2)),
+          attendanceScore: parseInt((identifications.value[i].score * 100).toFixed(2)),
         },
         imageFile
       );
@@ -413,7 +413,7 @@ const confirmAttendance = async (attendance: Attendance) => {
       attendance.attendanceConfirmStatus = "confirmed";
       await attendanceStore.confirmAttendanceByTeacher(attendance.attendanceId + "");
       alert("Attendance has been confirmed.");
-  await attendanceStore.getAttendanceByAssignmentId(route.params.assignmentId.toString());
+      await attendanceStore.getAttendanceByAssignmentId(route.params.assignmentId.toString());
 
     } catch (error) {
       console.error("Error recording attendance:", error);
@@ -424,11 +424,11 @@ const confirmAttendance = async (attendance: Attendance) => {
 //reject student
 const reCheckAttendance = async (attendance: Attendance) => {
   try {
-    attendance.attendanceStatus = "present";
-    attendance.attendanceConfirmStatus = "recheck";
-    await attendanceStore.rejectAttendanceByTeacher(attendance.attendanceId + "");
+    // attendance.attendanceStatus = "present";
+    // attendance.attendanceConfirmStatus = "recheck";
+    await attendanceStore.removeAttendance(attendance.attendanceId + "");
     alert("Attendance has been recheck.");
-  await attendanceStore.getAttendanceByAssignmentId(route.params.assignmentId.toString());
+    await attendanceStore.getAttendanceByAssignmentId(route.params.assignmentId.toString());
 
   } catch (error) {
     console.error("Error recording attendance:", error);

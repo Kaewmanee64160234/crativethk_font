@@ -144,6 +144,11 @@ function getAttendanceByAssignmentAndStudent(
   );
 }
 
+// removev attdent
+function removeAttendance(attendanceId: string) {
+  return http.delete(`/attendances/${attendanceId}`);
+}
+
 export default {
   getAttendance,
   createAttendance,
@@ -159,4 +164,5 @@ export default {
   updateAttendanceTeacher,
   getAttendanceByCourseandStudentId,
   getAttendanceByAssignmentAndStudent,
+  removeAttendance
 };
