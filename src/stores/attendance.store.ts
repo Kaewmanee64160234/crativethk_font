@@ -213,22 +213,9 @@ const userStore = useUserStore();
       if(res.status === 200){
         console.log(res.data);
         currentAttendance.value = res.data;
-      }else{
-        // create attdent
-        console.log('create attendance');
-        const attendance =  {
-          attendanceId: -1,
-          attendanceDate: new Date(),
-          attendanceStatus: "recheck",
-          attendanceConfirmStatus: "confirmed" ,
-          assignment: assignmentStore.currentAssignment,
-          user: userStore.currentUser,
-          attendanceImage: "",
-          attendanceScore: 0,
-        };
-        const res = await attendaceService.createAttendance(attendance,null);
+        editAttendance.value = res.data;
       }
-      console.log('Attendance updated successfully', editAttendance.value);
+      console.log('Attendance updated successfully', currentAttendance.value);
       
     } catch (error) {
       console.log(error);

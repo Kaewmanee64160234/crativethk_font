@@ -150,11 +150,12 @@ const reCheckAttendance = async (attendance: Attendance) => {
     attendance.attendanceStatus = diff > 900000 ? "late" : "present";
     attendance.attendanceConfirmStatus = "recheck";
     attendance.user = userStore.currentUser;
+    attendance.attendanceScore = 100;
 
     if (croppedImage.value) {
       const imageFile = dataURLToFile(croppedImage.value, 'rechecked-image.jpg');
      
-      await attendanceStore.createAttendance(attendance,imageFile);
+      await attendanceStore.confirmAttendance(attendance,imageFile);
     } 
 
     router.push("/courseDetail/" + queryCourseId);
@@ -168,20 +169,11 @@ const confirmRecheck = async () => {
   console.log('assignmentStore.currentAssignment!.assignmentId',assignmentStore.currentAssignment!.assignmentId);
   console.log('userStore.currentUser!.studentId',userStore.currentUser!.studentId);
   
-  console.log('editAttendance',attendanceStore.editAttendance);
+  // console.log('editAttendance',attendanceStore.editAttendance);
 
-  attendanceStore.editAttendance = {
-    attendanceId: -1,
-    attendanceDate: new Date(),
-    attendanceStatus: "recheck",
-    attendanceConfirmStatus: "confirmed",
-    assignment: assignmentStore.currentAssignment,
-    user: userStore.currentUser,
-    attendanceImage: "",
-    attendanceScore: 0,
-  }
-  
-  
+  await attendanceStore.getAttendanceByAssignmentAndStudent(route.params.assignmentId.toString(), userStore.currentUser!.studentId);
+ console.log('editAttendance',attendanceStore.editAttendance);
+ 
   await reCheckAttendance(attendanceStore.editAttendance);
   showDialog.value = false;
 };
