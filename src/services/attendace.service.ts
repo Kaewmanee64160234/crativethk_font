@@ -75,7 +75,10 @@ function updateAttendance(attendance: Attendance, file: File) {
   );
   // user Id
   formData.append("userId",attendance.user!.studentId!.toString());
-  formData.append("file", file, file.name);
+  if(file != null){
+    formData.append("file", file, file.name);
+
+  }
   // assignMentTime
   const assignMentTime = new Date();
   formData.append("assignmentMentTime", assignMentTime.toISOString());

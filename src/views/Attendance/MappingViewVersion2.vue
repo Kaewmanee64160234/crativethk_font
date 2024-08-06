@@ -111,7 +111,7 @@ onMounted(async () => {
     console.log("Confirming attendance for", identifications.value, "students");
 
     // Call createAttendance after all images have been processed
-    // await createAttendance();
+    await createAttendance();
 
   } catch (error) {
     console.error("Error in onMounted:", error);
