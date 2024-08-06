@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, onMounted, computed } from "vue";
 import * as faceapi from "face-api.js";
 import { useUserStore } from "@/stores/user.store";
 import { useRoute, useRouter } from "vue-router";
@@ -51,7 +51,12 @@ const assignmentStore = useAssignmentStore();
 const attendanceStore = useAttendanceStore();
 const isLoading = ref(true); // Add a loading state
 const url = import.meta.env.VITE_API_URL as string;
-
+const sortedAttendances = computed(() => {
+  return attendanceStore.attendances!
+    .slice()
+    .filter((attendance) => attendance.attendanceImage !== 'noimage.jpg')
+    .sort((a, b) => a.attendanceScore! - b.attendanceScore!);
+});
 onMounted(async () => {
   try {
     isLoading.value = true;
@@ -106,7 +111,7 @@ onMounted(async () => {
     console.log("Confirming attendance for", identifications.value, "students");
 
     // Call createAttendance after all images have been processed
-    await createAttendance();
+    // await createAttendance();
 
   } catch (error) {
     console.error("Error in onMounted:", error);
@@ -438,77 +443,192 @@ const reCheckAttendance = async (attendance: Attendance) => {
   }
 };
 
+const goHome = () => {
+  router.push("/courseDetail/" + courseStore.currentCourse?.coursesId);
+};
+
+const nextPage = () => {
+  router.push(`/reCheckMappingTeacher/course/${courseStore.currentCourse?.coursesId}/assignment/${route.params.assignmentId}`);
+};
+
 </script>
 
 
 <template>
-  <v-container style="margin-top: 10%">
-    <v-card class="mx-auto" color="primary" max-width="1200" outlined style="padding: 20px">
-      <v-card-title>
-        <h1 class="text-h5">{{ courseStore.currentCourse?.nameCourses }}</h1>
-      </v-card-title>
-    </v-card>
-
-    <!-- Display Controls and Image Upload -->
-    <!-- <v-row class="mt-5">
-      <v-col cols="12" md="6"></v-col>
-      <v-col cols="12" md="6" class="text-right">
-        <v-btn color="#CFEBFB" @click="confirmAttendance()">
-          <v-icon size="30">mdi-clipboard-check-outline</v-icon>ตรวจสอบการเช็คชื่อ
-        </v-btn>
-      </v-col>
-    </v-row> -->
-
+  <v-container class="mt-10">
     <!-- Loading Spinner -->
-    <v-row justify="center" v-if="isLoading">
-      <v-col cols="12" md="6" class="text-center">
+    <v-row v-if="isLoading" class="fill-height">
+      <v-col class="d-flex flex-column justify-center align-center text-center">
         <v-progress-circular :size="70" :width="7" indeterminate color="primary"></v-progress-circular>
-        <div>Processing images...</div>
+        <div class="mt-4">Processing images...</div>
+        <div class="mt-2">Detected: {{ identifications.length }} / {{ userStore.users.length }} students</div>
       </v-col>
     </v-row>
-    <!-- Layout Row for Image Display and Identifications -->
-    <v-row v-if="!isLoading">
-      <!-- Column for Attendance Cards -->
 
-      <v-row class="pt-5">
-        <v-col v-for="(attendee, index) in attendanceStore.attendances?.filter(
-          (attendee) => attendee.attendanceImage !== 'noimage.jpg'
-        ) " :key="index" cols="12" sm="6" md="4" lg="3">
-          <v-card class="mb-2" style="padding: 20px; background-color: rgb(237, 237, 237)">
-            <v-row justify="center">
-              <v-card-title class="bold-text mt-2">
-                <v-icon small>mdi-circle-small</v-icon>
-                {{ attendee.user?.studentId + " " + attendee.user?.firstName }}
-              </v-card-title>
-              <p>Confident value : {{ attendee.attendanceScore }}%</p>
-            </v-row>
-            <v-row>
-              <v-col cols="6">
-                <!-- {{attendee.attendanceImage}} -->
-                <v-img :src="`${url}/attendances/image/${attendee.attendanceImage}`" height="200px"></v-img>
-              </v-col>
-              <v-col cols="6">
-                <v-img :src="`${url}/users/${attendee.user?.userId}/image`" height="200px"></v-img>
-              </v-col>
-            </v-row>
-            <v-card-text>
-              <!-- <div>Score: {{ (attendee.*100).toFixed(2) }}%</div> -->
-            </v-card-text>
-            <v-card-actions>
-              <v-btn variant="flat" color="warning" style="color: black"
-                @click="reCheckAttendance(attendee)">Recheck</v-btn>
-              <v-spacer></v-spacer>
-              <v-btn variant="flat" color="success" @click="confirmAttendance(attendee)">Confirm</v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-col>
-      </v-row>
+    <!-- Layout Row for Image Display and Identifications -->
+    <v-row v-else style="padding: 20px;">
+      <v-col cols="12" class="d-flex justify-space-between align-center mb-4">
+        <h1 class="display-1">ตรวจสอบการเช็คชื่อ</h1>
+        <div class="d-flex align-center">
+          <!-- Navigation Buttons -->
+          <v-btn
+            color="primary"
+            variant="outlined"
+            class="mr-3"
+            @click="goHome"
+          >
+            Go Home
+          </v-btn>
+          <v-btn
+            color="primary"
+            variant="outlined"
+            @click="nextPage"
+          >
+            Next Page
+          </v-btn>
+        </div>
+        <div class="status-student d-flex align-center">
+          <v-row class="align-center text-center" justify="center">
+            <v-col cols="auto" class="status-section">
+              <div class="status-number">{{ identifications.length }}</div>
+              <div class="status-label">ตรวจจับได้</div>
+            </v-col>
+            <v-divider vertical></v-divider>
+            <v-col cols="auto" class="status-section">
+              <div class="status-number">{{ userStore.users.length }}</div>
+              <div class="status-label">จำนวนนิสิตทั้งหมด</div>
+            </v-col>
+          </v-row>
+        </div>
+      </v-col>
+
+      <v-col cols="12" class="pt-5">
+        <v-container>
+          <v-row>
+            <v-col
+              v-for="(attendee, index) in sortedAttendances"
+              :key="index"
+              cols="12"
+              sm="6"
+              md="4"
+              lg="3"
+            >
+              <v-card
+                class="mb-3"
+                :style="{
+                  padding: '20px',
+                  backgroundColor: attendee.attendanceScore! >= 50 ? 'rgb(237, 237, 237)' : 'rgb(255, 230, 230)',
+                  boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)',
+                  borderRadius: '10px'
+                }"
+              >
+                <v-row justify="center">
+                  <v-card-title class="bold-text mt-2 text-center">
+                    <v-icon small class="mr-2">mdi-circle-small</v-icon>
+                    {{ attendee.user?.studentId + " " + attendee.user?.firstName }}
+                  </v-card-title>
+                  <v-card-subtitle :class="attendee.attendanceScore! >= 50 ? 'correct-text' : 'incorrect-text'">
+                    {{ attendee.attendanceScore! >= 50 ? 'ความถูกต้อง' : 'ไม่ถูกต้อง' }} {{ attendee.attendanceScore }}%
+                  </v-card-subtitle>
+                </v-row>
+                <v-row>
+                  <v-col cols="6">
+                    <v-img
+                      :src="`${url}/attendances/image/${attendee.attendanceImage}`"
+                      height="200px"
+                      class="rounded-lg"
+                    ></v-img>
+                  </v-col>
+                  <v-col cols="6">
+                    <v-img
+                      :src="`${url}/users/${attendee.user?.userId}/image`"
+                      height="200px"
+                      class="rounded-lg"
+                    ></v-img>
+                  </v-col>
+                </v-row>
+                <v-card-actions class="justify-space-between">
+                  <v-btn
+                    color="error"
+                    variant="flat"
+                    @click="reCheckAttendance(attendee)"
+                    class="font-weight-bold"
+                  >
+                    ปฏิเสธ
+                  </v-btn>
+                  <v-btn
+                    color="success"
+                    variant="flat"
+                    @click="confirmAttendance(attendee)"
+                    class="font-weight-bold"
+                  >
+                    ยืนยัน
+                  </v-btn>
+                </v-card-actions>
+              </v-card>
+            </v-col>
+          </v-row>
+        </v-container>
+      </v-col>
     </v-row>
   </v-container>
 </template>
-
 <style scoped>
 .bold-text {
   font-weight: bold;
+}
+
+.correct-text {
+  color: green;
+}
+
+.incorrect-text {
+  color: red;
+}
+
+.fill-height {
+  min-height: 80vh;
+}
+
+.display-1 {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.status-student {
+  text-align: center; /* Center-align the text inside the status */
+}
+
+.status-section {
+  margin: 0 20px;
+}
+
+.status-number {
+  font-size: 28px; /* Larger font size for numbers */
+  font-weight: bold;
+  color: #333;
+}
+
+.status-label {
+  font-size: 14px; /* Smaller font size for description */
+  color: #777;
+  line-height: 1;
+}
+
+.v-card {
+  border-radius: 10px; /* Add rounded corners to cards */
+  transition: transform 0.3s;
+}
+
+.v-card:hover {
+  transform: translateY(-5px); /* Add hover effect to lift card */
+}
+
+.v-btn {
+  transition: background-color 0.3s;
+}
+
+.v-btn:hover {
+  background-color: #eee;
 }
 </style>
