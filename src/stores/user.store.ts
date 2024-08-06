@@ -21,7 +21,7 @@ export const useUserStore = defineStore("userStore", () => {
   const keyword = ref("");
   const messageStore = useMessageStore()
   const currentUser = ref<User>();
-  const register = ref<User[]>([]);
+  const regisUser = ref<User>();
 
   const editUser = ref<User & { files: File[] }>({
     userId: 0,
@@ -174,12 +174,34 @@ const getUserByCourseId = async (courseId: string) => {
         console.log(e);
     }
 }
+
+const updateRegisterStatus = async (userId: number, user:User) => {
+  try {
+    const res = await userService.updateRegisterStatus(userId, user);
+    console.log("data", res.data);
+    regisUser.value = res.data;
+    console.log("users.value", regisUser.value);
+  } catch (e) {
+    console.log(e);
+  }
+}
+
 //getUsersById
 const getUsersById = async (id: number) => {
   try {
       const res = await userService.getUserById(id);
       console.log("res", res.data);
       currentUser.value = mapToUser(res.data); // Directly map the single user object
+  } catch (e) {
+      console.log(e);
+  }
+}
+
+const getUsersByStdId = async (id: string) => {
+  try {
+      const res = await userService.getUserByStdId(id);
+      console.log("res std", res.data);
+      regisUser.value = mapToUser(res.data); // Directly map the single user object
   } catch (e) {
       console.log(e);
   }
@@ -219,6 +241,7 @@ const getUserFromLocalStorage = () => {
       const res = await userService.getStdQR(stdId);
       const imageDataUrl = `${res.data}`;
       QR.value = imageDataUrl;
+      editUser.value.studentId = stdId;
       console.log("found", QR.value);
     } catch (error) {
       console.error("Error while fetching QR code:", error);
@@ -252,8 +275,10 @@ const getUserFromLocalStorage = () => {
     showImageDialog,
     closeImageDialog,
     file_,
-    register,
     getUsersById,
-    QR
+    getUsersByStdId,
+    QR,
+    regisUser,
+    updateRegisterStatus
   };
 });

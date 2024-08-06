@@ -14,6 +14,8 @@ const courseStore = useCourseStore();
 const enrollmentStore = useEnrollmentStore();
 const url = 'http://localhost:3000';
 const router = useRouter();
+const images = ref<string[]>([]);
+const user = ref<User | undefined>(undefined);
 
 const isStudent = computed(() => userStore.currentUser?.role === 'นิสิต');
 const isTeacher = computed(() => userStore.currentUser?.role === 'อาจารย์');
@@ -31,12 +33,15 @@ onMounted(async () => {
     if (isStudent.value && userStore.currentUser!.studentId) {
         // await userStore.createQrByStdId(userStore.currentUser!.studentId);
         await enrollmentStore.getCourseByStudentId(userStore.currentUser!.studentId!);
+        await userStore.getUsersByStdId(userStore.currentUser!.studentId!);
+        user.value = userStore.regisUser;
+        images.value = user.value?.images?.map((image: string) => `${url}/users/image/filename/${image}`) ?? [];
+        if (images.value.length > 0 && userStore.currentUser?.registerStatus == 'notConfirmed') {
+            userStore.createQrByStdId(userStore.currentUser?.studentId!);
+        }
+        console.log("image",images.value)
     }
 });
-console.log(userStore.currentUser)
-if(userStore.currentUser?.registerStatus == 'notConfirmed') {
-    userStore.createQrByStdId(userStore.currentUser?.studentId!);
-}
 </script>
 
 <template>
@@ -80,7 +85,8 @@ if(userStore.currentUser?.registerStatus == 'notConfirmed') {
                                 </v-row>
                             </v-col>
                             <v-col>
-                                <v-img :src="userStore.QR" style="width: 200px; height: 200px; object-fit: cover;"></v-img>
+                                <v-img :src="userStore.QR"
+                                    style="width: 200px; height: 200px; object-fit: cover;"></v-img>
                             </v-col>
                         </v-row>
                     </v-card-text>

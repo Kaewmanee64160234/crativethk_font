@@ -15,7 +15,7 @@ const fileInputKey = ref(Date.now()); // Key to reset the file input field
 
 // Fetching existing images from the user store
 const images = ref<string[]>(userStore.currentUser?.images?.map((image: string) => `${url}/users/image/filename/${image}`) ?? []);
-
+console.log("image",images.value)
 async function close() {
   userStore.closeImageDialog();
 }
@@ -25,6 +25,7 @@ onMounted(async () => {
   images.value = userStore.currentUser?.images?.map((image: string) => `${url}/users/image/filename/${image}`) ?? [];
 
   await loadModels();
+  console.log("Face API models loaded",images.value);
 });
 
 async function loadModels() {
@@ -34,7 +35,7 @@ async function loadModels() {
     await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
   } catch (error) {
     console.error("Error loading face-api models:", error);
-  }
+ }
 }
 
 function float32ArrayToBase64(float32Array: Float32Array) {
