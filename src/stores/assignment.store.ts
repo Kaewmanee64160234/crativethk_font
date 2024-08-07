@@ -37,6 +37,7 @@ export const useAssignmentStore = defineStore("assignmentStore", () => {
           major: "",
           year: "",
           profileImage: "",
+          registerStatus: "",
         },
       },
     },

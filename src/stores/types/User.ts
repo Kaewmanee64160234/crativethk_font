@@ -10,6 +10,7 @@ export interface User {
   picture?: string;
   teacherId?: string;
   studentId?: string;
+  registerStatus?: string;
   profileImage?: string;
   faceDescriptions?: string[];
   createdAt?: Date;
@@ -49,6 +50,7 @@ export function mapToUser(data: any): User {
     teacherId: data.teacherId,
     year: data.year,
     major: data.major,
+    registerStatus: data.registerStatus,
     faceDescriptions: faceDescriptions,
     // faceDescriptions: faceDescriptions,
     picture: data.picture,

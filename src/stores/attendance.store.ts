@@ -22,6 +22,7 @@ export const useAttendanceStore = defineStore("attendanceStore", () => {
     status: "",
     major: "",
     year: "",
+    registerStatus: "",
     profileImage: "",
   });
   const messageStore = useMessageStore();

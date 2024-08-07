@@ -34,8 +34,7 @@ const cancel = () => {
     selectedFile.value = null;
 };
 
-const saveUser = async () => {
-    userStore.register = [];  // Clears existing register array
+const saveUser = async () => { 
     for (let i = 0; i < userStore.file_.length; i++) {
         const nameParts = userStore.file_[i].name.split(' ');
         const firstName = nameParts[0];
@@ -48,21 +47,22 @@ const saveUser = async () => {
             major: userStore.file_[i].major,
             year: userStore.file_[i].year,
             email: userStore.file_[i].id + "@go.buu.ac.th",
+            registerStatus: "notConfirmed",
             role: "นิสิต",
-            status: "กำลังศึกษา"
+            status: "กำลังศึกษา",
         };
 
         try {
             await userStore.saveUser();
-            console.log("New User Registered:", userStore.register);
         } catch (error) {
             console.error("Failed to save user:", error);
         }
     }
-    if (userStore.register.length > 0) {
-        router.push(`/uploadImage/${userStore.register[0].studentId}`);
-    }
+    // if (userStore.register.length > 0) {
+    //     router.push(`/uploadImage/${userStore.register[0].studentId}`);
+    // }
     userStore.file_ = [];  // Clear the file list after processing
+    selectedFile.value = null;
 };
 </script>
 <template>

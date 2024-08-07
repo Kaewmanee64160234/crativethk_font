@@ -26,6 +26,7 @@ function saveUser(user: User & { files: File[] }) {
   formData.append('status', user.status!);
   formData.append('major', user.major!);
   formData.append('year', user.year!);
+  formData.append('registerStatus', user.registerStatus!);
 
   // Check if files are available
   // if (user.files && user.files.length > 0) {
@@ -69,9 +70,10 @@ function updateUser(user: User & { files: File[] }, userId: number) {
   formData.append("status", user.status!);
   formData.append('major', user.major!);
   formData.append('year', user.year!);
+  formData.append('registerStatus', user.registerStatus!);
 
   // Append files and face descriptions
-  if (user.faceDescriptions!.length > 0) {
+  if (user.faceDescriptions!.length > 0 && ( user.files && user.files.length > 0)) {
     // Append files and face descriptions
     for (let i = 0; i < user.faceDescriptions!.length; i++) {
       formData.append("files", user.files[i], user.files[i].name); // Ensure there are exactly 5 files
@@ -82,6 +84,16 @@ function updateUser(user: User & { files: File[] }, userId: number) {
   return http.patch(`/users/${userId}`, formData, {
     headers: {
       "Content-Type": "multipart/form-data",
+    },
+  });
+}
+
+function updateRegisterStatus(userId: number, user: User) {
+  return http.patch(`/users/${userId}/register-status`, {
+    registerStatus: user.registerStatus
+  }, {
+    headers: {
+      "Content-Type": "application/json",
     },
   });
 }
@@ -112,6 +124,10 @@ function getUserById(id: number) {
   return http.get(`/users/${id}`);
 }
 
+function getUserByStdId(id: string) {
+  return http.get(`/users/std/${id}`);
+}
+
 function getFileStd(formData: FormData) {
   return http.post("/users/upload", formData, {
     headers: {
@@ -120,7 +136,7 @@ function getFileStd(formData: FormData) {
   });
 }
 
-function getStdQR(stdId: number) {
+function getStdQR(stdId: string) {
   return http.get(`/users/${stdId}/qr`);
 }
 
@@ -135,4 +151,6 @@ export default {
   getUserByCourseId,
   getFileStd,
   getStdQR,
+  getUserByStdId,
+  updateRegisterStatus
 };
