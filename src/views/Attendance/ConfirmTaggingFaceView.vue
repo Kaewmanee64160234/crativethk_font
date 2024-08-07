@@ -201,32 +201,69 @@ const confirmRecheck = async () => {
   </v-container>
 
   <v-dialog v-model="showDialog" max-width="600px">
-    <v-card>
-      <v-card-title>
-        <span class="headline">Confirm Identity</span>
-      </v-card-title>
-      <v-card-text>
-        <img :src="croppedImage" alt="Cropped Face" />
-        <p>Is this you?</p>
-      </v-card-text>
-      <v-card-actions>
-        <v-btn color="primary" @click="confirmRecheck()">Yes</v-btn>
-        <v-btn color="secondary" @click="showDialog = false">No</v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+      <v-card>
+        <v-card-title>
+          <span class="headline">Confirm Identity</span>
+        </v-card-title>
+        <v-card-text class="text-center">
+          <img :src="croppedImage" alt="Cropped Face" class="rounded-lg mb-2" />
+          <p>Is this you?</p>
+        </v-card-text>
+        <v-card-actions class="justify-center">
+          <v-btn color="primary" @click="confirmRecheck()">Yes</v-btn>
+          <v-btn color="secondary" @click="showDialog = false">No</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 </template>
 
 <style scoped>
-img {
-  width: 100%;
-  height: auto;
-  object-fit: contain;
+/* Main container to center content */
+.v-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
 }
 
-canvas {
+/* Image container to maintain position relative for canvas overlay */
+.image-container {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Image styling to keep it centered and contained */
+.image-display {
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Canvas for overlay effects */
+.overlay-canvas {
   position: absolute;
   top: 0;
   left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Dialog text alignment for better UX */
+.v-card-text {
+  text-align: center;
+}
+
+/* Button styling for consistency */
+.v-btn {
+  text-transform: none;
+  font-weight: bold;
 }
 </style>
