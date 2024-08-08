@@ -111,7 +111,7 @@ onMounted(async () => {
     console.log("Confirming attendance for", identifications.value, "students");
 
     // Call createAttendance after all images have been processed
-    if (attendanceStore.attendances!.length > 0) {
+    if (assignmentStore.assignment!.statusAssignment == 'completed') {
       console.log("Assignment is already completed. Skipping attendance confirmation.");
       await updateAttdent()
     } else {
