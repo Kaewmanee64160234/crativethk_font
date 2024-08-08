@@ -21,7 +21,7 @@ export const useUserStore = defineStore("userStore", () => {
   const keyword = ref("");
   const messageStore = useMessageStore()
   const currentUser = ref<User>();
-  const register = ref<User[]>([]);
+  const regisUser = ref<User>();
 
   const editUser = ref<User & { files: File[] }>({
     userId: 0,
@@ -34,6 +34,7 @@ export const useUserStore = defineStore("userStore", () => {
     year: "",
     role: "",
     status: "",
+    registerStatus: "",
     profileImage: "",
     faceDescriptions:[],
     images:[],
@@ -84,6 +85,7 @@ export const useUserStore = defineStore("userStore", () => {
       status: "",
       major: "",
       year: "",
+      registerStatus: "",
       profileImage: "",
       files: [],
     };
@@ -91,18 +93,11 @@ export const useUserStore = defineStore("userStore", () => {
   //save user
   const saveUser = async () => {
     try {
-        console.log("save user", editUser.value);
         if (editUser.value.userId && editUser.value.userId !== 0) {
-            const updatedUser = await userService.updateUser(editUser.value, editUser.value.userId);
+            await userService.updateUser(editUser.value, editUser.value.userId);
             // Update user in the register array
-            const index = register.value.findIndex(user => user.userId === editUser.value.userId);
-            if (index !== -1) {
-                register.value[index] = { ...register.value[index], ...updatedUser.data };
-                messageStore.showInfo("User updated successfully.");
-            }
         } else {
-            const newUser = await userService.saveUser(editUser.value);
-            register.value.push(newUser.data); // Add new user to register
+            await userService.saveUser(editUser.value);
             messageStore.showInfo("New user created successfully.");
         }
 
@@ -172,18 +167,41 @@ export const useUserStore = defineStore("userStore", () => {
 const getUserByCourseId = async (courseId: string) => {
     try {
         const res = await userService.getUserByCourseId(courseId);
-        console.log("res", res.data);
         users.value = res.data.map((user: any) => mapToUser(user));
+        console.log("users.value", users.value);
+
     } catch (e) {
         console.log(e);
     }
 }
+
+const updateRegisterStatus = async (userId: number, user:User) => {
+  try {
+    const res = await userService.updateRegisterStatus(userId, user);
+    console.log("data", res.data);
+    regisUser.value = res.data;
+    console.log("users.value", regisUser.value);
+  } catch (e) {
+    console.log(e);
+  }
+}
+
 //getUsersById
 const getUsersById = async (id: number) => {
   try {
       const res = await userService.getUserById(id);
       console.log("res", res.data);
       currentUser.value = mapToUser(res.data); // Directly map the single user object
+  } catch (e) {
+      console.log(e);
+  }
+}
+
+const getUsersByStdId = async (id: string) => {
+  try {
+      const res = await userService.getUserByStdId(id);
+      console.log("res std", res.data);
+      regisUser.value = mapToUser(res.data); // Directly map the single user object
   } catch (e) {
       console.log(e);
   }
@@ -218,11 +236,12 @@ const getUserFromLocalStorage = () => {
     }
   }
 
-  async function createQrByStdId(stdId: number) {
+  async function createQrByStdId(stdId: string) {
     try {
       const res = await userService.getStdQR(stdId);
       const imageDataUrl = `${res.data}`;
       QR.value = imageDataUrl;
+      editUser.value.studentId = stdId;
       console.log("found", QR.value);
     } catch (error) {
       console.error("Error while fetching QR code:", error);
@@ -256,8 +275,10 @@ const getUserFromLocalStorage = () => {
     showImageDialog,
     closeImageDialog,
     file_,
-    register,
     getUsersById,
-    QR
+    getUsersByStdId,
+    QR,
+    regisUser,
+    updateRegisterStatus
   };
 });

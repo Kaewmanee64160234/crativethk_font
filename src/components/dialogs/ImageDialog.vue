@@ -15,7 +15,7 @@ const fileInputKey = ref(Date.now()); // Key to reset the file input field
 
 // Fetching existing images from the user store
 const images = ref<string[]>(userStore.currentUser?.images?.map((image: string) => `${url}/users/image/filename/${image}`) ?? []);
-
+console.log("image",images.value)
 async function close() {
   userStore.closeImageDialog();
 }
@@ -25,6 +25,7 @@ onMounted(async () => {
   images.value = userStore.currentUser?.images?.map((image: string) => `${url}/users/image/filename/${image}`) ?? [];
 
   await loadModels();
+  console.log("Face API models loaded",images.value);
 });
 
 async function loadModels() {
@@ -35,8 +36,8 @@ async function loadModels() {
     await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
   } catch (error) {
     console.error("Error loading face-api models:", error);
-  }
 
+ }
 }
 
 function float32ArrayToBase64(float32Array: Float32Array): string {
@@ -215,8 +216,8 @@ const canUpload = computed(() => imageUrls.value.length === 5);
 
 <template>
   <v-container class="pt-12">
-    <v-dialog v-model="showDialog" max-width="800px" persistent>
-      <v-card>
+    <v-dialog v-model="showDialog" height="800" persistent>
+      <v-card class="rounded-lg" outlined>
         <v-card-title class="headline">
           รูปภาพทั้งหมด
           <v-btn icon @click="close">
@@ -224,30 +225,57 @@ const canUpload = computed(() => imageUrls.value.length === 5);
           </v-btn>
         </v-card-title>
         <v-card-text>
+          <v-row v-if="!canUpload" class="mt-2">
+            <v-col cols="12" class="text-center">
+              <v-alert type="info" class="mt-3" border="left">
+                <v-icon left>mdi-information-outline</v-icon>
+                กรุณาอัปโหลดรูปภาพให้ครบ 5 รูป
+              </v-alert>
+            </v-col>
+          </v-row>
+          
+          <!-- Existing Images -->
           <v-row>
-            <v-col v-for="(image, index) in images" :key="'existing-' + index" cols="6" md="4" lg="3" class="image-container">
-              <v-img :src="image" aspect-ratio="1" class="rounded-lg"></v-img>
-              <v-btn icon small @click="removeImage(index)" class="close-button">
-                <v-icon color="red">mdi-close</v-icon>
-              </v-btn>
+            <v-col
+              v-for="(image, index) in images"
+              :key="'existing-' + index"
+              cols="2"
+              md="2"
+              lg="2"
+              class="image-container"
+            >
+              <v-img
+                :src="image"
+                aspect-ratio="1"
+                class="rounded-lg d-flex align-center justify-center"
+              ></v-img>
             </v-col>
           </v-row>
 
-          <v-row v-if="hasUploadedImages">
+          <!-- Uploaded Images -->
+          <v-row v-if="hasUploadedImages" class="mt-4">
             <v-col cols="12">
               <v-text class="font-weight-bold">รูปภาพที่อัปโหลด</v-text>
             </v-col>
-            <v-col v-for="(image, index) in imageUrls" :key="'uploaded-' + index" cols="6" md="4" lg="3" class="image-container">
-              <v-img :src="image" aspect-ratio="1" class="rounded-lg ma-2"></v-img>
-              <v-btn icon small @click="removeUploadedImage(index)" class="close-button">
-                <v-icon color="red">mdi-close</v-icon>
-              </v-btn>
+            <v-col
+              v-for="(image, index) in imageUrls"
+              :key="'uploaded-' + index"
+              cols="2"
+              md="2"
+              lg="2"
+              class="image-container"
+            >
+              <v-img
+                :src="image"
+                aspect-ratio="1"
+                class="rounded-lg ma-2 d-flex align-center justify-center"
+              ></v-img>
             </v-col>
           </v-row>
 
+          <!-- File Input -->
           <v-row>
-            <v-col cols="12">
-              <!-- File Input -->
+            <v-col cols="12" class="mt-4">
               <v-file-input
                 :key="fileInputKey"
                 label="อัปโหลดรูปภาพ"
@@ -262,6 +290,7 @@ const canUpload = computed(() => imageUrls.value.length === 5);
             </v-col>
           </v-row>
 
+          <!-- Upload Button -->
           <v-row justify="end" class="mt-4">
             <v-col cols="auto">
               <v-btn
@@ -275,14 +304,6 @@ const canUpload = computed(() => imageUrls.value.length === 5);
             </v-col>
           </v-row>
 
-          <v-row v-if="!canUpload" class="mt-2">
-            <v-col cols="12" class="text-center">
-              <v-alert type="info" class="mt-3" border="left">
-                <v-icon left>mdi-information-outline</v-icon>
-                กรุณาอัปโหลดรูปภาพให้ครบ 5 รูป
-              </v-alert>
-            </v-col>
-          </v-row>
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -301,17 +322,13 @@ const canUpload = computed(() => imageUrls.value.length === 5);
   margin-bottom: 1rem;
 }
 
-.close-button {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  z-index: 10;
-  background: rgba(255, 255, 255, 0.7);
-  border-radius: 50%;
-}
-
 .v-alert {
   background-color: #e3f2fd;
   border-color: #1976d2;
+}
+
+.v-card {
+  height: 800px; /* Ensure the dialog is square */
+  overflow: hidden; /* Prevent content overflow */
 }
 </style>

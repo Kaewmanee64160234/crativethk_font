@@ -7,6 +7,7 @@ import { useCourseStore } from "./course.store";
 import type Attendance from "./types/Attendances";
 import { useMessageStore } from "./message";
 import type { User } from "./types/User";
+import { useUserStore } from "./user.store";
 export const useAttendanceStore = defineStore("attendanceStore", () => {
   const attendances = ref<Attendance[]>();
   const showDialog = ref(false);
@@ -21,6 +22,7 @@ export const useAttendanceStore = defineStore("attendanceStore", () => {
     status: "",
     major: "",
     year: "",
+    registerStatus: "",
     profileImage: "",
   });
   const messageStore = useMessageStore();
@@ -40,7 +42,8 @@ export const useAttendanceStore = defineStore("attendanceStore", () => {
     attendanceStatus: "",
     files: [],
   });
-
+const assignmentStore = useAssignmentStore();
+const userStore = useUserStore();
   const courseStore = useCourseStore();
   // create attendance
   const createAttendance = async (attendance: Attendance, file: File) => {
@@ -208,14 +211,28 @@ export const useAttendanceStore = defineStore("attendanceStore", () => {
         assignmentId,
         studentId
       );
-      editAttendance.value = res.data;
-      console.log('Attendance updated successfully', editAttendance.value);
+      if(res.status === 200){
+        console.log(res.data);
+        currentAttendance.value = res.data;
+        editAttendance.value = res.data;
+      }
+      console.log('Attendance updated successfully', currentAttendance.value);
       
     } catch (error) {
       console.log(error);
     }
   };
-
+// removeAttendance
+  const removeAttendance = async (attendanceId: string) => {
+    try {
+      const res = await attendaceService.removeAttendance(attendanceId);
+      if (res.data) {
+        console.log(res.data);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
   return {
     getAttendanceByCourseandStudentId,
     attendances,
@@ -234,6 +251,8 @@ export const useAttendanceStore = defineStore("attendanceStore", () => {
     editAttendance,
     userAttendance,
     updateAttendanceTeacher,
-    getAttendanceByAssignmentAndStudent
+    getAttendanceByAssignmentAndStudent,
+    removeAttendance
+
   };
 });

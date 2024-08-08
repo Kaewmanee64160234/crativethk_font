@@ -28,11 +28,15 @@ function createAttendance(data: Attendance, file: File) {
   formData.append("date", data.attendanceDate.toString());
   formData.append("attendanceStatus", data.attendanceStatus);
   formData.append("confirmStatus", data.attendanceConfirmStatus);
+  formData.append("attendanceScore", data.attendanceScore!.toString());
 
   // attendanceConfirmStatus
   formData.append("confirmStatus", data.attendanceConfirmStatus);
 
-  printFormData(formData);
+  console.log("formData", data);
+  
+
+  // printFormData(formData);
   return http.post("/attendances", formData, {
     headers: {
       "Content-Type": "multipart/form-data",
@@ -71,7 +75,10 @@ function updateAttendance(attendance: Attendance, file: File) {
   );
   // user Id
   formData.append("userId",attendance.user!.studentId!.toString());
-  formData.append("file", file, file.name);
+  if(file != null){
+    formData.append("file", file, file.name);
+
+  }
   // assignMentTime
   const assignMentTime = new Date();
   formData.append("assignmentMentTime", assignMentTime.toISOString());
@@ -82,6 +89,8 @@ function updateAttendance(attendance: Attendance, file: File) {
   formData.append("date", attendance.attendanceDate.toString());
   formData.append("attendanceStatus", attendance.attendanceStatus);
   formData.append("confirmStatus", attendance.attendanceConfirmStatus);
+  formData.append("attendanceScore", attendance.attendanceScore!.toString());
+
   return http.patch(`attendances/${attendance.attendanceId}`, formData, {
     headers: {
       "Content-Type": "multipart/form-data",
@@ -138,6 +147,11 @@ function getAttendanceByAssignmentAndStudent(
   );
 }
 
+// removev attdent
+function removeAttendance(attendanceId: string) {
+  return http.delete(`/attendances/${attendanceId}`);
+}
+
 export default {
   getAttendance,
   createAttendance,
@@ -153,4 +167,5 @@ export default {
   updateAttendanceTeacher,
   getAttendanceByCourseandStudentId,
   getAttendanceByAssignmentAndStudent,
+  removeAttendance
 };

@@ -14,7 +14,6 @@ export const useAuthStore = defineStore('authStore', () => {
     email: '',
     role: '',
     profileImage: '',
-    // faceDescriptions: [],
   });
   const accessToken = ref('');
   const setCurrentUser = (user: User) => {
@@ -45,8 +44,12 @@ export const useAuthStore = defineStore('authStore', () => {
         console.log("current user" ,(currentUser.value));
         if (currentUser.value.user.role === 'อาจารย์') {
           router.push('/courseManagement');
-        } else{
+        } 
+        if (currentUser.value.user.role === 'นิสิต') {
           router.push('/enrolmentManagement');
+        }
+        if (currentUser.value.user.role === 'แอดมิน') {
+          router.push('/userManagement');
         }
       }
     } catch (error) {
