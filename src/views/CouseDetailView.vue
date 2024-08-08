@@ -51,9 +51,6 @@ onMounted(async () => {
   await courseStore.getAllRooms();
   posts.value = assignmentStore.assignments;
 
-  if (isTeacher.value) {
-    showDialog.value = true;
-  }
 });
 
 const processFile = (url: string) => {
