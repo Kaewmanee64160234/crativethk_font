@@ -79,7 +79,7 @@ const editAssignment = async () => {
   </div>
   <ConfirmDialog ref="confirmDlg" />
   <v-dialog v-model="assignmentStore.EditAssignment" persistent>
-    <EditAssignment></EditAssignment>
+    <EditAssignment :post="props.post" :assignmentId="props.post.assignmentId ?? 0"></EditAssignment>
   </v-dialog>
 </template>
 

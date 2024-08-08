@@ -28,11 +28,7 @@ onMounted(async () => {
 });
 
 async function loadModels() {
-<<<<<<< HEAD
-  await faceapi.nets.ssdMobilenetv1.loadFromUri('/models');
-  await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
-  await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
-=======
+
   try {
     await faceapi.nets.ssdMobilenetv1.loadFromUri('/models');
     await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
@@ -40,7 +36,7 @@ async function loadModels() {
   } catch (error) {
     console.error("Error loading face-api models:", error);
   }
->>>>>>> 5a2a4880db4ca5266bb10031ff4a5388fd442742
+
 }
 
 function float32ArrayToBase64(float32Array: Float32Array): string {
@@ -118,28 +114,7 @@ async function save() {
       files: imageFiles.value,
     };
 
-<<<<<<< HEAD
-  // Process images and get face descriptors
-  const faceDescriptions = await processFiles(userStore.editUser.files);
 
-  // Convert face descriptors to Base64
-  const dataFaceBase64 = faceDescriptions.map(faceDescription => float32ArrayToBase64(faceDescription));
-  userStore.editUser.faceDescriptions = dataFaceBase64;
-
-  try {
-    // Save user data including face descriptors
-    await userStore.saveUser();
-    showDialog.value = false;
-    await userStore.closeImageDialog();
-    window.location.reload();
-
-    // Refresh user data
-    await userStore.getUsersById(userStore.currentUser?.userId!);
-    showDialog.value = true;
-  } catch (error) {
-    console.error("Error saving user:", error);
-    // Handle error gracefully here
-=======
     const faceDescriptions = await processFiles(userStore.editUser.files);
     if (faceDescriptions.length !== 5) {
       // Do not proceed if any face detection fails
@@ -159,7 +134,6 @@ async function save() {
 
     await userStore.getUsersById(userStore.currentUser?.userId!);
     showDialog.value = true;
->>>>>>> 5a2a4880db4ca5266bb10031ff4a5388fd442742
   }
 }
 
