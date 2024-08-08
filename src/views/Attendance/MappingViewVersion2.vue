@@ -111,8 +111,12 @@ onMounted(async () => {
     console.log("Confirming attendance for", identifications.value, "students");
 
     // Call createAttendance after all images have been processed
-    await createAttendance();
-
+    if (attendanceStore.attendances!.length > 0) {
+      console.log("Assignment is already completed. Skipping attendance confirmation.");
+      await updateAttdent()
+    } else {
+      await createAttendance();
+    }
   } catch (error) {
     console.error("Error in onMounted:", error);
     alert("Failed to load data. Please check the console for more details.");
@@ -235,17 +239,6 @@ function findBestUserMatch(
   return bestMatch; // Return the best match found
 }
 
-// Existing functions
-async function loadImage(url: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "Anonymous";
-    img.onload = () => resolve(img);
-    img.onerror = (error) =>
-      reject(new Error(`Failed to load image from ${url}: ${error}`));
-    img.src = url;
-  });
-}
 
 function resizeAndConvertToBase64(
   imgUrl: string,
@@ -410,7 +403,73 @@ const createAttendance = async () => {
 
   console.log("Attendance confirmed successfully");
 };
+// update Attdent
+const updateAttdent = async () => {
+  await assignmentStore.getAssignmentById(route.params.assignmentId.toString());
+  try {
+    for (let i = 0; i < identifications.value.length; i++) {
 
+      if (!croppedImagesDataUrls.value[i]) {
+        console.error("Image URL is missing for index:", i);
+        continue;
+      }
+
+      const resizedImageBase64 = await resizeAndConvertToBase64(
+        croppedImagesDataUrls.value[i],
+        800,
+        600
+      );
+      const blob = base64ToBlob(resizedImageBase64, "image/jpeg");
+      const imageFile = new File([blob], `attendance_${Date.now()}.jpg`, {
+        type: "image/jpeg",
+      });
+
+      let identifiedUser =
+        identifications.value[i].name !== "Unknown"
+          ? userStore.users.find(
+            (user) => user.firstName === identifications.value[i].name
+          )
+          : ({
+            studentId: i + "",
+            firstName: "Unknown",
+            lastName: "Unknown",
+            faceDescriptions: [],
+          } as User);
+
+      // find user from attdent from name identifiv=cation
+      await attendanceStore.getAttendanceByAssignmentId(route.params.assignmentId.toString());
+      const userAttdent = attendanceStore.attendances!.find((user) => user.user?.firstName === identifications.value[i].name);
+      // console.log("User Attdent:", userAttdent);
+      if (userAttdent) {
+        userAttdent.attendanceStatus = "present";
+        userAttdent.attendanceConfirmStatus = identifiedUser ? "confirmed" : "notConfirmed";
+        userAttdent.attendanceScore = parseInt((identifications.value[i].score * 100).toFixed(2));
+        userAttdent.assignment = assignmentStore.currentAssignment!;
+        console.log("User Attdent:", userAttdent);
+        
+        await attendanceStore.confirmAttendance(userAttdent, imageFile);
+      }
+
+
+
+
+    }
+  } catch (e) {
+    console.error(
+      "Error recording attendance for",
+   
+      ":",
+      e
+    );
+    console.error(
+      "Detailed Error:",
+      e instanceof Event ? "DOM Event error, check network or permissions." : e
+    );
+  } finally {
+    await attendanceStore.getAttendanceByAssignmentId(route.params.assignmentId.toString());
+
+  }
+}
 const confirmAttendance = async (attendance: Attendance) => {
   if (confirm("Do you want to confirm this attendance?")) {
     try {
@@ -426,13 +485,15 @@ const confirmAttendance = async (attendance: Attendance) => {
     }
   }
 };
+
+
 //reject student
 const reCheckAttendance = async (attendance: Attendance) => {
   try {
     // attendance.attendanceStatus = "present";
     // attendance.attendanceConfirmStatus = "recheck";
     console.log("Attendance:Ging", attendance);
-    
+
     await attendanceStore.removeAttendance(attendance.attendanceId + "");
     alert("Attendance has been recheck.");
     await attendanceStore.getAttendanceByAssignmentId(route.params.assignmentId.toString());
@@ -471,19 +532,10 @@ const nextPage = () => {
         <h1 class="display-1">ตรวจสอบการเช็คชื่อ</h1>
         <div class="d-flex align-center">
           <!-- Navigation Buttons -->
-          <v-btn
-            color="primary"
-            variant="outlined"
-            class="mr-3"
-            @click="goHome"
-          >
+          <v-btn color="primary" variant="outlined" class="mr-3" @click="goHome">
             Go Home
           </v-btn>
-          <v-btn
-            color="primary"
-            variant="outlined"
-            @click="nextPage"
-          >
+          <v-btn color="primary" variant="outlined" @click="nextPage">
             Next Page
           </v-btn>
         </div>
@@ -505,23 +557,13 @@ const nextPage = () => {
       <v-col cols="12" class="pt-5">
         <v-container>
           <v-row>
-            <v-col
-              v-for="(attendee, index) in sortedAttendances"
-              :key="index"
-              cols="12"
-              sm="6"
-              md="4"
-              lg="3"
-            >
-              <v-card
-                class="mb-3"
-                :style="{
-                  padding: '20px',
-                  backgroundColor: attendee.attendanceScore! >= 50 ? 'rgb(237, 237, 237)' : 'rgb(255, 230, 230)',
-                  boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)',
-                  borderRadius: '10px'
-                }"
-              >
+            <v-col v-for="(attendee, index) in sortedAttendances" :key="index" cols="12" sm="6" md="4" lg="3">
+              <v-card class="mb-3" :style="{
+                padding: '20px',
+                backgroundColor: attendee.attendanceScore! >= 50 ? 'rgb(237, 237, 237)' : 'rgb(255, 230, 230)',
+                boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)',
+                borderRadius: '10px'
+              }">
                 <v-row justify="center">
                   <v-card-title class="bold-text mt-2 text-center">
                     <v-icon small class="mr-2">mdi-circle-small</v-icon>
@@ -533,35 +575,19 @@ const nextPage = () => {
                 </v-row>
                 <v-row>
                   <v-col cols="6">
-                    <v-img
-                      :src="`${url}/attendances/image/${attendee.attendanceImage}`"
-                      height="200px"
-                      class="rounded-lg"
-                    ></v-img>
+                    <v-img :src="`${url}/attendances/image/${attendee.attendanceImage}`" height="200px"
+                      class="rounded-lg"></v-img>
                   </v-col>
                   <v-col cols="6">
-                    <v-img
-                      :src="`${url}/users/${attendee.user?.userId}/image`"
-                      height="200px"
-                      class="rounded-lg"
-                    ></v-img>
+                    <v-img :src="`${url}/users/${attendee.user?.userId}/image`" height="200px"
+                      class="rounded-lg"></v-img>
                   </v-col>
                 </v-row>
                 <v-card-actions class="justify-space-between">
-                  <v-btn
-                    color="error"
-                    variant="flat"
-                    @click="reCheckAttendance(attendee)"
-                    class="font-weight-bold"
-                  >
+                  <v-btn color="error" variant="flat" @click="reCheckAttendance(attendee)" class="font-weight-bold">
                     ปฏิเสธ
                   </v-btn>
-                  <v-btn
-                    color="success"
-                    variant="flat"
-                    @click="confirmAttendance(attendee)"
-                    class="font-weight-bold"
-                  >
+                  <v-btn color="success" variant="flat" @click="confirmAttendance(attendee)" class="font-weight-bold">
                     ยืนยัน
                   </v-btn>
                 </v-card-actions>
@@ -596,7 +622,8 @@ const nextPage = () => {
 }
 
 .status-student {
-  text-align: center; /* Center-align the text inside the status */
+  text-align: center;
+  /* Center-align the text inside the status */
 }
 
 .status-section {
@@ -604,24 +631,28 @@ const nextPage = () => {
 }
 
 .status-number {
-  font-size: 28px; /* Larger font size for numbers */
+  font-size: 28px;
+  /* Larger font size for numbers */
   font-weight: bold;
   color: #333;
 }
 
 .status-label {
-  font-size: 14px; /* Smaller font size for description */
+  font-size: 14px;
+  /* Smaller font size for description */
   color: #777;
   line-height: 1;
 }
 
 .v-card {
-  border-radius: 10px; /* Add rounded corners to cards */
+  border-radius: 10px;
+  /* Add rounded corners to cards */
   transition: transform 0.3s;
 }
 
 .v-card:hover {
-  transform: translateY(-5px); /* Add hover effect to lift card */
+  transform: translateY(-5px);
+  /* Add hover effect to lift card */
 }
 
 .v-btn {

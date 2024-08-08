@@ -31,33 +31,6 @@ onMounted(async () => {
   attdent.value.push(...attendanceStore.attendances!.filter((attend: Attendance) => (attend.user?.studentId === userStore.currentUser?.studentId) && (attend.attendanceImage !== 'noimage.jpg')));
 });
 
-//confirm attendance
-// const confirmAttendance = async (attendance: Attendance) => {
-//   // Show a confirmation dialog
-//   if (confirm("Do you want to confirm this attendance?")) {
-//     try {
-//       // Set attendance status
-//       attendance.assignment = assignmentStore.currentAssignment;
-//       attendance.attendanceStatus = "present";
-//       attendance.attendanceConfirmStatus = "confirmed";
-//       if (attendance.user === null) {
-//         attendance.user = userStore.currentUser;
-//       }
-
-//       // Call store method to confirm attendance
-//       await attendanceStore.confirmAttendance(attendance);
-
-//       // Notify user of success
-//       alert("Attendance has been confirmed.");
-
-//       // Redirect after successful confirmation
-//       // router.push('/resheckMappingTeacher/' + assignmentStore.currentAssignment?.assignmentId); // Replace '/next-page-route' with your specific route
-//     } catch (error) {
-//       console.error("Error recording attendance:", error);
-//       alert("Failed to confirm attendance."); // Show error alert
-//     }
-//   }
-// };
 
 const reCheckAttendance = async (attendance: Attendance) => {
   try {
