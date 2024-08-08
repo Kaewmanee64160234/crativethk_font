@@ -182,6 +182,34 @@ const updatePost = async () => {
 </script>
 
 <template>
+
+  <!-- // <div>
+  //   <v-card>
+  //     <v-card-text>
+  //       <h4>
+  //         {{ props.post.course.user.firstName + ' ' + props.post.course.user.lastName }} โพสเนื้อหาใหม่ : {{ props.post.nameAssignment }}
+  //       </h4>
+  //     </v-card-text>
+  //     <v-card-actions>
+  //       <v-card-text>{{ formatThaiDate(new Date(props.post.createdDate)) }}</v-card-text>
+  //       <v-spacer></v-spacer>
+  //       <v-btn @click="gotoMappingForStudent()">
+  //         <v-icon size="30">mdi-card-account-mail</v-icon>
+  //       </v-btn>
+  //       <v-btn @click="editAssignment()">
+  //         <v-icon size="30">mdi mdi-book-edit</v-icon>
+  //       </v-btn>
+  //       <v-btn @click="deleteAssignment()">
+  //         <v-icon size="30">mdi mdi-delete</v-icon>
+  //       </v-btn>
+  //     </v-card-actions>
+  //   </v-card>
+  // </div>
+  // <ConfirmDialog ref="confirmDlg" />
+  // <v-dialog v-model="assignmentStore.EditAssignment" persistent>
+  //   <EditAssignment :post="props.post" :assignmentId="props.post.assignmentId ?? 0"></EditAssignment>
+  // </v-dialog> -->
+
     <div>
         <v-card>
             <v-card-text>
@@ -198,14 +226,18 @@ const updatePost = async () => {
                 <v-btn v-if="userStore.currentUser?.role == 'อาจารย์'" @click="goToMapping2()"><v-icon
                         size="30">mdi-account-edit-outline</v-icon></v-btn>
                         <v-btn @click="editAssignment()">
-          <v-icon size="30">mdi mdi-book-edit</v-icon>
-        </v-btn>
-        <v-btn @click="deleteAssignment()">
-          <v-icon size="30">mdi mdi-delete</v-icon>
-        </v-btn>
+    <v-icon size="30">mdi mdi-book-edit</v-icon>
+    </v-btn>
+     <v-btn @click="deleteAssignment()">
+     <v-icon size="30">mdi mdi-delete</v-icon>
+    </v-btn>
             </v-card-actions>
         </v-card>
     </div>
+    <ConfirmDialog ref="confirmDlg" />
+  <v-dialog v-model="assignmentStore.EditAssignment" persistent>
+  <EditAssignment :post="props.post" :assignmentId="props.post.assignmentId ?? 0"></EditAssignment>
+  </v-dialog>
 
     <v-dialog v-model="showDialog" persistent max-width="600px">
         <v-card>
@@ -256,7 +288,6 @@ const updatePost = async () => {
             </v-card-actions>
         </v-card>
     </v-dialog>
->>>>>>> dc4dbbfe9f93c138a34482a6f55eba79d50a59ab
 </template>
 
 <style scoped>

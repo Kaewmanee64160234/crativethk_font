@@ -106,7 +106,6 @@ export const useAssignmentStore = defineStore("assignmentStore", () => {
       console.error("Error updating assignment:", e);
     }
   };
-<<<<<<< HEAD
   const deleteAssignment = async (id: string) => {
     try {
       const response = await assignmentService.deleteAssignment(id);
@@ -122,11 +121,6 @@ export const useAssignmentStore = defineStore("assignmentStore", () => {
   const closeEditDialog = () => {
     EditAssignment.value = false;
   }
-=======
-
-  
-
->>>>>>> dc4dbbfe9f93c138a34482a6f55eba79d50a59ab
   // assignments.value.push(res.data);
 
   return {
