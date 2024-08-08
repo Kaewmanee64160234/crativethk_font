@@ -19,6 +19,7 @@ const userStore = useUserStore();
 const attdentStore = useAttendanceStore();
 const courseId = route.params.courseId;
 const showDialog = ref(false);
+const showDialogEditAssignment = ref(false);
 const videoRef = ref<HTMLVideoElement | null>(null);
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const capturedImages = ref<string[]>([]);
@@ -26,7 +27,7 @@ const imageUrls = ref<string[]>([]);
 const imageFiles = ref<File[]>([]);
 const showCamera = ref(false);
 const props = defineProps<{
-  post: Assignment
+    post: Assignment
 }>();
 
 onMounted(async () => {
@@ -35,27 +36,27 @@ onMounted(async () => {
 
 
 function formatThaiDate(date: Date) {
-  return date.toLocaleDateString('th-TH', {
-    day: 'numeric', // Numeric day of the month
-    month: 'short'  // Abbreviated month name
-  }).replace('.', ''); // Remove the dot after the month abbreviation
+    return date.toLocaleDateString('th-TH', {
+        day: 'numeric', // Numeric day of the month
+        month: 'short'  // Abbreviated month name
+    }).replace('.', ''); // Remove the dot after the month abbreviation
 }
 // Delete assignment and update UI
 const deleteAssignment = async () => {
-  await confirmDlg.value.openDialog(
-    'Please Confirm',
-    `Do you want to delete this Assignment?`,
-    'Accept',
-    'Cancel'
-  )
-  await assignmentStore.deleteAssignment(props.post.assignmentId);
-  window.location.reload();
-  await assignmentStore.getAssignmentByCourseId(id.value.toString());
-  // Optionally, remove the item from a local list if not using a global store
+    await confirmDlg.value.openDialog(
+        'Please Confirm',
+        `Do you want to delete this Assignment?`,
+        'Accept',
+        'Cancel'
+    )
+    await assignmentStore.deleteAssignment(props.post.assignmentId);
+    window.location.reload();
+    await assignmentStore.getAssignmentByCourseId(id.value.toString());
+    // Optionally, remove the item from a local list if not using a global store
 }
 // function edit
 const editAssignment = async () => {
-  assignmentStore.EditAssignment = true;
+    showDialogEditAssignment.value = true;
 }
 //create function goto mapping 2
 const recheckMapping = () => {
@@ -69,12 +70,10 @@ const gotoMappinfForStudent = () => {
 }
 // goToMapping2
 const goToMapping2 = async () => {
-  showDialog.value = true;
-  console.log("assigment", props.post);
-  await attdentStore.getAttendanceByAssignmentId(props.post!.assignmentId! + '');
 
-  // assignmentStore.currentAssignment = props.post;
-  // router.push(`/mapping2/course/${courseId}/assignment/${props.post.assignmentId}`);
+    showDialog.value = true;
+    console.log("assigment", props.post);
+    await attdentStore.getAttendanceByAssignmentId(props.post!.assignmentId! + '');
 }
 
 const handleFileChange = (event: Event) => {
@@ -131,11 +130,11 @@ const stopCamera = () => {
 };
 
 const startCamera = async () => {
-  showCamera.value = true;
-  const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-  if (videoRef.value) {
-    videoRef.value.srcObject = stream;
-  }
+    showCamera.value = true;
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    if (videoRef.value) {
+        videoRef.value.srcObject = stream;
+    }
 };
 
 const dataURLtoFile = (dataurl: string, filename: string) => {
@@ -150,95 +149,86 @@ const dataURLtoFile = (dataurl: string, filename: string) => {
   return new File([u8arr], filename, { type: mime });
 };
 const captureImage = () => {
-  if (videoRef.value && canvasRef.value) {
-    const ctx = canvasRef.value.getContext("2d");
-    if (!ctx) return;
-    canvasRef.value.width = videoRef.value.videoWidth;
-    canvasRef.value.height = videoRef.value.videoHeight;
-    ctx.drawImage(videoRef.value, 0, 0);
-    const imageUrl = canvasRef.value.toDataURL("image/jpeg");
-    resizeAndConvertImageToBase64(imageUrl, 800, 600)
-      .then((resizedImage) => {
-        capturedImages.value.push(resizedImage);
-        const file = dataURLtoFile(resizedImage, `image-${Date.now()}.jpg`);
-        imageFiles.value.push(file);
-      })
-      .catch((error) => console.error("Error resizing image:", error));
-  }
+    if (videoRef.value && canvasRef.value) {
+        const ctx = canvasRef.value.getContext("2d");
+        if (!ctx) return;
+        canvasRef.value.width = videoRef.value.videoWidth;
+        canvasRef.value.height = videoRef.value.videoHeight;
+        ctx.drawImage(videoRef.value, 0, 0);
+        const imageUrl = canvasRef.value.toDataURL("image/jpeg");
+        resizeAndConvertImageToBase64(imageUrl, 800, 600)
+            .then((resizedImage) => {
+                capturedImages.value.push(resizedImage);
+                const file = dataURLtoFile(resizedImage, `image-${Date.now()}.jpg`);
+                imageFiles.value.push(file);
+            })
+            .catch((error) => console.error("Error resizing image:", error));
+    }
 };
 
 // updatePost
 const updatePost = async () => {
-  if (imageUrls.value.length > 0) {
-    imageUrls.value.push(...capturedImages.value);
-    router.push({ path: `/mapping2/assignment/${props.post.assignmentId}`, query: { imageUrls: imageUrls.value } });
-    imageUrls.value = [];
-    capturedImages.value = [];
-  } else {
-    console.error("No images available for posting.");
-  }
-};
 
+    if (imageUrls.value.length > 0) {
+        imageUrls.value.push(...capturedImages.value);
+        router.push({ path: `/mapping2/assignment/${props.post.assignmentId}`, query: { imageUrls: imageUrls.value } });
+        imageUrls.value = [];
+        capturedImages.value = [];
+    } else {
+        console.error("No images available for posting.");
+    }
+};
+async function save() {
+    try {
+        // Debug: Check if assignmentId is correctly set
+        console.log('Assignment ID to update:', props.post.assignmentId);
+
+        // Ensure that assignmentId is valid
+        if (!props.post.assignmentId || parseInt(props.post.assignmentId + '') === 0) {
+            throw new Error('Invalid assignment ID');
+        }
+
+        // Attempt to update the assignment with the new name
+        await assignmentStore.updateAssignment(props.post.assignmentId + '', props.post);
+        close();
+        console.log('Assignment updated successfully'); // Log success
+    } catch (error) {
+        console.error('Error updating assignment:', error); // Log any errors
+    }
+}
+
+function close() {
+  showDialogEditAssignment.value = false;
+}
 </script>
 
 <template>
-
-  <!-- // <div>
-  //   <v-card>
-  //     <v-card-text>
-  //       <h4>
-  //         {{ props.post.course.user.firstName + ' ' + props.post.course.user.lastName }} โพสเนื้อหาใหม่ : {{ props.post.nameAssignment }}
-  //       </h4>
-  //     </v-card-text>
-  //     <v-card-actions>
-  //       <v-card-text>{{ formatThaiDate(new Date(props.post.createdDate)) }}</v-card-text>
-  //       <v-spacer></v-spacer>
-  //       <v-btn @click="gotoMappingForStudent()">
-  //         <v-icon size="30">mdi-card-account-mail</v-icon>
-  //       </v-btn>
-  //       <v-btn @click="editAssignment()">
-  //         <v-icon size="30">mdi mdi-book-edit</v-icon>
-  //       </v-btn>
-  //       <v-btn @click="deleteAssignment()">
-  //         <v-icon size="30">mdi mdi-delete</v-icon>
-  //       </v-btn>
-  //     </v-card-actions>
-  //   </v-card>
-  // </div>
-  // <ConfirmDialog ref="confirmDlg" />
-  // <v-dialog v-model="assignmentStore.EditAssignment" persistent>
-  //   <EditAssignment :post="props.post" :assignmentId="props.post.assignmentId ?? 0"></EditAssignment>
-  // </v-dialog> -->
-
-  <div>
-    <v-card>
-      <v-card-text>
-        <h4>{{ props.post!.course!.user!.firstName + ' ' + props.post!.course!.user!.lastName }} โพสเนื้อหาใหม่ : {{
-          props.post.nameAssignment }}</h4>
-      </v-card-text>
-      <v-card-actions>
-        <v-card-text> {{ formatThaiDate(new Date(props.post!.createdDate!)) }}</v-card-text>
-        <v-spacer></v-spacer>
-        <v-btn @click="gotoMappinfForStudent()"> <v-icon size="30">mdi-card-account-mail</v-icon>
-        </v-btn>
-        <v-btn v-if="userStore.currentUser?.role == 'อาจารย์'" @click="recheckMapping()"><v-icon
-            size="30">mdi-account-file-text-outline</v-icon></v-btn>
-        <v-btn v-if="userStore.currentUser?.role == 'อาจารย์'" @click="goToMapping2()"><v-icon
-            size="30">mdi-account-edit-outline</v-icon></v-btn>
-        <v-btn @click="editAssignment()">
-          <v-icon size="30">mdi mdi-book-edit</v-icon>
-        </v-btn>
-        <v-btn @click="deleteAssignment()">
-          <v-icon size="30">mdi mdi-delete</v-icon>
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </div>
-  <ConfirmDialog ref="confirmDlg" />
-  <v-dialog v-model="assignmentStore.EditAssignment" persistent>
-    <EditAssignment :post="props.post" :assignmentId="props.post.assignmentId ?? 0"></EditAssignment>
-  </v-dialog>
-
+    <div>
+        <v-card>
+            <v-card-text>
+                <h4>{{ props.post!.course!.user!.firstName + ' ' + props.post!.course!.user!.lastName }} โพสเนื้อหาใหม่
+                    : {{
+                        props.post.nameAssignment }}</h4>
+            </v-card-text>
+            <v-card-actions>
+                <v-card-text> {{ formatThaiDate(new Date(props.post!.createdDate!)) }}</v-card-text>
+                <v-spacer></v-spacer>
+                <v-btn @click="gotoMappinfForStudent()"> <v-icon size="30">mdi-card-account-mail</v-icon>
+                </v-btn>
+                <v-btn v-if="userStore.currentUser?.role == 'อาจารย์'" @click="recheckMapping()"><v-icon
+                        size="30">mdi-account-file-text-outline</v-icon></v-btn>
+                <v-btn v-if="userStore.currentUser?.role == 'อาจารย์'" @click="goToMapping2()"><v-icon
+                        size="30">mdi-account-edit-outline</v-icon></v-btn>
+                <v-btn @click="editAssignment()">
+                    <v-icon size="30">mdi mdi-book-edit</v-icon>
+                </v-btn>
+                <v-btn @click="deleteAssignment()">
+                    <v-icon size="30">mdi mdi-delete</v-icon>
+                </v-btn>
+            </v-card-actions>
+        </v-card>
+    </div>
+    <ConfirmDialog ref="confirmDlg" />
   <v-dialog v-model="showDialog" persistent max-width="600px">
     <v-card>
       <v-card-title>
@@ -247,46 +237,78 @@ const updatePost = async () => {
       <v-card-text>
         <v-container>
 
-          <v-row>
-            <h1>Upload file เพื่อเพิ่มนิสิตที่เข้าเรียน</h1>
-          </v-row>
-          <v-row>
-            <v-col cols="12" sm="12">
-              <v-file-input label="Upload Images" prepend-icon="mdi-camera" filled @change="handleFileChange"
-                accept="image/*" variant="outlined" multiple></v-file-input>
-            </v-col>
-          </v-row>
-          <v-row>
-            <v-col cols="12" sm="12">
-              <v-btn color="primary" @click="startCamera">Open Camera</v-btn>
-            </v-col>
-          </v-row>
-          <v-row v-if="showCamera">
-            <v-col cols="12" sm="12">
-              <video ref="videoRef" autoplay style="width: 100%;"></video>
-              <canvas ref="canvasRef" style="display: none;"></canvas>
-            </v-col>
-            <v-col cols="12" sm="6">
-              <v-btn @click="captureImage" block>Capture Image</v-btn>
-            </v-col>
-            <v-col cols="12" sm="6">
-              <v-btn @click="stopCamera" block>Close Camera</v-btn>
-            </v-col>
-          </v-row>
-          <v-row>
-            <v-col cols="12" sm="6" md="4" v-for="(image, index) in [...capturedImages, ...imageUrls]" :key="index">
-              <v-img :src="image" aspect-ratio="1" class="ma-2"></v-img>
-            </v-col>
-          </v-row>
-        </v-container>
-      </v-card-text>
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn color="error" @click="showDialog = false">ยกเลิก</v-btn>
-        <v-btn color="primary" @click="updatePost()">โพสต์</v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+                    <v-row>
+                        <h1>Upload file เพื่อเพิ่มนิสิตที่เข้าเรียน</h1>
+                    </v-row>
+                    <v-row>
+                        <v-col cols="12" sm="12">
+                            <v-file-input label="Upload Images" prepend-icon="mdi-camera" filled
+                                @change="handleFileChange" accept="image/*" variant="outlined" multiple></v-file-input>
+                        </v-col>
+                    </v-row>
+                    <v-row>
+                        <v-col cols="12" sm="12">
+                            <v-btn color="primary" @click="startCamera">Open Camera</v-btn>
+                        </v-col>
+                    </v-row>
+                    <v-row v-if="showCamera">
+                        <v-col cols="12" sm="12">
+                            <video ref="videoRef" autoplay style="width: 100%;"></video>
+                            <canvas ref="canvasRef" style="display: none;"></canvas>
+                        </v-col>
+                        <v-col cols="12" sm="6">
+                            <v-btn @click="captureImage" block>Capture Image</v-btn>
+                        </v-col>
+                        <v-col cols="12" sm="6">
+                            <v-btn @click="stopCamera" block>Close Camera</v-btn>
+                        </v-col>
+                    </v-row>
+                    <v-row>
+                        <v-col cols="12" sm="6" md="4" v-for="(image, index) in [...capturedImages, ...imageUrls]"
+                            :key="index">
+                            <v-img :src="image" aspect-ratio="1" class="ma-2"></v-img>
+                        </v-col>
+                    </v-row>
+                </v-container>
+            </v-card-text>
+            <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn color="error" @click="showDialog = false">ยกเลิก</v-btn>
+                <v-btn color="primary" @click="updatePost()">โพสต์</v-btn>
+            </v-card-actions>
+        </v-card>
+    </v-dialog>
+
+    <v-dialog v-model="showDialogEditAssignment" max-width="600px" persistent>
+        <v-card>
+            <!-- Dialog title -->
+            <v-card-title class="headline">
+                Edit Assignment
+                <v-spacer></v-spacer>
+                <!-- Close button for dialog -->
+                <v-btn icon @click="close">
+                    <v-icon color="red">mdi-close</v-icon>
+                </v-btn>
+            </v-card-title>
+            <!-- Dialog content -->
+            <v-card-text>
+                <!-- Form to edit assignment name -->
+                <v-form ref="form" @submit.prevent="save">
+                    <!-- Text field to input the assignment name -->
+                    <v-text-field v-model="props.post.nameAssignment" label="Assignment Name" required></v-text-field>
+                </v-form>
+            </v-card-text>
+            <!-- Dialog actions (buttons) -->
+            <v-card-actions>
+                <v-spacer></v-spacer>
+                <!-- Button to save changes -->
+                <v-btn color="primary" @click="save">บันทึก</v-btn>
+            </v-card-actions>
+        </v-card>
+    </v-dialog>
+
+
 </template>
 
 <style scoped></style>
+
