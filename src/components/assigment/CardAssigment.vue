@@ -218,10 +218,10 @@ function close() {
                         size="30">mdi-account-file-text-outline</v-icon></v-btn>
                 <v-btn v-if="userStore.currentUser?.role == 'อาจารย์'" @click="goToMapping2()"><v-icon
                         size="30">mdi-account-edit-outline</v-icon></v-btn>
-                <v-btn @click="editAssignment()">
+                <v-btn v-if="userStore.currentUser?.role == 'อาจารย์'" @click="editAssignment()">
                     <v-icon size="30">mdi mdi-book-edit</v-icon>
                 </v-btn>
-                <v-btn @click="deleteAssignment()">
+                <v-btn v-if="userStore.currentUser?.role == 'อาจารย์'" @click="deleteAssignment()">
                     <v-icon size="30">mdi mdi-delete</v-icon>
                 </v-btn>
             </v-card-actions>
