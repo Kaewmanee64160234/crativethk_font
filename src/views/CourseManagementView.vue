@@ -16,6 +16,7 @@ import type Enrollment from "@/stores/types/Enrollment";
 import { useEnrollmentStore } from "@/stores/enrollment.store";
 import Swal from "sweetalert2";
 import { useMessageStore } from "@/stores/message";
+import course from "@/services/course";
 const courseStore = useCourseStore();
 const userStore = useUserStore();
 const enrollmentStore = useEnrollmentStore();
@@ -81,7 +82,7 @@ const advanceStep = () => {
       return;
     }
   }
-  if (currentStep.value < 3) {
+  if (currentStep.value <= 3) {
     currentStep.value++;
   }
 };
@@ -99,6 +100,14 @@ const closeDialog = () => {
 };
 
 const finishCreation = async () => {
+  console.log("file",courseStore.files.length)
+  if (courseStore.files.length <= 0) {
+    {
+      messageStore.showError("กรุณาเลือกไฟล์เพื่อใส่รายชื่อนิสิต");
+      closeDialog();
+      return;
+    }
+  }
   const newCourse = {
     coursesId: courseStore.courseId,
     nameCourses: courseStore.nameCourse,
@@ -119,7 +128,7 @@ const finishCreation = async () => {
   };
   try {
     // ส่งคำขอสร้าง course
-    // await courseStore.createCourse(newCourse);
+    await courseStore.createCourse(newCourse);
     console.log("course", newCourse);
     courseStore.nameCourse = "";
     courseStore.courseId = "";
@@ -142,7 +151,7 @@ const finishCreation = async () => {
             updatedDate: undefined,
             deletedDate: undefined,
           };
-          // enrollmentStore.createEnrollment(newEnrollment);
+          enrollmentStore.createEnrollment(newEnrollment);
         }
       }
     }
