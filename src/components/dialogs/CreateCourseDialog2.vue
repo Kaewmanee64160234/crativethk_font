@@ -10,14 +10,12 @@ const selectedDate = ref(new Date());
 const showDatePicker = ref(false);
 const selectedTime = ref("00:00");
 const showTimePicker = ref(false);
-const showDatePicker2 = ref(false);
 const selectedTime2 = ref("00:00");
 const showTimePicker2 = ref(false);
 const selectedDate3 = ref(new Date());
 const showDatePicker3 = ref(false);
 const selectedTime3 = ref("00:00");
 const showTimePicker3 = ref(false);
-const showDatePicker4 = ref(false);
 const selectedTime4 = ref("00:00");
 const showTimePicker4 = ref(false);
 const messageStore = useMessageStore();
@@ -73,36 +71,36 @@ watch([selectedDate3, selectedTime4], ([newDate, newTime]) => {
     <v-card-text>
       <v-row>
         <v-col>
-          <p>กลุ่มเรียนที่</p>
-          <v-text-field variant="outlined" v-model="courseStore.session" :rules="[(v: any) => !!v || 'โปรดกรอกกลุ่มที่เรียนให้ถูกต้อง',
-          (v: string) => /^[0-9]+$/.test(v) || 'โปรดกรอกตัวเลขเท่านั้น',
-          ]"></v-text-field>
+          <p>จำนวนหน่วยกิต</p>
+          <v-select :items="['1', '2', '3']" variant="outlined"
+          v-model="courseStore.credit"  :rules="[(v: any) => !!v || 'โปรดเลือกจำนวนหน่วยกิต']"></v-select>
         </v-col>
         <v-col>
-          <p>จำนวนหน่วยกิต</p>
-          <v-text-field variant="outlined" v-model="courseStore.credit" :rules="[
-            (v: any) => !!v || 'โปรดกรอกจำนวนหน่วยกิตให้ถูกต้อง',
-            (v: string) => /^[0-9]+$/.test(v) || 'โปรดกรอกตัวเลขเท่านั้น',
-          ]"></v-text-field>
+          <p>กลุ่มเรียนที่</p>
+          <v-select :items="['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']" variant="outlined"
+          v-model="courseStore.session"  :rules="[(v: any) => !!v || 'โปรดเลือกกลุ่มที่เรียน']"></v-select>
         </v-col>
       </v-row>
       <v-row>
-        <v-col>
+        <!-- <v-col>
           <p>จำนวนนักเรียน</p>
           <v-text-field variant="outlined" v-model="courseStore.stdAmount" :rules="[
             (v: any) => !!v || 'โปรดกรอกจำนวนนักเรียนให้ถูกต้อง',
             (v: string) => /^[0-9]+$/.test(v) || 'โปรดกรอกตัวเลขเท่านั้น',
           ]"></v-text-field>
-        </v-col>
+        </v-col> -->
         <v-col>
           <p>คะแนนเต็ม</p>
-          <v-text-field variant="outlined" v-model="courseStore.fullScore" :rules="[
-            (v: any) => !!v || 'โปรดกรอกคะแนนเต็มให้ถูกต้อง',
-            (v: string) => /^[0-9]+$/.test(v) || 'โปรดกรอกตัวเลขเท่านั้น',
-          ]"></v-text-field>
+          <v-text-field
+            variant="outlined"
+            v-model="courseStore.fullScore"
+            :rules="[
+              (v: any) => !!v || 'โปรดกรอกคะแนนเต็มให้ถูกต้อง', 
+              (v: string) => /^[0-9]+$/.test(v) || 'โปรดกรอกตัวเลขเท่านั้น',
+              (v: number) => v >= 1 && v <= 100 || 'โปรดกรอกคะแนนตั้งแต่ 1 ถึง 100'
+            ]"
+          ></v-text-field>
         </v-col>
-      </v-row>
-      <v-row>
         <v-col>
           <p>วันที่</p>
           <v-menu v-model="showDatePicker" :close-on-content-click="false" transition="scale-transition" offset-y
@@ -118,6 +116,8 @@ watch([selectedDate3, selectedTime4], ([newDate, newTime]) => {
             <v-date-picker v-model="selectedDate" show-adjacent-month></v-date-picker>
           </v-menu>
         </v-col>
+      </v-row>
+      <v-row>
         <v-col>
           <p>เวลา</p>
           <v-menu v-model="showTimePicker" :close-on-content-click="false" transition="scale-transition" offset-y
@@ -130,23 +130,6 @@ watch([selectedDate3, selectedTime4], ([newDate, newTime]) => {
               </v-text-field>
             </template>
             <v-time-picker v-model="selectedTime" format="24hr"></v-time-picker>
-          </v-menu>
-        </v-col>
-      </v-row>
-      <v-row>
-        <v-col>
-          <p>วันที่</p>
-          <v-menu v-model="showDatePicker2" :close-on-content-click="false" transition="scale-transition" offset-y
-            position-x="right">
-            <template v-slot:activator="{ props }">
-              <v-text-field label="วันที่เลิกเลคเชอร์" v-model="selectedDate" :value="formatThaiDate(selectedDate)"
-                variant="outlined" readonly @click:append="showDatePicker2 = !showDatePicker2">
-                <template v-slot:append>
-                  <v-icon v-bind="props">mdi-calendar-clock-outline</v-icon>
-                </template>
-              </v-text-field>
-            </template>
-            <v-date-picker v-model="selectedDate" show-adjacent-month></v-date-picker>
           </v-menu>
         </v-col>
         <v-col>
@@ -196,21 +179,6 @@ watch([selectedDate3, selectedTime4], ([newDate, newTime]) => {
         </v-col>
       </v-row>
       <v-row v-if="courseStore.typeCourse === 'เลคเชอร์และแลป'">
-        <v-col>
-          <p>วันที่</p>
-          <v-menu v-model="showDatePicker4" :close-on-content-click="false" transition="scale-transition" offset-y
-            position-x="right">
-            <template v-slot:activator="{ props }">
-              <v-text-field label="วันที่เลิกแลป" v-model="selectedDate3" :value="formatThaiDate(selectedDate3)"
-                variant="outlined" readonly @click:append="showDatePicker4 = !showDatePicker4">
-                <template v-slot:append>
-                  <v-icon v-bind="props">mdi-calendar-clock-outline</v-icon>
-                </template>
-              </v-text-field>
-            </template>
-            <v-date-picker v-model="selectedDate3" show-adjacent-month></v-date-picker>
-          </v-menu>
-        </v-col>
         <v-col>
           <p>เวลา</p>
           <v-menu v-model="showTimePicker4" :close-on-content-click="false" transition="scale-transition" offset-y

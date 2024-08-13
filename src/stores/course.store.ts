@@ -12,9 +12,9 @@ export const useCourseStore = defineStore("courseStore", () => {
   const files = ref([] as {id:string, name:string}[]);
   const nameCourse = ref("");
   const courseId = ref("");
-  const typeCourse = ref("");
+  const typeCourse = ref("เลคเชอร์");
   const session = ref("1");
-  const credit = ref(0);
+  const credit = ref(1);
   const stdAmount = ref(0);
   const fullScore = ref(0);
   const timeInLab = ref(new Date());
@@ -22,6 +22,7 @@ export const useCourseStore = defineStore("courseStore", () => {
   const timeInLec = ref(new Date());
   const timeOutLec = ref(new Date());
   const showCreateDialog = ref(false);
+  const showCreateDialog2 = ref(false);
   const showEditDialog = ref(false);
   const showDeleteDialog = ref(false);
   const currentCourse = ref<Course>();
@@ -139,5 +140,6 @@ export const useCourseStore = defineStore("courseStore", () => {
     rooms,
     getFileUser,
     files,
+    showCreateDialog2
   };
 });

@@ -15,11 +15,13 @@ import { useRouter } from "vue-router";
 import type Enrollment from "@/stores/types/Enrollment";
 import { useEnrollmentStore } from "@/stores/enrollment.store";
 import Swal from "sweetalert2";
+import { useMessageStore } from "@/stores/message";
 const courseStore = useCourseStore();
 const userStore = useUserStore();
 const enrollmentStore = useEnrollmentStore();
 const currentStep = ref(1);
 const router = useRouter();
+const messageStore = useMessageStore();
 console.log("user", courseStore.currentCourse?.user?.firstName);
 onMounted(async () => {
   await userStore.getCurrentUser();
@@ -58,27 +60,31 @@ const formatThaiDate = (isoDateTime: string | undefined): string => {
 };
 
 const advanceStep = () => {
-  if (currentStep.value < 3) { // Assuming you have 3 steps
-    currentStep.value++;
-  }
   if (currentStep.value === 1) {
-    if (courseStore.nameCourse === "" || courseStore.typeCourse === "" || courseStore.courseId.length >= 8) {
-      alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+    if (
+      courseStore.nameCourse.length <= 0 || courseStore.nameCourse.length >= 100 ||
+      courseStore.courseId.length < 8
+    ) {
+      messageStore.showError("กรุณากรอกข้อมูลให้ครบถ้วน");
+      closeDialog();
+      return;
     }
-    currentStep.value = 1;
   }
+
   if (currentStep.value === 2) {
     if (
-      courseStore.credit <= 0 ||
-      courseStore.session === "" ||
-      courseStore.stdAmount <= 0 ||
-      courseStore.fullScore <= 0
+      courseStore.session.length <= 0 || courseStore.session.length >= 10 ||
+      courseStore.fullScore <= 0 || courseStore.fullScore > 100
     ) {
-      alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+      messageStore.showError("กรุณากรอกข้อมูลให้ถูกต้อง");
+      closeDialog();
+      return;
     }
-    currentStep.value = 2;
   }
-}
+  if (currentStep.value < 3) {
+    currentStep.value++;
+  }
+};
 
 const retreatStep = () => {
   if (currentStep.value > 1) {
@@ -113,7 +119,7 @@ const finishCreation = async () => {
   };
   try {
     // ส่งคำขอสร้าง course
-    await courseStore.createCourse(newCourse);
+    // await courseStore.createCourse(newCourse);
     console.log("course", newCourse);
     courseStore.nameCourse = "";
     courseStore.courseId = "";
@@ -136,7 +142,7 @@ const finishCreation = async () => {
             updatedDate: undefined,
             deletedDate: undefined,
           };
-          enrollmentStore.createEnrollment(newEnrollment);
+          // enrollmentStore.createEnrollment(newEnrollment);
         }
       }
     }

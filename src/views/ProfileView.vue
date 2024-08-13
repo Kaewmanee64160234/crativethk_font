@@ -36,8 +36,8 @@ onMounted(async () => {
         await userStore.getUsersByStdId(userStore.currentUser!.studentId!);
         user.value = userStore.regisUser;
         images.value = user.value?.images?.map((image: string) => `${url}/users/image/filename/${image}`) ?? [];
-        if (images.value.length > 0 && userStore.currentUser?.registerStatus == 'notConfirmed') {
-            userStore.createQrByStdId(userStore.currentUser?.studentId!);
+        if (images.value.length > 0 && user.value?.registerStatus == 'notConfirmed') {
+            userStore.createQrByStdId(user.value.studentId!);
         }
         console.log("image",images.value)
     }
