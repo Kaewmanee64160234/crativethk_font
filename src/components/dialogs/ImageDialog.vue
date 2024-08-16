@@ -3,7 +3,9 @@ import { onMounted, ref, computed } from 'vue';
 import { useUserStore } from '@/stores/user.store';
 import * as faceapi from 'face-api.js';
 import Swal from 'sweetalert2';
+import { useMessageStore } from '@/stores/message';
 
+const messageStore = useMessageStore();
 const userStore = useUserStore();
 const showDialog = ref(true);
 const alertDialog = ref(false);
@@ -15,7 +17,7 @@ const fileInputKey = ref(Date.now()); // Key to reset the file input field
 
 // Fetching existing images from the user store
 const images = ref<string[]>(userStore.currentUser?.images?.map((image: string) => `${url}/users/image/filename/${image}`) ?? []);
-console.log("image",images.value)
+console.log("image", images.value)
 async function close() {
   userStore.closeImageDialog();
 }
@@ -25,7 +27,7 @@ onMounted(async () => {
   images.value = userStore.currentUser?.images?.map((image: string) => `${url}/users/image/filename/${image}`) ?? [];
 
   await loadModels();
-  console.log("Face API models loaded",images.value);
+  console.log("Face API models loaded", images.value);
 });
 
 async function loadModels() {
@@ -37,7 +39,7 @@ async function loadModels() {
   } catch (error) {
     console.error("Error loading face-api models:", error);
 
- }
+  }
 }
 
 function float32ArrayToBase64(float32Array: Float32Array): string {
@@ -128,89 +130,93 @@ async function save() {
     console.log(userStore.editUser);
 
     // Uncomment these lines once the issue is resolved
-    await userStore.saveUser();
-    showDialog.value = false;
-    await userStore.closeImageDialog();
-    window.location.reload();
+    try {
+      await userStore.saveUser();
+      showDialog.value = false;
+      // messageStore.showInfo('Image upload completed.');
+      // await userStore.closeImageDialog();
+      window.location.reload();
 
-    await userStore.getUsersById(userStore.currentUser?.userId!);
-    showDialog.value = true;
+    } catch (error) {
+      messageStore.showError('Failed to save user data.');
+      console.error("Save error:", error);
+    }
   }
 }
 
-const handleFileChange = (event: Event) => {
-  const input = event.target as HTMLInputElement;
-  if (input.files && input.files.length > 0) {
-    Array.from(input.files).forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const result = e.target?.result as string;
-        if (result) {
-          try {
-            const resizedImage = await resizeAndConvertImageToBase64(result, 800, 600);
-            
-            // Check for duplicate images
-            const isDuplicate = checkDuplicateImage(resizedImage);
-            if (!isDuplicate) {
-              imageUrls.value.push(resizedImage);
-              imageFiles.value.push(file);
+  const handleFileChange = (event: Event) => {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      Array.from(input.files).forEach((file) => {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const result = e.target?.result as string;
+          if (result) {
+            try {
+              const resizedImage = await resizeAndConvertImageToBase64(result, 800, 600);
+
+              // Check for duplicate images
+              const isDuplicate = checkDuplicateImage(resizedImage);
+              if (!isDuplicate) {
+                imageUrls.value.push(resizedImage);
+                imageFiles.value.push(file);
+              }
+            } catch (error) {
+              console.error("Error resizing image:", error);
             }
-          } catch (error) {
-            console.error("Error resizing image:", error);
           }
-        }
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  };
+
+  const resizeAndConvertImageToBase64 = (imageUrl: string, maxWidth: number, maxHeight: number) => {
+    return new Promise<string>((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = "Anonymous";
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return reject(new Error("Canvas context not available"));
+
+        const ratio = Math.min(maxWidth / img.width, maxHeight / img.height);
+        const width = img.width * ratio;
+        const height = img.height * ratio;
+
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg"));
       };
-      reader.readAsDataURL(file);
+      img.onerror = () => reject(new Error(`Failed to load image at ${imageUrl}`));
+      img.src = imageUrl;
+    });
+  };
+
+  function checkDuplicateImage(newImageBase64: string): boolean {
+    // Check if the new image base64 string is already in the list
+    return imageUrls.value.some((uploadedImage) => {
+      const uploadedImageBase64 = uploadedImage.split(',')[1];
+      return uploadedImageBase64 === newImageBase64.split(',')[1];
     });
   }
-};
 
-const resizeAndConvertImageToBase64 = (imageUrl: string, maxWidth: number, maxHeight: number) => {
-  return new Promise<string>((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "Anonymous";
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return reject(new Error("Canvas context not available"));
+  function removeImage(index: number) {
+    images.value.splice(index, 1);
+    userStore.currentUser.images = images.value.map(image => image.replace(`${url}/users/image/filename/`, ''));
+  }
 
-      const ratio = Math.min(maxWidth / img.width, maxHeight / img.height);
-      const width = img.width * ratio;
-      const height = img.height * ratio;
+  function removeUploadedImage(index: number) {
+    imageUrls.value.splice(index, 1);
+    imageFiles.value.splice(index, 1);
+    fileInputKey.value = Date.now(); // Reset the file input field
+  }
 
-      canvas.width = width;
-      canvas.height = height;
-      ctx.drawImage(img, 0, 0, width, height);
-      resolve(canvas.toDataURL("image/jpeg"));
-    };
-    img.onerror = () => reject(new Error(`Failed to load image at ${imageUrl}`));
-    img.src = imageUrl;
-  });
-};
+  // Computed properties
+  const hasUploadedImages = computed(() => imageUrls.value.length > 0);
 
-function checkDuplicateImage(newImageBase64: string): boolean {
-  // Check if the new image base64 string is already in the list
-  return imageUrls.value.some((uploadedImage) => {
-    const uploadedImageBase64 = uploadedImage.split(',')[1];
-    return uploadedImageBase64 === newImageBase64.split(',')[1];
-  });
-}
-
-function removeImage(index: number) {
-  images.value.splice(index, 1);
-  userStore.currentUser.images = images.value.map(image => image.replace(`${url}/users/image/filename/`, ''));
-}
-
-function removeUploadedImage(index: number) {
-  imageUrls.value.splice(index, 1);
-  imageFiles.value.splice(index, 1);
-  fileInputKey.value = Date.now(); // Reset the file input field
-}
-
-// Computed properties
-const hasUploadedImages = computed(() => imageUrls.value.length > 0);
-
-const canUpload = computed(() => imageUrls.value.length === 5);
+  const canUpload = computed(() => imageUrls.value.length === 5);
 
 </script>
 
@@ -233,22 +239,12 @@ const canUpload = computed(() => imageUrls.value.length === 5);
               </v-alert>
             </v-col>
           </v-row>
-          
+
           <!-- Existing Images -->
           <v-row>
-            <v-col
-              v-for="(image, index) in images"
-              :key="'existing-' + index"
-              cols="2"
-              md="2"
-              lg="2"
-              class="image-container"
-            >
-              <v-img
-                :src="image"
-                aspect-ratio="1"
-                class="rounded-lg d-flex align-center justify-center"
-              ></v-img>
+            <v-col v-for="(image, index) in images" :key="'existing-' + index" cols="2" md="2" lg="2"
+              class="image-container">
+              <v-img :src="image" aspect-ratio="1" class="rounded-lg d-flex align-center justify-center"></v-img>
             </v-col>
           </v-row>
 
@@ -257,48 +253,26 @@ const canUpload = computed(() => imageUrls.value.length === 5);
             <v-col cols="12">
               <v-text class="font-weight-bold">รูปภาพที่อัปโหลด</v-text>
             </v-col>
-            <v-col
-              v-for="(image, index) in imageUrls"
-              :key="'uploaded-' + index"
-              cols="2"
-              md="2"
-              lg="2"
-              class="image-container"
-            >
-              <v-img
-                :src="image"
-                aspect-ratio="1"
-                class="rounded-lg ma-2 d-flex align-center justify-center"
-              ></v-img>
+            <v-col v-for="(image, index) in imageUrls" :key="'uploaded-' + index" cols="2" md="2" lg="2"
+              class="image-container">
+              <v-img :src="image" aspect-ratio="1" class="rounded-lg ma-2 d-flex align-center justify-center"></v-img>
             </v-col>
           </v-row>
 
           <!-- File Input -->
           <v-row>
             <v-col cols="12" class="mt-4">
-              <v-file-input
-                :key="fileInputKey"
-                label="อัปโหลดรูปภาพ"
-                multiple
-                prepend-icon="mdi-camera"
-                filled
-                @change="handleFileChange"
-                accept="image/*"
-                variant="outlined"
-                :rules="[() => canUpload || imageUrls.length < 5 ? true : 'ต้องอัปโหลดรูปภาพให้ครบ 5 รูป']"
-              ></v-file-input>
+              <v-file-input :key="fileInputKey" label="อัปโหลดรูปภาพ" multiple prepend-icon="mdi-camera" filled
+                @change="handleFileChange" accept="image/*" variant="outlined"
+                :rules="[() => canUpload || imageUrls.length < 5 ? true : 'ต้องอัปโหลดรูปภาพให้ครบ 5 รูป']"></v-file-input>
             </v-col>
           </v-row>
 
           <!-- Upload Button -->
           <v-row justify="end" class="mt-4">
             <v-col cols="auto">
-              <v-btn
-                :disabled="!canUpload"
-                color="primary"
-                @click="save"
-                v-tooltip="'กรุณาอัปโหลดรูปภาพ 5 รูปก่อนอัปเดต'"
-              >
+              <v-btn :disabled="!canUpload" color="primary" @click="save"
+                v-tooltip="'กรุณาอัปโหลดรูปภาพ 5 รูปก่อนอัปเดต'">
                 อัปโหลด
               </v-btn>
             </v-col>
@@ -328,7 +302,9 @@ const canUpload = computed(() => imageUrls.value.length === 5);
 }
 
 .v-card {
-  height: 800px; /* Ensure the dialog is square */
-  overflow: hidden; /* Prevent content overflow */
+  height: 800px;
+  /* Ensure the dialog is square */
+  overflow: hidden;
+  /* Prevent content overflow */
 }
 </style>

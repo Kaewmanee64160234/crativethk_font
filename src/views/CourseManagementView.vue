@@ -73,11 +73,11 @@ const advanceStep = () => {
       }
     } else {
       if (
-        courseStore.currentCourse.nameCourses.length <= 0 || courseStore.currentCourse.nameCourses.length >= 100 ||
-        courseStore.currentCourse.coursesId.length < 8
+        courseStore.currentCourse.nameCourses.length <= 0 || courseStore.currentCourse.nameCourses.length >= 100
       ) {
         messageStore.showError("กรุณากรอกข้อมูลให้ครบถ้วน");
-        closeDialog();
+        courseStore.showEditDialog = false;
+        courseStore.getCourseByTeachId(userStore.currentUser!.teacherId!);
         return;
       }
     }
@@ -96,10 +96,11 @@ const advanceStep = () => {
     } else {
       if (
         courseStore.currentCourse.session.length <= 0 || courseStore.currentCourse.session.length >= 10 ||
-        courseStore.currentCourse.fullScore <= 0 || courseStore.currentCourse.fullScore > 100
+        courseStore.currentCourse.fullScore <= 0 || courseStore.currentCourse.fullScore > 100 || courseStore.currentCourse.coursesId.length < 8
       ) {
         messageStore.showError("กรุณากรอกข้อมูลให้ถูกต้อง");
-        closeDialog();
+        courseStore.showEditDialog = false;
+        courseStore.getCourseByTeachId(userStore.currentUser!.teacherId!);
         return;
       }
     }
@@ -121,15 +122,15 @@ const closeDialog = () => {
   courseStore.showEditDialog = false;
   currentStep.value = 1;
   courseStore.nameCourse = "";
-    courseStore.courseId = "";
-    courseStore.typeCourse = "เลคเชอร์";
-    courseStore.credit = 0;
-    courseStore.session = "1";
-    courseStore.stdAmount = 0;
-    courseStore.timeInLab = new Date();
-    courseStore.timeOutLab = new Date();
-    courseStore.timeInLec = new Date();
-    courseStore.timeOutLec = new Date();
+  courseStore.courseId = "";
+  courseStore.typeCourse = "เลคเชอร์";
+  courseStore.credit = 0;
+  courseStore.session = "1";
+  courseStore.stdAmount = 0;
+  courseStore.timeInLab = new Date();
+  courseStore.timeOutLab = new Date();
+  courseStore.timeInLec = new Date();
+  courseStore.timeOutLec = new Date();
 };
 
 const finishCreation = async () => {
@@ -206,6 +207,7 @@ const updateCourse = () => {
     }
     enrollmentStore.selectedEnrollment = [];
   }
+  messageStore.showInfo("Successfully updated course.");
 }
 </script>
 <template>

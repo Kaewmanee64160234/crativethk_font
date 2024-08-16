@@ -34,21 +34,6 @@ const router = createRouter({
       },
     },
     {
-      //uploadImageView
-      path: "/uploadImage/:userId",
-      name: "uploadImage",
-      components: {
-        default: () => import("../views/Register/UploadImageView.vue"),
-        header: () => import("../components/headers/MainHeader.vue"),
-        menu: () => import("../components/headers/SubHeader.vue"),
-      },
-      meta: {
-        layout: "FullLayout",
-        // requiresAuth: true,
-        // beforeEnter:[ ezAutorized]
-      },
-    },
-    {
       //confirmRegisterView
       path: "/confirmRegister/:stdId",
       name: "confirmRegister",
