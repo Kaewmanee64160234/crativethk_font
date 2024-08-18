@@ -126,8 +126,8 @@ watch([selectedDate4, selectedTime4], ([newDate,newTime]) => {
         <v-row>
           <v-col cols="12" sm="6">
             <p>กลุ่มเรียนที่</p>
-            <v-text-field variant="outlined" v-model="courseStore.currentCourse!.session"
-              :rules="[(v: any) => !!v || 'โปรดกรอกกลุ่มที่เรียนให้ถูกต้อง']"></v-text-field>
+            <v-select :items="['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']" variant="outlined"
+            v-model="courseStore.currentCourse!.session"  :rules="[(v: any) => !!v || 'โปรดเลือกกลุ่มที่เรียน']"></v-select>
           </v-col>
           <v-col cols="12" sm="6">
             <p>รหัสวิชา</p>
@@ -141,16 +141,15 @@ watch([selectedDate4, selectedTime4], ([newDate,newTime]) => {
         <v-row>
           <v-col cols="12" sm="6">
             <p>จำนวนหน่วยกิต</p>
-            <v-text-field variant="outlined" v-model="courseStore.currentCourse!.credit" :rules="[
-              (v: any) => !!v || 'โปรดกรอกจำนวนหน่วยกิตให้ถูกต้อง',
-              (v: string) => /^[0-9]+$/.test(v) || 'โปรดกรอกตัวเลขเท่านั้น',
-            ]"></v-text-field>
+            <v-select :items="['1', '2', '3']" variant="outlined"
+            v-model="courseStore.currentCourse!.credit"  :rules="[(v: any) => !!v || 'โปรดเลือกจำนวนหน่วยกิต']"></v-select>
           </v-col>
           <v-col cols="12" sm="6">
-            <p>จำนวนนักเรียน</p>
-            <v-text-field variant="outlined" v-model="courseStore.currentCourse!.stdAmount" :rules="[
-              (v: any) => !!v || 'โปรดกรอกจำนวนนักเรียนให้ถูกต้อง',
+            <p>คะแนนเต็ม</p>
+            <v-text-field variant="outlined" v-model="courseStore.currentCourse!.fullScore" :rules="[
+              (v: any) => !!v || 'โปรดกรอกคะแนนเต็มให้ถูกต้อง', 
               (v: string) => /^[0-9]+$/.test(v) || 'โปรดกรอกตัวเลขเท่านั้น',
+              (v: number) => v >= 1 && v <= 100 || 'โปรดกรอกคะแนนตั้งแต่ 1 ถึง 100'
             ]"></v-text-field>
           </v-col>
         </v-row>
@@ -186,7 +185,7 @@ watch([selectedDate4, selectedTime4], ([newDate,newTime]) => {
           </v-col>
         </v-row>
         <v-row>
-          <v-col cols="12" sm="6">
+          <!-- <v-col cols="12" sm="6">
             <p>วันที่</p>
             <v-menu v-model="showDatePicker2" :close-on-content-click="false" transition="scale-transition" offset-y
               position-x="right">
@@ -200,7 +199,8 @@ watch([selectedDate4, selectedTime4], ([newDate,newTime]) => {
               </template>
               <v-date-picker v-model="selectedDate2" show-adjacent-month></v-date-picker>
             </v-menu>
-          </v-col>
+          </v-col> -->
+          <v-col cols="12" sm="6"></v-col>
           <v-col cols="12" sm="6">
             <p>เวลา</p>
             <v-menu v-model="showTimePicker2" :close-on-content-click="false" transition="scale-transition" offset-y
@@ -248,21 +248,7 @@ watch([selectedDate4, selectedTime4], ([newDate,newTime]) => {
           </v-col>
         </v-row>
         <v-row v-if="courseStore.currentCourse!.typeCourses === 'เลคเชอร์และแลป'">
-          <v-col cols="12" sm="6">
-            <p>วันที่</p>
-            <v-menu v-model="showDatePicker4" :close-on-content-click="false" transition="scale-transition" offset-y
-              position-x="right">
-              <template v-slot:activator="{ props }">
-                <v-text-field label="วันที่เลิกแลป" v-model="selectedDate4" :value="formatThaiDate(selectedDate4)"
-                  variant="outlined" readonly @click:append="showDatePicker4 = !showDatePicker4">
-                  <template v-slot:append>
-                    <v-icon v-bind="props">mdi-calendar-clock-outline</v-icon>
-                  </template>
-                </v-text-field>
-              </template>
-              <v-date-picker v-model="selectedDate4" show-adjacent-month></v-date-picker>
-            </v-menu>
-          </v-col>
+          <v-col cols="12" sm="6"></v-col>
           <v-col cols="12" sm="6">
             <p>เวลา</p>
             <v-menu v-model="showTimePicker4" :close-on-content-click="false" transition="scale-transition" offset-y
@@ -276,15 +262,6 @@ watch([selectedDate4, selectedTime4], ([newDate,newTime]) => {
               </template>
               <v-time-picker v-model="selectedTime4" format="24hr"></v-time-picker>
             </v-menu>
-          </v-col>
-        </v-row>
-        <v-row>
-          <v-col cols="12">
-            <p>คะแนนเต็ม</p>
-            <v-text-field variant="outlined" v-model="courseStore.currentCourse!.fullScore" :rules="[
-              (v: any) => !!v || 'โปรดกรอกคะแนนเต็มให้ถูกต้อง',
-              (v: string) => /^[0-9]+$/.test(v) || 'โปรดกรอกตัวเลขเท่านั้น',
-            ]"></v-text-field>
           </v-col>
         </v-row>
       </v-card-title>

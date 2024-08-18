@@ -23,11 +23,11 @@ const userStore = useUserStore();
               <v-icon size="40" color="#819DA9">mdi mdi-account-edit</v-icon>
             </v-list-item>
           </div>
-          <div v-if="userStore.currentUser?.teacherId">
+          <!-- <div v-if="userStore.currentUser?.teacherId">
             <v-list-item link to="/enrolmentManagement">
             <v-icon size="40" color="#819DA9">mdi mdi-book</v-icon>
           </v-list-item>
-          </div>
+          </div> -->
 
           <v-list-item link to="/userProfile">
             <v-icon size="40" color="#819DA9">mdi mdi-account</v-icon>

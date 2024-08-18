@@ -15,11 +15,14 @@ import { useRouter } from "vue-router";
 import type Enrollment from "@/stores/types/Enrollment";
 import { useEnrollmentStore } from "@/stores/enrollment.store";
 import Swal from "sweetalert2";
+import { useMessageStore } from "@/stores/message";
+import course from "@/services/course";
 const courseStore = useCourseStore();
 const userStore = useUserStore();
 const enrollmentStore = useEnrollmentStore();
 const currentStep = ref(1);
 const router = useRouter();
+const messageStore = useMessageStore();
 console.log("user", courseStore.currentCourse?.user?.firstName);
 onMounted(async () => {
   await userStore.getCurrentUser();
@@ -58,27 +61,54 @@ const formatThaiDate = (isoDateTime: string | undefined): string => {
 };
 
 const advanceStep = () => {
-  if (currentStep.value < 3) { // Assuming you have 3 steps
+  if (currentStep.value === 1) {
+    if (!courseStore.currentCourse) {
+      if (
+        courseStore.nameCourse.length <= 0 || courseStore.nameCourse.length >= 100 ||
+        courseStore.courseId.length < 8
+      ) {
+        messageStore.showError("กรุณากรอกข้อมูลให้ครบถ้วน");
+        closeDialog();
+        return;
+      }
+    } else {
+      if (
+        courseStore.currentCourse.nameCourses.length <= 0 || courseStore.currentCourse.nameCourses.length >= 100 ||
+        courseStore.currentCourse.coursesId.length < 8
+      ) {
+        messageStore.showError("กรุณากรอกข้อมูลให้ครบถ้วน");
+        closeDialog();
+        return;
+      }
+    }
+  }
+
+  if (currentStep.value === 2) {
+    if (!courseStore.currentCourse) {
+      if (
+        courseStore.session.length <= 0 || courseStore.session.length >= 10 ||
+        courseStore.fullScore <= 0 || courseStore.fullScore > 100
+      ) {
+        messageStore.showError("กรุณากรอกข้อมูลให้ถูกต้อง");
+        closeDialog();
+        return;
+      }
+    } else {
+      if (
+        courseStore.currentCourse.session.length <= 0 || courseStore.currentCourse.session.length >= 10 ||
+        courseStore.currentCourse.fullScore <= 0 || courseStore.currentCourse.fullScore > 100
+      ) {
+        messageStore.showError("กรุณากรอกข้อมูลให้ถูกต้อง");
+        closeDialog();
+        return;
+      }
+    }
+  }
+  if (currentStep.value <= 3) {
     currentStep.value++;
   }
-  if (currentStep.value === 1) {
-    if (courseStore.nameCourse === "" || courseStore.typeCourse === "" || courseStore.courseId.length >= 8) {
-      alert("กรุณากรอกข้อมูลให้ครบถ้วน");
-    }
-    currentStep.value = 1;
-  }
-  if (currentStep.value === 2) {
-    if (
-      courseStore.credit <= 0 ||
-      courseStore.session === "" ||
-      courseStore.stdAmount <= 0 ||
-      courseStore.fullScore <= 0
-    ) {
-      alert("กรุณากรอกข้อมูลให้ครบถ้วน");
-    }
-    currentStep.value = 2;
-  }
-}
+};
+
 
 const retreatStep = () => {
   if (currentStep.value > 1) {
@@ -90,9 +120,27 @@ const closeDialog = () => {
   courseStore.showCreateDialog = false;
   courseStore.showEditDialog = false;
   currentStep.value = 1;
+  courseStore.nameCourse = "";
+    courseStore.courseId = "";
+    courseStore.typeCourse = "เลคเชอร์";
+    courseStore.credit = 0;
+    courseStore.session = "1";
+    courseStore.stdAmount = 0;
+    courseStore.timeInLab = new Date();
+    courseStore.timeOutLab = new Date();
+    courseStore.timeInLec = new Date();
+    courseStore.timeOutLec = new Date();
 };
 
 const finishCreation = async () => {
+  console.log("file", courseStore.files.length)
+  if (courseStore.files.length <= 0) {
+    {
+      messageStore.showError("กรุณาเลือกไฟล์เพื่อใส่รายชื่อนิสิต");
+      closeDialog();
+      return;
+    }
+  }
   const newCourse = {
     coursesId: courseStore.courseId,
     nameCourses: courseStore.nameCourse,
@@ -117,7 +165,7 @@ const finishCreation = async () => {
     console.log("course", newCourse);
     courseStore.nameCourse = "";
     courseStore.courseId = "";
-    courseStore.typeCourse = "";
+    courseStore.typeCourse = "เลคเชอร์";
     courseStore.credit = 0;
     courseStore.session = "1";
     courseStore.stdAmount = 0;
