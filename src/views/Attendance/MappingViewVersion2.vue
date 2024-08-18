@@ -61,8 +61,6 @@ onMounted(async () => {
   try {
     isLoading.value = true;
     await Promise.all([
-      faceapi.nets.ssdMobilenetv1.loadFromUri("/models"),
-      faceapi.nets.faceLandmark68Net.loadFromUri("/models"),
       faceapi.nets.faceRecognitionNet.loadFromUri("/models"),
     ]);
     // get user by course id
@@ -599,6 +597,7 @@ const nextPage = () => {
     </v-row>
   </v-container>
 </template>
+
 <style scoped>
 .bold-text {
   font-weight: bold;
