@@ -30,18 +30,17 @@ const assignmentStore = useAssignmentStore();
 const courseStore = useCourseStore();
 const showDialog = ref(false);
 const nameAssignment = ref("");
-const authStore = useAuthStore();
 const userStore = useUserStore();
 const url = "http://localhost:3000";
 const attendanceStore = useAttendanceStore();
 const roomSelect = ref<string>();
-const messageStore = useMessageStore();
 
 const isTeacher = computed(() => userStore.currentUser?.role === 'อาจารย์');
 const showCamera = ref(false);
 const videoRef = ref<HTMLVideoElement | null>(null);
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const capturedImages = ref<string[]>([]);
+const assignmentManual = ref(false);
 
 onMounted(async () => {
   await assignmentStore.getAssignmentByCourseId(id.value.toString());
@@ -51,8 +50,15 @@ onMounted(async () => {
   await courseStore.getAllRooms();
   posts.value = assignmentStore.assignments;
 
-});
 
+});
+const removeImage = (index:number) => {
+  if (index < capturedImages.value.length) {
+    capturedImages.value.splice(index, 1);
+  } else {
+    imageUrls.value.splice(index - capturedImages.value.length, 1);
+  }
+};
 const processFile = (url: string) => {
   imageUrls.value.push(url);
 };
@@ -117,35 +123,47 @@ const createPost = async () => {
     course: { ...courseStore.currentCourse! },
     assignmentId: 0,
     attdances: [],
-
-    
-    status:"no data",
+    status: "no data",
     room: room,
     createdDate: new Date(),
     updatedDate: undefined,
     deletedDate: undefined,
+    assignmentManual: assignmentManual.value,
   };
 
-  // if assignment.name is empty, set to currnet date time
+  // if assignment.name is empty, set to current date time
   if (newAssignment.nameAssignment === "") {
     newAssignment.nameAssignment = new Date().toLocaleString();
   }
 
+  console.log(imageFiles.value.length);
+
+  // Create the assignment in the backend
   await assignmentStore.createAssignment({
     ...newAssignment,
-    statusAssignment:'nodata',
-  },imageFiles.value);
-  if (imageUrls.value.length > 0) {
-    // image url and captured images are available
-    imageUrls.value.push(...capturedImages.value);
-    // router.push({ path: `/mapping2/assignment/${assignmentStore.assignment?.assignmentId}`, query: { imageUrls: imageUrls.value } });
+    statusAssignment: 'nodata',
+  }, imageFiles.value);
+
+  // Combine captured images and image URLs
+  const allImages = [...capturedImages.value, ...imageUrls.value];
+
+  if (allImages.length > 0) {
+    // Navigate to the next page, passing the image URLs and captured images as query parameters
+    router.push({
+      path: `/mapping2/assignment/${assignmentStore.assignment?.assignmentId}/course/${id.value.toString()}`,
+      query: { imageUrls: allImages },
+    });
+
+    // Clear the form and images after navigating
     nameAssignment.value = "";
     imageUrls.value = [];
     capturedImages.value = [];
+    imageFiles.value = [];
   } else {
     console.error("No images available for posting.");
   }
 };
+
 
 const getAttendanceStatus = (
   attendances: Attendance[],
@@ -153,7 +171,7 @@ const getAttendanceStatus = (
   assignmentId: number
 ): string => {
   const attendanceIndex = attendances?.findIndex(
-    (att:Attendance) => att.user?.userId === userId && att.assignment?.assignmentId === assignmentId
+    (att: Attendance) => att.user?.userId === userId && att.assignment?.assignmentId === assignmentId
   );
   return attendances[attendanceIndex!] ? attendances[attendanceIndex!].attendanceStatus : "absent";
 };
@@ -226,8 +244,8 @@ const openDialog = (assignment: Assignment, user: User) => {
   //filter attendance from assignments
   const attendance = attendanceStore.attendances?.findIndex(
     (att) => att.user?.userId === user.userId && att.assignment?.assignmentId === assignment.assignmentId);
-  console.log("show",attendance)
-  console.log("show",assignment)
+  console.log("show", attendance)
+  console.log("show", assignment)
   attendanceStore.editAttendance = attendanceStore.attendances![attendance!];
   attendanceStore.userAttendance = user;
   attendanceStore.showDialog = true;
@@ -243,246 +261,147 @@ const openDialog = (assignment: Assignment, user: User) => {
     </v-tabs>
 
     <v-container>
-      <!-- Tab content for posts -->
-      <v-tab-item v-if="tab === 'Posts'" value="Posts">
-        <v-card 
-          class="mx-auto "
-          color="primary"
-          max-width="1200"
-          outlined
-          style="padding: 20px"
-        >
-          <v-card-title>
-            <h1 class="text-h5">{{ courseStore.currentCourse?.nameCourses }}</h1>
-          </v-card-title>
-        </v-card>
+  <!-- Tab content for posts -->
+  <v-tab-item v-if="tab === 'Posts'" value="Posts">
+    <v-card class="mx-auto" color="primary" max-width="1200" outlined style="padding: 20px">
+      <v-card-title>
+        <h1 class="text-h5">{{ courseStore.currentCourse?.nameCourses }}</h1>
+      </v-card-title>
+    </v-card>
 
+    <v-btn v-if="isTeacher" color="#6CA7FA" @click="showDialog = true" style="margin: 10px 0; color: black">
+      <v-icon>mdi-plus</v-icon>สร้างการเช็คชื่อ
+    </v-btn>
 
-        <v-btn v-if="isTeacher" color="#6CA7FA" @click="showDialog = true" style="margin: 10px 0; color: black">
-          <v-icon>mdi-plus</v-icon>สร้างการเช็คชื่อ
-        </v-btn>
-
-        <!-- Dialog for creating post -->
-        <v-dialog v-model="showDialog" persistent max-width="600px">
-          <v-card>
-            <v-card-title>
-              <span class="headline">Create Post</span>
-            </v-card-title>
-            <v-card-text>
-              <v-container>
-                
-                <v-row>
-                  <v-col cols="12" sm="12">
-                    <v-text-field
-                      name="nameAssignment"
-                      label="label"
-                      id="id"
-                      v-model="nameAssignment"
-                      variant="outlined"
-                      outlined
-                    ></v-text-field>
-                  
-                  </v-col>
-                </v-row>
-                <v-row>
-                  <v-col cols="12" sm="12">
-                    <v-file-input
-                      label="Upload Images"
-                      prepend-icon="mdi-camera"
-                      filled
-                      @change="handleFileChange"
-                      accept="image/*"
-                      variant="outlined"
-                      multiple
-                    ></v-file-input>
-                  </v-col>
-                </v-row>
-                <v-row>
-                  <v-col cols="12" sm="12">
-                    <v-btn color="primary" @click="startCamera">Open Camera</v-btn>
-                  </v-col>
-                </v-row>
-                <v-row v-if="showCamera">
-                  <v-col cols="12" sm="12">
-                    <video ref="videoRef" autoplay style="width: 100%;"></video>
-                    <canvas ref="canvasRef" style="display: none;"></canvas>
-                  </v-col>
-                  <v-col cols="12" sm="6">
-                    <v-btn @click="captureImage" block>Capture Image</v-btn>
-                  </v-col>
-                  <v-col cols="12" sm="6">
-                    <v-btn @click="stopCamera" block>Close Camera</v-btn>
-                  </v-col>
-                </v-row>
-                <v-row>
-                  <v-col
-                    cols="12"
-                    sm="6"
-                    md="4"
-                    v-for="(image, index) in [...capturedImages, ...imageUrls]"
-                    :key="index"
-                  >
-                    <v-img :src="image" aspect-ratio="1" class="ma-2"></v-img>
-                  </v-col>
-                </v-row>
-              </v-container>
-            </v-card-text>
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn color="error" @click="showDialog = false">ยกเลิก</v-btn>
-              <v-btn color="primary" @click="createPost()">โพสต์</v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
-
-        <v-row class="pt-5" v-if="posts.length>0">
-          <v-col  cols="12" sm="12" md="12" v-for="post in posts" :key="post.assignmentId">
-            <CardAssigment  :post="post"></CardAssigment>
-          </v-col>
-         
-        </v-row>
-        <v-row class="pt-5" v-else>
-          <v-col cols="12" sm="12" md="12">
-            <v-card outlined>
-              <v-card-text>
-                <h2>No posts available</h2>
-              </v-card-text>
-            </v-card>
-          </v-col>
-          </v-row>
-
-      </v-tab-item>
-
-      <!-- Tab content for Members -->
-      <v-tab-item v-else-if="tab === 'Members'" value="Members">
-        <v-card
-          class="mx-auto"
-          color="primary"
-          max-width="1200"
-          outlined
-          style="padding: 20px"
-        >
-          <v-card-title>
-            <h1 class="text-h5">{{ courseStore.currentCourse?.nameCourses }}</h1>
-          </v-card-title>
-        </v-card>
-        <div style="width: 100%; padding: 20px">
-          <!-- Teacher Section -->
-          <div style="margin-bottom: 30px">
+    <!-- Dialog for creating post -->
+    <v-dialog v-model="showDialog" persistent max-width="600px">
+      <v-card>
+        <v-card-title class="text-h5 text-center primary--text">
+          <v-icon left class="mr-2">mdi-pencil</v-icon>
+          Create Post
+        </v-card-title>
+        <v-card-text>
+          <v-container>
             <v-row>
-              <v-col>
-                <h3>Teacher</h3>
+              <v-col cols="12" sm="12">
+                <v-text-field
+                  name="nameAssignment"
+                  label="Assignment Name"
+                  id="nameAssignment"
+                  v-model="nameAssignment"
+                  variant="outlined"
+                  outlined
+                  prepend-inner-icon="mdi-assignment"
+                ></v-text-field>
               </v-col>
             </v-row>
             <v-row>
-              <v-divider></v-divider>
-
-              <v-col cols="2">
-                <v-avatar size="56">
+              <v-col cols="12" sm="12">
+                <v-checkbox
+                  v-model="assignmentManual"
+                  label="Adjust Assignment Manually"
+                  class="primary--text"
+                ></v-checkbox>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col cols="12" sm="12">
+                <v-file-input
+                  label="Upload Images"
+                  prepend-icon="mdi-camera"
+                  filled
+                  @change="handleFileChange"
+                  accept="image/*"
+                  variant="outlined"
+                  multiple
+                ></v-file-input>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col cols="12" sm="12">
+                <v-btn color="primary" @click="startCamera" block>
+                  <v-icon left>mdi-camera</v-icon>
+                  Open Camera
+                </v-btn>
+              </v-col>
+            </v-row>
+            <v-row v-if="showCamera">
+              <v-col cols="12" sm="12">
+                <video ref="videoRef" autoplay style="width: 100%; border-radius: 8px;"></video>
+                <canvas ref="canvasRef" style="display: none;"></canvas>
+              </v-col>
+              <v-col cols="12" sm="6">
+                <v-btn @click="captureImage" block>
+                  <v-icon left>mdi-camera</v-icon>
+                  Capture Image
+                </v-btn>
+              </v-col>
+              <v-col cols="12" sm="6">
+                <v-btn @click="stopCamera" block color="error">
+                  <v-icon left>mdi-close</v-icon>
+                  Close Camera
+                </v-btn>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col
+                cols="12"
+                sm="6"
+                md="4"
+                v-for="(image, index) in [...capturedImages, ...imageUrls]"
+                :key="index"
+              >
+                <v-card outlined class="ma-2">
                   <v-img
-                    :src="`${url}/users/${courseStore.currentCourse?.user?.userId}/image`"
+                    :src="image"
+                    aspect-ratio="1"
+                    class="ma-2"
+                    style="border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);"
                   ></v-img>
-                </v-avatar>
-              </v-col>
-              <v-col cols="10" style="display: flex; align-items: center">
-                <div>
-                  {{
-                    courseStore.currentCourse?.user?.firstName +
-                    " " +
-                    courseStore.currentCourse?.user?.lastName
-                  }}
-                </div>
-              </v-col>
-              <v-divider></v-divider>
-            </v-row>
-          </div>
-
-          <!-- Students Section -->
-          <div>
-            <v-row>
-              <v-col cols="6">
-                <h3>Students</h3>
-              </v-col>
-
-              <v-col cols="6" style="text-align: end">
-                <p>{{ userStore.users.length }} Members</p>
+                  <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn icon @click="removeImage(index)">
+                      <v-icon color="red">mdi-delete</v-icon>
+                    </v-btn>
+                  </v-card-actions>
+                </v-card>
               </v-col>
             </v-row>
-            <v-row v-for="(member, index) in userStore.users" :key="index">
-              <v-divider></v-divider>
-              <v-col cols="2">
-                <v-avatar size="56">
-                  <v-img :src="`${url}/users/${member.userId}/image`"></v-img>
-                </v-avatar>
-              </v-col>
-              <v-col cols="10" style="display: flex; align-items: center">
-                <div>
-                  {{ member.studentId + " " + member.firstName + " " + member.lastName }}
-                </div>
-              </v-col>
-              <v-divider></v-divider>
-            </v-row>
-          </div>
-        </div>
-      </v-tab-item>
+          </v-container>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="error" @click="showDialog = false" outlined>
+            <v-icon left>mdi-cancel</v-icon>
+            ยกเลิก
+          </v-btn>
+          <v-btn color="primary" @click="createPost()" outlined>
+            <v-icon left>mdi-send</v-icon>
+            โพสต์
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
-      <!-- Tab content for Assignments -->
-      <!-- Tab Item for Users -->
-   <!-- Tab content for Assignment Attendance -->
-   <v-tab-item v-else>
-        <v-card class="mx-auto" color="primary" max-width="1200" outlined style="padding: 20px">
-          <v-card-title>
-            <h1 class="text-h5">{{ courseStore.currentCourse?.nameCourses }}</h1>
-          </v-card-title>
+    <v-row class="pt-5" v-if="posts.length > 0">
+      <v-col cols="12" sm="12" md="12" v-for="post in posts" :key="post.assignmentId">
+        <CardAssigment :post="post"></CardAssigment>
+      </v-col>
+    </v-row>
+    <v-row class="pt-5" v-else>
+      <v-col cols="12" sm="12" md="12">
+        <v-card outlined>
+          <v-card-text>
+            <h2>No posts available</h2>
+          </v-card-text>
         </v-card>
-        <v-card class="mx-auto" outlined style="padding: 20px; margin-top: 10px">
-          <v-card-title>Assignment Attendance Details</v-card-title>
-          <v-table>
-            <thead>
-              <tr>
-                <th class="text-left vertical-divider">Student ID</th>
-                <th class="text-left vertical-divider">Student Name</th>
-                <th class="text-left vertical-divider">Full Score</th>
-                <th class="text-left vertical-divider">Score</th>
-                <th class="vertical-divider" v-for="assignment in assignmentStore.assignments" :key="assignment.assignmentId">
-                  {{ assignment.nameAssignment }}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="user in userStore.users" :key="user.userId">
-                <td class="vertical-divider">{{ user.studentId }}</td>
-                <td class="vertical-divider">{{ user.firstName + " " + user.lastName }}</td>
-                <td class="vertical-divider">{{ assignmentStore.assignments.length }}</td>
-                <td class="vertical-divider">{{ calculateTotalScore(user.userId!, assignmentStore.assignments) }}</td>
-                <td v-for="assignment in assignmentStore.assignments" :key="assignment.assignmentId" class="vertical-divider">
-                  <template v-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'present'">
-                    <v-btn density="compact" color="green" icon="mdi-check-circles" v-if="isTeacher" @click="openDialog(assignment, user)">
-                      <v-icon>mdi-check-circle</v-icon>
-                    </v-btn>
-                    <v-icon color="green" v-else>mdi-check-circle</v-icon>
-                  </template>
-                  <template v-else-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'late'">
-                    <v-btn density="compact" color="orange" icon="mdi-check-circles" v-if="isTeacher" @click="openDialog(assignment, user)">
-                      <v-icon>mdi-clock-outline</v-icon>
-                    </v-btn>
-                    <v-icon color="orange" v-else>mdi-clock-outline</v-icon>
-                  </template>
-                  <template v-else>
-                    <v-btn density="compact" color="red" icon="mdi-check-circles" v-if="isTeacher" @click="openDialog(assignment, user)">
-                      <v-icon>mdi-close-circle</v-icon>
-                    </v-btn>
-                    <v-icon color="red" v-else>mdi-close-circle</v-icon>
-                  </template>
-                </td>
-              </tr>
-            </tbody>
-          </v-table>
-        </v-card>
-      </v-tab-item>
-    </v-container>
+      </v-col>
+    </v-row>
+  </v-tab-item>
+</v-container>
+
   </div>
-  <UpdateAttendantDialogView/>
+  <UpdateAttendantDialogView />
 </template>
 
 <style scoped>
@@ -490,8 +409,11 @@ const openDialog = (assignment: Assignment, user: User) => {
   padding: 10px 0;
   /* Provides consistent vertical spacing between rows */
 }
+
 .vertical-divider {
-  border-left: 1px solid #e0e0e0; /* สีของเส้นแบ่ง */
-  height: auto; /* ให้สูงตามความสูงของ col */
+  border-left: 1px solid #e0e0e0;
+  /* สีของเส้นแบ่ง */
+  height: auto;
+  /* ให้สูงตามความสูงของ col */
 }
 </style>

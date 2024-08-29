@@ -62,6 +62,8 @@ onMounted(async () => {
     isLoading.value = true;
     await Promise.all([
       faceapi.nets.faceRecognitionNet.loadFromUri("/models"),
+      faceapi.nets.faceLandmark68Net.loadFromUri("/models"),
+      faceapi.nets.ssdMobilenetv1.loadFromUri("/models"),
     ]);
     // get user by course id
     await userStore.getUserByCourseId(courseStore.currentCourse?.coursesId + '');

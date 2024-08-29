@@ -9,7 +9,8 @@ export const useAssignmentStore = defineStore("assignmentStore", () => {
       assignmentId: 0,
 
       assignmentTime: new Date(),
-      imageAssignments: [""],
+      imageAssignments: [],
+      assignmentManual: false,
       statusAssignment: "",
       nameAssignment: "",
       course: {
@@ -24,7 +25,6 @@ export const useAssignmentStore = defineStore("assignmentStore", () => {
         timeOutLec: new Date(),
         typeCourses: "",
         codeCourses: "",
-
         user: {
           userId: 0,
           firstName: "",
@@ -62,7 +62,6 @@ export const useAssignmentStore = defineStore("assignmentStore", () => {
       const res = await assignmentService.getAssignmentByCourseId(id);
       //map assignment
       assignments.value = res.data;
-      console.log(id);
     } catch (e) {
       console.log(e);
     }
@@ -123,6 +122,20 @@ export const useAssignmentStore = defineStore("assignmentStore", () => {
   }
   // assignments.value.push(res.data);
 
+  // getAssignmentImages
+  async function getAssignmentImages(id:string) {
+    try {
+      const res =  await assignmentService.getAssignmentImages(id);
+      if(res.status === 200){
+        assignment.value = res.data;
+      }
+    } catch (error) {
+      console.log(error);
+      
+    }
+  
+  }
+
   return {
     assignments,
     getAssignmentByCourseId,
@@ -135,6 +148,7 @@ export const useAssignmentStore = defineStore("assignmentStore", () => {
     dialogAssignmentTag,
     deleteAssignment,
     EditAssignment,
-    closeEditDialog
+    closeEditDialog,
+    getAssignmentImages
   };
 });
