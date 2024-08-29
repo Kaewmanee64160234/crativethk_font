@@ -93,8 +93,8 @@ const handleFileChange = (event: Event) => {
 
 // Function to resize an image and convert it to a base64 string
 const resizeAndConvertImageToBase64 = (
-  imageUrl: string, 
-  maxWidth: number, 
+  imageUrl: string,
+  maxWidth: number,
   maxHeight: number,
   quality: number = 0.7  // default quality is set to 0.7
 ): Promise<string> => {
@@ -114,7 +114,7 @@ const resizeAndConvertImageToBase64 = (
       // Set canvas dimensions
       canvas.width = width;
       canvas.height = height;
-      
+
       // Draw the resized image onto the canvas
       ctx.drawImage(img, 0, 0, width, height);
 
@@ -186,7 +186,7 @@ const createPost = async () => {
   console.timeEnd('Image processing');
 
   // Convert base64 images to File objects
-  const filesToUpload = processedImages.map((base64, index) => 
+  const filesToUpload = processedImages.map((base64, index) =>
     base64ToFile(base64, `image-${index + 1}.jpg`)
   );
 
@@ -500,62 +500,63 @@ const openDialog = (assignment: Assignment, user: User) => {
       <!-- Tab Item for Users -->
       <!-- Tab content for Assignment Attendance -->
       <v-tab-item v-else>
-  <v-card class="mx-auto" color="primary" max-width="1200" outlined style="padding: 20px">
-    <v-card-title>
-      <h1 class="text-h5">{{ courseStore.currentCourse?.nameCourses }}</h1>
-    </v-card-title>
-  </v-card>
-  <v-card class="mx-auto" outlined style="padding: 20px; margin-top: 10px">
-    <v-card-title>Assignment Attendance Details</v-card-title>
-    <v-table>
-      <thead>
-        <tr>
-          <th class="text-left vertical-divider">Student ID</th>
-          <th class="text-left vertical-divider">Student Name</th>
-          <th class="text-left vertical-divider">Full Score</th>
-          <th class="text-left vertical-divider">Score</th>
-          <th class="vertical-divider" v-for="assignment in assignmentStore.assignments" :key="assignment.assignmentId">
-            {{ assignment.nameAssignment }}
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="user in filteredUsers" :key="user.userId">
-          <td class="vertical-divider">{{ user.studentId }}</td>
-          <td class="vertical-divider">{{ user.firstName + " " + user.lastName }}</td>
-          <td class="vertical-divider">{{ assignmentStore.assignments.length }}</td>
-          <td class="vertical-divider">{{ calculateTotalScore(user.userId!, assignmentStore.assignments) }}</td>
-          <td v-for="assignment in assignmentStore.assignments" :key="assignment.assignmentId"
-            class="vertical-divider">
-            <template
-              v-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'present'">
-              <v-btn density="compact" color="green" icon="mdi-check-circles" v-if="isTeacher"
-                @click="openDialog(assignment, user)">
-                <v-icon>mdi-check-circle</v-icon>
-              </v-btn>
-              <v-icon color="green" v-else>mdi-check-circle</v-icon>
-            </template>
-            <template
-              v-else-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'late'">
-              <v-btn density="compact" color="orange" icon="mdi-check-circles" v-if="isTeacher"
-                @click="openDialog(assignment, user)">
-                <v-icon>mdi-clock-outline</v-icon>
-              </v-btn>
-              <v-icon color="orange" v-else>mdi-clock-outline</v-icon>
-            </template>
-            <template v-else>
-              <v-btn density="compact" color="red" icon="mdi-check-circles" v-if="isTeacher"
-                @click="openDialog(assignment, user)">
-                <v-icon>mdi-close-circle</v-icon>
-              </v-btn>
-              <v-icon color="red" v-else>mdi-close-circle</v-icon>
-            </template>
-          </td>
-        </tr>
-      </tbody>
-    </v-table>
-  </v-card>
-</v-tab-item>
+        <v-card class="mx-auto" color="primary" max-width="1200" outlined style="padding: 20px">
+          <v-card-title>
+            <h1 class="text-h5">{{ courseStore.currentCourse?.nameCourses }}</h1>
+          </v-card-title>
+        </v-card>
+        <v-card class="mx-auto" outlined style="padding: 20px; margin-top: 10px">
+          <v-card-title>Assignment Attendance Details</v-card-title>
+          <v-table>
+            <thead>
+              <tr>
+                <th class="text-left vertical-divider">Student ID</th>
+                <th class="text-left vertical-divider">Student Name</th>
+                <th class="text-left vertical-divider">Full Score</th>
+                <th class="text-left vertical-divider">Score</th>
+                <th class="vertical-divider" v-for="assignment in assignmentStore.assignments"
+                  :key="assignment.assignmentId">
+                  {{ assignment.nameAssignment }}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="user in filteredUsers" :key="user.userId">
+                <td class="vertical-divider">{{ user.studentId }}</td>
+                <td class="vertical-divider">{{ user.firstName + " " + user.lastName }}</td>
+                <td class="vertical-divider">{{ assignmentStore.assignments.length }}</td>
+                <td class="vertical-divider">{{ calculateTotalScore(user.userId!, assignmentStore.assignments) }}</td>
+                <td v-for="assignment in assignmentStore.assignments" :key="assignment.assignmentId"
+                  class="vertical-divider">
+                  <template
+                    v-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'present'">
+                    <v-btn density="compact" color="green" icon="mdi-check-circles" v-if="isTeacher"
+                      @click="openDialog(assignment, user)">
+                      <v-icon>mdi-check-circle</v-icon>
+                    </v-btn>
+                    <v-icon color="green" v-else>mdi-check-circle</v-icon>
+                  </template>
+                  <template
+                    v-else-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'late'">
+                    <v-btn density="compact" color="orange" icon="mdi-check-circles" v-if="isTeacher"
+                      @click="openDialog(assignment, user)">
+                      <v-icon>mdi-clock-outline</v-icon>
+                    </v-btn>
+                    <v-icon color="orange" v-else>mdi-clock-outline</v-icon>
+                  </template>
+                  <template v-else>
+                    <v-btn density="compact" color="red" icon="mdi-check-circles" v-if="isTeacher"
+                      @click="openDialog(assignment, user)">
+                      <v-icon>mdi-close-circle</v-icon>
+                    </v-btn>
+                    <v-icon color="red" v-else>mdi-close-circle</v-icon>
+                  </template>
+                </td>
+              </tr>
+            </tbody>
+          </v-table>
+        </v-card>
+      </v-tab-item>
 
 
 
