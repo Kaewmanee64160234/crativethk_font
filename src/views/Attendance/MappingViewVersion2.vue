@@ -52,7 +52,7 @@ const attendanceStore = useAttendanceStore();
 const isLoading = ref(true); // Add a loading state
 const url = import.meta.env.VITE_API_URL as string;
 const filterOptions = ['Show All', 'Show Less Than 50%'];
-const filterOption = ref('Show All');
+const filterOption = ref('Show Less Than 50%');
 const sortedAttendances = computed(() => {
   return attendanceStore.attendances
     ?.slice()
@@ -502,8 +502,7 @@ const confirmAttendance = async (attendance: Attendance) => {
 //reject student
 const reCheckAttendance = async (attendance: Attendance) => {
   try {
-    // attendance.attendanceStatus = "present";
-    // attendance.attendanceConfirmStatus = "recheck";
+
     console.log("Attendance:Ging", attendance);
 
     await attendanceStore.removeAttendance(attendance.attendanceId + "");
@@ -569,8 +568,9 @@ const nextPage = () => {
         </div>
       </v-col>
       <!-- Filter Dropdown -->
-      <v-col cols="auto"  >
-        <v-select v-model="filterOption" :items="filterOptions" label="Filter Attendances" variant="solo" dense></v-select>
+      <v-col cols="auto">
+        <v-select v-model="filterOption" :items="filterOptions" label="Filter Attendances" variant="solo"
+          dense></v-select>
       </v-col>
       <v-col cols="12" class="pt-5">
         <v-container>
@@ -585,7 +585,7 @@ const nextPage = () => {
                 <v-row justify="center">
                   <v-card-title class="bold-text mt-2 text-center">
                     <v-icon small class="mr-2">mdi-circle-small</v-icon>
-                    {{ attendee.user?.studentId + " " + attendee.user?.firstName }}
+                    {{ attendee.user ? attendee.user?.studentId + " " + attendee.user?.firstName : 'ไม่พบในฐานข้อมูล' }}
                   </v-card-title>
                   <v-card-subtitle :class="attendee.attendanceScore! >= 50 ? 'correct-text' : 'incorrect-text'">
                     {{ attendee.attendanceScore! >= 50 ? 'ความถูกต้อง' : 'ไม่ถูกต้อง' }} {{ attendee.attendanceScore }}%
@@ -593,12 +593,19 @@ const nextPage = () => {
                 </v-row>
                 <v-row>
                   <v-col cols="6">
+
                     <v-img :src="`${url}/attendances/image/${attendee.attendanceImage}`" height="200px"
                       class="rounded-lg"></v-img>
                   </v-col>
                   <v-col cols="6">
-                    <v-img :src="`${url}/users/${attendee.user?.userId}/image`" height="200px"
-                      class="rounded-lg"></v-img>
+                    <v-img v-if="attendee.user?.userId"
+                      :src=" `${url}/users/${attendee.user?.userId}/image` "
+                      height="200px" class="rounded-lg">
+                    </v-img>
+                    <v-img v-else
+                      src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"
+                      height="200px" class="rounded-lg">
+                    </v-img>
                   </v-col>
                 </v-row>
                 <v-card-actions>

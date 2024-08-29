@@ -295,15 +295,7 @@ const openDialog = (assignment: Assignment, user: User) => {
                 ></v-text-field>
               </v-col>
             </v-row>
-            <v-row>
-              <v-col cols="12" sm="12">
-                <v-checkbox
-                  v-model="assignmentManual"
-                  label="Adjust Assignment Manually"
-                  class="primary--text"
-                ></v-checkbox>
-              </v-col>
-            </v-row>
+            
             <v-row>
               <v-col cols="12" sm="12">
                 <v-file-input
@@ -398,6 +390,135 @@ const openDialog = (assignment: Assignment, user: User) => {
       </v-col>
     </v-row>
   </v-tab-item>
+  <!-- tab member -->
+  <v-tab-item v-else-if="tab === 'Members'" value="Members">
+        <v-card
+          class="mx-auto"
+          color="primary"
+          max-width="1200"
+          outlined
+          style="padding: 20px"
+        >
+          <v-card-title>
+            <h1 class="text-h5">{{ courseStore.currentCourse?.nameCourses }}</h1>
+          </v-card-title>
+        </v-card>
+        <div style="width: 100%; padding: 20px">
+          <!-- Teacher Section -->
+          <div style="margin-bottom: 30px">
+            <v-row>
+              <v-col>
+                <h3>Teacher</h3>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-divider></v-divider>
+
+              <v-col cols="2">
+                <v-avatar size="56">
+                  <v-img
+                    :src="`${url}/users/${courseStore.currentCourse?.user?.userId}/image`"
+                  ></v-img>
+                </v-avatar>
+              </v-col>
+              <v-col cols="10" style="display: flex; align-items: center">
+                <div>
+                  {{
+                    courseStore.currentCourse?.user?.firstName +
+                    " " +
+                    courseStore.currentCourse?.user?.lastName
+                  }}
+                </div>
+              </v-col>
+              <v-divider></v-divider>
+            </v-row>
+          </div>
+
+          <!-- Students Section -->
+          <div>
+            <v-row>
+              <v-col cols="6">
+                <h3>Students</h3>
+              </v-col>
+
+              <v-col cols="6" style="text-align: end">
+                <p>{{ userStore.users.length }} Members</p>
+              </v-col>
+            </v-row>
+            <v-row v-for="(member, index) in userStore.users" :key="index">
+              <v-divider></v-divider>
+              <v-col cols="2">
+                <v-avatar size="56">
+                  <v-img :src="`${url}/users/${member.userId}/image`"></v-img>
+                </v-avatar>
+              </v-col>
+              <v-col cols="10" style="display: flex; align-items: center">
+                <div>
+                  {{ member.studentId + " " + member.firstName + " " + member.lastName }}
+                </div>
+              </v-col>
+              <v-divider></v-divider>
+            </v-row>
+          </div>
+        </div>
+      </v-tab-item>
+
+      <!-- Tab content for Assignments -->
+      <!-- Tab Item for Users -->
+   <!-- Tab content for Assignment Attendance -->
+   <v-tab-item v-else>
+        <v-card class="mx-auto" color="primary" max-width="1200" outlined style="padding: 20px">
+          <v-card-title>
+            <h1 class="text-h5">{{ courseStore.currentCourse?.nameCourses }}</h1>
+          </v-card-title>
+        </v-card>
+        <v-card class="mx-auto" outlined style="padding: 20px; margin-top: 10px">
+          <v-card-title>Assignment Attendance Details</v-card-title>
+          <v-table>
+            <thead>
+              <tr>
+                <th class="text-left vertical-divider">Student ID</th>
+                <th class="text-left vertical-divider">Student Name</th>
+                <th class="text-left vertical-divider">Full Score</th>
+                <th class="text-left vertical-divider">Score</th>
+                <th class="vertical-divider" v-for="assignment in assignmentStore.assignments" :key="assignment.assignmentId">
+                  {{ assignment.nameAssignment }}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="user in userStore.users" :key="user.userId">
+                <td class="vertical-divider">{{ user.studentId }}</td>
+                <td class="vertical-divider">{{ user.firstName + " " + user.lastName }}</td>
+                <td class="vertical-divider">{{ assignmentStore.assignments.length }}</td>
+                <td class="vertical-divider">{{ calculateTotalScore(user.userId!, assignmentStore.assignments) }}</td>
+                <td v-for="assignment in assignmentStore.assignments" :key="assignment.assignmentId" class="vertical-divider">
+                  <template v-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'present'">
+                    <v-btn density="compact" color="green" icon="mdi-check-circles" v-if="isTeacher" @click="openDialog(assignment, user)">
+                      <v-icon>mdi-check-circle</v-icon>
+                    </v-btn>
+                    <v-icon color="green" v-else>mdi-check-circle</v-icon>
+                  </template>
+                  <template v-else-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'late'">
+                    <v-btn density="compact" color="orange" icon="mdi-check-circles" v-if="isTeacher" @click="openDialog(assignment, user)">
+                      <v-icon>mdi-clock-outline</v-icon>
+                    </v-btn>
+                    <v-icon color="orange" v-else>mdi-clock-outline</v-icon>
+                  </template>
+                  <template v-else>
+                    <v-btn density="compact" color="red" icon="mdi-check-circles" v-if="isTeacher" @click="openDialog(assignment, user)">
+                      <v-icon>mdi-close-circle</v-icon>
+                    </v-btn>
+                    <v-icon color="red" v-else>mdi-close-circle</v-icon>
+                  </template>
+                </td>
+              </tr>
+            </tbody>
+          </v-table>
+        </v-card>
+      </v-tab-item>
+
+
 </v-container>
 
   </div>
