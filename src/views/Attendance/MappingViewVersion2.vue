@@ -112,9 +112,11 @@ onMounted(async () => {
       }
     });
 
-    const urls: string[] = route.query.imageUrls || [];
+    const urls: string[] = JSON.parse(localStorage.getItem('images') || '[]');
     console.log(urls);
     imageUrls.value = urls;
+    localStorage.removeItem('images');
+
 
     // Process each image and wait for all to finish
     await Promise.all(
@@ -123,11 +125,11 @@ onMounted(async () => {
     console.log("Confirming attendance for", identifications.value, "students");
 
     // Call createAttendance after all images have been processed
-    if (assignmentStore.assignment!.statusAssignment == 'completed') {
+    if (assignmentStore.currentAssignment!.statusAssignment == 'completed') {
       console.log("Assignment is already completed. Skipping attendance confirmation.");
-      // await updateAttdent()
+      await updateAttdent()
     } else {
-      // await createAttendance();
+      await createAttendance();
     }
   } catch (error) {
     console.error("Error in onMounted:", error);

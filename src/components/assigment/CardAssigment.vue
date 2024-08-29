@@ -169,9 +169,14 @@ const captureImage = () => {
 const updatePost = async () => {
     if (imageUrls.value.length > 0) {
         imageUrls.value.push(...capturedImages.value);
-        router.push({ path: `/mapping2/assignment/${props.post.assignmentId}`, query: { imageUrls: imageUrls.value } });
+        const allImages = [...capturedImages.value, ...imageUrls.value];
+        router.push({
+            path: `/mapping2/assignment/${assignmentStore.currentAssignment?.assignmentId}/course/${id.value.toString()}`,
+            query: { imageUrls: allImages },
+        });
         imageUrls.value = [];
         capturedImages.value = [];
+
     } else {
         console.error("No images available for posting.");
     }
@@ -196,7 +201,7 @@ async function save() {
 }
 
 function close() {
-  showDialogEditAssignment.value = false;
+    showDialogEditAssignment.value = false;
 }
 </script>
 

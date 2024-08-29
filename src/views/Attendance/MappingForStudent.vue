@@ -107,7 +107,7 @@ const confirmTagging = () => {
           <!-- Re-check Button -->
           <v-row class="mt-2" v-if="userStore.currentUser?.role !== 'อาจารย์'">
             <v-col cols="12">
-              <v-btn block color="#F6BB49" class="recheck-btn" @click="reCheckAttendance(student)">
+              <v-btn block color="#F6BB49" class="recheck-btn" @click="confirmTagging()">
                 ตรวจสอบอีกครั้ง
               </v-btn>
             </v-col>
@@ -145,7 +145,7 @@ const confirmTagging = () => {
           <!-- Re-check Button -->
           <v-row class="mt-2">
             <v-col cols="12">
-              <v-btn block color="#F6BB49" class="recheck-btn" @click="reCheckAttendance(student)">
+              <v-btn block color="#F6BB49" class="recheck-btn" @click="confirmTagging()">
                 ตรวจสอบอีกครั้ง
               </v-btn>
             </v-col>
