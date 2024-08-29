@@ -149,7 +149,7 @@ const createPost = async () => {
     console.timeEnd('Validation check');
     return;
   } else {
-    alert('The assignment has been created successfully.');
+    // alert('The assignment has been created successfully.');
   }
   console.timeEnd('Validation check');
 
@@ -209,7 +209,7 @@ const createPost = async () => {
   if (allImages.length > 0) {
     // Navigate to the next page (this part is commented out as per your request)
     router.push({
-      path: `/mapping2/assignment/${assignmentStore.assignment?.assignmentId}/course/${id.value.toString()}`,
+      path: `/mapping2/assignment/${assignmentStore.currentAssignment?.assignmentId}/course/${id.value.toString()}`,
     });
 
     // Clear the form and images after navigating

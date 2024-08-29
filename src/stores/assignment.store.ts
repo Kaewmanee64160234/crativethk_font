@@ -72,7 +72,7 @@ export const useAssignmentStore = defineStore("assignmentStore", () => {
     try {
       const res = await assignmentService.createAssignment(data,files);
       if (res.data) {
-        assignment.value = res.data;
+        currentAssignment.value = res.data;
         console.log("assignment created", res.data);
         await getAssignmentByCourseId(data.course.coursesId);
       } else {
@@ -128,7 +128,7 @@ export const useAssignmentStore = defineStore("assignmentStore", () => {
     try {
       const res =  await assignmentService.getAssignmentImages(id);
       if(res.status === 200){
-        assignment.value = res.data;
+        currentAssignment.value = res.data;
       }
     } catch (error) {
       console.log(error);

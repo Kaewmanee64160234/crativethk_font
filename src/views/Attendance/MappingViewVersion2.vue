@@ -354,7 +354,7 @@ const createAttendance = async () => {
           attendanceDate: new Date(),
           attendanceStatus: "present",
           attendanceConfirmStatus: identifiedUser ? "confirmed" : "notConfirmed",
-          assignment: assignmentStore.assignment,
+          assignment: assignmentStore.currentAssignment,
           user: identifiedUser,
           attendanceImage: "",
           attendanceScore: parseInt((identifications.value[i].score * 100).toFixed(2)),
@@ -376,7 +376,7 @@ const createAttendance = async () => {
   }
 
   // Filter users from identifications and create unknown users
-  await userStore.getUserByCourseId(assignmentStore.assignment?.course.coursesId + '')
+  await userStore.getUserByCourseId(assignmentStore.currentAssignment?.course.coursesId + '')
   const usersCreateUnknown = userStore.users.filter((user) => {
     return !identifications.value.some((identification) => identification.studentId === user.studentId);
   });
@@ -391,7 +391,7 @@ const createAttendance = async () => {
           attendanceDate: new Date(),
           attendanceStatus: "absent",
           attendanceConfirmStatus: "notConfirmed",
-          assignment: assignmentStore.assignment,
+          assignment: assignmentStore.currentAssignment,
           user: usersCreateUnknown[i],
           attendanceImage: "",
           attendanceScore: 0
@@ -411,8 +411,8 @@ const createAttendance = async () => {
       );
     }
   }
-  assignmentStore.assignment!.statusAssignment = 'completed';
-  await assignmentStore.updateAssignment(assignmentStore.assignment!.assignmentId + '', assignmentStore.assignment!);
+  assignmentStore.currentAssignment!.statusAssignment = 'completed';
+  await assignmentStore.updateAssignment(assignmentStore.currentAssignment!.assignmentId + '', assignmentStore.currentAssignment!);
   await attendanceStore.getAttendanceByAssignmentId(route.params.assignmentId.toString());
 
   console.log("Attendance confirmed successfully");
