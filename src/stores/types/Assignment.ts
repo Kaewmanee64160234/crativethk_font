@@ -10,7 +10,6 @@ export default interface Assignment{
     attdances?:Attendance[];
     assignmentImages?:string[];
     statusAssignment:string;
-    assignmentManual:boolean;
     room?:Room;
     course:Course;
     createdDate?:Date;

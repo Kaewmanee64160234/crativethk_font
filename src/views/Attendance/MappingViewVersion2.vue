@@ -51,12 +51,24 @@ const assignmentStore = useAssignmentStore();
 const attendanceStore = useAttendanceStore();
 const isLoading = ref(true); // Add a loading state
 const url = import.meta.env.VITE_API_URL as string;
+const filterOptions = ['Show All', 'Show Less Than 50%'];
+const filterOption = ref('Show All');
 const sortedAttendances = computed(() => {
-  return attendanceStore.attendances!
-    .slice()
+  return attendanceStore.attendances
+    ?.slice()
     .filter((attendance) => attendance.attendanceImage !== 'noimage.jpg')
     .sort((a, b) => a.attendanceScore! - b.attendanceScore!);
 });
+
+// Filtering attendances based on the selected dropdown option
+const filteredAttendances = computed(() => {
+  if (filterOption.value === 'Show Less Than 50%') {
+    return sortedAttendances.value!.filter(attendee => attendee.attendanceScore! < 50);
+  } else {
+    return sortedAttendances.value;
+  }
+});
+
 onMounted(async () => {
   try {
     isLoading.value = true;
@@ -113,9 +125,9 @@ onMounted(async () => {
     // Call createAttendance after all images have been processed
     if (assignmentStore.assignment!.statusAssignment == 'completed') {
       console.log("Assignment is already completed. Skipping attendance confirmation.");
-      await updateAttdent()
+      // await updateAttdent()
     } else {
-      await createAttendance();
+      // await createAttendance();
     }
   } catch (error) {
     console.error("Error in onMounted:", error);
@@ -446,7 +458,7 @@ const updateAttdent = async () => {
         userAttdent.attendanceScore = parseInt((identifications.value[i].score * 100).toFixed(2));
         userAttdent.assignment = assignmentStore.currentAssignment!;
         console.log("User Attdent:", userAttdent);
-        
+
         await attendanceStore.confirmAttendance(userAttdent, imageFile);
       }
 
@@ -457,7 +469,7 @@ const updateAttdent = async () => {
   } catch (e) {
     console.error(
       "Error recording attendance for",
-   
+
       ":",
       e
     );
@@ -539,6 +551,9 @@ const nextPage = () => {
             Next Page
           </v-btn>
         </div>
+
+
+
         <div class="status-student d-flex align-center">
           <v-row class="align-center text-center" justify="center">
             <v-col cols="auto" class="status-section">
@@ -553,11 +568,14 @@ const nextPage = () => {
           </v-row>
         </div>
       </v-col>
-
+      <!-- Filter Dropdown -->
+      <v-col cols="auto"  >
+        <v-select v-model="filterOption" :items="filterOptions" label="Filter Attendances" variant="solo" dense></v-select>
+      </v-col>
       <v-col cols="12" class="pt-5">
         <v-container>
           <v-row>
-            <v-col v-for="(attendee, index) in sortedAttendances" :key="index" cols="12" sm="6" md="4" lg="3">
+            <v-col v-for="(attendee, index) in filteredAttendances" :key="index" cols="12" sm="6" md="4" lg="3">
               <v-card class="mb-3" :style="{
                 padding: '20px',
                 backgroundColor: attendee.attendanceScore! >= 50 ? 'rgb(237, 237, 237)' : 'rgb(255, 230, 230)',
@@ -583,12 +601,10 @@ const nextPage = () => {
                       class="rounded-lg"></v-img>
                   </v-col>
                 </v-row>
-                <v-card-actions class="justify-space-between">
-                  <v-btn color="error" variant="flat" @click="reCheckAttendance(attendee)" class="font-weight-bold">
+                <v-card-actions>
+                  <v-btn color="error" variant="flat" @click="reCheckAttendance(attendee)" class="font-weight-bold"
+                    block>
                     ปฏิเสธ
-                  </v-btn>
-                  <v-btn color="success" variant="flat" @click="confirmAttendance(attendee)" class="font-weight-bold">
-                    ยืนยัน
                   </v-btn>
                 </v-card-actions>
               </v-card>
@@ -599,6 +615,8 @@ const nextPage = () => {
     </v-row>
   </v-container>
 </template>
+
+
 
 <style scoped>
 .bold-text {
