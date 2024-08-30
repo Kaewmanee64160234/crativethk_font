@@ -180,10 +180,26 @@ const confirmRecheck = async () => {
 </script>
 
 <template>
-  <v-container>
+  <v-container class="mt-10">
+    <!-- Title and Description -->
     <v-row>
-      <v-col cols="12" md="6">
-        <div v-for="(imageUrl, index) in imageUrls" :key="index" class="position-relative mb-3">
+      <v-col class="mt-3" cols="12">
+        <h1 class="text-center">Confirm Tagging Face</h1>
+        <p class="text-center description">Please click on your face if it is you. If the image is not you, click the "Not My Image" button.</p>
+      </v-col>
+    </v-row>
+
+    <!-- Action Button -->
+    <v-row>
+      <v-col cols="12" class="align-start justify-start">
+        <v-btn color="secondary">ไม่มีภาพของฉัน</v-btn>
+      </v-col>
+    </v-row>
+
+    <!-- Image and Canvas Display -->
+    <v-row>
+      <v-col cols="12" md="6" v-for="(imageUrl, index) in imageUrls" :key="index">
+        <div class="position-relative mb-3">
           <img :src="imageUrl" class="w-100 rounded-lg"
             @load="(event) => { 
               const img = event.target; 
@@ -200,21 +216,22 @@ const confirmRecheck = async () => {
     </v-row>
   </v-container>
 
+  <!-- Confirmation Dialog -->
   <v-dialog v-model="showDialog" max-width="600px">
-      <v-card>
-        <v-card-title>
-          <span class="headline">Confirm Identity</span>
-        </v-card-title>
-        <v-card-text class="text-center">
-          <img :src="croppedImage" alt="Cropped Face" class="rounded-lg mb-2" />
-          <p>Is this you?</p>
-        </v-card-text>
-        <v-card-actions class="justify-center">
-          <v-btn color="primary" @click="confirmRecheck()">Yes</v-btn>
-          <v-btn color="secondary" @click="showDialog = false">No</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <v-card>
+      <v-card-title>
+        <span class="headline">Confirm Identity</span>
+      </v-card-title>
+      <v-card-text class="text-center">
+        <img :src="croppedImage" alt="Cropped Face" class="rounded-lg mb-2" />
+        <p>Is this you?</p>
+      </v-card-text>
+      <v-card-actions class="justify-center">
+        <v-btn color="primary" @click="confirmRecheck()">Yes</v-btn>
+        <v-btn color="secondary" @click="showDialog = false">No</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <style scoped>
@@ -225,6 +242,13 @@ const confirmRecheck = async () => {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+}
+
+/* Description text styling */
+.description {
+  font-size: 1.1rem;
+  color: #555;
+  margin-top: 10px;
 }
 
 /* Image container to maintain position relative for canvas overlay */
@@ -267,3 +291,4 @@ const confirmRecheck = async () => {
   font-weight: bold;
 }
 </style>
+
