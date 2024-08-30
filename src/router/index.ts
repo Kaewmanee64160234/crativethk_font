@@ -241,6 +241,8 @@ const router = createRouter({
         menu: () => import("../components/headers/SubHeader.vue"),
       },
     },
+  
+
     {
       // pagenot foun
       path: "/:catchAll(.*)",
