@@ -206,34 +206,51 @@ function close() {
 </script>
 
 <template>
-
     <div>
         <v-card>
             <v-card-text>
                 <h4>{{ props.post!.course!.user!.firstName + ' ' + props.post!.course!.user!.lastName }} โพสเนื้อหาใหม่
-                    : {{
-                        props.post.nameAssignment }}</h4>
+                    : {{ props.post.nameAssignment }}</h4>
             </v-card-text>
             <v-card-actions>
                 <v-card-text> {{ formatThaiDate(new Date(props.post!.createdDate!)) }}</v-card-text>
                 <v-spacer></v-spacer>
-                <v-btn @click="gotoMappinfForStudent()"> <v-icon size="30">mdi-card-account-mail</v-icon>
+                <v-btn @click="gotoMappinfForStudent()"> 
+                    <v-icon size="30">mdi-card-account-mail</v-icon>
                 </v-btn>
-                <v-btn v-if="userStore.currentUser?.role == 'อาจารย์'" @click="recheckMapping()"><v-icon
-                        size="30">mdi-account-file-text-outline</v-icon></v-btn>
-                <v-btn v-if="userStore.currentUser?.role == 'อาจารย์'" @click="goToMapping2()"><v-icon
-                        size="30">mdi-account-edit-outline</v-icon></v-btn>
-                <v-btn v-if="userStore.currentUser?.role == 'อาจารย์'" @click="editAssignment()">
-                    <v-icon size="30">mdi mdi-book-edit</v-icon>
-                </v-btn>
-                <v-btn v-if="userStore.currentUser?.role == 'อาจารย์'" @click="deleteAssignment()">
-                    <v-icon size="30">mdi mdi-delete</v-icon>
-                </v-btn>
+                
+                <!-- Dropdown Menu for Teacher Actions -->
+                <v-menu v-if="userStore.currentUser?.role == 'อาจารย์'" bottom right>
+                    <template v-slot:activator="{ props }">
+                        <v-btn icon="mdi-dots-vertical" variant="text" v-bind="props"></v-btn>
+                    </template>
+                    <v-list>
+                        <v-list-item @click="recheckMapping">
+                          
+                            <v-list-item-title>ยืนยันนิสิตที่ให้ตรวจสอบอีกครั้ง</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item @click="goToMapping2">
+                           
+                            <v-list-item-title>เพิ่มภาพถ่ายการเช็คชื่อ</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item @click="editAssignment">
+                           
+                            <v-list-item-title>เปลี่ยนชื่อ Assignment</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item @click="deleteAssignment">
+                           
+                            <v-list-item-title>เปลี่ยนชื่อ Assignment</v-list-item-title>
+                        </v-list-item>
+                    </v-list>
+                </v-menu>
             </v-card-actions>
         </v-card>
     </div>
+
+    <!-- ConfirmDialog Component -->
     <ConfirmDialog ref="confirmDlg" />
 
+    <!-- Create Post Dialog -->
     <v-dialog v-model="showDialog" persistent max-width="600px">
         <v-card>
             <v-card-title>
@@ -241,7 +258,6 @@ function close() {
             </v-card-title>
             <v-card-text>
                 <v-container>
-
                     <v-row>
                         <h1>Upload file เพื่อเพิ่มนิสิตที่เข้าเรียน</h1>
                     </v-row>
@@ -284,35 +300,28 @@ function close() {
         </v-card>
     </v-dialog>
 
+    <!-- Edit Assignment Dialog -->
     <v-dialog v-model="showDialogEditAssignment" max-width="600px" persistent>
         <v-card>
-            <!-- Dialog title -->
             <v-card-title class="headline">
                 Edit Assignment
                 <v-spacer></v-spacer>
-                <!-- Close button for dialog -->
                 <v-btn icon @click="close">
                     <v-icon color="red">mdi-close</v-icon>
                 </v-btn>
             </v-card-title>
-            <!-- Dialog content -->
             <v-card-text>
-                <!-- Form to edit assignment name -->
                 <v-form ref="form" @submit.prevent="save">
-                    <!-- Text field to input the assignment name -->
                     <v-text-field v-model="props.post.nameAssignment" label="Assignment Name" required></v-text-field>
                 </v-form>
             </v-card-text>
-            <!-- Dialog actions (buttons) -->
             <v-card-actions>
                 <v-spacer></v-spacer>
-                <!-- Button to save changes -->
                 <v-btn color="primary" @click="save">บันทึก</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>
-
-
 </template>
+
 
 <style scoped></style>
