@@ -43,16 +43,25 @@ function formatThaiDate(date: Date) {
 }
 // Delete assignment and update UI
 const deleteAssignment = async () => {
-    await confirmDlg.value.openDialog(
+    try {
+        await confirmDlg.value.openDialog(
         'Please Confirm',
         `Do you want to delete this Assignment?`,
         'Accept',
         'Cancel'
     )
-    await assignmentStore.deleteAssignment(props.post.assignmentId);
-    window.location.reload();
+
+    await assignmentStore.deleteAssignment(props.post.assignmentId!);
     await assignmentStore.getAssignmentByCourseId(id.value.toString());
-    // Optionally, remove the item from a local list if not using a global store
+
+    window.location.reload();
+    console.log('Assignment deleted successfully');
+    } catch (error) {
+        console.log('Error deleting assignment:', error);
+        
+        
+    }
+ 
 }
 // function edit
 const editAssignment = async () => {
@@ -215,10 +224,10 @@ function close() {
             <v-card-actions>
                 <v-card-text> {{ formatThaiDate(new Date(props.post!.createdDate!)) }}</v-card-text>
                 <v-spacer></v-spacer>
-                <v-btn @click="gotoMappinfForStudent()"> 
+                <v-btn @click="gotoMappinfForStudent()">
                     <v-icon size="30">mdi-card-account-mail</v-icon>
                 </v-btn>
-                
+
                 <!-- Dropdown Menu for Teacher Actions -->
                 <v-menu v-if="userStore.currentUser?.role == 'อาจารย์'" bottom right>
                     <template v-slot:activator="{ props }">
@@ -226,20 +235,20 @@ function close() {
                     </template>
                     <v-list>
                         <v-list-item @click="recheckMapping">
-                          
+
                             <v-list-item-title>ยืนยันนิสิตที่ให้ตรวจสอบอีกครั้ง</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="goToMapping2">
-                           
+
                             <v-list-item-title>เพิ่มภาพถ่ายการเช็คชื่อ</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="editAssignment">
-                           
+
                             <v-list-item-title>เปลี่ยนชื่อ Assignment</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="deleteAssignment">
-                           
-                            <v-list-item-title>เปลี่ยนชื่อ Assignment</v-list-item-title>
+
+                            <v-list-item-title>ลบ Assignment</v-list-item-title>
                         </v-list-item>
                     </v-list>
                 </v-menu>
@@ -303,24 +312,25 @@ function close() {
     <!-- Edit Assignment Dialog -->
     <v-dialog v-model="showDialogEditAssignment" max-width="600px" persistent>
         <v-card>
+            <!-- Dialog title without the close button -->
             <v-card-title class="headline">
                 Edit Assignment
-                <v-spacer></v-spacer>
-                <v-btn icon @click="close">
-                    <v-icon color="red">mdi-close</v-icon>
-                </v-btn>
             </v-card-title>
+            <!-- Dialog content with form -->
             <v-card-text>
                 <v-form ref="form" @submit.prevent="save">
                     <v-text-field v-model="props.post.nameAssignment" label="Assignment Name" required></v-text-field>
                 </v-form>
             </v-card-text>
+            <!-- Dialog actions with Confirm and Cancel buttons -->
             <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn color="primary" @click="save">บันทึก</v-btn>
+                <v-btn color="secondary" @click="showDialogEditAssignment = false">ยกเลิก</v-btn>
+                <v-btn color="primary" @click="save">ยืนยัน</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>
+
 </template>
 
 

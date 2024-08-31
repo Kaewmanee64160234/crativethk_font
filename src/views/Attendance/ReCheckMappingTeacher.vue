@@ -7,15 +7,18 @@ import { useAssignmentStore } from "@/stores/assignment.store";
 import type Assignment from "@/stores/types/Assignment";
 import { useCourseStore } from "@/stores/course.store";
 import { useUserStore } from "@/stores/user.store";
+import router from "@/router";
 const attendanceStore = useAttendanceStore();
 const assignmentStore = useAssignmentStore();
 const courseStore = useCourseStore();
 const userStore = useUserStore();
 const route = useRoute();
-const url = "http://localhost:3000";
 
+const url = "http://localhost:3000";
+const queryCourseId = ref('');
 onMounted(async () => {
   const id = route.params.assignmentId;
+  queryCourseId.value = route.params.courseId + '';
   await attendanceStore.getAttendanceByStatusInAssignment(id + ""); // Assuming this function exists and fetches the attendances
   //get assignment by id
   await assignmentStore.getAssignmentById(id + "");
@@ -28,7 +31,9 @@ onMounted(async () => {
 });
 
 
-
+const goBackToCourseDetail = () => {
+  router.push("/courseDetail/" + queryCourseId.value);
+};
 
 // confirm student
 const confirmAttendance = async (attendance: Attendance) => {
@@ -61,6 +66,14 @@ const reCheckAttendance = async (attendance: Attendance) => {
 <template>
   <v-container fluid class="my-5">
     <div style="margin-top: 5%; margin-left: 5%">
+      <v-row>
+        <v-col cols="12">
+          <v-btn @click="goBackToCourseDetail" color="primary" class="mr-4">
+            <v-icon>mdi-arrow-left</v-icon>
+            กลับ
+          </v-btn>
+        </v-col>
+      </v-row>
 
 
       <v-row>
@@ -102,12 +115,7 @@ const reCheckAttendance = async (attendance: Attendance) => {
             </v-card-title>
             <v-card-text>
               <v-row>
-                <v-col
-                  cols="12"
-                  md="6"
-                  v-for="attendee in attendanceStore.attendances"
-                  :key="attendee.attendanceId"
-                >
+                <v-col cols="12" md="6" v-for="attendee in attendanceStore.attendances" :key="attendee.attendanceId">
                   <v-card class="attendee-card" outlined>
                     <v-card-title class="attendee-name">
                       <v-icon small>mdi-circle-small</v-icon>
@@ -115,37 +123,23 @@ const reCheckAttendance = async (attendance: Attendance) => {
                     </v-card-title>
                     <v-row class="attendee-images">
                       <v-col cols="6">
-                        <v-img
-                          :src="`${url}/attendances/image/${attendee.attendanceImage}`"
-                          height="200px"
-                          class="attendee-img"
-                        ></v-img>
+                        <v-img :src="`${url}/attendances/image/${attendee.attendanceImage}`" height="200px"
+                          class="attendee-img"></v-img>
                       </v-col>
                       <v-col cols="6">
-                        <v-img
-                          :src="`${url}/users/${attendee.user?.userId}/image`"
-                          height="200px"
-                          class="attendee-img"
-                        ></v-img>
+                        <v-img :src="`${url}/users/${attendee.user?.userId}/image`" height="200px"
+                          class="attendee-img"></v-img>
                       </v-col>
                     </v-row>
                     <v-card-text class="attendee-status">
                       <div>Attendance Status: {{ attendee.attendanceStatus }}</div>
                     </v-card-text>
                     <v-card-actions>
-                      <v-btn
-                        variant="flat"
-                        color="warning"
-                        class="recheck-btn"
-                        @click="reCheckAttendance(attendee)"
-                      >Recheck</v-btn>
+                      <v-btn variant="flat" color="warning" class="recheck-btn"
+                        @click="reCheckAttendance(attendee)">Recheck</v-btn>
                       <v-spacer></v-spacer>
-                      <v-btn
-                        variant="flat"
-                        color="success"
-                        class="confirm-btn"
-                        @click="confirmAttendance(attendee)"
-                      >Confirm</v-btn>
+                      <v-btn variant="flat" color="success" class="confirm-btn"
+                        @click="confirmAttendance(attendee)">Confirm</v-btn>
                     </v-card-actions>
                   </v-card>
                 </v-col>
@@ -274,8 +268,11 @@ const reCheckAttendance = async (attendance: Attendance) => {
 .bold-text {
   font-weight: bold;
 }
+
 .vertical-divider {
-  border-left: 1px solid #e0e0e0; /* สีของเส้นแบ่ง */
-  height: auto; /* ให้สูงตามความสูงของ col */
+  border-left: 1px solid #e0e0e0;
+  /* สีของเส้นแบ่ง */
+  height: auto;
+  /* ให้สูงตามความสูงของ col */
 }
 </style>
