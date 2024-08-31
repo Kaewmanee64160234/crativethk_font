@@ -221,18 +221,12 @@ const cropFaceFromImage = (ctx: CanvasRenderingContext2D | null, box: faceapi.Bo
   return null;
 };
 
-const startCamera = () => {
-  showCamera.value = true;
 
+const startCamera = async () => {
+  showCamera.value = true;
+  const stream = await navigator.mediaDevices.getUserMedia({ video: true });
   if (videoRef.value) {
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(stream => {
-        videoRef.value!.srcObject = stream;
-        videoRef.value!.play();
-      })
-      .catch(err => {
-        console.error("Error accessing the camera: ", err);
-      });
+    videoRef.value.srcObject = stream;
   }
 };
 
