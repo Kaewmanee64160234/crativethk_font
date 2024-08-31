@@ -12,7 +12,7 @@ const route = useRoute();
 const router = useRouter();
 const images = ref<string[]>([]);
 const imageFiles = ref<File[]>([]);
-const url = "http://localhost:3000";
+  const url = import.meta.env.VITE_API_URL;
 const messageStore = useMessageStore();
 stdId.value = route.params.stdId as string;
 

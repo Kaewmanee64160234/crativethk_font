@@ -9,7 +9,7 @@ onMounted(async () => {
 });
 
 const userStore = useUserStore();
-const url = 'http://localhost:3000';
+const url = import.meta.env.VITE_API_URL;
 async function save() {
     const faceDescriptions = await processFiles(userStore.editUser.files);
     const dataFaceBase64 = faceDescriptions.map((faceDescription) => float32ArrayToBase64(faceDescription));

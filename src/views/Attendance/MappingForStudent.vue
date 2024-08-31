@@ -9,7 +9,7 @@ import assignment from "@/services/assignment";
 import { useAssignmentStore } from "@/stores/assignment.store";
 import type Attendance from "@/stores/types/Attendances";
 import { useMessageStore } from "@/stores/message";
-const url = "http://localhost:3000";
+const url = import.meta.env.VITE_API_URL;
 
 const route = useRoute();
 const attendanceStore = useAttendanceStore();

@@ -31,7 +31,7 @@ const courseStore = useCourseStore();
 const showDialog = ref(false);
 const nameAssignment = ref("");
 const userStore = useUserStore();
-const url = "http://localhost:3000";
+const url = import.meta.env.VITE_API_URL;
 const attendanceStore = useAttendanceStore();
 const roomSelect = ref<string>();
 
