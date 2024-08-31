@@ -66,17 +66,24 @@ const confirmTagging = () => {
   router.push("/taggingFace/course/" + queryCourseId + "/assignment/" + route.params.assignmentId);
 };
 </script>
-
-
 <template>
   <v-container class="fill-height" style="margin-top: 5%">
-    <!-- Title -->
-    <h1 class="title mt-5">ตรวจสอบการเข้าเรียน</h1>
+    <!-- Title Row with Back Button -->
+    <v-row class="align-center">
 
-    <!-- Back Button -->
-    <v-btn fab dark icon absolute top right color="blue" @click="goBackToCourseDetail" class="back-btn">
-      <v-icon>mdi-arrow-left</v-icon>
-    </v-btn>
+
+      <!-- Title -->
+      <v-col cols="12">
+        <h1 class="title mt-5">ตรวจสอบการเข้าเรียน</h1>
+      </v-col>
+    </v-row>
+    <v-row style="width: 100%;" >
+      <!-- Back Button -->
+        <v-btn variant="outlined" color="blue" @click="goBackToCourseDetail" class="back-btn">
+          Go home
+        </v-btn>
+    
+    </v-row>
 
     <!-- Conditional rendering for attendance data -->
     <v-row v-if="userStore.currentUser?.role === 'อาจารย์'" class="row-spacing" style="width: 100%;">
@@ -100,8 +107,8 @@ const confirmTagging = () => {
           <v-row justify="center" class="mt-2">
             <!-- Student Image -->
             <v-img :src="`${url}/attendances/image/${student.attendanceImage}`" height="200px" width="auto"
-              class="rounded-lg student-image" :alt="`Student Image for ${student.user ? student.user.firstName : 'Unknown'
-                }`"></v-img>
+              class="rounded-lg student-image"
+              :alt="`Student Image for ${student.user ? student.user.firstName : 'Unknown'}`"></v-img>
           </v-row>
 
           <!-- Re-check Button -->
@@ -138,8 +145,8 @@ const confirmTagging = () => {
           <v-row justify="center" class="mt-2">
             <!-- Student Image -->
             <v-img :src="`${url}/attendances/image/${student.attendanceImage}`" height="200px" width="auto"
-              class="rounded-lg student-image" :alt="`Student Image for ${student.user ? student.user.firstName : 'Unknown'
-                }`"></v-img>
+              class="rounded-lg student-image"
+              :alt="`Student Image for ${student.user ? student.user.firstName : 'Unknown'}`"></v-img>
           </v-row>
 
           <!-- Re-check Button -->
@@ -173,6 +180,7 @@ const confirmTagging = () => {
 <style scoped>
 .fill-height {
   min-height: 100vh;
+  width: 100%;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -182,33 +190,23 @@ const confirmTagging = () => {
 .title {
   text-align: center;
   font-size: 2.5rem;
-  /* Slightly increased font size */
   font-weight: bold;
   color: #3f51b5;
-  /* Updated color for better visibility */
   margin-bottom: 20px;
 }
 
 .back-btn {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  z-index: 10;
   font-weight: bold;
-  border-radius: 50%;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  /* Added shadow for depth */
 }
 
 .bold-text {
   font-weight: bold;
   color: #333;
-  /* Updated color for better contrast */
 }
 
 .pa-3 {
   padding: 20px !important;
-  /* Adjusted padding for consistency */
 }
 
 .subtitle-1 {
@@ -225,26 +223,21 @@ const confirmTagging = () => {
   flex-direction: column;
   justify-content: space-between;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  /* Subtle shadow for better appearance */
   margin-bottom: 16px;
-  /* Ensures spacing between cards */
 }
 
 .student-card:hover {
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-  /* Enhanced hover effect */
 }
 
 .v-img {
   object-fit: cover;
   border-radius: 8px;
-  /* Rounded corners for images */
 }
 
 .v-btn {
   text-transform: none;
   font-weight: bold;
-  /* Consistent font weight */
 }
 
 .recheck-btn {
@@ -255,7 +248,6 @@ const confirmTagging = () => {
 
 .recheck-btn:hover {
   background-color: #e0a838;
-  /* Darken on hover */
 }
 
 .confirm-btn {
@@ -266,16 +258,13 @@ const confirmTagging = () => {
 
 .confirm-btn:hover {
   background-color: #2e3b8a;
-  /* Darken on hover */
 }
 
 .red--text {
   color: #f44336;
-  /* Consistent color for error text */
 }
 
 .row-spacing {
   margin-bottom: 16px;
-  /* Consistent spacing between rows */
 }
 </style>
