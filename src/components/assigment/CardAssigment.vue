@@ -61,7 +61,7 @@ const editAssignment = async () => {
 //create function goto mapping 2
 const recheckMapping = () => {
     assignmentStore.currentAssignment = props.post;
-    router.push(`/reCheckMappingTeacher/course/${courseId}/assignment/${props.post.assignmentId}`);
+    router.push(`/reCheckMappingTeacher/course/${courseStore.currentCourse?.coursesId}/assignment/${props.post.assignmentId}`);
 }
 
 const gotoMappinfForStudent = () => {

@@ -156,7 +156,6 @@ const reCheckAttendance = async (attendance: Attendance) => {
     attendance.attendanceId = attendanceStore.currentAttendance?.attendanceId;
     console.log('Attendance:', attendance);
     
-
     if (croppedImage.value) {
       const imageFile = dataURLToFile(croppedImage.value, 'rechecked-image.jpg');
       console.log('Image File:', imageFile);
@@ -224,12 +223,12 @@ const cropFaceFromImage = (ctx: CanvasRenderingContext2D | null, box: faceapi.Bo
 
 const startCamera = () => {
   showCamera.value = true;
+
   if (videoRef.value) {
     navigator.mediaDevices.getUserMedia({ video: true })
       .then(stream => {
         videoRef.value!.srcObject = stream;
         videoRef.value!.play();
-        showCamera.value = true;
       })
       .catch(err => {
         console.error("Error accessing the camera: ", err);
@@ -271,7 +270,6 @@ const stopCamera = () => {
   }
 };
 </script>
-
 
 <template>
   <v-container class="mt-10">
@@ -356,6 +354,7 @@ const stopCamera = () => {
     </v-dialog>
   </v-container>
 </template>
+
 
 
 <style scoped>
