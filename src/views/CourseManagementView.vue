@@ -212,7 +212,7 @@ const updateCourse = () => {
 </script>
 <template>
   <v-container>
-    <v-row>
+    <v-row v-if="courseStore.courses.length > 0">
       <v-col cols="12" sm="6" md="4" v-for="(item, index) of courseStore.courses" :key="index">
         <v-card style="margin-left: 10%; margin-top: 15%" @click="goToCourseDetail(item.coursesId, item)">
           <v-img height="100"
@@ -268,6 +268,10 @@ const updateCourse = () => {
           </v-card-text>
         </v-card>
       </v-col>
+    </v-row>
+    <v-row v-else style="padding-top: 120px;">
+      <v-col class="d-flex justify-center">
+        <h1>ไม่มีรายวิชา</h1></v-col>
     </v-row>
   </v-container>
   <v-btn class="bottom-list-item" size="60" style="border-radius: 50%" variant="outlined"

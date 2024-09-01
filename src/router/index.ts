@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 import HomeView from "../views/HomeView.vue";
 import { ref } from "vue";
+import { useUserStore } from "@/stores/user.store";
 const user = ref<any | null>(localStorage.getItem("users"));
 const user_ = JSON.parse(user.value);
 const ezAutorized = () => {
@@ -44,8 +45,17 @@ const router = createRouter({
       },
       meta: {
         layout: "FullLayout",
-        // requiresAuth: true,
-        // beforeEnter:[ ezAutorized]
+      },
+      beforeEnter: (to, from, next) => {
+        const userStore = useUserStore();
+        const role = userStore.currentUser?.role;
+        const allowedRoles = ["แอดมิน", "อาจารย์"]; // บทบาทที่อนุญาตให้เข้าถึงเส้นทางนี้
+    
+        if (allowedRoles.includes(role ?? "")) {
+          next(); // อนุญาตให้ผ่านไปยังเส้นทาง
+        } else {
+          next({ name: "unauthorized" }); // ส่งผู้ใช้ไปยังเส้นทางอื่นหากไม่มีสิทธิ์
+        }
       },
     },
     {

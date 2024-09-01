@@ -9,11 +9,11 @@ const userStore = useUserStore();
       <v-layout style="margin-top: 10%; margin-left: 5%">
         <v-list density="compact">
           <div v-if="userStore.currentUser?.teacherId">
-            <v-list-item link to="/courseManagement">
-              <v-icon size="40" color="#819DA9">mdi mdi-human-male-board</v-icon>
+            <v-list-item link to="/courseManagement" prepend-icon="mdi-human-male-board">
+              <!-- <v-icon size="40" color="#819DA9">mdi mdi-human-male-board</v-icon> -->
             </v-list-item>
           </div>
-          <div v-if="userStore.currentUser?.studentId">
+          <div v-if="userStore.currentUser?.studentId && userStore.currentUser?.registerStatus == 'confirmed'">
             <v-list-item link to="/enrolmentManagement">
               <v-icon size="40" color="#819DA9">mdi mdi-human-male-board</v-icon>
             </v-list-item>
