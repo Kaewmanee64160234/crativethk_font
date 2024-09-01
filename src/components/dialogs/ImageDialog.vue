@@ -1,15 +1,34 @@
 <script lang="ts" setup>
-import { onMounted, ref, computed } from 'vue';
+import { onMounted, ref, computed, reactive } from 'vue';
 import { useUserStore } from '@/stores/user.store';
 import * as faceapi from 'face-api.js';
 import Swal from 'sweetalert2';
 import { useMessageStore } from '@/stores/message';
+import type { User } from '@/stores/types/User';
+import Loader from "@/components/loader/Loader.vue";
+
+interface CanvasRefs {
+  [key: number]: HTMLCanvasElement;
+}
+
+interface Identification {
+  name: string;
+  studentId: string;
+  imageUrl: string;
+  score: number;
+  user: User;
+}
 
 const messageStore = useMessageStore();
+const isLoading = ref(false); 
 const userStore = useUserStore();
 const showDialog = ref(true);
 const alertDialog = ref(false);
 const alertMessage = ref('');
+const identifications = ref<Identification[]>([]);
+const canvasRefs = reactive<CanvasRefs>({});
+const croppedImagesDataUrls = ref<string[]>([]);
+const userDescriptors = new Map<string, Float32Array[]>();
 const url = import.meta.env.VITE_API_URL;
 const imageUrls = ref<string[]>([]);
 const imageFiles = ref<File[]>([]);
@@ -23,200 +42,335 @@ async function close() {
 }
 
 onMounted(async () => {
+  await loadModels()
   await userStore.getUsersById(userStore.currentUser?.userId!);
   images.value = userStore.currentUser?.images?.map((image: string) => `${url}/users/image/filename/${image}`) ?? [];
-
-  await loadModels();
-  console.log("Face API models loaded", images.value);
 });
 
 async function loadModels() {
 
   try {
-    await faceapi.nets.ssdMobilenetv1.loadFromUri('/models');
-    await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
-    await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
+    await Promise.all([
+      faceapi.nets.faceRecognitionNet.loadFromUri("/models"),
+      faceapi.nets.faceLandmark68Net.loadFromUri("/models"),
+      faceapi.nets.ssdMobilenetv1.loadFromUri("/models"),
+    ]);
+    userStore.users.forEach((user) => {
+      const descriptors: Float32Array[] = [];
+      const faceDescriptionFields = user.faceDescriptions || [];
+
+      faceDescriptionFields.forEach((description, idx) => {
+        if (description) {
+          try {
+            const float32Array = base64ToFloat32Array(description);
+            descriptors.push(float32Array);
+          } catch (error) {
+            console.error(`Error decoding face description ${idx + 1} for user: ${user.email}`, error);
+          }
+        }
+      });
+
+      if (descriptors.length > 0) {
+        userDescriptors.set(user.studentId!, descriptors);
+      }
+    });
+    console.timeEnd("Face Description Processing Time");
+    const urls: string[] = JSON.parse(localStorage.getItem('images') || '[]');
+    console.log(urls);
+
+    imageUrls.value = urls;
+    localStorage.removeItem('images');
+
+
+    console.time("Image Processing Time");
+    await Promise.all(imageUrls.value.map((url, index) => loadImageAndProcess(url, index)));
+    console.timeEnd("Image Processing Time");
   } catch (error) {
     console.error("Error loading face-api models:", error);
 
   }
 }
 
-function float32ArrayToBase64(float32Array: Float32Array): string {
-  const uint8Array = new Uint8Array(float32Array.buffer);
-  let binary = '';
-  for (let i = 0; i < uint8Array.byteLength; i++) {
-    binary += String.fromCharCode(uint8Array[i]);
+function base64ToFloat32Array(base64: string): Float32Array {
+  try {
+    const binaryString = atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return new Float32Array(bytes.buffer);
+  } catch (error) {
+    console.error("Failed to decode base64 string:", base64, error);
+    throw error;
   }
-  return btoa(binary);
 }
 
-async function createImageElement(file: File): Promise<HTMLImageElement> {
+function loadImageAndProcess(dataUrl: string, index: number): Promise<void> {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      const img = new Image();
-      img.src = reader.result as string;
-      img.onload = () => resolve(img);
-      img.onerror = reject;
+    const img = new Image();
+    img.onload = async () => {
+      try {
+        await processImage(img, index);
+        resolve();
+      } catch (error) {
+        reject(error);
+      }
     };
-
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
+    img.onerror = (error) => {
+      console.error("Error loading image:", dataUrl, error);
+      reject(error);
+    };
+    img.src = dataUrl;
   });
 }
 
-async function processFiles(files: File[]): Promise<Float32Array[]> {
-  const faceDescriptions: Float32Array[] = [];
-  const failedFiles: string[] = [];
+async function processImage(image: HTMLImageElement, index: number) {
+  console.time(`Image Detection and Descriptor Time - Image ${index}`);
+  const canvas = canvasRefs[index] || document.createElement("canvas");
+  document.body.appendChild(canvas);
+  canvas.width = image.naturalWidth;
+  canvas.height = image.naturalHeight;
+  const ctx = canvas.getContext("2d");
 
-  for (const file of files) {
-    try {
-      const imgElement = await createImageElement(file);
-      const faceDescription = await faceapi
-        .detectSingleFace(imgElement, new faceapi.SsdMobilenetv1Options())
-        .withFaceLandmarks()
-        .withFaceDescriptor();
+  try {
+    const detections = await faceapi.detectAllFaces(image).withFaceLandmarks().withFaceDescriptors();
 
-      if (faceDescription) {
-        faceDescriptions.push(faceDescription.descriptor);
+    detections.forEach((detection) => {
+      const bestMatch = findBestUserMatch(detection.descriptor);
+      const cropCanvas = document.createElement("canvas");
+      const cropCtx = cropCanvas.getContext("2d");
+      const { x, y, width, height } = detection.detection.box;
+      cropCanvas.width = width;
+      cropCanvas.height = height;
+      cropCtx!.drawImage(image, x, y, width, height, 0, 0, width, height);
+
+      const croppedDataURL = cropCanvas.toDataURL();
+      croppedImagesDataUrls.value.push(croppedDataURL);
+
+      if (bestMatch.user) {
+        identifications.value.push({
+          name: bestMatch.user.firstName,
+          studentId: bestMatch.user.studentId!,
+          imageUrl: croppedDataURL!,
+          score: 1 - bestMatch.score,
+          user: bestMatch.user,
+        });
       } else {
-        // close dialog
-        showDialog.value = false;
-        userStore.showImageDialog = false;
-        // console.warn(`No face detected in file: ${file.name}`);
-        Swal.fire("No face detected", `No face detected in file: ${file.name}`, "error");
-        failedFiles.push(file.name);
+        identifications.value.push({
+          name: "Unknown",
+          studentId: "N/A",
+          imageUrl: croppedDataURL!,
+          score: 0,
+          user: null,
+        });
+      }
+    });
+  } catch (error) {
+    console.error("Failed to process face detection:", error);
+  } finally {
+    document.body.removeChild(canvas);
+    console.timeEnd(`Image Detection and Descriptor Time - Image ${index}`);
+  }
+}
 
+function findBestUserMatch(
+  descriptor: Float32Array
+): { user: User | null; score: number } {
+  const threshold = 0.6; // Set the threshold for best match
+  let bestMatch = { user: null, score: threshold }; // Initialize best match with threshold score
+
+  // Iterate over each user's descriptors
+  userDescriptors.forEach((descriptors, studentId) => {
+    // Iterate over each descriptor for the current user
+    console.log("Student ID:", studentId, 'Descriptors:', descriptors.length);
+
+    descriptors.forEach((userDescriptor) => {
+      // Ensure descriptor lengths match to avoid calculation errors
+      if (descriptor.length !== userDescriptor.length) {
+        console.error(
+          `Descriptor length mismatch for user ${studentId}:`,
+          `descriptor length: ${descriptor.length}, userDescriptor length: ${userDescriptor.length}`
+        );
+        return; // Skip this descriptor if there's a length mismatch
       }
 
-      // Clean up the created image element
-      imgElement.remove();
-    } catch (error) {
-      console.error(`Error processing file ${file.name}:`, error);
-      failedFiles.push(file.name);
-    }
-  }
+      // Calculate Euclidean distance between the input descriptor and the user's descriptor
+      const distance = faceapi.euclideanDistance(descriptor, userDescriptor);
 
-  if (failedFiles.length > 0) {
-    alertMessage.value = `No face detected in the following files: ${failedFiles.join(', ')}`;
-    alertDialog.value = true;
-    return [];
-  }
+      // Debug logging to trace values
+      console.log("Distance:", distance, "Threshold:", threshold, "Match Score:", bestMatch.score, "Student ID:", studentId);
 
-  return faceDescriptions;
+      // Update best match if the current distance is lower than the current best score
+      if (distance < bestMatch.score) {
+        console.log("Best match updated:", studentId, distance);
+
+        bestMatch = {
+          user: userStore.users.find((u) => u.studentId === studentId)!, // Find the matching user by student ID
+          score: distance, // Update the score with the new best distance
+        };
+      }
+    });
+  });
+
+  return bestMatch; // Return the best match found
+}
+function float32ArrayToBase64(float32Array: Float32Array): string {
+  const uint8Array = new Uint8Array(float32Array.buffer);
+  const binaryString = String.fromCharCode.apply(null, uint8Array as unknown as number[]);
+  return btoa(binaryString);
 }
 
 async function save() {
   if (canUpload.value) {
+    isLoading.value = true;
+    const processedImages = await Promise.all(
+      imageFiles.value.map(file => resizeAndConvertImageToBase64(URL.createObjectURL(file), 800, 600, 0.7))
+    );
+
+    const filesToUpload = processedImages.map((base64, index) =>
+      base64ToFile(base64, `image-${index + 1}.jpg`)
+    );
+
+    const faceDescriptionsArray: string[] = [];
+    
+    for (const image of imageFiles.value) {
+      const img = new Image();
+      img.src = URL.createObjectURL(image);
+      await new Promise<void>((resolve, reject) => {
+        img.onload = async () => {
+          try {
+            const detection = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
+            if (detection) {
+              const descriptor = detection.descriptor;
+              const base64Descriptor = float32ArrayToBase64(descriptor);
+              faceDescriptionsArray.push(base64Descriptor); // Store as Base64 string
+            }
+            resolve();
+          } catch (error) {
+            console.error("Face detection failed:", error);
+            reject(error);
+          }
+        };
+        img.onerror = (error) => {
+          console.error("Error loading image:", error);
+          reject(error);
+        };
+      });
+    }
     userStore.editUser = {
       ...userStore.currentUser,
       firstName: userStore.currentUser!.firstName || '',
       lastName: userStore.currentUser!.lastName || '',
-      files: imageFiles.value,
+      files: filesToUpload, 
+      faceDescriptions: faceDescriptionsArray, 
+      images: imageUrls.value,
     };
-
-
-    const faceDescriptions = await processFiles(userStore.editUser.files);
-    if (faceDescriptions.length !== 5) {
-      // Do not proceed if any face detection fails
-      return;
-    }
-    const dataFaceBase64 = faceDescriptions.map(faceDescription => float32ArrayToBase64(faceDescription));
-    console.log("Number of face descriptors:", faceDescriptions.length);
-    userStore.editUser.faceDescriptions = dataFaceBase64;
-
-    console.log(userStore.editUser);
 
     // Uncomment these lines once the issue is resolved
     try {
       await userStore.saveUser();
       showDialog.value = false;
-      // messageStore.showInfo('Image upload completed.');
-      // await userStore.closeImageDialog();
+      messageStore.showInfo('Image upload completed.');
       window.location.reload();
 
     } catch (error) {
       messageStore.showError('Failed to save user data.');
       console.error("Save error:", error);
+    } finally {
+      isLoading.value = false;
     }
   }
 }
 
-  const handleFileChange = (event: Event) => {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      Array.from(input.files).forEach((file) => {
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-          const result = e.target?.result as string;
-          if (result) {
-            try {
-              const resizedImage = await resizeAndConvertImageToBase64(result, 800, 600);
 
-              // Check for duplicate images
-              const isDuplicate = checkDuplicateImage(resizedImage);
-              if (!isDuplicate) {
-                imageUrls.value.push(resizedImage);
-                imageFiles.value.push(file);
-              }
-            } catch (error) {
-              console.error("Error resizing image:", error);
+
+const handleFileChange = (event: Event) => {
+  const input = event.target as HTMLInputElement;
+  if (input.files && input.files.length > 0) {
+    Array.from(input.files).forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const result = e.target?.result as string;
+        if (result) {
+          try {
+            const resizedImage = await resizeAndConvertImageToBase64(result, 800, 600);
+
+            // Check for duplicate images
+            const isDuplicate = checkDuplicateImage(resizedImage);
+            if (!isDuplicate) {
+              imageUrls.value.push(resizedImage);
+              imageFiles.value.push(file);
             }
+          } catch (error) {
+            console.error("Error resizing image:", error);
           }
-        };
-        reader.readAsDataURL(file);
-      });
-    }
-  };
-
-  const resizeAndConvertImageToBase64 = (imageUrl: string, maxWidth: number, maxHeight: number) => {
-    return new Promise<string>((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = "Anonymous";
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return reject(new Error("Canvas context not available"));
-
-        const ratio = Math.min(maxWidth / img.width, maxHeight / img.height);
-        const width = img.width * ratio;
-        const height = img.height * ratio;
-
-        canvas.width = width;
-        canvas.height = height;
-        ctx.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL("image/jpeg"));
+        }
       };
-      img.onerror = () => reject(new Error(`Failed to load image at ${imageUrl}`));
-      img.src = imageUrl;
-    });
-  };
-
-  function checkDuplicateImage(newImageBase64: string): boolean {
-    // Check if the new image base64 string is already in the list
-    return imageUrls.value.some((uploadedImage) => {
-      const uploadedImageBase64 = uploadedImage.split(',')[1];
-      return uploadedImageBase64 === newImageBase64.split(',')[1];
+      reader.readAsDataURL(file);
     });
   }
+};
 
-  function removeImage(index: number) {
-    images.value.splice(index, 1);
-    userStore.currentUser.images = images.value.map(image => image.replace(`${url}/users/image/filename/`, ''));
+const base64ToFile = (base64: string, filename: string): File => {
+  const arr = base64.split(',');
+  const mime = arr[0].match(/:(.*?);/)?.[1];
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
   }
 
-  function removeUploadedImage(index: number) {
-    imageUrls.value.splice(index, 1);
-    imageFiles.value.splice(index, 1);
-    fileInputKey.value = Date.now(); // Reset the file input field
-  }
+  return new File([u8arr], filename, { type: mime });
+};
 
-  // Computed properties
-  const hasUploadedImages = computed(() => imageUrls.value.length > 0);
+const resizeAndConvertImageToBase64 = (
+  imageUrl: string,
+  maxWidth: number,
+  maxHeight: number,
+  quality: number = 0.7  // default quality is set to 0.7
+): Promise<string> => {
+  return new Promise<string>((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "Anonymous";
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return reject(new Error("Canvas context not available"));
 
-  const canUpload = computed(() => imageUrls.value.length === 5);
+      // Calculate the aspect ratio and resize
+      const ratio = Math.min(maxWidth / img.width, maxHeight / img.height);
+      const width = img.width * ratio;
+      const height = img.height * ratio;
+
+      // Set canvas dimensions
+      canvas.width = width;
+      canvas.height = height;
+
+      // Draw the resized image onto the canvas
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // Convert the canvas to a base64 string with the specified quality
+      const resizedImage = canvas.toDataURL("image/jpeg", quality);
+      resolve(resizedImage);
+    };
+    img.onerror = () => reject(new Error(`Failed to load image at ${imageUrl}`));
+    img.src = imageUrl;
+  });
+};
+
+function checkDuplicateImage(newImageBase64: string): boolean {
+  // Check if the new image base64 string is already in the list
+  return imageUrls.value.some((uploadedImage) => {
+    const uploadedImageBase64 = uploadedImage.split(',')[1];
+    return uploadedImageBase64 === newImageBase64.split(',')[1];
+  });
+}
+const hasUploadedImages = computed(() => imageUrls.value.length > 0);
+
+const canUpload = computed(() => imageFiles.value.length === 5);
 
 </script>
 
@@ -224,6 +378,10 @@ async function save() {
   <v-container class="pt-12">
     <v-dialog v-model="showDialog" height="800" persistent>
       <v-card class="rounded-lg" outlined>
+        <!-- Loader Overlay -->
+        <div v-if="isLoading" class="loader-overlay">
+          <Loader></Loader>
+        </div>
         <v-card-title class="headline">
           รูปภาพทั้งหมด
           <v-btn icon @click="close">
@@ -306,5 +464,19 @@ async function save() {
   /* Ensure the dialog is square */
   overflow: hidden;
   /* Prevent content overflow */
+}
+
+.loader-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
 }
 </style>

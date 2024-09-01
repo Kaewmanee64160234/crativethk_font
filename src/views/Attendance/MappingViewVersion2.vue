@@ -4,6 +4,7 @@ import * as faceapi from "face-api.js";
 import { useUserStore } from "@/stores/user.store";
 import { useRoute, useRouter } from "vue-router";
 import type { FaceDetection, WithFaceDescriptor } from "face-api.js";
+import Loader from "@/components/loader/Loader.vue";
 import type { User } from "@/stores/types/User";
 import { useAssignmentStore } from "@/stores/assignment.store";
 import { useCourseStore } from "@/stores/course.store";
@@ -522,12 +523,14 @@ const nextPage = () => {
 <template>
   <v-container class="mt-10">
     <!-- Loading Spinner -->
-    <v-row v-if="isLoading" class="fill-height">
-      <v-col class="d-flex flex-column justify-center align-center text-center">
-        <v-progress-circular :size="70" :width="7" indeterminate color="primary"></v-progress-circular>
+    <v-row v-if="isLoading">
+      <Loader>
+      </Loader>
+      <!-- <v-col class="d-flex flex-column justify-center align-center text-center">
+        <span class="loader"></span>
         <div class="mt-4">Processing images...</div>
         <div class="mt-2">Detected: {{ identifications.length }} / {{ userStore.users.length }} students</div>
-      </v-col>
+      </v-col> -->
     </v-row>
 
     <!-- Layout Row for Image Display and Identifications -->
@@ -591,8 +594,7 @@ const nextPage = () => {
                       class="rounded-lg"></v-img>
                   </v-col>
                   <v-col cols="6">
-                    <v-img v-if="attendee.user?.userId"
-                      :src=" `${url}/users/${attendee.user?.userId}/image` "
+                    <v-img v-if="attendee.user?.userId" :src="`${url}/users/${attendee.user?.userId}/image`"
                       height="200px" class="rounded-lg">
                     </v-img>
                     <v-img v-else

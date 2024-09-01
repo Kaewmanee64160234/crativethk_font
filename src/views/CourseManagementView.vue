@@ -63,8 +63,11 @@ const formatThaiDate = (isoDateTime: string | undefined): string => {
 const advanceStep = () => {
   if (currentStep.value === 1) {
     if (!courseStore.currentCourse) {
-      if (
-        courseStore.nameCourse.length <= 0 || courseStore.nameCourse.length >= 100 ||
+      // Check if courseStore.nameCourse is not null or undefined
+      if (!courseStore.nameCourse ||
+        courseStore.nameCourse.length <= 0 ||
+        courseStore.nameCourse.length >= 100 ||
+        !courseStore.courseId ||
         courseStore.courseId.length < 8
       ) {
         messageStore.showError("กรุณากรอกข้อมูลให้ครบถ้วน");
@@ -72,8 +75,10 @@ const advanceStep = () => {
         return;
       }
     } else {
-      if (
-        courseStore.currentCourse.nameCourses.length <= 0 || courseStore.currentCourse.nameCourses.length >= 100
+      // Check if courseStore.currentCourse.nameCourses is not null or undefined
+      if (!courseStore.currentCourse.nameCourses ||
+        courseStore.currentCourse.nameCourses.length < 1 ||
+        courseStore.currentCourse.nameCourses.length >= 100
       ) {
         messageStore.showError("กรุณากรอกข้อมูลให้ครบถ้วน");
         courseStore.showEditDialog = false;
@@ -85,18 +90,26 @@ const advanceStep = () => {
 
   if (currentStep.value === 2) {
     if (!courseStore.currentCourse) {
-      if (
-        courseStore.session.length <= 0 || courseStore.session.length >= 10 ||
-        courseStore.fullScore <= 0 || courseStore.fullScore > 100
+      // Check if courseStore.session is not null or undefined
+      if (!courseStore.session ||
+        courseStore.session.length <= 0 ||
+        courseStore.session.length >= 10 ||
+        courseStore.fullScore <= 0 || 
+        courseStore.fullScore > 100
       ) {
         messageStore.showError("กรุณากรอกข้อมูลให้ถูกต้อง");
         closeDialog();
         return;
       }
     } else {
-      if (
-        courseStore.currentCourse.session.length <= 0 || courseStore.currentCourse.session.length >= 10 ||
-        courseStore.currentCourse.fullScore <= 0 || courseStore.currentCourse.fullScore > 100 || courseStore.currentCourse.coursesId.length < 8
+      // Check if courseStore.currentCourse.session is not null or undefined
+      if (!courseStore.currentCourse.session ||
+        courseStore.currentCourse.session.length <= 0 ||
+        courseStore.currentCourse.session.length >= 10 ||
+        courseStore.currentCourse.fullScore <= 0 ||
+        courseStore.currentCourse.fullScore > 100 ||
+        !courseStore.currentCourse.coursesId ||
+        courseStore.currentCourse.coursesId.length < 8
       ) {
         messageStore.showError("กรุณากรอกข้อมูลให้ถูกต้อง");
         courseStore.showEditDialog = false;
@@ -105,10 +118,12 @@ const advanceStep = () => {
       }
     }
   }
+  
   if (currentStep.value <= 3) {
     currentStep.value++;
   }
 };
+
 
 
 const retreatStep = () => {
