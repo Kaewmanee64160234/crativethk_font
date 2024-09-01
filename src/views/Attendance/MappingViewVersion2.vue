@@ -50,24 +50,33 @@ const assignmentStore = useAssignmentStore();
 const attendanceStore = useAttendanceStore();
 const isLoading = ref(true); // Add a loading state
 const url = import.meta.env.VITE_API_URL as string;
+const filterOptions = ['Show All', 'Show Less Than 50%'];
+const filterOption = ref('Show Less Than 50%');
 const sortedAttendances = computed(() => {
-  return attendanceStore.attendances!
-    .slice()
+  return attendanceStore.attendances
+    ?.slice()
     .filter((attendance) => attendance.attendanceImage !== 'noimage.jpg')
     .sort((a, b) => a.attendanceScore! - b.attendanceScore!);
+});
+
+// Filtering attendances based on the selected dropdown option
+const filteredAttendances = computed(() => {
+  if (filterOption.value === 'Show Less Than 50%') {
+    return sortedAttendances.value!.filter(attendee => attendee.attendanceScore! < 50);
+  } else {
+    return sortedAttendances.value;
+  }
 });
 
 onMounted(async () => {
   try {
     isLoading.value = true;
-    console.time("Total Runtime");
-
-    console.time("Model Loading Time");
-    await faceapi.nets.ssdMobilenetv1.loadFromUri("/models");
-    await faceapi.nets.faceRecognitionNet.loadFromUri("/models");
-    await faceapi.nets.faceLandmark68Net.loadFromUri("/models");
-    console.timeEnd("Model Loading Time");
-
+    await Promise.all([
+      faceapi.nets.faceRecognitionNet.loadFromUri("/models"),
+      faceapi.nets.faceLandmark68Net.loadFromUri("/models"),
+      faceapi.nets.ssdMobilenetv1.loadFromUri("/models"),
+    ]);
+    // get user by course id
     await userStore.getUserByCourseId(courseStore.currentCourse?.coursesId + '');
     await assignmentStore.getAssignmentById(route.params.assignmentId.toString());
 
@@ -92,15 +101,20 @@ onMounted(async () => {
       }
     });
     console.timeEnd("Face Description Processing Time");
+    const urls: string[] = JSON.parse(localStorage.getItem('images') || '[]');
+    console.log(urls);
 
-    const urls: string[] = route.query.imageUrls || [];
     imageUrls.value = urls;
+    localStorage.removeItem('images');
+
 
     console.time("Image Processing Time");
     await Promise.all(imageUrls.value.map((url, index) => loadImageAndProcess(url, index)));
     console.timeEnd("Image Processing Time");
 
-    if (assignmentStore.assignment!.statusAssignment == 'completed') {
+
+    // Call createAttendance after all images have been processed
+    if (assignmentStore.currentAssignment!.statusAssignment == 'completed') {
       console.log("Assignment is already completed. Skipping attendance confirmation.");
       console.time("Update Attendance Time");
       await updateAttdent();
@@ -331,7 +345,7 @@ const createAttendance = async () => {
           attendanceDate: new Date(),
           attendanceStatus: "present",
           attendanceConfirmStatus: identifiedUser ? "confirmed" : "notConfirmed",
-          assignment: assignmentStore.assignment,
+          assignment: assignmentStore.currentAssignment,
           user: identifiedUser,
           attendanceImage: "",
           attendanceScore: parseInt((identifications.value[i].score * 100).toFixed(2)),
@@ -353,7 +367,7 @@ const createAttendance = async () => {
   }
 
   // Filter users from identifications and create unknown users
-  await userStore.getUserByCourseId(assignmentStore.assignment?.course.coursesId + '')
+  await userStore.getUserByCourseId(assignmentStore.currentAssignment?.course.coursesId + '')
   const usersCreateUnknown = userStore.users.filter((user) => {
     return !identifications.value.some((identification) => identification.studentId === user.studentId);
   });
@@ -368,7 +382,7 @@ const createAttendance = async () => {
           attendanceDate: new Date(),
           attendanceStatus: "absent",
           attendanceConfirmStatus: "notConfirmed",
-          assignment: assignmentStore.assignment,
+          assignment: assignmentStore.currentAssignment,
           user: usersCreateUnknown[i],
           attendanceImage: "",
           attendanceScore: 0
@@ -388,8 +402,8 @@ const createAttendance = async () => {
       );
     }
   }
-  assignmentStore.assignment!.statusAssignment = 'completed';
-  await assignmentStore.updateAssignment(assignmentStore.assignment!.assignmentId + '', assignmentStore.assignment!);
+  assignmentStore.currentAssignment!.statusAssignment = 'completed';
+  await assignmentStore.updateAssignment(assignmentStore.currentAssignment!.assignmentId + '', assignmentStore.currentAssignment!);
   await attendanceStore.getAttendanceByAssignmentId(route.params.assignmentId.toString());
 
   console.log("Attendance confirmed successfully");
@@ -481,8 +495,7 @@ const confirmAttendance = async (attendance: Attendance) => {
 //reject student
 const reCheckAttendance = async (attendance: Attendance) => {
   try {
-    // attendance.attendanceStatus = "present";
-    // attendance.attendanceConfirmStatus = "recheck";
+
     console.log("Attendance:Ging", attendance);
 
     await attendanceStore.removeAttendance(attendance.attendanceId + "");
@@ -530,6 +543,9 @@ const nextPage = () => {
             Next Page
           </v-btn>
         </div>
+
+
+
         <div class="status-student d-flex align-center">
           <v-row class="align-center text-center" justify="center">
             <v-col cols="auto" class="status-section">
@@ -544,11 +560,15 @@ const nextPage = () => {
           </v-row>
         </div>
       </v-col>
-
+      <!-- Filter Dropdown -->
+      <v-col cols="auto">
+        <v-select v-model="filterOption" :items="filterOptions" label="Filter Attendances" variant="solo"
+          dense></v-select>
+      </v-col>
       <v-col cols="12" class="pt-5">
         <v-container>
           <v-row>
-            <v-col v-for="(attendee, index) in sortedAttendances" :key="index" cols="12" sm="6" md="4" lg="3">
+            <v-col v-for="(attendee, index) in filteredAttendances" :key="index" cols="12" sm="6" md="4" lg="3">
               <v-card class="mb-3" :style="{
                 padding: '20px',
                 backgroundColor: attendee.attendanceScore! >= 50 ? 'rgb(237, 237, 237)' : 'rgb(255, 230, 230)',
@@ -558,7 +578,7 @@ const nextPage = () => {
                 <v-row justify="center">
                   <v-card-title class="bold-text mt-2 text-center">
                     <v-icon small class="mr-2">mdi-circle-small</v-icon>
-                    {{ attendee.user?.studentId + " " + attendee.user?.firstName }}
+                    {{ attendee.user ? attendee.user?.studentId + " " + attendee.user?.firstName : 'ไม่พบในฐานข้อมูล' }}
                   </v-card-title>
                   <v-card-subtitle :class="attendee.attendanceScore! >= 50 ? 'correct-text' : 'incorrect-text'">
                     {{ attendee.attendanceScore! >= 50 ? 'ความถูกต้อง' : 'ไม่ถูกต้อง' }} {{ attendee.attendanceScore }}%
@@ -566,20 +586,25 @@ const nextPage = () => {
                 </v-row>
                 <v-row>
                   <v-col cols="6">
+
                     <v-img :src="`${url}/attendances/image/${attendee.attendanceImage}`" height="200px"
                       class="rounded-lg"></v-img>
                   </v-col>
                   <v-col cols="6">
-                    <v-img :src="`${url}/users/${attendee.user?.userId}/image`" height="200px"
-                      class="rounded-lg"></v-img>
+                    <v-img v-if="attendee.user?.userId"
+                      :src=" `${url}/users/${attendee.user?.userId}/image` "
+                      height="200px" class="rounded-lg">
+                    </v-img>
+                    <v-img v-else
+                      src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"
+                      height="200px" class="rounded-lg">
+                    </v-img>
                   </v-col>
                 </v-row>
-                <v-card-actions class="justify-space-between">
-                  <v-btn color="error" variant="flat" @click="reCheckAttendance(attendee)" class="font-weight-bold">
+                <v-card-actions>
+                  <v-btn color="error" variant="flat" @click="reCheckAttendance(attendee)" class="font-weight-bold"
+                    block>
                     ปฏิเสธ
-                  </v-btn>
-                  <v-btn color="success" variant="flat" @click="confirmAttendance(attendee)" class="font-weight-bold">
-                    ยืนยัน
                   </v-btn>
                 </v-card-actions>
               </v-card>
@@ -590,6 +615,9 @@ const nextPage = () => {
     </v-row>
   </v-container>
 </template>
+
+
+
 <style scoped>
 .bold-text {
   font-weight: bold;

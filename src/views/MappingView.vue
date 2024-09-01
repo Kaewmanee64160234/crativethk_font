@@ -1,7 +1,5 @@
 <template>
- <v-chip>
-  Chip
-</v-chip>
+
   <div style="margin-bottom: 20px">
     <input type="file"  @change="onFirstImageChange" accept="image/*" />
     <div style="position: relative; width: 250px; height: 250px">

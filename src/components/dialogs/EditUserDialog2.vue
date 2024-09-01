@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useUserStore } from '@/stores/user.store';
 const userStore = useUserStore();
-const url = 'http://localhost:3000';
+const url = import.meta.env.VITE_API_URL;
 
 async function save() {
         await userStore.saveUser();

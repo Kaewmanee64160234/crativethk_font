@@ -4,7 +4,7 @@
   
   const userStore = useUserStore();
   const showDialog = ref(true);
-  const url = "http://localhost:3000";
+  const url = import.meta.env.VITE_API_URL;
   
   
 
