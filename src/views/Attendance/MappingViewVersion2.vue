@@ -508,7 +508,6 @@ const reCheckAttendance = async (attendance: Attendance) => {
     console.log("Attendance:Ging", attendance);
 
     await attendanceStore.removeAttendance(attendance.attendanceId + "");
-    alert("Attendance has been recheck.");
     await attendanceStore.getAttendanceByAssignmentId(route.params.assignmentId.toString());
 
   } catch (error) {
