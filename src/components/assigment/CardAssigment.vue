@@ -45,23 +45,23 @@ function formatThaiDate(date: Date) {
 const deleteAssignment = async () => {
     try {
         await confirmDlg.value.openDialog(
-        'Please Confirm',
-        `Do you want to delete this Assignment?`,
-        'Accept',
-        'Cancel'
-    )
+            'Please Confirm',
+            `Do you want to delete this Assignment?`,
+            'Accept',
+            'Cancel'
+        )
 
-    await assignmentStore.deleteAssignment(props.post.assignmentId!);
-    await assignmentStore.getAssignmentByCourseId(id.value.toString());
+        await assignmentStore.deleteAssignment(props.post.assignmentId!);
+        await assignmentStore.getAssignmentByCourseId(id.value.toString());
 
-    window.location.reload();
-    console.log('Assignment deleted successfully');
+        window.location.reload();
+        console.log('Assignment deleted successfully');
     } catch (error) {
         console.log('Error deleting assignment:', error);
-        
-        
+
+
     }
- 
+
 }
 // function edit
 const editAssignment = async () => {
@@ -79,8 +79,8 @@ const gotoMappinfForStudent = () => {
 }
 // goToMapping2
 const goToMapping2 = async () => {
+
     showDialog.value = true;
-    console.log("assigment", props.post);
     await attdentStore.getAttendanceByAssignmentId(props.post!.assignmentId! + '');
 }
 
@@ -176,12 +176,14 @@ const captureImage = () => {
 
 // updatePost
 const updatePost = async () => {
+
     if (imageUrls.value.length > 0) {
         imageUrls.value.push(...capturedImages.value);
         const allImages = [...capturedImages.value, ...imageUrls.value];
+        localStorage.setItem('images', JSON.stringify(allImages));
         router.push({
             path: `/mapping2/assignment/${assignmentStore.currentAssignment?.assignmentId}/course/${id.value.toString()}`,
-            query: { imageUrls: allImages },
+        
         });
         imageUrls.value = [];
         capturedImages.value = [];
@@ -238,10 +240,12 @@ function close() {
 
                             <v-list-item-title>ยืนยันนิสิตที่ให้ตรวจสอบอีกครั้ง</v-list-item-title>
                         </v-list-item>
+
                         <v-list-item @click="goToMapping2">
 
                             <v-list-item-title>เพิ่มภาพถ่ายการเช็คชื่อ</v-list-item-title>
                         </v-list-item>
+
                         <v-list-item @click="editAssignment">
 
                             <v-list-item-title>เปลี่ยนชื่อ Assignment</v-list-item-title>
@@ -258,7 +262,6 @@ function close() {
 
     <!-- ConfirmDialog Component -->
     <ConfirmDialog ref="confirmDlg" />
-
     <!-- Create Post Dialog -->
     <v-dialog v-model="showDialog" persistent max-width="600px">
         <v-card>
@@ -315,6 +318,11 @@ function close() {
             <!-- Dialog title without the close button -->
             <v-card-title class="headline">
                 Edit Assignment
+                <v-spacer></v-spacer>
+                <!-- Close button for dialog -->
+                <v-btn icon @click="close" class="close-button">
+                    <v-icon color="red">mdi-close</v-icon>
+                </v-btn>
             </v-card-title>
             <!-- Dialog content with form -->
             <v-card-text>
@@ -333,5 +341,14 @@ function close() {
 
 </template>
 
+<style scoped>
+.headline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 
-<style scoped></style>
+.close-button {
+  margin-right: -12px; /* Adjust this value if necessary to align with the edge */
+}
+</style>

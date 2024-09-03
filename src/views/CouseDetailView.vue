@@ -139,7 +139,6 @@ const base64ToFile = (base64: string, filename: string): File => {
 
   return new File([u8arr], filename, { type: mime });
 };
-
 // Function to handle post creation, including image processing and backend communication
 const createPost = async () => {
   console.time('Total createPost execution time');
@@ -171,7 +170,15 @@ const createPost = async () => {
     deletedDate: undefined,
     assignmentManual: assignmentManual.value,
   };
+  await assignmentStore.createAssignment({
+    ...newAssignment,
+    statusAssignment: 'nodata',
+  }, imageFiles.value);
 
+  if (imageUrls.value.length > 0) {
+    imageUrls.value.push(...capturedImages.value);
+    router.push({ path: `/mapping2/assignment/${assignmentStore.assignment?.assignmentId}`, query: { imageUrls: imageUrls.value } });
+  }
   // If assignment.name is empty, set it to the current date and time
   if (newAssignment.nameAssignment === "") {
     newAssignment.nameAssignment = new Date().toLocaleString();
@@ -223,7 +230,7 @@ const createPost = async () => {
   console.timeEnd('Image storage and navigation');
 
   console.timeEnd('Total createPost execution time');
-};
+  };
 
 
 
