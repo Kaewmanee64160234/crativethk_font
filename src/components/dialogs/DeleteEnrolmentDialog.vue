@@ -21,17 +21,19 @@ const deleteEnrollment = async (idEnrollment: number) => {
   <v-container>
     <v-row justify="center">
       <v-card class="cardText">
-        <v-card-title class="text-h4 mt-6 cut" style="text-align: center"
+        <v-card-title>
+          <h2>ต้องการยกเลิกการลงทะเบียน?</h2></v-card-title>
+        <v-card-title
           >ต้องการยกเลิกการลงทะเบียนในรายวิชา
           {{ enrollmentStore.currentEnrollment?.course?.nameCourses }}
-          หรือไม่</v-card-title
+          ใช่หรือไม่</v-card-title
         >
         <v-card-actions class="actions">
-          <v-btn class="text-h5" @click="courseStore.showDeleteDialog = false"
-            >ยกเลิก</v-btn
+          <v-btn @click="courseStore.showDeleteDialog = false"
+            >ไม่ยกเลิก</v-btn
           >
           <v-btn
-            class="colorText text-h5"
+            class="colorText"
             @click="
               deleteEnrollment(enrollmentStore.currentEnrollment?.enrollmentId ?? 0)
             "
@@ -48,7 +50,7 @@ const deleteEnrollment = async (idEnrollment: number) => {
   justify-content: flex-end;
 }
 .colorText {
-  color: #2a6ec5;
+  color: #c52a2a;
 }
 .cardText {
   width: auto;

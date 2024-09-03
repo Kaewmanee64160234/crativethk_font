@@ -6,7 +6,7 @@ const userStore = useUserStore();
 <template>
   <v-card>
     <!-- <v-navigation-drawer app permanent width="80" color="#F1F1F1">  -->
-    <v-navigation-drawer expand-on-hover rail color="#F1F1F1">
+    <v-navigation-drawer expand-on-hover rail permanent color="#F1F1F1">
       <!-- <v-layout style="margin-top: 10%; margin-left: 5%"> -->
         <v-list>
           <div v-if="userStore.currentUser?.teacherId">
