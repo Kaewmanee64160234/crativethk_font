@@ -42,6 +42,7 @@ onMounted(async () => {
         }
         console.log("image",images.value)
     }
+    await userStore.getCurrentUser();
     
 });
 </script>

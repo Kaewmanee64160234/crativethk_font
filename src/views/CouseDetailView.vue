@@ -133,38 +133,12 @@ const base64ToFile = (base64: string, filename: string): File => {
   let n = bstr.length;
   const u8arr = new Uint8Array(n);
 
-<<<<<<< HEAD
-const createPost = async () => {
-  // Check if nameAssignment is empty
-  if (!nameAssignment.value) {
-    // If empty, set nameAssignment to the current timestamp formatted as Day - Month Name - Year CurrentTime
-    const now = new Date();
-    const day = String(now.getDate()).padStart(2, '0');
-    const monthNames = [
-      "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December"
-    ];
-    const month = monthNames[now.getMonth()];
-    const year = now.getFullYear();
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-
-    const timestamp = `${day} ${month} ${year} ${hours}:${minutes}:${seconds}`;
-    nameAssignment.value = `${timestamp}`;
-  }
-
-  // Proceed with creating the post
-  const room = courseStore.rooms.find((r) => r.roomNumber === roomSelect.value);
-=======
   while (n--) {
     u8arr[n] = bstr.charCodeAt(n);
   }
 
   return new File([u8arr], filename, { type: mime });
 };
->>>>>>> 45590ce1e35463afb16c10dd064af149d7fe6173
-
 // Function to handle post creation, including image processing and backend communication
 const createPost = async () => {
   console.time('Total createPost execution time');
@@ -189,10 +163,6 @@ const createPost = async () => {
     course: { ...courseStore.currentCourse! },
     assignmentId: 0,
     attdances: [],
-<<<<<<< HEAD
-
-=======
->>>>>>> 45590ce1e35463afb16c10dd064af149d7fe6173
     status: "no data",
     room: room,
     createdDate: new Date(),
@@ -200,8 +170,6 @@ const createPost = async () => {
     deletedDate: undefined,
     assignmentManual: assignmentManual.value,
   };
-
-<<<<<<< HEAD
   await assignmentStore.createAssignment({
     ...newAssignment,
     statusAssignment: 'nodata',
@@ -210,7 +178,7 @@ const createPost = async () => {
   if (imageUrls.value.length > 0) {
     imageUrls.value.push(...capturedImages.value);
     router.push({ path: `/mapping2/assignment/${assignmentStore.assignment?.assignmentId}`, query: { imageUrls: imageUrls.value } });
-=======
+  }
   // If assignment.name is empty, set it to the current date and time
   if (newAssignment.nameAssignment === "") {
     newAssignment.nameAssignment = new Date().toLocaleString();
@@ -252,7 +220,6 @@ const createPost = async () => {
     });
 
     // Clear the form and images after navigating
->>>>>>> 45590ce1e35463afb16c10dd064af149d7fe6173
     nameAssignment.value = "";
     imageUrls.value = [];
     capturedImages.value = [];
@@ -263,7 +230,7 @@ const createPost = async () => {
   console.timeEnd('Image storage and navigation');
 
   console.timeEnd('Total createPost execution time');
-};
+  };
 
 
 
