@@ -24,7 +24,6 @@ export const useAuthStore = defineStore('authStore', () => {
   const fetchUserProfile = () => {
     const response = fetch('localhost:3000/auth/profile').then((res) => res.json());
     console.log(response);
-
   }
   //login user
   const login = async (value: string) => {
