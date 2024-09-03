@@ -31,7 +31,7 @@ const props = defineProps<{
 }>();
 
 onMounted(async () => {
-  await assignmentStore.getAssignmentByCourseId(id.value.toString());
+    await assignmentStore.getAssignmentByCourseId(id.value.toString());
 })
 
 
@@ -60,13 +60,13 @@ const editAssignment = async () => {
 }
 //create function goto mapping 2
 const recheckMapping = () => {
-  assignmentStore.currentAssignment = props.post;
-  router.push(`/reCheckMappingTeacher/course/${courseId}/assignment/${props.post.assignmentId}`);
+    assignmentStore.currentAssignment = props.post;
+    router.push(`/reCheckMappingTeacher/course/${courseId}/assignment/${props.post.assignmentId}`);
 }
 
 const gotoMappinfForStudent = () => {
-  assignmentStore.currentAssignment = props.post;
-  router.push("/mappingForStudent/course/" + courseStore.currentCourse?.coursesId + "/assignment/" + props.post.assignmentId);
+    assignmentStore.currentAssignment = props.post;
+    router.push("/mappingForStudent/course/" + courseStore.currentCourse?.coursesId + "/assignment/" + props.post.assignmentId);
 }
 // goToMapping2
 const goToMapping2 = async () => {
@@ -77,56 +77,56 @@ const goToMapping2 = async () => {
 }
 
 const handleFileChange = (event: Event) => {
-  const input = event.target as HTMLInputElement;
-  if (input.files && input.files.length > 0) {
-    Array.from(input.files).forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const result = e.target?.result as string;
-        if (result) {
-          try {
-            const resizedImage = await resizeAndConvertImageToBase64(result, 800, 600);
-            imageUrls.value.push(resizedImage);
-            imageFiles.value.push(file);
-          } catch (error) {
-            console.error("Error resizing image:", error);
-          }
-        }
-      };
-      reader.readAsDataURL(file);
-    });
-  }
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+        Array.from(input.files).forEach((file) => {
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const result = e.target?.result as string;
+                if (result) {
+                    try {
+                        const resizedImage = await resizeAndConvertImageToBase64(result, 800, 600);
+                        imageUrls.value.push(resizedImage);
+                        imageFiles.value.push(file);
+                    } catch (error) {
+                        console.error("Error resizing image:", error);
+                    }
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+    }
 };
 
 const resizeAndConvertImageToBase64 = (imageUrl: string, maxWidth: number, maxHeight: number) => {
-  return new Promise<string>((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "Anonymous";
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return reject(new Error("Canvas context not available"));
+    return new Promise<string>((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = "Anonymous";
+        img.onload = () => {
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            if (!ctx) return reject(new Error("Canvas context not available"));
 
-      const ratio = Math.min(maxWidth / img.width, maxHeight / img.height);
-      const width = img.width * ratio;
-      const height = img.height * ratio;
+            const ratio = Math.min(maxWidth / img.width, maxHeight / img.height);
+            const width = img.width * ratio;
+            const height = img.height * ratio;
 
-      canvas.width = width;
-      canvas.height = height;
-      ctx.drawImage(img, 0, 0, width, height);
-      resolve(canvas.toDataURL("image/jpeg"));
-    };
-    img.onerror = () => reject(new Error(`Failed to load image at ${imageUrl}`));
-    img.src = imageUrl;
-  });
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL("image/jpeg"));
+        };
+        img.onerror = () => reject(new Error(`Failed to load image at ${imageUrl}`));
+        img.src = imageUrl;
+    });
 };
 const stopCamera = () => {
-  if (videoRef.value && videoRef.value.srcObject) {
-    const stream = videoRef.value.srcObject as MediaStream;
-    stream.getTracks().forEach((track) => track.stop());
-    videoRef.value.srcObject = null;
-  }
-  showCamera.value = false;
+    if (videoRef.value && videoRef.value.srcObject) {
+        const stream = videoRef.value.srcObject as MediaStream;
+        stream.getTracks().forEach((track) => track.stop());
+        videoRef.value.srcObject = null;
+    }
+    showCamera.value = false;
 };
 
 const startCamera = async () => {
@@ -138,15 +138,15 @@ const startCamera = async () => {
 };
 
 const dataURLtoFile = (dataurl: string, filename: string) => {
-  const arr = dataurl.split(',');
-  const mime = arr[0].match(/:(.*?);/)?.[1];
-  const bstr = atob(arr[1]);
-  let n = bstr.length;
-  const u8arr = new Uint8Array(n);
-  while (n--) {
-    u8arr[n] = bstr.charCodeAt(n);
-  }
-  return new File([u8arr], filename, { type: mime });
+    const arr = dataurl.split(',');
+    const mime = arr[0].match(/:(.*?);/)?.[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, { type: mime });
 };
 const captureImage = () => {
     if (videoRef.value && canvasRef.value) {
@@ -198,7 +198,7 @@ async function save() {
 }
 
 function close() {
-  showDialogEditAssignment.value = false;
+    showDialogEditAssignment.value = false;
 }
 </script>
 
@@ -208,7 +208,7 @@ function close() {
             <v-card-text>
                 <h4>{{ props.post!.course!.user!.firstName + ' ' + props.post!.course!.user!.lastName }} โพสเนื้อหาใหม่
                     : {{
-                        props.post.nameAssignment }}</h4>
+                    props.post.nameAssignment }}</h4>
             </v-card-text>
             <v-card-actions>
                 <v-card-text> {{ formatThaiDate(new Date(props.post!.createdDate!)) }}</v-card-text>
@@ -229,13 +229,13 @@ function close() {
         </v-card>
     </div>
     <ConfirmDialog ref="confirmDlg" />
-  <v-dialog v-model="showDialog" persistent max-width="600px">
-    <v-card>
-      <v-card-title>
-        <span class="headline">Create Post</span>
-      </v-card-title>
-      <v-card-text>
-        <v-container>
+    <v-dialog v-model="showDialog" persistent max-width="600px">
+        <v-card>
+            <v-card-title>
+                <span class="headline">Create Post</span>
+            </v-card-title>
+            <v-card-text>
+                <v-container>
 
                     <v-row>
                         <h1>Upload file เพื่อเพิ่มนิสิตที่เข้าเรียน</h1>
@@ -286,7 +286,7 @@ function close() {
                 Edit Assignment
                 <v-spacer></v-spacer>
                 <!-- Close button for dialog -->
-                <v-btn icon @click="close">
+                <v-btn icon @click="close" class="close-button">
                     <v-icon color="red">mdi-close</v-icon>
                 </v-btn>
             </v-card-title>
@@ -310,5 +310,14 @@ function close() {
 
 </template>
 
-<style scoped></style>
+<style scoped>
+.headline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 
+.close-button {
+  margin-right: -12px; /* Adjust this value if necessary to align with the edge */
+}
+</style>

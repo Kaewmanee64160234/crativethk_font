@@ -14,9 +14,11 @@ export const useUserStore = defineStore("userStore", () => {
   const showImageDialog = ref(false);
   const showDialog2 = ref(false);
   const showDialog3 = ref(false);
+  const showDialog4 = ref(false);
   const showDeleteDialog = ref(false);
   const showEditDialog = ref(false);
   const showEditDialog2 = ref(false);
+  const showEditDialog3 = ref(false);
   const QR = ref("");
   const keyword = ref("");
   const messageStore = useMessageStore()
@@ -30,6 +32,7 @@ export const useUserStore = defineStore("userStore", () => {
     email: "",
     studentId: "",
     teacherId: "",
+    adminId: "",
     major: "",
     year: "",
     role: "",
@@ -74,22 +77,27 @@ export const useUserStore = defineStore("userStore", () => {
     }
 
   };
-  function resetUser() {
+  // function resetUser
+  const resetUser = () => {
     editUser.value = {
+      userId: 0,
+      firstName: "",
+      lastName: "",
+      email: "",
       studentId: "",
       teacherId: "",
-      firstName: "",
-      email: "",
-      lastName: "",
-      role: "",
-      status: "",
+      adminId: "",
       major: "",
       year: "",
+      role: "",
+      status: "",
       registerStatus: "",
       profileImage: "",
+      faceDescriptions:[],
+      images:[],
       files: [],
     };
-  }
+  };
   //save user
   const saveUser = async () => {
     try {
@@ -133,8 +141,10 @@ export const useUserStore = defineStore("userStore", () => {
     showDialog2.value = false;
     showDialog3.value = false;
     showDialog3.value = false;
+    showDialog4.value = false;
     showEditDialog.value = false;
     showEditDialog2.value = false;
+    showEditDialog3.value = false;
   };
 
   const closeImageDialog = () => {
@@ -264,6 +274,8 @@ const getUserFromLocalStorage = () => {
     showDialog2,
     closeDialog,
     showDialog3,
+    showDialog4,
+    showEditDialog3,
     editUser,
     saveUser,
     deleteUser,

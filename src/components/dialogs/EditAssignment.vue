@@ -72,12 +72,12 @@ console.log('Edit Assignment ID:', editAssignment.value.assignmentId);
     <!-- Dialog for editing assignment details -->
     <v-dialog v-model="showDialog" max-width="600px" persistent>
       <v-card>
-        <!-- Dialog title -->
+        <!-- Dialog title with X button aligned to the right -->
         <v-card-title class="headline">
           Edit Assignment
           <v-spacer></v-spacer>
           <!-- Close button for dialog -->
-          <v-btn icon @click="close">
+          <v-btn icon @click="close" class="close-button">
             <v-icon color="red">mdi-close</v-icon>
           </v-btn>
         </v-card-title>
@@ -105,5 +105,9 @@ console.log('Edit Assignment ID:', editAssignment.value.assignmentId);
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.close-button {
+  margin-right: -12px; /* Adjust this value if necessary to align with the edge */
 }
 </style>

@@ -5,7 +5,7 @@ const url = 'http://localhost:3000';
 
 async function save() {
         await userStore.saveUser();
-        userStore.resetUser();
+        await userStore.resetUser();
         window.location.reload(); 
 }
 
@@ -35,9 +35,9 @@ if (!userStore.editUser.role) {
                     <v-col cols="12" md="8">
                         <v-row align="center">
                             <v-col cols="12">
-                                <v-text-field label="รหัสอาจารย์" dense solo required
-                                    v-model="userStore.editUser.teacherId"
-                                    :rules="[(v) => !!v || 'โปรดกรอกรหัสอาจารย์', (v) => /^[0-9]{8}$/.test(v) || 'โปรดกรอกข้อมูลเฉพาะตัวเลข 8 หลัก']"></v-text-field>
+                                <v-text-field label="รหัสแอดมิน" dense solo required
+                                    v-model="userStore.editUser.adminId"
+                                    :rules="[(v) => !!v || 'โปรดกรอกรหัสแอดมิน', (v) => /^[0-9]{8}$/.test(v) || 'โปรดกรอกข้อมูลเฉพาะตัวเลข 8 หลัก']"></v-text-field>
                             </v-col>
                             <v-col cols="12">
                                 <v-text-field label="ชื่อ" dense solo required

@@ -103,12 +103,26 @@ const resizeAndConvertImageToBase64 = (imageUrl: string, maxWidth: number, maxHe
 };
 
 const createPost = async () => {
-  if (nameAssignment.value === "") {
-    return;
-  } else {
-    alert('The assignment has been created successfully.');
+  // Check if nameAssignment is empty
+  if (!nameAssignment.value) {
+    // If empty, set nameAssignment to the current timestamp formatted as Day - Month Name - Year CurrentTime
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, '0');
+    const monthNames = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+    const month = monthNames[now.getMonth()];
+    const year = now.getFullYear();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+
+    const timestamp = `${day} ${month} ${year} ${hours}:${minutes}:${seconds}`;
+    nameAssignment.value = `${timestamp}`;
   }
 
+  // Proceed with creating the post
   const room = courseStore.rooms.find((r) => r.roomNumber === roomSelect.value);
 
   const newAssignment = {
@@ -118,25 +132,19 @@ const createPost = async () => {
     assignmentId: 0,
     attdances: [],
 
-    
-    status:"no data",
+    status: "no data",
     room: room,
     createdDate: new Date(),
     updatedDate: undefined,
     deletedDate: undefined,
   };
 
-  // if assignment.name is empty, set to currnet date time
-  if (newAssignment.nameAssignment === "") {
-    newAssignment.nameAssignment = new Date().toLocaleString();
-  }
-
   await assignmentStore.createAssignment({
     ...newAssignment,
-    statusAssignment:'nodata',
-  },imageFiles.value);
+    statusAssignment: 'nodata',
+  }, imageFiles.value);
+
   if (imageUrls.value.length > 0) {
-    // image url and captured images are available
     imageUrls.value.push(...capturedImages.value);
     router.push({ path: `/mapping2/assignment/${assignmentStore.assignment?.assignmentId}`, query: { imageUrls: imageUrls.value } });
     nameAssignment.value = "";

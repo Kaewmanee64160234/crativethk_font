@@ -1,3 +1,7 @@
+<script lang="ts" setup>
+import { useUserStore } from '@/stores/user.store';
+const userStore = useUserStore();
+</script>
 <template>
   <v-app-bar scroll-behavior="elevate" color="#3051AC">
     <img src="../../assets/BUU_logo.png" alt="Your Image" style="margin-left: 1%; width: 40px; height: 40px;" />
@@ -31,7 +35,3 @@
   >
   </v-app-bar>
 </template>
-<script lang="ts" setup>
-import { useUserStore } from '@/stores/user.store';
-const userStore = useUserStore();
-</script>

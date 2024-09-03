@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import CreateUserDialog from '@/components/dialogs/CreateUserDialog.vue';
 import CreateUserDialog2 from '@/components/dialogs/CreateUserDialog2.vue';
+import CreateUserDialog3 from '@/components/dialogs/CreateUserDialog3.vue';
 import EditUserDialog from '@/components/dialogs/EditUserDialog.vue';
 import EditUserDialog2 from '@/components/dialogs/EditUserDialog2.vue';
+import EditUserDialog3 from '@/components/dialogs/EditUserDialog3.vue';
 import ConfirmDialog from '@/components/dialogs/ConfirmDialog.vue';
 import type { User } from '@/stores/types/User';
 import { useUserStore } from '@/stores/user.store';
@@ -30,23 +32,44 @@ const sortedTeachers = computed(() => {
       return 0;
     });
 });
+const sortedAdmins = computed(() => {
+  return userStore.users
+    .filter(user => user.adminId)
+    .sort((a, b) => {
+      if (a.adminId && b.adminId) {
+        return a.adminId.localeCompare(b.adminId);
+      }
+      return 0;
+    });
+});
 // const teachers = computed(() => userStore.users.filter(user => user.teacherId));
 const confirmDlg = ref();
 onMounted(async () => {
   await userStore.getUsers();
+  await userStore.getUserFromLocalStorage();
 })
-//create showEditDialog if studentId go to showEditDialog but if teacherId go to showEditDialog2
+
 const showEditedDialog = (user: User) => {
   if (user.studentId) {
+    // Show the student edit dialog
     userStore.showEditDialog = true;
     userStore.editUser = { ...user, files: [] };
-    console.log('id user', userStore.editUser);
-  } else {
+    console.log('Student ID user', userStore.editUser);
+  } else if (user.teacherId) {
+    // Show the teacher edit dialog
     userStore.showEditDialog2 = true;
     userStore.editUser = { ...user, files: [] };
-    console.log('id user', userStore.editUser);
+    console.log('Teacher ID user', userStore.editUser);
+  } else if (user.adminId) {
+    // Show the admin edit dialog
+    userStore.showEditDialog3 = true;
+    userStore.editUser = { ...user, files: [] };
+    console.log('Admin ID user', userStore.editUser);
+  } else {
+    console.log('User does not have a valid ID');
   }
 }
+
 
 // function delete user
 const deleteUser = async (id: number) => {
@@ -111,12 +134,22 @@ const tab = ref(0);
             </v-dialog>
           </v-btn>
         </v-col>
+        <v-col cols="auto">
+          <v-btn color="primary" variant="elevated" @click="userStore.showDialog4 = true" class="custom-btn">
+            <v-icon left>mdi-plus</v-icon>
+            เพิ่มผู้ใช้แอดมิน
+            <v-dialog v-model="userStore.showDialog4" persistent>
+              <CreateUserDialog3></CreateUserDialog3>
+            </v-dialog>
+          </v-btn>
+        </v-col>
       </v-row>
     </v-toolbar><br>
     <v-card class="my-3 emboss-effect" style="width: 100%;" elevation="2">
       <v-tabs v-model="tab" background-color="white" dark>
         <v-tab>นิสิต</v-tab>
         <v-tab>อาจารย์</v-tab>
+        <v-tab>แอดมิน</v-tab>
         <!-- <v-tab>บุคลากร</v-tab> -->
       </v-tabs>
       <!-- Tab content for นืสิต -->
@@ -129,6 +162,8 @@ const tab = ref(0);
                 <th class="text-left">ภาพ</th>
                 <th class="text-left">รหัสนิสิต</th>
                 <th class="text-left">ชื่อ-นามสกุล</th>
+                <th class="text-left">ชั้นปี</th>
+                <th class="text-left">สาขา</th>
                 <th class="text-left">ตำแหน่ง</th>
                 <th class="text-left">สถานะภาพ</th>
                 <th class="text-center">ตัวเลือกเพิ่มเติม</th>
@@ -140,6 +175,8 @@ const tab = ref(0);
                 <img :src="`${url}/users/${item.userId}/image`" style="width: 100px; height: 100px;">
                 <td>{{ item.studentId }}</td>
                 <td>{{ item.firstName + " " + item.lastName }}</td>
+                <td>{{ item.year }}</td>
+                <td>{{ item.major}}</td>
                 <td>{{ item.role }}</td>
                 <td style="color: seagreen;">{{ item.status }}</td>
                 <td>
@@ -200,7 +237,43 @@ const tab = ref(0);
         </v-table>
       </v-tab-item>
       <v-tab-item v-if="tab === 2">
-        <!-- Content for บุคลากร -->
+        <v-table dense>
+          <template v-slot:default>
+            <thead>
+              <tr>
+                <th class="text-left"></th>
+                <th class="text-left">ภาพ</th>
+                <th class="text-left">รหัสแอดมิน</th>
+                <th class="text-left">ชื่อ-นามสกุล</th>
+                <th class="text-left">ตำแหน่ง</th>
+                <th class="text-left">สถานะภาพ</th>
+                <th class="text-center">ตัวเลือกเพิ่มเติม</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(item, index) of sortedAdmins" :key="index">
+                <td>{{ index + 1 }}</td>
+                <img :src="`${url}/users/${item.userId}/image`" style="width: 100px; height: 100px;">
+                <td>{{ item.adminId }}</td>
+                <td>{{ item.firstName + " " + item.lastName }}</td>
+                <td>{{ item.role }}</td>
+                <td style="color: seagreen;">{{ item.status }}</td>
+                <td style="justify-content: center;">
+                  <div class="button-group">
+                  <v-btn small class="ma-1" color="yellow darken-2" text="Button Text" @click="showEditedDialog(item)">
+                    <v-icon left>mdi-pencil</v-icon>
+                    แก้ไขข้อมูล
+                  </v-btn>
+                </div>
+                  <!-- <v-btn small class="ma-1" color="red" text="Button Text" @click="deleteUser(item.userId!)">
+                    <v-icon left>mdi-delete</v-icon>
+                    ลบข้อมูล
+                  </v-btn> -->
+                </td>
+              </tr>
+            </tbody>
+          </template>
+        </v-table>
       </v-tab-item>
     </v-card>
   </v-container>
@@ -209,6 +282,9 @@ const tab = ref(0);
   </v-dialog>
   <v-dialog v-model="userStore.showEditDialog2" persistent>
     <EditUserDialog2></EditUserDialog2>
+  </v-dialog>
+  <v-dialog v-model="userStore.showEditDialog3" persistent>
+    <EditUserDialog3></EditUserDialog3>
   </v-dialog>
   <ConfirmDialog ref="confirmDlg" />
 

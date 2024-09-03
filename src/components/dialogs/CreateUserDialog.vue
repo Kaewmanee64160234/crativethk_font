@@ -23,7 +23,7 @@ async function save() {
     console.log(dataFaceBase64);
     userStore.editUser.faceDescriptions = dataFaceBase64;
     await userStore.saveUser();
-        // userStore.resetUser();
+    await userStore.resetUser();
 }
 
 async function cancel() {
@@ -109,6 +109,20 @@ function float32ArrayToBase64(float32Array) {
                             <v-col cols="12">
                                 <v-text-field label="อีเมล" dense solo required v-model="userStore.editUser.email"
                                     :rules="[(v) => !!v || 'โปรดกรอกอีเมล']"></v-text-field>
+                            </v-col>
+                            <v-col cols="12">
+                                <v-combobox label="ชั้นปี" :items="['1', '2', '3', '4']"
+                                    dense solo required v-model="userStore.editUser.year" :rules="[
+                                v => !!v || 'โปรดเลือกชั้นปี',
+                                v => ['1', '2', '3', '4'].includes(v) || 'โปรดเลือกชั้นปีจากรายการที่ให้ไว้'
+                            ]"></v-combobox>
+                            </v-col>
+                            <v-col cols="12">
+                                <v-combobox label="สาขา" :items="['CS', 'SE', 'IT', 'AI']"
+                                    dense solo required v-model="userStore.editUser.major" :rules="[
+                                v => !!v || 'โปรดเลือกสาขา',
+                                v => ['CS', 'SE', 'IT', 'AI'].includes(v) || 'โปรดเลือกสาขาจากรายการที่ให้ไว้'
+                            ]"></v-combobox>
                             </v-col>
                             <v-col cols="12">
                                 <v-text-field label="ตำแหน่ง" dense solo required v-model="userStore.editUser.role" 
