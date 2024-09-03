@@ -45,23 +45,23 @@ function formatThaiDate(date: Date) {
 const deleteAssignment = async () => {
     try {
         await confirmDlg.value.openDialog(
-        'Please Confirm',
-        `Do you want to delete this Assignment?`,
-        'Accept',
-        'Cancel'
-    )
+            'Please Confirm',
+            `Do you want to delete this Assignment?`,
+            'Accept',
+            'Cancel'
+        )
 
-    await assignmentStore.deleteAssignment(props.post.assignmentId!);
-    await assignmentStore.getAssignmentByCourseId(id.value.toString());
+        await assignmentStore.deleteAssignment(props.post.assignmentId!);
+        await assignmentStore.getAssignmentByCourseId(id.value.toString());
 
-    window.location.reload();
-    console.log('Assignment deleted successfully');
+        window.location.reload();
+        console.log('Assignment deleted successfully');
     } catch (error) {
         console.log('Error deleting assignment:', error);
-        
-        
+
+
     }
- 
+
 }
 // function edit
 const editAssignment = async () => {
@@ -81,7 +81,6 @@ const gotoMappinfForStudent = () => {
 const goToMapping2 = async () => {
 
     showDialog.value = true;
-    console.log("assigment", props.post);
     await attdentStore.getAttendanceByAssignmentId(props.post!.assignmentId! + '');
 }
 
@@ -181,9 +180,10 @@ const updatePost = async () => {
     if (imageUrls.value.length > 0) {
         imageUrls.value.push(...capturedImages.value);
         const allImages = [...capturedImages.value, ...imageUrls.value];
+        localStorage.setItem('images', JSON.stringify(allImages));
         router.push({
             path: `/mapping2/assignment/${assignmentStore.currentAssignment?.assignmentId}/course/${id.value.toString()}`,
-            query: { imageUrls: allImages },
+        
         });
         imageUrls.value = [];
         capturedImages.value = [];
@@ -240,10 +240,12 @@ function close() {
 
                             <v-list-item-title>ยืนยันนิสิตที่ให้ตรวจสอบอีกครั้ง</v-list-item-title>
                         </v-list-item>
+
                         <v-list-item @click="goToMapping2">
 
                             <v-list-item-title>เพิ่มภาพถ่ายการเช็คชื่อ</v-list-item-title>
                         </v-list-item>
+
                         <v-list-item @click="editAssignment">
 
                             <v-list-item-title>เปลี่ยนชื่อ Assignment</v-list-item-title>

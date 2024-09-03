@@ -45,6 +45,7 @@ const sortedAdmins = computed(() => {
 // const teachers = computed(() => userStore.users.filter(user => user.teacherId));
 const confirmDlg = ref();
 onMounted(async () => {
+  await userStore.getCurrentUser();
   await userStore.getUsers();
   await userStore.getUserFromLocalStorage();
 })
