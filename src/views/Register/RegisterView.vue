@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import router from '@/router';
+import { useMessageStore } from '@/stores/message';
 import type { User } from '@/stores/types/User';
 import { useUserStore } from '@/stores/user.store';
 import { computed, onMounted, ref } from 'vue';
@@ -7,6 +8,7 @@ import { computed, onMounted, ref } from 'vue';
 const userStore = useUserStore();
 const page = ref(1);
 const itemsPerPage = 5;
+const messageStore = useMessageStore();
 
 const selectedFile = ref(null);
 const uploadFile = async () => {
@@ -63,6 +65,7 @@ const saveUser = async () => {
     // }
     userStore.file_ = [];  // Clear the file list after processing
     selectedFile.value = null;
+    messageStore.showInfo("New user created successfully.");
 };
 </script>
 <template>

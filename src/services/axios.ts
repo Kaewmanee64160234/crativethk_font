@@ -1,8 +1,7 @@
 import axios from "axios";
 import router from "@/router";
-
 const instance = axios.create({
-  baseURL: "http://localhost:3000",
+  baseURL: import.meta.env.VITE_API_URL,
 });
 
 function delay(time: number) {

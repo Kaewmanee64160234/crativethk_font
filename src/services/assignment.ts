@@ -39,4 +39,11 @@ function updateAssignment(id:string,data:Assignment) {
 function deleteAssignment(id:string) {
     return http.delete(`/assignments/${id}`);
 }
-export default { getAssignment,createAssignment,getAssignmentById,getAssignmentByCourseId,updateAssignment, deleteAssignment };
+
+// getAssignmentImages
+function getAssignmentImages(id:string) {
+    return http.get(`/assignments/images/course/${id}`);
+}
+
+
+export default { getAssignment,createAssignment,getAssignmentById,getAssignmentByCourseId,updateAssignment, deleteAssignment,getAssignmentImages };

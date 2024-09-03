@@ -4,12 +4,13 @@ import assignmentService from "@/services/assignment";
 import type Assignment from "./types/Assignment";
 
 export const useAssignmentStore = defineStore("assignmentStore", () => {
-  const assignments = ref<Assignment[] >([
+  const assignments = ref<Assignment[]>([
     {
       assignmentId: 0,
 
       assignmentTime: new Date(),
-      imageAssignments: [""],
+      imageAssignments: [],
+      assignmentManual: false,
       statusAssignment: "",
       nameAssignment: "",
       course: {
@@ -24,7 +25,6 @@ export const useAssignmentStore = defineStore("assignmentStore", () => {
         timeOutLec: new Date(),
         typeCourses: "",
         codeCourses: "",
-
         user: {
           userId: 0,
           firstName: "",
@@ -62,17 +62,16 @@ export const useAssignmentStore = defineStore("assignmentStore", () => {
       const res = await assignmentService.getAssignmentByCourseId(id);
       //map assignment
       assignments.value = res.data;
-      console.log(id);
     } catch (e) {
       console.log(e);
     }
   };
   //create Assignment
-  const createAssignment = async (data: Assignment,files:File[]) => {
+  const createAssignment = async (data: Assignment, files: File[]) => {
     try {
-      const res = await assignmentService.createAssignment(data,files);
+      const res = await assignmentService.createAssignment(data, files);
       if (res.data) {
-        assignment.value = res.data;
+        currentAssignment.value = res.data;
         console.log("assignment created", res.data);
         await getAssignmentByCourseId(data.course.coursesId);
       } else {
@@ -98,7 +97,6 @@ export const useAssignmentStore = defineStore("assignmentStore", () => {
       const res = await assignmentService.updateAssignment(id, data);
       if (res.data) {
         console.log("assignment updated", res.data);
-        await getAssignmentByCourseId(data.course.coursesId);
       } else {
         alert("Error updating assignment");
       }
@@ -109,19 +107,33 @@ export const useAssignmentStore = defineStore("assignmentStore", () => {
   const deleteAssignment = async (id: string) => {
     try {
       const response = await assignmentService.deleteAssignment(id);
-      if (response.status === 200) {
-        // Remove the deleted assignment from the assignments list
-        assignments.value = assignments.value.filter(assignment => assignment.assignmentId !== parseInt(id));
-        console.log('Assignment deleted successfully');
+      console.log('Successfully deleted assignment:', response);
+      
+      if (response.data) {
+       
+        console.log("res", response.data);
+
       }
     } catch (error) {
-      console.error('Error deleting assignment:', error);
+      console.error("Error deleting assignment:", error);
     }
   };
   const closeEditDialog = () => {
     EditAssignment.value = false;
-  }
+  };
   // assignments.value.push(res.data);
+
+  // getAssignmentImages
+  async function getAssignmentImages(id: string) {
+    try {
+      const res = await assignmentService.getAssignmentImages(id);
+      if (res.status === 200) {
+        currentAssignment.value = res.data;
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
   return {
     assignments,
@@ -135,6 +147,7 @@ export const useAssignmentStore = defineStore("assignmentStore", () => {
     dialogAssignmentTag,
     deleteAssignment,
     EditAssignment,
-    closeEditDialog
+    closeEditDialog,
+    getAssignmentImages,
   };
 });

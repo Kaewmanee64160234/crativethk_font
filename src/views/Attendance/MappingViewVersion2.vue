@@ -3,9 +3,9 @@ import { ref, reactive, onMounted, computed } from "vue";
 import * as faceapi from "face-api.js";
 import { useUserStore } from "@/stores/user.store";
 import { useRoute, useRouter } from "vue-router";
-import type { FaceDetection, WithFaceLandmarks, WithFaceDescriptor } from "face-api.js";
+import type { FaceDetection, WithFaceDescriptor } from "face-api.js";
+import Loader from "@/components/loader/Loader.vue";
 import type { User } from "@/stores/types/User";
-import assignment from "@/services/assignment";
 import { useAssignmentStore } from "@/stores/assignment.store";
 import { useCourseStore } from "@/stores/course.store";
 import { useAttendanceStore } from "@/stores/attendance.store";
@@ -51,81 +51,92 @@ const assignmentStore = useAssignmentStore();
 const attendanceStore = useAttendanceStore();
 const isLoading = ref(true); // Add a loading state
 const url = import.meta.env.VITE_API_URL as string;
+const filterOptions = ['Show All', 'Show Less Than 50%'];
+const filterOption = ref('Show Less Than 50%');
 const sortedAttendances = computed(() => {
-  return attendanceStore.attendances!
-    .slice()
+  return attendanceStore.attendances
+    ?.slice()
     .filter((attendance) => attendance.attendanceImage !== 'noimage.jpg')
     .sort((a, b) => a.attendanceScore! - b.attendanceScore!);
 });
+
+// Filtering attendances based on the selected dropdown option
+const filteredAttendances = computed(() => {
+  if (filterOption.value === 'Show Less Than 50%') {
+    return sortedAttendances.value!.filter(attendee => attendee.attendanceScore! < 50);
+  } else {
+    return sortedAttendances.value;
+  }
+});
+
 onMounted(async () => {
   try {
     isLoading.value = true;
     await Promise.all([
-      faceapi.nets.ssdMobilenetv1.loadFromUri("/models"),
-      faceapi.nets.faceLandmark68Net.loadFromUri("/models"),
       faceapi.nets.faceRecognitionNet.loadFromUri("/models"),
+      faceapi.nets.faceLandmark68Net.loadFromUri("/models"),
+      faceapi.nets.ssdMobilenetv1.loadFromUri("/models"),
     ]);
     // get user by course id
     await userStore.getUserByCourseId(courseStore.currentCourse?.coursesId + '');
     await assignmentStore.getAssignmentById(route.params.assignmentId.toString());
 
-    console.log("Models loaded successfully");
-    console.log("Current Assignment:", userStore.users);
-
-    // Process all face descriptions for each user
+    console.time("Face Description Processing Time");
     userStore.users.forEach((user) => {
       const descriptors: Float32Array[] = [];
-
-      // Iterate over each face description field
       const faceDescriptionFields = user.faceDescriptions || [];
-      console.log("Face Descriptions Length:", user.faceDescriptions!.length);
 
       faceDescriptionFields.forEach((description, idx) => {
         if (description) {
           try {
             const float32Array = base64ToFloat32Array(description);
             descriptors.push(float32Array);
-            console.log(`User: ${user.firstName}, Student ID: ${user.studentId}, Descriptor Index: ${idx}`);
           } catch (error) {
             console.error(`Error decoding face description ${idx + 1} for user: ${user.email}`, error);
           }
-        } else {
-          console.warn(`No face description found for user: ${user.email}, Descriptor Index: ${idx}`);
         }
       });
 
-      // Store descriptors in the map with the student ID as the key
       if (descriptors.length > 0) {
         userDescriptors.set(user.studentId!, descriptors);
       }
     });
-
-    const urls: string[] = route.query.imageUrls || [];
+    console.timeEnd("Face Description Processing Time");
+    const urls: string[] = JSON.parse(localStorage.getItem('images') || '[]');
     console.log(urls);
-    imageUrls.value = urls;
 
-    // Process each image and wait for all to finish
-    await Promise.all(
-      imageUrls.value.map((url, index) => loadImageAndProcess(url, index))
-    );
-    console.log("Confirming attendance for", identifications.value, "students");
+    imageUrls.value = urls;
+    localStorage.removeItem('images');
+
+
+    console.time("Image Processing Time");
+    await Promise.all(imageUrls.value.map((url, index) => loadImageAndProcess(url, index)));
+    console.timeEnd("Image Processing Time");
+
 
     // Call createAttendance after all images have been processed
-    if (assignmentStore.assignment!.statusAssignment == 'completed') {
+    if (assignmentStore.currentAssignment!.statusAssignment == 'completed') {
       console.log("Assignment is already completed. Skipping attendance confirmation.");
-      await updateAttdent()
+      console.time("Update Attendance Time");
+      await updateAttdent();
+      console.timeEnd("Update Attendance Time");
     } else {
+      console.time("Create Attendance Time");
       await createAttendance();
+      console.timeEnd("Create Attendance Time");
     }
+
   } catch (error) {
     console.error("Error in onMounted:", error);
     alert("Failed to load data. Please check the console for more details.");
   } finally {
-    isLoading.value = false; // Disable loading after processing
+    isLoading.value = false;
+    console.timeEnd("Total Runtime");
   }
 });
 
 async function processImage(image: HTMLImageElement, index: number) {
+  console.time(`Image Detection and Descriptor Time - Image ${index}`);
   const canvas = canvasRefs[index] || document.createElement("canvas");
   document.body.appendChild(canvas);
   canvas.width = image.naturalWidth;
@@ -133,13 +144,7 @@ async function processImage(image: HTMLImageElement, index: number) {
   const ctx = canvas.getContext("2d");
 
   try {
-    const detections = (await faceapi
-      .detectAllFaces(image, new faceapi.SsdMobilenetv1Options())
-      .withFaceLandmarks()
-      .withFaceDescriptors()) as WithFaceLandmarks<
-        { detection: FaceDetection },
-        WithFaceDescriptor
-      >[];
+    const detections = await faceapi.detectAllFaces(image).withFaceLandmarks().withFaceDescriptors();
 
     detections.forEach((detection) => {
       const bestMatch = findBestUserMatch(detection.descriptor);
@@ -158,7 +163,7 @@ async function processImage(image: HTMLImageElement, index: number) {
           name: bestMatch.user.firstName,
           studentId: bestMatch.user.studentId!,
           imageUrl: croppedDataURL!,
-          score: 1 - bestMatch.score, // Higher score is better
+          score: 1 - bestMatch.score,
           user: bestMatch.user,
         });
       } else {
@@ -166,8 +171,8 @@ async function processImage(image: HTMLImageElement, index: number) {
           name: "Unknown",
           studentId: "N/A",
           imageUrl: croppedDataURL!,
-          score: 0, // Unknown score
-          user: null, //
+          score: 0,
+          user: null,
         });
       }
     });
@@ -175,6 +180,7 @@ async function processImage(image: HTMLImageElement, index: number) {
     console.error("Failed to process face detection:", error);
   } finally {
     document.body.removeChild(canvas);
+    console.timeEnd(`Image Detection and Descriptor Time - Image ${index}`);
   }
 }
 
@@ -340,7 +346,7 @@ const createAttendance = async () => {
           attendanceDate: new Date(),
           attendanceStatus: "present",
           attendanceConfirmStatus: identifiedUser ? "confirmed" : "notConfirmed",
-          assignment: assignmentStore.assignment,
+          assignment: assignmentStore.currentAssignment,
           user: identifiedUser,
           attendanceImage: "",
           attendanceScore: parseInt((identifications.value[i].score * 100).toFixed(2)),
@@ -362,7 +368,7 @@ const createAttendance = async () => {
   }
 
   // Filter users from identifications and create unknown users
-  await userStore.getUserByCourseId(assignmentStore.assignment?.course.coursesId + '')
+  await userStore.getUserByCourseId(assignmentStore.currentAssignment?.course.coursesId + '')
   const usersCreateUnknown = userStore.users.filter((user) => {
     return !identifications.value.some((identification) => identification.studentId === user.studentId);
   });
@@ -377,7 +383,7 @@ const createAttendance = async () => {
           attendanceDate: new Date(),
           attendanceStatus: "absent",
           attendanceConfirmStatus: "notConfirmed",
-          assignment: assignmentStore.assignment,
+          assignment: assignmentStore.currentAssignment,
           user: usersCreateUnknown[i],
           attendanceImage: "",
           attendanceScore: 0
@@ -397,8 +403,8 @@ const createAttendance = async () => {
       );
     }
   }
-  assignmentStore.assignment!.statusAssignment = 'completed';
-  await assignmentStore.updateAssignment(assignmentStore.assignment!.assignmentId + '', assignmentStore.assignment!);
+  assignmentStore.currentAssignment!.statusAssignment = 'completed';
+  await assignmentStore.updateAssignment(assignmentStore.currentAssignment!.assignmentId + '', assignmentStore.currentAssignment!);
   await attendanceStore.getAttendanceByAssignmentId(route.params.assignmentId.toString());
 
   console.log("Attendance confirmed successfully");
@@ -446,7 +452,7 @@ const updateAttdent = async () => {
         userAttdent.attendanceScore = parseInt((identifications.value[i].score * 100).toFixed(2));
         userAttdent.assignment = assignmentStore.currentAssignment!;
         console.log("User Attdent:", userAttdent);
-        
+
         await attendanceStore.confirmAttendance(userAttdent, imageFile);
       }
 
@@ -457,7 +463,7 @@ const updateAttdent = async () => {
   } catch (e) {
     console.error(
       "Error recording attendance for",
-   
+
       ":",
       e
     );
@@ -490,8 +496,7 @@ const confirmAttendance = async (attendance: Attendance) => {
 //reject student
 const reCheckAttendance = async (attendance: Attendance) => {
   try {
-    // attendance.attendanceStatus = "present";
-    // attendance.attendanceConfirmStatus = "recheck";
+
     console.log("Attendance:Ging", attendance);
 
     await attendanceStore.removeAttendance(attendance.attendanceId + "");
@@ -518,12 +523,14 @@ const nextPage = () => {
 <template>
   <v-container class="mt-10">
     <!-- Loading Spinner -->
-    <v-row v-if="isLoading" class="fill-height">
-      <v-col class="d-flex flex-column justify-center align-center text-center">
-        <v-progress-circular :size="70" :width="7" indeterminate color="primary"></v-progress-circular>
+    <v-row v-if="isLoading">
+      <Loader>
+      </Loader>
+      <!-- <v-col class="d-flex flex-column justify-center align-center text-center">
+        <span class="loader"></span>
         <div class="mt-4">Processing images...</div>
         <div class="mt-2">Detected: {{ identifications.length }} / {{ userStore.users.length }} students</div>
-      </v-col>
+      </v-col> -->
     </v-row>
 
     <!-- Layout Row for Image Display and Identifications -->
@@ -539,6 +546,9 @@ const nextPage = () => {
             Next Page
           </v-btn>
         </div>
+
+
+
         <div class="status-student d-flex align-center">
           <v-row class="align-center text-center" justify="center">
             <v-col cols="auto" class="status-section">
@@ -553,11 +563,15 @@ const nextPage = () => {
           </v-row>
         </div>
       </v-col>
-
+      <!-- Filter Dropdown -->
+      <v-col cols="auto">
+        <v-select v-model="filterOption" :items="filterOptions" label="Filter Attendances" variant="solo"
+          dense></v-select>
+      </v-col>
       <v-col cols="12" class="pt-5">
         <v-container>
           <v-row>
-            <v-col v-for="(attendee, index) in sortedAttendances" :key="index" cols="12" sm="6" md="4" lg="3">
+            <v-col v-for="(attendee, index) in filteredAttendances" :key="index" cols="12" sm="6" md="4" lg="3">
               <v-card class="mb-3" :style="{
                 padding: '20px',
                 backgroundColor: attendee.attendanceScore! >= 50 ? 'rgb(237, 237, 237)' : 'rgb(255, 230, 230)',
@@ -567,7 +581,7 @@ const nextPage = () => {
                 <v-row justify="center">
                   <v-card-title class="bold-text mt-2 text-center">
                     <v-icon small class="mr-2">mdi-circle-small</v-icon>
-                    {{ attendee.user?.studentId + " " + attendee.user?.firstName }}
+                    {{ attendee.user ? attendee.user?.studentId + " " + attendee.user?.firstName : 'ไม่พบในฐานข้อมูล' }}
                   </v-card-title>
                   <v-card-subtitle :class="attendee.attendanceScore! >= 50 ? 'correct-text' : 'incorrect-text'">
                     {{ attendee.attendanceScore! >= 50 ? 'ความถูกต้อง' : 'ไม่ถูกต้อง' }} {{ attendee.attendanceScore }}%
@@ -575,20 +589,24 @@ const nextPage = () => {
                 </v-row>
                 <v-row>
                   <v-col cols="6">
+
                     <v-img :src="`${url}/attendances/image/${attendee.attendanceImage}`" height="200px"
                       class="rounded-lg"></v-img>
                   </v-col>
                   <v-col cols="6">
-                    <v-img :src="`${url}/users/${attendee.user?.userId}/image`" height="200px"
-                      class="rounded-lg"></v-img>
+                    <v-img v-if="attendee.user?.userId" :src="`${url}/users/${attendee.user?.userId}/image`"
+                      height="200px" class="rounded-lg">
+                    </v-img>
+                    <v-img v-else
+                      src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"
+                      height="200px" class="rounded-lg">
+                    </v-img>
                   </v-col>
                 </v-row>
-                <v-card-actions class="justify-space-between">
-                  <v-btn color="error" variant="flat" @click="reCheckAttendance(attendee)" class="font-weight-bold">
+                <v-card-actions>
+                  <v-btn color="error" variant="flat" @click="reCheckAttendance(attendee)" class="font-weight-bold"
+                    block>
                     ปฏิเสธ
-                  </v-btn>
-                  <v-btn color="success" variant="flat" @click="confirmAttendance(attendee)" class="font-weight-bold">
-                    ยืนยัน
                   </v-btn>
                 </v-card-actions>
               </v-card>
@@ -599,6 +617,9 @@ const nextPage = () => {
     </v-row>
   </v-container>
 </template>
+
+
+
 <style scoped>
 .bold-text {
   font-weight: bold;

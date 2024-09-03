@@ -1,14 +1,12 @@
 <script lang="ts" setup>
-import course from "@/services/course";
 import { useCourseStore } from "@/stores/course.store";
-import { useEnrollmentStore } from "@/stores/enrollment.store";
-import type Enrollment from "@/stores/types/Enrollment";
+import { useMessageStore } from "@/stores/message";
 import { useUserStore } from "@/stores/user.store";
-import { on } from "events";
 import { onMounted, ref } from "vue";
 const courseStore = useCourseStore();
 const userStore = useUserStore();
 const selectedFile = ref(null);
+const messageStore = useMessageStore();
 
 const uploadFile = async () => {
   if (selectedFile.value) {

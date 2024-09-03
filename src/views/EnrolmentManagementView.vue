@@ -1,8 +1,6 @@
 <script lang="ts" setup>
-import CreateCourseDialog from "@/components/dialogs/CreateCourseDialog.vue";
 import CreateEnrolmentDialog from "@/components/dialogs/CreateEnrolmentDialog.vue";
 import DeleteEnrolmentDialog from "@/components/dialogs/DeleteEnrolmentDialog.vue";
-import EditCourseDialog from "@/components/dialogs/EditCourseDialog.vue";
 import { useCourseStore } from "@/stores/course.store";
 import { useEnrollmentStore } from "@/stores/enrollment.store";
 import type Course from "@/stores/types/Course";
@@ -40,10 +38,11 @@ const showDeleteDialog = (enrollment: Enrollment) => {
   courseStore.showDeleteDialog = true;
   enrollmentStore.currentEnrollment = enrollment;
 };
+
 </script>
 <template>
   <v-container>
-    <v-row>
+    <v-row v-if="enrollmentStore.enrollments.length > 0">
       <v-col cols="12" sm="6" md="4" v-for="(item, index) of enrollmentStore.enrollments" :key="index">
         <v-card style="margin-left: 10%; margin-top: 15%"
           @click="goToCourseDetail(item.course!.coursesId!, item.course!)">
@@ -61,7 +60,7 @@ const showDeleteDialog = (enrollment: Enrollment) => {
               </template>
               <v-list>
                 <v-list-item @click="showDeleteDialog(item)">
-                  <v-list-item-title>Unenroll</v-list-item-title>
+                  <v-list-item-title>ยกเลิก</v-list-item-title>
                 </v-list-item>
               </v-list>
             </v-menu>
@@ -95,20 +94,18 @@ const showDeleteDialog = (enrollment: Enrollment) => {
         </v-card>
       </v-col>
     </v-row>
+    <v-row v-else style="padding-top: 120px;">
+      <v-col class="d-flex justify-center">
+        <h1>ไม่มีรายวิชาที่ลงทะเบียน</h1></v-col>
+    </v-row>
   </v-container>
-  <!-- <v-container class="container" fluid>
-        <v-row align="center" justify="end">
-            <v-col> -->
   <v-btn class="bottom-list-item" size="60" style="border-radius: 50%" variant="outlined"
     @click="courseStore.showCreateDialog = true">
     <v-icon icon="mdi-plus" size="40"></v-icon>
   </v-btn>
-  <v-dialog v-model="courseStore.showCreateDialog" persistent>
-    <CreateEnrolmentDialog />
+  <v-dialog v-model="courseStore.showCreateDialog">
+    <CreateEnrolmentDialog/>
   </v-dialog>
-  <!-- </v-col>
-        </v-row>
-    </v-container> -->
 </template>
 
 <style scoped>

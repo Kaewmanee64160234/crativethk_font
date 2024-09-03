@@ -1,15 +1,18 @@
 <script lang="ts" setup>
 import { useCourseStore } from "@/stores/course.store";
 import { useEnrollmentStore } from "@/stores/enrollment.store";
+import { useMessageStore } from "@/stores/message";
 import { useUserStore } from "@/stores/user.store";
 
 const enrollmentStore = useEnrollmentStore();
 const courseStore = useCourseStore();
+const messageStore = useMessageStore();
 const userStore = useUserStore();
 
 const deleteEnrollment = async (idEnrollment: number) => {
-  await enrollmentStore.deleteEnrollment(idEnrollment);
   courseStore.showDeleteDialog = false;
+  await enrollmentStore.deleteEnrollment(idEnrollment);
+  messageStore.showInfo("Successfully deleted enrollment.");
   await enrollmentStore.getCourseByStudentId(userStore.currentUser!.studentId!);
 };
 </script>

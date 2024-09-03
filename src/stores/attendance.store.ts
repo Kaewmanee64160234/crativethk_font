@@ -103,7 +103,7 @@ const userStore = useUserStore();
   const confirmAttendance = async (attendance: Attendance,file:File) => {
     try {
       const res = await attendaceService.updateAttendance(attendance,file);
-      await messageStore.showInfo("The information has been sent to the teacher. Please wait for confirmation..");
+      // await messageStore.showInfo("The information has been sent to the teacher. Please wait for confirmation..");
     } catch (error) {
       // Log the error object which might contain additional info
       console.error("Error confirming attendance:", error);

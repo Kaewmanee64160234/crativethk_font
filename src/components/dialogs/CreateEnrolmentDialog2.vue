@@ -63,12 +63,8 @@ const cancel = async () => {
                   จำนวนหน่วยกิต: {{ enrollmentStore.currentEnrollment?.course?.credit }}
                 </div>
                 <div>
-                  จำนวนนักเรียน:
-                  {{ enrollmentStore.currentEnrollment?.course?.stdAmount }}
-                </div>
-                <div>
                   อาจารย์ผู้สอน:
-                  {{ enrollmentStore.currentEnrollment?.course?.user?.firstName }}
+                  {{ enrollmentStore.currentEnrollment?.course?.user?.firstName + " " + enrollmentStore.currentEnrollment?.course?.user?.lastName }}
                 </div>
                 <div>
                   เวลาเริ่มเรียนเลคเชอร์:

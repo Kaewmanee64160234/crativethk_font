@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 import HomeView from "../views/HomeView.vue";
 import { ref } from "vue";
+import { useUserStore } from "@/stores/user.store";
 const user = ref<any | null>(localStorage.getItem("users"));
 const user_ = JSON.parse(user.value);
 const ezAutorized = () => {
@@ -34,21 +35,6 @@ const router = createRouter({
       },
     },
     {
-      //uploadImageView
-      path: "/uploadImage/:userId",
-      name: "uploadImage",
-      components: {
-        default: () => import("../views/Register/UploadImageView.vue"),
-        header: () => import("../components/headers/MainHeader.vue"),
-        menu: () => import("../components/headers/SubHeader.vue"),
-      },
-      meta: {
-        layout: "FullLayout",
-        // requiresAuth: true,
-        // beforeEnter:[ ezAutorized]
-      },
-    },
-    {
       //confirmRegisterView
       path: "/confirmRegister/:stdId",
       name: "confirmRegister",
@@ -59,8 +45,17 @@ const router = createRouter({
       },
       meta: {
         layout: "FullLayout",
-        // requiresAuth: true,
-        // beforeEnter:[ ezAutorized]
+      },
+      beforeEnter: (to, from, next) => {
+        const userStore = useUserStore();
+        const role = userStore.currentUser?.role;
+        const allowedRoles = ["แอดมิน", "อาจารย์"]; // บทบาทที่อนุญาตให้เข้าถึงเส้นทางนี้
+    
+        if (allowedRoles.includes(role ?? "")) {
+          next(); // อนุญาตให้ผ่านไปยังเส้นทาง
+        } else {
+          next({ name: "unauthorized" }); // ส่งผู้ใช้ไปยังเส้นทางอื่นหากไม่มีสิทธิ์
+        }
       },
     },
     {
@@ -96,7 +91,7 @@ const router = createRouter({
     },
     {
       //mappingView
-      path: "/mapping2/assignment/:assignmentId",
+      path: "/mapping2/assignment/:assignmentId/course/:courseId",
       name: "mapping2",
       components: {
         default: () => import("../views/Attendance/MappingViewVersion2.vue"),
@@ -241,6 +236,8 @@ const router = createRouter({
         menu: () => import("../components/headers/SubHeader.vue"),
       },
     },
+  
+
     {
       // pagenot foun
       path: "/:catchAll(.*)",
