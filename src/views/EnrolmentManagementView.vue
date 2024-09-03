@@ -42,7 +42,7 @@ const showDeleteDialog = (enrollment: Enrollment) => {
 </script>
 <template>
   <v-container>
-    <v-row>
+    <v-row v-if="enrollmentStore.enrollments.length > 0">
       <v-col cols="12" sm="6" md="4" v-for="(item, index) of enrollmentStore.enrollments" :key="index">
         <v-card style="margin-left: 10%; margin-top: 15%"
           @click="goToCourseDetail(item.course!.coursesId!, item.course!)">
@@ -93,6 +93,10 @@ const showDeleteDialog = (enrollment: Enrollment) => {
           </v-card-text>
         </v-card>
       </v-col>
+    </v-row>
+    <v-row v-else style="padding-top: 120px;">
+      <v-col class="d-flex justify-center">
+        <h1>ไม่มีรายวิชาที่ลงทะเบียน</h1></v-col>
     </v-row>
   </v-container>
   <v-btn class="bottom-list-item" size="60" style="border-radius: 50%" variant="outlined"

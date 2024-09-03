@@ -33,6 +33,7 @@ const sortedTeachers = computed(() => {
 // const teachers = computed(() => userStore.users.filter(user => user.teacherId));
 const confirmDlg = ref();
 onMounted(async () => {
+  await userStore.getCurrentUser();
   await userStore.getUsers();
 })
 //create showEditDialog if studentId go to showEditDialog but if teacherId go to showEditDialog2

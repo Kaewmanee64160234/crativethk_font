@@ -2,6 +2,7 @@ import enrollmentService from "@/services/enrollment";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import type Enrollment from "./types/Enrollment";
+import { useMessageStore } from "./message";
 
 
 export const useEnrollmentStore = defineStore("enrollmentStore", () => {
@@ -33,7 +34,7 @@ export const useEnrollmentStore = defineStore("enrollmentStore", () => {
     try {
       const res = await enrollmentService.deleteEnrollment(id);
       currentEnrollment.value = res.data;
-      window.location.reload();
+      // window.location.reload();
     } catch (e) {
       console.log(e);
     }

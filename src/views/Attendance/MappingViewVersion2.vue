@@ -3,9 +3,9 @@ import { ref, reactive, onMounted, computed } from "vue";
 import * as faceapi from "face-api.js";
 import { useUserStore } from "@/stores/user.store";
 import { useRoute, useRouter } from "vue-router";
-import type { FaceDetection, WithFaceLandmarks, WithFaceDescriptor } from "face-api.js";
+import type { FaceDetection, WithFaceDescriptor } from "face-api.js";
+import Loader from "@/components/loader/Loader.vue";
 import type { User } from "@/stores/types/User";
-import assignment from "@/services/assignment";
 import { useAssignmentStore } from "@/stores/assignment.store";
 import { useCourseStore } from "@/stores/course.store";
 import { useAttendanceStore } from "@/stores/attendance.store";
@@ -81,65 +81,62 @@ onMounted(async () => {
     await userStore.getUserByCourseId(courseStore.currentCourse?.coursesId + '');
     await assignmentStore.getAssignmentById(route.params.assignmentId.toString());
 
-    console.log("Models loaded successfully");
-    console.log("Current Assignment:", userStore.users);
-
-    // Process all face descriptions for each user
+    console.time("Face Description Processing Time");
     userStore.users.forEach((user) => {
       const descriptors: Float32Array[] = [];
-
-      // Iterate over each face description field
       const faceDescriptionFields = user.faceDescriptions || [];
-      console.log("Face Descriptions Length:", user.faceDescriptions!.length);
 
       faceDescriptionFields.forEach((description, idx) => {
         if (description) {
           try {
             const float32Array = base64ToFloat32Array(description);
             descriptors.push(float32Array);
-            console.log(`User: ${user.firstName}, Student ID: ${user.studentId}, Descriptor Index: ${idx}`);
           } catch (error) {
             console.error(`Error decoding face description ${idx + 1} for user: ${user.email}`, error);
           }
-        } else {
-          console.warn(`No face description found for user: ${user.email}, Descriptor Index: ${idx}`);
         }
       });
 
-      // Store descriptors in the map with the student ID as the key
       if (descriptors.length > 0) {
         userDescriptors.set(user.studentId!, descriptors);
       }
     });
-
+    console.timeEnd("Face Description Processing Time");
     const urls: string[] = JSON.parse(localStorage.getItem('images') || '[]');
     console.log(urls);
+
     imageUrls.value = urls;
     localStorage.removeItem('images');
 
 
-    // Process each image and wait for all to finish
-    await Promise.all(
-      imageUrls.value.map((url, index) => loadImageAndProcess(url, index))
-    );
-    console.log("Confirming attendance for", identifications.value, "students");
+    console.time("Image Processing Time");
+    await Promise.all(imageUrls.value.map((url, index) => loadImageAndProcess(url, index)));
+    console.timeEnd("Image Processing Time");
+
 
     // Call createAttendance after all images have been processed
     if (assignmentStore.currentAssignment!.statusAssignment == 'completed') {
       console.log("Assignment is already completed. Skipping attendance confirmation.");
-      await updateAttdent()
+      console.time("Update Attendance Time");
+      await updateAttdent();
+      console.timeEnd("Update Attendance Time");
     } else {
+      console.time("Create Attendance Time");
       await createAttendance();
+      console.timeEnd("Create Attendance Time");
     }
+
   } catch (error) {
     console.error("Error in onMounted:", error);
     alert("Failed to load data. Please check the console for more details.");
   } finally {
-    isLoading.value = false; // Disable loading after processing
+    isLoading.value = false;
+    console.timeEnd("Total Runtime");
   }
 });
 
 async function processImage(image: HTMLImageElement, index: number) {
+  console.time(`Image Detection and Descriptor Time - Image ${index}`);
   const canvas = canvasRefs[index] || document.createElement("canvas");
   document.body.appendChild(canvas);
   canvas.width = image.naturalWidth;
@@ -147,13 +144,7 @@ async function processImage(image: HTMLImageElement, index: number) {
   const ctx = canvas.getContext("2d");
 
   try {
-    const detections = (await faceapi
-      .detectAllFaces(image, new faceapi.SsdMobilenetv1Options())
-      .withFaceLandmarks()
-      .withFaceDescriptors()) as WithFaceLandmarks<
-        { detection: FaceDetection },
-        WithFaceDescriptor
-      >[];
+    const detections = await faceapi.detectAllFaces(image).withFaceLandmarks().withFaceDescriptors();
 
     detections.forEach((detection) => {
       const bestMatch = findBestUserMatch(detection.descriptor);
@@ -172,7 +163,7 @@ async function processImage(image: HTMLImageElement, index: number) {
           name: bestMatch.user.firstName,
           studentId: bestMatch.user.studentId!,
           imageUrl: croppedDataURL!,
-          score: 1 - bestMatch.score, // Higher score is better
+          score: 1 - bestMatch.score,
           user: bestMatch.user,
         });
       } else {
@@ -180,8 +171,8 @@ async function processImage(image: HTMLImageElement, index: number) {
           name: "Unknown",
           studentId: "N/A",
           imageUrl: croppedDataURL!,
-          score: 0, // Unknown score
-          user: null, //
+          score: 0,
+          user: null,
         });
       }
     });
@@ -189,6 +180,7 @@ async function processImage(image: HTMLImageElement, index: number) {
     console.error("Failed to process face detection:", error);
   } finally {
     document.body.removeChild(canvas);
+    console.timeEnd(`Image Detection and Descriptor Time - Image ${index}`);
   }
 }
 
@@ -530,12 +522,14 @@ const nextPage = () => {
 <template>
   <v-container class="mt-10">
     <!-- Loading Spinner -->
-    <v-row v-if="isLoading" class="fill-height">
-      <v-col class="d-flex flex-column justify-center align-center text-center">
-        <v-progress-circular :size="70" :width="7" indeterminate color="primary"></v-progress-circular>
+    <v-row v-if="isLoading">
+      <Loader>
+      </Loader>
+      <!-- <v-col class="d-flex flex-column justify-center align-center text-center">
+        <span class="loader"></span>
         <div class="mt-4">Processing images...</div>
         <div class="mt-2">Detected: {{ identifications.length }} / {{ userStore.users.length }} students</div>
-      </v-col>
+      </v-col> -->
     </v-row>
 
     <!-- Layout Row for Image Display and Identifications -->
@@ -599,8 +593,7 @@ const nextPage = () => {
                       class="rounded-lg"></v-img>
                   </v-col>
                   <v-col cols="6">
-                    <v-img v-if="attendee.user?.userId"
-                      :src=" `${url}/users/${attendee.user?.userId}/image` "
+                    <v-img v-if="attendee.user?.userId" :src="`${url}/users/${attendee.user?.userId}/image`"
                       height="200px" class="rounded-lg">
                     </v-img>
                     <v-img v-else

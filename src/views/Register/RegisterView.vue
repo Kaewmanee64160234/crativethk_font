@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import router from '@/router';
+import { useMessageStore } from '@/stores/message';
 import type { User } from '@/stores/types/User';
 import { useUserStore } from '@/stores/user.store';
 import { computed, onMounted, ref } from 'vue';
@@ -7,6 +8,7 @@ import { computed, onMounted, ref } from 'vue';
 const userStore = useUserStore();
 const page = ref(1);
 const itemsPerPage = 5;
+const messageStore = useMessageStore();
 
 const selectedFile = ref(null);
 const uploadFile = async () => {
@@ -34,7 +36,7 @@ const cancel = () => {
     selectedFile.value = null;
 };
 
-const saveUser = async () => { 
+const saveUser = async () => {
     for (let i = 0; i < userStore.file_.length; i++) {
         const nameParts = userStore.file_[i].name.split(' ');
         const firstName = nameParts[0];
@@ -63,6 +65,7 @@ const saveUser = async () => {
     // }
     userStore.file_ = [];  // Clear the file list after processing
     selectedFile.value = null;
+    messageStore.showInfo("New user created successfully.");
 };
 </script>
 <template>
@@ -75,6 +78,7 @@ const saveUser = async () => {
                     accept=".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                     label="Upload File" variant="outlined" prepend-icon="mdi-file-document-plus-outline"
                     v-model="selectedFile" @change="uploadFile()"></v-file-input>
+                <div style="color: red;">*upload ได้เฉพาะ file Excel เท่านั้น</div>
             </v-col>
             <v-col col="6">
                 <v-card>
@@ -97,9 +101,10 @@ const saveUser = async () => {
                     <v-pagination v-model="page" :length="pageCount" :total-visible="7"></v-pagination>
                 </v-card>
                 <v-card-actions class="actions">
-                    <v-btn color="error" variant="elevated" @click="cancel">ยกเลิก</v-btn>
+                    <v-btn color="error" variant="elevated" @click="cancel"> 
+                        <v-icon left>mdi-close-thick</v-icon>ยกเลิก</v-btn>
                     <v-spacer></v-spacer>
-                    <v-btn color="success" variant="elevated" @click="saveUser()">เสร็จสิ้น</v-btn>
+                    <v-btn color="success" variant="elevated" @click="saveUser()"><v-icon left>mdi-check-bold</v-icon>เสร็จสิ้น</v-btn>
                 </v-card-actions>
             </v-col>
         </v-row>

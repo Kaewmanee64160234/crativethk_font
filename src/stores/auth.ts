@@ -24,7 +24,6 @@ export const useAuthStore = defineStore('authStore', () => {
   const fetchUserProfile = () => {
     const response = fetch('localhost:3000/auth/profile').then((res) => res.json());
     console.log(response);
-
   }
   //login user
   const login = async (value: string) => {
@@ -46,7 +45,7 @@ export const useAuthStore = defineStore('authStore', () => {
           router.push('/courseManagement');
         } 
         if (currentUser.value.user.role === 'นิสิต') {
-          router.push('/enrolmentManagement');
+          router.push('/userProfile');
         }
         if (currentUser.value.user.role === 'แอดมิน') {
           router.push('/userManagement');

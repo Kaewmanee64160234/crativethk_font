@@ -98,7 +98,6 @@ export const useUserStore = defineStore("userStore", () => {
             // Update user in the register array
         } else {
             await userService.saveUser(editUser.value);
-            messageStore.showInfo("New user created successfully.");
         }
 
         await getUsers(); // Refresh or reload user list

@@ -5,11 +5,13 @@ import { useEnrollmentStore } from "@/stores/enrollment.store";
 import { onMounted, ref } from "vue";
 import course from "@/services/course";
 import { useUserStore } from "@/stores/user.store";
+import { useMessageStore } from "@/stores/message";
 const courseStore = useCourseStore();
 const enrollmentStore = useEnrollmentStore();
 const courseId = ref("");
 const userStore = useUserStore();
 const codeCourse = ref("");
+const messageStore = useMessageStore();
 
 
 onMounted(async () => {
@@ -19,7 +21,8 @@ onMounted(async () => {
 });
 const saveEnrollment = () => {
   if (codeCourse.value.length < 10) {
-    console.log("no data");
+    messageStore.showError("Please enter your password.");
+    courseStore.showCreateDialog = false
     return;
   }
   for (let i = 0; i < courseStore.courses.length; i++) {
@@ -45,6 +48,8 @@ const saveEnrollment = () => {
     } else {
       console.log("no courseID"); // ไม่มี courseId ที่ตรงกับที่กรอกมา
       codeCourse.value = "";
+      messageStore.showError("The password is incorrect. Please try again.");
+      courseStore.showCreateDialog = false
       return;
     }
   }
