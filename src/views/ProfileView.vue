@@ -19,6 +19,7 @@ const user = ref<User | undefined>(undefined);
 
 const isStudent = computed(() => userStore.currentUser?.role === 'นิสิต');
 const isTeacher = computed(() => userStore.currentUser?.role === 'อาจารย์');
+const isAdmin = computed(() => userStore.currentUser?.role === 'แอดมิน');
 
 console.log(userStore.currentUser)
 
@@ -42,6 +43,8 @@ onMounted(async () => {
         }
         console.log("image",images.value)
     }
+    await userStore.getCurrentUser();
+    
 });
 </script>
 
@@ -73,10 +76,10 @@ onMounted(async () => {
                                     <v-col cols="12" v-if="isStudent">
                                         <strong>สาขา: </strong>{{ userStore.currentUser?.major }}
                                     </v-col>
-                                    <v-col cols="12" v-if="isTeacher">
+                                    <v-col cols="12" v-if="isTeacher || isAdmin">
                                         <strong>ตำแหน่ง: </strong>{{ userStore.currentUser?.role }}
                                     </v-col>
-                                    <v-col cols="12" v-if="isTeacher">
+                                    <v-col cols="12" v-if="isTeacher|| isAdmin">
                                         <strong>สถานะภาพ: </strong>{{ userStore.currentUser?.status }}
                                     </v-col>
                                     <v-col cols="12">
@@ -98,7 +101,7 @@ onMounted(async () => {
         <!-- Attendance History Tab -->
         <v-row>
             <v-col cols="12">
-                <v-card>
+                <v-card v-if="isTeacher || isStudent">
                     <v-tabs v-model="tab" bg-color="primary">
                         <v-tab style="margin-top: auto">ประวัติการเช็คชื่อ</v-tab>
                     </v-tabs>

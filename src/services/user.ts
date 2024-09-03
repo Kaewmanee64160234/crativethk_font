@@ -22,6 +22,7 @@ function saveUser(user: User & { files: File[] }) {
   formData.append('email', user.email!);
   formData.append('studentId', user.studentId!);
   formData.append('teacherId', user.teacherId!);
+  formData.append('adminId', user.adminId!);
   formData.append('role', user.role!);
   formData.append('status', user.status!);
   formData.append('major', user.major!);
@@ -30,24 +31,37 @@ function saveUser(user: User & { files: File[] }) {
 
   // Check if files are available
   // if (user.files && user.files.length > 0) {
-      // Append the first file if it exists
-      // formData.append('files', user.files[0], user.files[0].name);
+  // Append the first file if it exists
+  // formData.append('files', user.files[0], user.files[0].name);
   // } else {
   //     console.error("No files found in the user object.");
-      // Optional: Handle the case where no files are provided
+  // Optional: Handle the case where no files are provided
 
-  if (user.faceDescriptions!.length > 0) {
-    // Append files and face descriptions
-    for (let i = 0; i < user.faceDescriptions!.length; i++) {
+  if (user.role == 'นิสิต') {
+    if (user.faceDescriptions!.length > 0) {
+      // Append files and face descriptions
+      for (let i = 0; i < user.faceDescriptions!.length; i++) {
+        formData.append("files", user.files[i], user.files[i].name); // Ensure there are exactly 5 files
+        formData.append(`faceDescription${i + 1}`, user.faceDescriptions![i]);
+      }
+    }
+  } else if (user.role == 'แอดมิน' || user.role == 'อาจารย์') {
+    
+    for (let i = 0; i < user.files.length; i++) {
+
       formData.append("files", user.files[i], user.files[i].name); // Ensure there are exactly 5 files
       formData.append(`faceDescription${i + 1}`, user.faceDescriptions![i]);
     }
   }
+  // console.log('created User Dto', formData);
+  
 
   // Log form data
-  for (const [key, value] of formData.entries()) {
-    console.log(`${key}:`, value);
-  }
+  // for (const [key, value] of formData.entries()) {
+  //   console.log(`${key}:`, value);
+  // }
+  // console.log(user);
+
   return http.post("/users", formData, {
     headers: {
       "Content-Type": "multipart/form-data",
@@ -66,6 +80,7 @@ function updateUser(user: User & { files: File[] }, userId: number) {
   formData.append("email", user.email!);
   formData.append("studentId", user.studentId!);
   formData.append("teacherId", user.teacherId!);
+  formData.append("admindId", user.adminId!);
   formData.append("role", user.role!);
   formData.append("status", user.status!);
   formData.append('major', user.major!);
@@ -73,14 +88,22 @@ function updateUser(user: User & { files: File[] }, userId: number) {
   formData.append('registerStatus', user.registerStatus!);
 
   // Append files and face descriptions
-  if (user.faceDescriptions!.length > 0 && ( user.files && user.files.length > 0)) {
-    // Append files and face descriptions
-    for (let i = 0; i < user.faceDescriptions!.length; i++) {
+  if (user.role == 'นิสิต') {
+    if (user.faceDescriptions!.length > 0) {
+      // Append files and face descriptions
+      for (let i = 0; i < user.faceDescriptions!.length; i++) {
+        formData.append("files", user.files[i], user.files[i].name); // Ensure there are exactly 5 files
+        formData.append(`faceDescription${i + 1}`, user.faceDescriptions![i]);
+      }
+    }
+  } else if (user.role == 'แอดมิน' || user.role == 'อาจารย์') {
+    
+    for (let i = 0; i < user.files.length; i++) {
+
       formData.append("files", user.files[i], user.files[i].name); // Ensure there are exactly 5 files
       formData.append(`faceDescription${i + 1}`, user.faceDescriptions![i]);
     }
   }
-
   return http.patch(`/users/${userId}`, formData, {
     headers: {
       "Content-Type": "multipart/form-data",

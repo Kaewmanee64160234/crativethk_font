@@ -79,6 +79,7 @@ const gotoMappinfForStudent = () => {
 }
 // goToMapping2
 const goToMapping2 = async () => {
+
     showDialog.value = true;
     await attdentStore.getAttendanceByAssignmentId(props.post!.assignmentId! + '');
 }
@@ -175,6 +176,7 @@ const captureImage = () => {
 
 // updatePost
 const updatePost = async () => {
+
     if (imageUrls.value.length > 0) {
         imageUrls.value.push(...capturedImages.value);
         const allImages = [...capturedImages.value, ...imageUrls.value];
@@ -260,7 +262,6 @@ function close() {
 
     <!-- ConfirmDialog Component -->
     <ConfirmDialog ref="confirmDlg" />
-
     <!-- Create Post Dialog -->
     <v-dialog v-model="showDialog" persistent max-width="600px">
         <v-card>
@@ -317,6 +318,11 @@ function close() {
             <!-- Dialog title without the close button -->
             <v-card-title class="headline">
                 Edit Assignment
+                <v-spacer></v-spacer>
+                <!-- Close button for dialog -->
+                <v-btn icon @click="close" class="close-button">
+                    <v-icon color="red">mdi-close</v-icon>
+                </v-btn>
             </v-card-title>
             <!-- Dialog content with form -->
             <v-card-text>
@@ -335,5 +341,14 @@ function close() {
 
 </template>
 
+<style scoped>
+.headline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 
-<style scoped></style>
+.close-button {
+  margin-right: -12px; /* Adjust this value if necessary to align with the edge */
+}
+</style>

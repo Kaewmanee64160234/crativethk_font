@@ -66,7 +66,7 @@ async function processFiles(files: File[]): Promise<Float32Array[]> {
 
 // Set the default value for role
 if (!userStore.editUser.role) {
-  userStore.editUser.role = 'อาจารย์';
+  userStore.editUser.role = 'แอดมิน';
 }
 
 </script>
@@ -86,9 +86,9 @@ if (!userStore.editUser.role) {
                     <v-col cols="12" md="8">
                         <v-row align="center">
                             <v-col cols="12">
-                                <v-text-field label="รหัสอาจารย์" dense solo required
-                                    v-model="userStore.editUser.teacherId"
-                                    :rules="[(v) => !!v || 'โปรดกรอกรหัสอาจารย์', (v) => /^[0-9]{8}$/.test(v) || 'โปรดกรอกข้อมูลเฉพาะตัวเลข 8 หลัก']"></v-text-field>
+                                <v-text-field label="รหัสแอดมิน" dense solo required
+                                    v-model="userStore.editUser.adminId"
+                                    :rules="[(v) => !!v || 'โปรดกรอกแอดมิน', (v) => /^[0-9]{8}$/.test(v) || 'โปรดกรอกข้อมูลเฉพาะตัวเลข 8 หลัก']"></v-text-field>
                             </v-col>
                             <v-col cols="12">
                                 <v-text-field label="ชื่อ" dense solo required v-model="userStore.editUser.firstName"

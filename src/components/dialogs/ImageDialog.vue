@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 import { useMessageStore } from '@/stores/message';
 import type { User } from '@/stores/types/User';
 import Loader from "@/components/loader/Loader.vue";
+import axios from 'axios';
 
 interface CanvasRefs {
   [key: number]: HTMLCanvasElement;
@@ -224,16 +225,13 @@ function float32ArrayToBase64(float32Array: Float32Array): string {
 async function save() {
   if (canUpload.value) {
     isLoading.value = true;
+
+    // Resize and convert images to Base64
     const processedImages = await Promise.all(
       imageFiles.value.map(file => resizeAndConvertImageToBase64(URL.createObjectURL(file), 800, 600, 0.7))
     );
-
-    const filesToUpload = processedImages.map((base64, index) =>
-      base64ToFile(base64, `image-${index + 1}.jpg`)
-    );
-
     const faceDescriptionsArray: string[] = [];
-    
+
     for (const image of imageFiles.value) {
       const img = new Image();
       img.src = URL.createObjectURL(image);
@@ -244,7 +242,7 @@ async function save() {
             if (detection) {
               const descriptor = detection.descriptor;
               const base64Descriptor = float32ArrayToBase64(descriptor);
-              faceDescriptionsArray.push(base64Descriptor); // Store as Base64 string
+              faceDescriptionsArray.push(base64Descriptor);
             }
             resolve();
           } catch (error) {
@@ -258,30 +256,31 @@ async function save() {
         };
       });
     }
-    userStore.editUser = {
-      ...userStore.currentUser,
-      firstName: userStore.currentUser!.firstName || '',
-      lastName: userStore.currentUser!.lastName || '',
-      files: filesToUpload, 
-      faceDescriptions: faceDescriptionsArray, 
-      images: imageUrls.value,
+
+    // Prepare data to be sent to the backend
+    const notificationData = {
+      userId: userStore.currentUser?.userId,
+      images: processedImages, // Base64 encoded images
+      faceDescriptions: faceDescriptionsArray, // Base64 encoded face descriptors
     };
 
-    // Uncomment these lines once the issue is resolved
     try {
-      await userStore.saveUser();
+      // Send the notification request to the backend
+      await axios.post(`${url}/notiforupdate`, notificationData);
+      messageStore.showInfo('Image update request sent to teacher for approval.');
       showDialog.value = false;
-      messageStore.showInfo('Image upload completed.');
-      window.location.reload();
 
+      // Optionally reload or reset the form
+      window.location.reload();
     } catch (error) {
-      messageStore.showError('Failed to save user data.');
-      console.error("Save error:", error);
+      messageStore.showError('Failed to send image update request.');
+      console.error("Notification error:", error);
     } finally {
       isLoading.value = false;
     }
   }
 }
+
 
 
 
