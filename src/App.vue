@@ -1,4 +1,6 @@
 <template>
+  <Loader v-if="loaderStore.loader" />
+
   <component
     :is="$route.meta.layout === 'mainLayout' ? MainLayout : FullLayout"
   ></component>
@@ -10,7 +12,9 @@ import { onMounted } from "vue";
 import FullLayout from "./components/layout/FullLayout.vue";
 import MainLayout from "./components/layout/MainLayout.vue";
 import { useUserStore } from "./stores/user.store";
+import { useLoaderStore } from "./stores/loader.store";
 const userStore = useUserStore();
+const loaderStore = useLoaderStore();
 // get user data fro local storage when on mounted
 onMounted(() => {
   userStore.getUserFromLocalStorage();
