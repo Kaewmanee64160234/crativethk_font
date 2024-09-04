@@ -12,6 +12,21 @@ const courseStore = useCourseStore();
 const userStore = useUserStore();
 const router = useRouter();
 const enrollmentStore = useEnrollmentStore();
+const images = ["https://img.freepik.com/free-vector/realist-illustration-room-interior_52683-64752.jpg?w=1060&t=st=1714843452~exp=1714844052~hmac=e767aadc96b291547ce66a82185eb5e078cac3c31f6ca29c677e54174e142dbb",
+  "https://i.pinimg.com/564x/ec/65/73/ec657382deed5cc8db3f7efb2329f7a3.jpg",
+  "https://i.pinimg.com/564x/88/d0/2b/88d02b3ac90940257c7cfe02bd576ab2.jpg",
+  "https://i.pinimg.com/564x/09/b9/38/09b9389c406920b420597d63193e5100.jpg",
+  "https://i.pinimg.com/564x/e5/76/f8/e576f8116717a0146760f8deac680893.jpg",
+  "https://i.pinimg.com/736x/0c/9c/25/0c9c25cbe3f54193de0e2964eb629a65.jpg",
+  "https://i.pinimg.com/564x/ce/c5/cc/cec5ccdd464656dbc2cc1ee8c9b4b63f.jpg",
+  "https://i.pinimg.com/564x/14/6d/7f/146d7f866c4b02002623ab99d2e844fb.jpg",
+  "https://i.pinimg.com/564x/03/31/f9/0331f9f0a19d37285d8622b9fff61ee7.jpg",
+  "https://i.pinimg.com/564x/33/7a/d4/337ad486dba5d4532b106c77961e5559.jpg"
+]
+const randomImage = () => {
+  const randomIndex = Math.floor(Math.random() * images.length);
+  return images[randomIndex];
+}
 
 onMounted(async () => {
   await userStore.getCurrentUser();
@@ -47,7 +62,7 @@ const showDeleteDialog = (enrollment: Enrollment) => {
         <v-card style="margin-left: 10%; margin-top: 15%"
           @click="goToCourseDetail(item.course!.coursesId!, item.course!)">
           <v-img height="15vh"
-            src="https://img.freepik.com/free-vector/realist-illustration-room-interior_52683-64752.jpg?w=1060&t=st=1714843452~exp=1714844052~hmac=e767aadc96b291547ce66a82185eb5e078cac3c31f6ca29c677e54174e142dbb"
+            :src="randomImage()"
             cover>
             <v-card-title style="margin-top: 5%">
               <h1 class="text-white">{{ item.course?.nameCourses }}</h1>

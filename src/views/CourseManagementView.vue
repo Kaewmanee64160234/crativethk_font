@@ -22,6 +22,22 @@ const userStore = useUserStore();
 const enrollmentStore = useEnrollmentStore();
 const currentStep = ref(1);
 const router = useRouter();
+const images = ["https://img.freepik.com/free-vector/realist-illustration-room-interior_52683-64752.jpg?w=1060&t=st=1714843452~exp=1714844052~hmac=e767aadc96b291547ce66a82185eb5e078cac3c31f6ca29c677e54174e142dbb",
+  "https://i.pinimg.com/564x/ec/65/73/ec657382deed5cc8db3f7efb2329f7a3.jpg",
+  "https://i.pinimg.com/564x/88/d0/2b/88d02b3ac90940257c7cfe02bd576ab2.jpg",
+  "https://i.pinimg.com/564x/09/b9/38/09b9389c406920b420597d63193e5100.jpg",
+  "https://i.pinimg.com/564x/e5/76/f8/e576f8116717a0146760f8deac680893.jpg",
+  "https://i.pinimg.com/736x/0c/9c/25/0c9c25cbe3f54193de0e2964eb629a65.jpg",
+  "https://i.pinimg.com/564x/ce/c5/cc/cec5ccdd464656dbc2cc1ee8c9b4b63f.jpg",
+  "https://i.pinimg.com/564x/14/6d/7f/146d7f866c4b02002623ab99d2e844fb.jpg",
+  "https://i.pinimg.com/564x/03/31/f9/0331f9f0a19d37285d8622b9fff61ee7.jpg",
+  "https://i.pinimg.com/564x/33/7a/d4/337ad486dba5d4532b106c77961e5559.jpg"
+]
+const randomImage = () => {
+  const randomIndex = Math.floor(Math.random() * images.length);
+  return images[randomIndex];
+}
+
 const messageStore = useMessageStore();
 console.log("user", courseStore.currentCourse?.user?.firstName);
 onMounted(async () => {
@@ -94,7 +110,7 @@ const advanceStep = () => {
       if (!courseStore.session ||
         courseStore.session.length <= 0 ||
         courseStore.session.length >= 10 ||
-        courseStore.fullScore <= 0 || 
+        courseStore.fullScore <= 0 ||
         courseStore.fullScore > 100
       ) {
         messageStore.showError("กรุณากรอกข้อมูลให้ถูกต้อง");
@@ -118,7 +134,7 @@ const advanceStep = () => {
       }
     }
   }
-  
+
   if (currentStep.value <= 3) {
     currentStep.value++;
   }
@@ -230,9 +246,7 @@ const updateCourse = () => {
     <v-row v-if="courseStore.courses.length > 0">
       <v-col cols="12" sm="6" md="4" v-for="(item, index) of courseStore.courses" :key="index">
         <v-card style="margin-left: 10%; margin-top: 15%" @click="goToCourseDetail(item.coursesId, item)">
-          <v-img height="100"
-            src="https://img.freepik.com/free-vector/realist-illustration-room-interior_52683-64752.jpg?w=1060&t=st=1714843452~exp=1714844052~hmac=e767aadc96b291547ce66a82185eb5e078cac3c31f6ca29c677e54174e142dbb"
-            cover>
+          <v-img height="100" :src="randomImage()" cover>
             <v-card-title style="margin-top: 5%">
               <h1 class="text-white">{{ item.nameCourses }}</h1>
             </v-card-title>
@@ -286,7 +300,8 @@ const updateCourse = () => {
     </v-row>
     <v-row v-else style="padding-top: 120px;">
       <v-col class="d-flex justify-center">
-        <h1>ไม่มีรายวิชา</h1></v-col>
+        <h1>ไม่มีรายวิชา</h1>
+      </v-col>
     </v-row>
   </v-container>
   <v-btn class="bottom-list-item" size="60" style="border-radius: 50%" variant="outlined"
