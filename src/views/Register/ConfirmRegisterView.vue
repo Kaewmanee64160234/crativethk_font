@@ -41,7 +41,9 @@ onMounted(async () => {
     }
 });
 
-const cancelRegister = () => {
+const cancelRegister = async () => {
+  messageStore.showInfo("Confirm rejection register");
+  await userStore.updateRegisterStatus(userStore.regisUser!.userId!, userStore.regisUser!);
   if (userStore.currentUser?.role == 'อาจารย์') {
     router.push(`/courseManagement`);
   }

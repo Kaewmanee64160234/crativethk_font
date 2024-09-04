@@ -8,14 +8,14 @@ export const useNotiforupdate = defineStore("notiforupdateStore", () => {
   const currentNotiforupdate = ref<Notiforupdate>();
 
   // Fetch all notifications
-  const fetchAllNotifications = async () => {
-    try {
-      const res = await notiforupdateService.getAllNotiforupdates();
-      notiforupdates.value = res.data; // Store the fetched data in the ref
-    } catch (error) {
-      console.error('Error fetching all notifications:', error);
-    }
-  };
+//   const fetchAllNotifications = async () => {
+//     try {
+//       const res = await notiforupdateService.getAllNotiforupdates();
+//       notiforupdates.value = res.data; // Store the fetched data in the ref
+//     } catch (error) {
+//       console.error('Error fetching all notifications:', error);
+//     }
+//   };
 
   // Get notiforupdate by ID
   const getNotiforupdateById = async (id: string) => {
@@ -26,44 +26,32 @@ export const useNotiforupdate = defineStore("notiforupdateStore", () => {
       console.log(error);
     }
   };
+    // create notification
+    const createNotiforupdate = async (notiforupdate:FormData) => {
+        try {
+        const res = await notiforupdateService.createNotificationUpdate(notiforupdate);
+        } catch (e) {
+        console.error('Error creating notiforupdate:', e);
+        }
+    };
 
-  // Delete notiforupdate
-  const deleteNotiforupdate = async (id: string) => {
-    try {
-      const res = await notiforupdateService.deleteNotiforupdate(id);
-      currentNotiforupdate.value = res.data;
-    } catch (e) {
-      console.log(e);
+    // get notifications by userId
+    const getNotiforupdateByUserId = async (userId:string) => {
+        try {
+        const res = await notiforupdateService.getNotiforupdateByUserId(userId);
+        notiforupdates.value = res.data;
+        } catch (error) {
+        console.log(error);
+        }
     }
-  };
-
-  // Create notiforupdate
-  const createNotiforupdate = async (notiforupdate: Notiforupdate) => {
-    try {
-      const res = await notiforupdateService.createNotiforupdate(notiforupdate);
-      currentNotiforupdate.value = res.data;
-    } catch (e) {
-      console.error('Error creating notiforupdate:', e);
-    }
-  };
-
-  // Get notiforupdate by UserId
-  const getNotiforupdateByUserId = async (userId: string) => {
-    try {
-      const res = await notiforupdateService.getNotiforupdateByUserId(userId);
-      notiforupdates.value = res.data;
-    } catch (error) {
-      console.log(error);
-    }
-  };
 
   return {
     notiforupdates, // Make sure this is returned so the list can be used in components
     currentNotiforupdate,
-    fetchAllNotifications,
+    // fetchAllNotifications,
     getNotiforupdateById,
     createNotiforupdate,
-    deleteNotiforupdate,
+    // deleteNotiforupdate,
     getNotiforupdateByUserId
   };
 });
