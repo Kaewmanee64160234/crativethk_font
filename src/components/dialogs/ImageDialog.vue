@@ -95,18 +95,29 @@ async function loadModels() {
 
 function base64ToFloat32Array(base64: string): Float32Array {
   try {
-    const binaryString = atob(base64);
+    // Remove metadata from base64 string if present (e.g., "data:image/jpeg;base64,")
+    const base64Data = base64.includes(',') ? base64.split(',')[1] : base64;
+
+    // Convert base64 to binary string
+    const binaryString = atob(base64Data);
     const len = binaryString.length;
     const bytes = new Uint8Array(len);
+
+    // Convert binary string to bytes
     for (let i = 0; i < len; i++) {
       bytes[i] = binaryString.charCodeAt(i);
     }
+
+    // Convert bytes to Float32Array
     return new Float32Array(bytes.buffer);
   } catch (error) {
     console.error("Failed to decode base64 string:", base64, error);
     throw error;
   }
 }
+
+
+
 
 function loadImageAndProcess(dataUrl: string, index: number): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -136,6 +147,8 @@ async function processImage(image: HTMLImageElement, index: number) {
   const ctx = canvas.getContext("2d");
 
   try {
+
+
     const detections = await faceapi.detectAllFaces(image).withFaceLandmarks().withFaceDescriptors();
 
     detections.forEach((detection) => {
@@ -211,114 +224,171 @@ function base64ToBlob(base64: string, type: string): Blob {
   return new Blob([bytes], { type });
 }
 
+// Function to calculate Euclidean distance between two face descriptors
+function calculateEuclideanDistance(descriptor1: Float32Array, descriptor2: Float32Array): number {
+  const distance = faceapi.euclideanDistance(descriptor1, descriptor2);
+  return distance;
+}
+async function saveUserUpdate() {
+  if (canUpload.value) {
+    isLoading.value = true;
+    const processedImages = await Promise.all(
+      imageFiles.value.map(file => resizeAndConvertImageToBase64(URL.createObjectURL(file), 800, 600, 0.7))
+    );
+
+    const filesToUpload = processedImages.map((base64, index) =>
+      base64ToFile(base64, `image-${index + 1}.jpg`)
+    );
+
+    const faceDescriptionsArray: string[] = [];
+
+    for (const image of imageFiles.value) {
+      const img = new Image();
+      img.src = URL.createObjectURL(image);
+      await new Promise<void>((resolve, reject) => {
+        img.onload = async () => {
+          try {
+            const detection = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
+            if (detection) {
+              const descriptor = detection.descriptor;
+              const base64Descriptor = float32ArrayToBase64(descriptor);
+              faceDescriptionsArray.push(base64Descriptor); // Store as Base64 string
+            }
+            resolve();
+          } catch (error) {
+            console.error("Face detection failed:", error);
+            reject(error);
+          }
+        };
+        img.onerror = (error) => {
+          console.error("Error loading image:", error);
+          reject(error);
+        };
+      });
+    }
+    userStore.editUser = {
+      ...userStore.currentUser,
+      firstName: userStore.currentUser!.firstName || '',
+      lastName: userStore.currentUser!.lastName || '',
+      files: filesToUpload,
+      faceDescriptions: faceDescriptionsArray,
+      images: imageUrls.value,
+    };
+
+    // Uncomment these lines once the issue is resolved
+    try {
+      await userStore.saveUser();
+      showDialog.value = false;
+      messageStore.showInfo('Image upload completed.');
+      window.location.reload();
+
+    } catch (error) {
+      messageStore.showError('Failed to save user data.');
+      console.error("Save error:", error);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+}
 async function save() {
   if (imageUrls.value && imageUrls.value.length > 0) {
     await Promise.all(imageUrls.value.map((url, index) => loadImageAndProcess(url, index)));
-    
-    const formData = new FormData();
+    // Convert user's face description from base64 string to Float32Array
+    const userFaceDescriptionBase64 = userStore.currentUser?.faceDescriptions![0]; // Assuming first descriptor
+    const userFaceDescriptor = base64ToFloat32Array(userFaceDescriptionBase64!);
 
-    console.log("croppedImagesDataUrls", croppedImagesDataUrls.value);
+    // Assuming croppedImagesDataUrls.value contains face descriptors in base64
+    const croppedImageDescriptorBase64 = faceDescriptionFields.value[0]; // First cropped face descriptor
+    const croppedFaceDescriptor = base64ToFloat32Array(croppedImageDescriptorBase64);
 
-    // Process and append cropped images to formData as files
-    for (let i = 0; i < croppedImagesDataUrls.value.length; i++) {
-      const croppedImageDataUrl = croppedImagesDataUrls.value[i];
+    console.log("User face descriptor (Float32Array):", userFaceDescriptor);
+    console.log("Cropped face descriptor (Float32Array):", croppedFaceDescriptor);
 
-      // Resize the image and convert to base64
-      const resizedImageBase64 = await resizeAndConvertToBase64(croppedImageDataUrl, 800, 600);
+    // Compare image
+    const distance = calculateEuclideanDistance(userFaceDescriptor, croppedFaceDescriptor);
+    console.log("Distance:", distance);
 
-      // Convert the resized base64 image to a Blob and then to a File
-      const blob = base64ToBlob(resizedImageBase64, "image/jpeg");
-      const imageFile = new File([blob], `croppedImage_${i + 1}_${Date.now()}.jpg`, {
-        type: "image/jpeg",
+    // Check similarity threshold (e.g., 0.6) for face matching
+    if (distance < 0.4) {
+      await saveUserUpdate();
+      Swal.fire(
+        'อัปโหลดรูปภาพสำเร็จ',
+        'ระบบกำลังประมวลผลข้อมูล',
+        'success'
+      )
+    } else {
+      await close();
+      // Add sweet alert to confirm send to teacher
+      await Swal.fire({
+        title: 'รูปภาพไม่ตรงกับข้อมูล',
+        text: 'คุณต้องการส่งรูปภาพไปยังครูหรือไม่',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'ส่ง',
+        cancelButtonText: 'ยกเลิก',
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          const formData = new FormData();
+
+          console.log("croppedImagesDataUrls", croppedImagesDataUrls.value);
+
+          // Process and append cropped images to formData as files
+          for (let i = 0; i < croppedImagesDataUrls.value.length; i++) {
+            const croppedImageDataUrl = croppedImagesDataUrls.value[i];
+
+            // Resize the image and convert to base64
+            const resizedImageBase64 = await resizeAndConvertToBase64(croppedImageDataUrl, 800, 600);
+
+            // Convert the resized base64 image to a Blob and then to a File
+            const blob = base64ToBlob(resizedImageBase64, "image/jpeg");
+            const imageFile = new File([blob], `croppedImage_${i + 1}_${Date.now()}.jpg`, {
+              type: "image/jpeg",
+            });
+
+            // Append the image file to the formData
+            formData.append("files", imageFile, imageFile.name);
+            console.log("Appended file:", imageFile.name);
+          }
+
+          // Add face descriptors to formData
+          faceDescriptionFields.value.forEach((faceDescription, index) => {
+            formData.append(`faceDescriptor${index + 1}`, faceDescription);
+          });
+
+          // Add userId to formData
+          formData.append("userId", userStore.currentUser!.userId!);
+
+          // Log the form data entries for debugging
+          for (const pair of formData.entries()) {
+            console.log(`${pair[0]}: ${pair[1]}`);
+          }
+
+          await notiStore.createNotiforupdate(formData);
+          // close dialog
+          Swal.fire(
+            'อัปโหลดรูปภาพสำเร็จ',
+            'ระบบกำลังประมวลผลข้อมูล',
+            'success'
+          )
+        }else{
+          // open dialog
+          showDialog.value = true;
+        }
       });
 
-      // Append the image file to the formData
-      formData.append("files", imageFile, imageFile.name);
-      console.log("Appended file:", imageFile.name);
+
     }
 
-    // Add face descriptors to formData
-    faceDescriptionFields.value.forEach((faceDescription, index) => {
-      formData.append(`faceDescriptor${index + 1}`, faceDescription);
-    });
 
-    // Add userId to formData
-    formData.append("userId", userStore.currentUser!.userId!);
+    await close();
+    // add sweet alert complete
 
-    // Log the form data entries for debugging
-    for (const pair of formData.entries()) {
-      console.log(`${pair[0]}: ${pair[1]}`);
-    }
 
-    await notiStore.createNotiforupdate(formData);
 
   } else {
     messageStore.showError("No images available to send.");
   }
 }
-
-
-// async function save() {
-//   if (canUpload.value) {
-//     isLoading.value = true;
-//     const processedImages = await Promise.all(
-//       imageFiles.value.map(file => resizeAndConvertImageToBase64(URL.createObjectURL(file), 800, 600, 0.7))
-//     );
-
-//     const filesToUpload = processedImages.map((base64, index) =>
-//       base64ToFile(base64, `image-${index + 1}.jpg`)
-//     );
-
-//     const faceDescriptionsArray: string[] = [];
-    
-//     for (const image of imageFiles.value) {
-//       const img = new Image();
-//       img.src = URL.createObjectURL(image);
-//       await new Promise<void>((resolve, reject) => {
-//         img.onload = async () => {
-//           try {
-//             const detection = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
-//             if (detection) {
-//               const descriptor = detection.descriptor;
-//               const base64Descriptor = float32ArrayToBase64(descriptor);
-//               faceDescriptionsArray.push(base64Descriptor); // Store as Base64 string
-//             }
-//             resolve();
-//           } catch (error) {
-//             console.error("Face detection failed:", error);
-//             reject(error);
-//           }
-//         };
-//         img.onerror = (error) => {
-//           console.error("Error loading image:", error);
-//           reject(error);
-//         };
-//       });
-//     }
-//     userStore.editUser = {
-//       ...userStore.currentUser,
-//       firstName: userStore.currentUser!.firstName || '',
-//       lastName: userStore.currentUser!.lastName || '',
-//       files: filesToUpload, 
-//       faceDescriptions: faceDescriptionsArray, 
-//       images: imageUrls.value,
-//     };
-
-//     // Uncomment these lines once the issue is resolved
-//     try {
-//       await userStore.saveUser();
-//       showDialog.value = false;
-//       messageStore.showInfo('Image upload completed.');
-//       window.location.reload();
-
-//     } catch (error) {
-//       messageStore.showError('Failed to save user data.');
-//       console.error("Save error:", error);
-//     } finally {
-//       isLoading.value = false;
-//     }
-//   }
-// }
 const handleFileChange = (event: Event) => {
   const input = event.target as HTMLInputElement;
   if (input.files && input.files.length > 0) {
