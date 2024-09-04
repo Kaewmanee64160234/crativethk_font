@@ -9,9 +9,19 @@ function getNotiforupdateById(id:string) {
   return http.get(`/notiforupdates/${id}`);
 }
 
-function createNotiforupdate(data:Notiforupdate) {
-  return http.post("/notiforupdates", data);
+async function createNotificationUpdate(formData: FormData) {
+  try {
+      // Send the formData with images and face descriptors to the backend
+      await http.post(`/notiforupdates`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+    } catch (error) {
+    console.log(error);
+    }
 }
+
 
 function updateNotiforupdate(id:string,data:Notiforupdate) {
   return http.patch(`/notiforupdates/${id}`, data);
@@ -28,4 +38,4 @@ function getNotiforupdateByUserId(userId:string) {
 
 
 
-export default { getNotiforupdate,createNotiforupdate,getNotiforupdateById,updateNotiforupdate, deleteNotiforupdate, getNotiforupdateByUserId };
+export default { getNotiforupdate,createNotificationUpdate,getNotiforupdateById,updateNotiforupdate, deleteNotiforupdate, getNotiforupdateByUserId };
