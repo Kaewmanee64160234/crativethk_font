@@ -12,6 +12,8 @@ import type Attendance from "@/stores/types/Attendances";
 import { useMessageStore } from "@/stores/message";
 import UpdateAttendantDialogView from "@/components/attendant/updateAttendantDialog.vue";
 import type { User } from "@/stores/types/User";
+import Loader from "@/components/loader/Loader.vue";
+import { useLoaderStore } from "@/stores/loader.store";
 
 const route = useRoute();
 const id = ref(route.params.idCourse);
@@ -34,6 +36,7 @@ const userStore = useUserStore();
 const url = import.meta.env.VITE_API_URL;
 const attendanceStore = useAttendanceStore();
 const roomSelect = ref<string>();
+const loaderStore = useLoaderStore();
 
 const isTeacher = computed(() => userStore.currentUser?.role === 'อาจารย์');
 const showCamera = ref(false);
@@ -49,13 +52,14 @@ const filteredUsers = computed(() => {
   }
 });
 onMounted(async () => {
+  // loader.value = true;
   await assignmentStore.getAssignmentByCourseId(id.value.toString());
   await attendanceStore.getAttendanceByCourseId(id.value.toString());
   await userStore.getUserByCourseId(id.value.toString());
   await courseStore.getCourseById(id.value.toString());
   await courseStore.getAllRooms();
   posts.value = assignmentStore.assignments;
-
+  // loader.value = false;
 
 });
 const removeImage = (index: number) => {
@@ -323,6 +327,7 @@ const openDialog = (assignment: Assignment, user: User) => {
 </script>
 
 <template>
+
   <div style="margin-top: 5%; margin-left: 5%">
     <v-tabs v-model="tab">
       <v-tab v-for="item in tabs" :key="item.id" :value="item.title">
@@ -331,6 +336,7 @@ const openDialog = (assignment: Assignment, user: User) => {
     </v-tabs>
 
     <v-container>
+
       <!-- Tab content for posts -->
       <v-tab-item v-if="tab === 'Posts'" value="Posts">
         <v-card class="mx-auto" color="primary" max-width="1200" outlined style="padding: 20px">

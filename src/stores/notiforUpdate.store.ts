@@ -29,10 +29,9 @@ export const useNotiforupdate = defineStore("notiforupdateStore", () => {
     }
 
     // create notification
-    const createNotiforupdate = async (notiforupdate:Notiforupdate) => {
+    const createNotiforupdate = async (notiforupdate:FormData) => {
         try {
-        const res = await notiforupdateService.createNotiforupdate(notiforupdate);
-        currentNotiforupdate.value = res.data;
+        const res = await notiforupdateService.createNotificationUpdate(notiforupdate);
         } catch (e) {
         console.error('Error creating notiforupdate:', e);
         }
