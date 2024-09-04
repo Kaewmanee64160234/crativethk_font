@@ -52,15 +52,14 @@ const filteredUsers = computed(() => {
   }
 });
 onMounted(async () => {
-  loader.value = true;
+  // loader.value = true;
   await assignmentStore.getAssignmentByCourseId(id.value.toString());
   await attendanceStore.getAttendanceByCourseId(id.value.toString());
   await userStore.getUserByCourseId(id.value.toString());
   await courseStore.getCourseById(id.value.toString());
   await courseStore.getAllRooms();
   posts.value = assignmentStore.assignments;
-  loader.value = false;
-
+  // loader.value = false;
 
 });
 const removeImage = (index: number) => {
