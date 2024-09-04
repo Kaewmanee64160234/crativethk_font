@@ -1,19 +1,15 @@
 <script lang="ts" setup>
 import { useUserStore } from '@/stores/user.store';
-import { ref } from 'vue';
+import { useNotiforupdate } from '@/stores/notiforUpdate.store';
+import { onMounted, ref } from 'vue';
 
 const userStore = useUserStore();
+const notiforupdateStore = useNotiforupdate();
 const showNotifications = ref(false);
-const notifications = ref([
-  { title: "New Assignment", subtitle: "You have a new assignment due tomorrow." },
-  { title: "Class Cancelled", subtitle: "Today's math class has been cancelled." },
-  // Add more notifications here
-]);
 
-const handleNotificationClick = () => {
-  showNotifications.value = !showNotifications.value;
-  console.log('Notification clicked');
-};
+onMounted(async () => {
+  await notiforupdateStore.fetchAllNotifications(); // Fetch notifications on mount
+});
 </script>
 
 <template>
@@ -34,10 +30,11 @@ const handleNotificationClick = () => {
             <v-icon>mdi-bell-outline</v-icon>
           </v-btn>
         </template>
-        
+
+        <!-- Notification List -->
         <v-list>
           <v-list-item
-            v-for="(notification, index) in notifications"
+            v-for="(notification, index) in notiforupdateStore.notiforupdates"
             :key="index"
           >
             <v-list-item-content>
@@ -46,13 +43,15 @@ const handleNotificationClick = () => {
             </v-list-item-content>
           </v-list-item>
 
-          <v-list-item v-if="notifications.length === 0">
+          <!-- No Notifications Message -->
+          <v-list-item v-if="notiforupdateStore.notiforupdates.length === 0">
             <v-list-item-content>
               <v-list-item-title>No notifications</v-list-item-title>
             </v-list-item-content>
           </v-list-item>
         </v-list>
       </v-menu>
+
       
       <v-app-bar-title style="margin: 0;">
         <span v-if="userStore.currentUser?.teacherId">

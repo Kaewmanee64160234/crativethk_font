@@ -226,12 +226,16 @@ async function save() {
   if (canUpload.value) {
     isLoading.value = true;
 
-    // Resize and convert images to Base64
     const processedImages = await Promise.all(
-      imageFiles.value.map(file => resizeAndConvertImageToBase64(URL.createObjectURL(file), 800, 600, 0.7))
+      imageFiles.value.map((file) => resizeAndConvertImageToBase64(URL.createObjectURL(file), 800, 600, 0.7))
     );
-    const faceDescriptionsArray: string[] = [];
 
+    const filesToUpload = processedImages.map((base64, index) =>
+      base64ToFile(base64, `image-${index + 1}.jpg`)
+    );
+
+    const faceDescriptionsArray: string[] = [];
+    
     for (const image of imageFiles.value) {
       const img = new Image();
       img.src = URL.createObjectURL(image);
@@ -242,7 +246,7 @@ async function save() {
             if (detection) {
               const descriptor = detection.descriptor;
               const base64Descriptor = float32ArrayToBase64(descriptor);
-              faceDescriptionsArray.push(base64Descriptor);
+              faceDescriptionsArray.push(base64Descriptor); // Store as Base64 string
             }
             resolve();
           } catch (error) {
@@ -257,9 +261,8 @@ async function save() {
       });
     }
 
-    // Prepare data to be sent to the backend
     const notificationData = {
-      userId: userStore.currentUser?.userId,
+      userId: userStore.currentUser?.userId, // Student's userId
       images: processedImages, // Base64 encoded images
       faceDescriptions: faceDescriptionsArray, // Base64 encoded face descriptors
     };
@@ -267,6 +270,10 @@ async function save() {
     try {
       // Send the notification request to the backend
       await axios.post(`${url}/notiforupdate`, notificationData);
+
+      // Notify the teacher and send an email (this will be handled by the backend)
+      await axios.post(`${url}/notiforupdate/send-email`, { userId: userStore.currentUser?.userId });
+
       messageStore.showInfo('Image update request sent to teacher for approval.');
       showDialog.value = false;
 
@@ -280,6 +287,69 @@ async function save() {
     }
   }
 }
+
+
+// async function save() {
+//   if (canUpload.value) {
+//     isLoading.value = true;
+//     const processedImages = await Promise.all(
+//       imageFiles.value.map(file => resizeAndConvertImageToBase64(URL.createObjectURL(file), 800, 600, 0.7))
+//     );
+
+//     const filesToUpload = processedImages.map((base64, index) =>
+//       base64ToFile(base64, `image-${index + 1}.jpg`)
+//     );
+
+//     const faceDescriptionsArray: string[] = [];
+    
+//     for (const image of imageFiles.value) {
+//       const img = new Image();
+//       img.src = URL.createObjectURL(image);
+//       await new Promise<void>((resolve, reject) => {
+//         img.onload = async () => {
+//           try {
+//             const detection = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
+//             if (detection) {
+//               const descriptor = detection.descriptor;
+//               const base64Descriptor = float32ArrayToBase64(descriptor);
+//               faceDescriptionsArray.push(base64Descriptor); // Store as Base64 string
+//             }
+//             resolve();
+//           } catch (error) {
+//             console.error("Face detection failed:", error);
+//             reject(error);
+//           }
+//         };
+//         img.onerror = (error) => {
+//           console.error("Error loading image:", error);
+//           reject(error);
+//         };
+//       });
+//     }
+//     userStore.editUser = {
+//       ...userStore.currentUser,
+//       firstName: userStore.currentUser!.firstName || '',
+//       lastName: userStore.currentUser!.lastName || '',
+//       files: filesToUpload, 
+//       faceDescriptions: faceDescriptionsArray, 
+//       images: imageUrls.value,
+//     };
+
+//     // Uncomment these lines once the issue is resolved
+//     try {
+//       await userStore.saveUser();
+//       showDialog.value = false;
+//       messageStore.showInfo('Image upload completed.');
+//       window.location.reload();
+
+//     } catch (error) {
+//       messageStore.showError('Failed to save user data.');
+//       console.error("Save error:", error);
+//     } finally {
+//       isLoading.value = false;
+//     }
+//   }
+// }
 
 
 

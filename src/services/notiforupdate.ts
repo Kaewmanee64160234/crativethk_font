@@ -26,6 +26,11 @@ function getNotiforupdateByUserId(userId:string) {
   return http.get(`/notiforupdates/user/${userId}`);
 }
 
+//getAllNotiforupdates
+function getAllNotiforupdates() {
+  return http.get("/notiforupdates");
+}
 
 
-export default { getNotiforupdate,createNotiforupdate,getNotiforupdateById,updateNotiforupdate, deleteNotiforupdate, getNotiforupdateByUserId };
+
+export default { getAllNotiforupdates, getNotiforupdate,createNotiforupdate,getNotiforupdateById,updateNotiforupdate, deleteNotiforupdate, getNotiforupdateByUserId };
