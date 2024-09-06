@@ -154,8 +154,8 @@ const confirmNotice = async () => {
         </v-row>
         <v-row>
           <v-col style="text-align: center;">
-            <h3>{{ userStore.regisUser?.studentId + " " + userStore.regisUser?.firstName + " " +
-              userStore.regisUser?.lastName }}</h3>
+            <h3>{{ userStore.notiUser?.studentId + " " + userStore.notiUser?.firstName + " " +
+              userStore.notiUser?.lastName }}</h3>
           </v-col>
         </v-row>
         <v-row class="d-flex justify-center">

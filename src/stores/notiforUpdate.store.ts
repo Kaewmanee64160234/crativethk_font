@@ -2,20 +2,21 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import type Notiforupdate from "./types/NotiforUpdate";
 import notiforupdateService from "@/services/notiforupdate";
+import type { User } from "./types/User";
 
 export const useNotiforupdate = defineStore("notiforupdateStore", () => {
   const notiforupdates = ref<Notiforupdate[]>([]);
   const currentNotiforupdate = ref<Notiforupdate>();
 
   // Fetch all notifications
-//   const fetchAllNotifications = async () => {
-//     try {
-//       const res = await notiforupdateService.getAllNotiforupdates();
-//       notiforupdates.value = res.data; // Store the fetched data in the ref
-//     } catch (error) {
-//       console.error('Error fetching all notifications:', error);
-//     }
-//   };
+  const fetchAllNotifications = async () => {
+    try {
+      const res = await notiforupdateService.getAllNotiforupdates();
+      notiforupdates.value = res.data; // Store the fetched data in the ref
+    } catch (error) {
+      console.error('Error fetching all notifications:', error);
+    }
+  };
 
   // Get notiforupdate by ID
   const getNotiforupdateById = async (id: string) => {
@@ -48,10 +49,10 @@ export const useNotiforupdate = defineStore("notiforupdateStore", () => {
   return {
     notiforupdates, // Make sure this is returned so the list can be used in components
     currentNotiforupdate,
-    // fetchAllNotifications,
+    fetchAllNotifications,
     getNotiforupdateById,
     createNotiforupdate,
     // deleteNotiforupdate,
-    getNotiforupdateByUserId
+    getNotiforupdateByUserId,
   };
 });

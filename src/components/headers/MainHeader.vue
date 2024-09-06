@@ -16,15 +16,9 @@ onMounted(async () => {
   <v-app-bar scroll-behavior="elevate" color="#3051AC">
     <img src="../../assets/BUU_logo.png" alt="Your Image" style="margin-left: 1%; width: 40px; height: 40px;" />
     <v-app-bar-title>ระบบจัดการการเข้าเรียนของนิสิต</v-app-bar-title>
-    
+
     <div style="display: flex; align-items: center; margin-right: 2%;">
-      <v-menu
-        v-model="showNotifications"
-        offset-y
-        bottom
-        origin="top right"
-        max-width="300"
-      >
+      <v-menu v-model="showNotifications" offset-y bottom origin="top right" max-width="300">
         <template v-slot:activator="{ props }">
           <v-btn icon v-bind="props">
             <v-icon>mdi-bell-outline</v-icon>
@@ -33,13 +27,10 @@ onMounted(async () => {
 
         <!-- Notification List -->
         <v-list>
-          <v-list-item
-            v-for="(notification, index) in notiforupdateStore.notiforupdates"
-            :key="index"
-          >
+          <v-list-item v-for="(notification, index) in notiforupdateStore.notiforupdates" :key="index">
             <v-list-item-content>
-              <v-list-item-title>{{ notification.title }}</v-list-item-title>
-              <v-list-item-subtitle>{{ notification.subtitle }}</v-list-item-subtitle>
+              <v-list-item-title>{{ notification.statusconfirmation }}</v-list-item-title>
+              <v-list-item-subtitle>{{ notification.createdDate?.toString() }}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
 
@@ -52,22 +43,22 @@ onMounted(async () => {
         </v-list>
       </v-menu>
 
-      
+
       <v-app-bar-title style="margin: 0;">
         <span v-if="userStore.currentUser?.teacherId">
           อาจารย์: {{
-            userStore.currentUser?.firstName + " " + userStore.currentUser?.lastName
-          }}
+        userStore.currentUser?.firstName + " " + userStore.currentUser?.lastName
+      }}
         </span>
         <span v-if="userStore.currentUser?.studentId">
           นิสิต: {{
-            userStore.currentUser?.firstName + " " + userStore.currentUser?.lastName
-          }}
+        userStore.currentUser?.firstName + " " + userStore.currentUser?.lastName
+      }}
         </span>
         <span v-if="userStore.currentUser?.role === 'แอดมิน'">
           แอดมิน: {{
-            userStore.currentUser?.firstName + " " + userStore.currentUser?.lastName
-          }}
+        userStore.currentUser?.firstName + " " + userStore.currentUser?.lastName
+      }}
         </span>
       </v-app-bar-title>
     </div>

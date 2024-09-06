@@ -117,7 +117,7 @@ const tab = ref(0);
           <v-text-field v-model="userStore.searchQuery" label="ค้าหารหัสนิสิต" append-inner-icon="mdi-magnify"
             hide-details dense variant="solo" class="search-bar"></v-text-field>
         </v-col>
-        <v-col cols="auto">
+        <!-- <v-col cols="auto">
           <v-btn color="primary" variant="elevated" @click="userStore.showDialog = true" class="custom-btn">
             <v-icon left>mdi-plus</v-icon>
             เพิ่มผู้ใช้นิสิต
@@ -125,7 +125,7 @@ const tab = ref(0);
               <CreateUserDialog></CreateUserDialog>
             </v-dialog>
           </v-btn>
-        </v-col>
+        </v-col> -->
         <v-col cols="auto">
           <v-btn color="primary" variant="elevated" @click="userStore.showDialog2 = true" class="custom-btn">
             <v-icon left>mdi-plus</v-icon>
@@ -160,7 +160,7 @@ const tab = ref(0);
             <thead>
               <tr>
                 <th class="text-left"></th>
-                <th class="text-left">ภาพ</th>
+                <!-- <th class="text-left">ภาพ</th> -->
                 <th class="text-left">รหัสนิสิต</th>
                 <th class="text-left">ชื่อ-นามสกุล</th>
                 <th class="text-left">ชั้นปี</th>
@@ -173,7 +173,7 @@ const tab = ref(0);
             <tbody>
               <tr v-for="(item, index) of sortedStudents" :key="index">
                 <td>{{ index + 1 }}</td>
-                <img :src="`${url}/users/${item.userId}/image`" style="width: 100px; height: 100px;">
+                <!-- <img :src="`${url}/users/${item.userId}/image`" style="width: 100px; height: 100px;"> -->
                 <td>{{ item.studentId }}</td>
                 <td>{{ item.firstName + " " + item.lastName }}</td>
                 <td>{{ item.year }}</td>

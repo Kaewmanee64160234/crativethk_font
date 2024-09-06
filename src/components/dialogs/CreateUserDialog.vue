@@ -2,6 +2,7 @@
 import { useUserStore } from '@/stores/user.store';
 import * as faceapi from 'face-api.js';
 import { onMounted } from 'vue';
+import ImageEditDialog from '@/components/dialogs/ImageEditDialog.vue';
 const userStore = useUserStore();
 onMounted(async () => {
     await loadModels();
@@ -111,17 +112,15 @@ function float32ArrayToBase64(float32Array) {
                                     :rules="[(v) => !!v || 'โปรดกรอกอีเมล']"></v-text-field>
                             </v-col>
                             <v-col cols="12">
-                                <v-combobox label="ชั้นปี" :items="['1', '2', '3', '4']"
-                                    dense solo required v-model="userStore.editUser.year" :rules="[
-                                v => !!v || 'โปรดเลือกชั้นปี',
-                                v => ['1', '2', '3', '4'].includes(v) || 'โปรดเลือกชั้นปีจากรายการที่ให้ไว้'
-                            ]"></v-combobox>
+                                <v-text-field label="ชั้นปี" dense solo required
+                                    v-model="userStore.editUser.year"
+                                    :rules="[(v) => !!v || 'โปรดใส่ชั้นปีเช่น 63, 64, 65', (v) => /^[0-9]{2}$/.test(v) || 'โปรดกรอกข้อมูลเฉพาะตัวเลข 2 หลัก']"></v-text-field>
                             </v-col>
                             <v-col cols="12">
-                                <v-combobox label="สาขา" :items="['CS', 'SE', 'IT', 'AI']"
+                                <v-combobox label="สาขา" :items="['วิทยาการคอมพิวเตอร์', 'เมคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจดทัล', 'วิศวกรรมซอฟต์แวร์', 'ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ']"
                                     dense solo required v-model="userStore.editUser.major" :rules="[
                                 v => !!v || 'โปรดเลือกสาขา',
-                                v => ['CS', 'SE', 'IT', 'AI'].includes(v) || 'โปรดเลือกสาขาจากรายการที่ให้ไว้'
+                                v =>['วิทยาการคอมพิวเตอร์', 'เมคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจดทัล', 'วิศวกรรมซอฟต์แวร์', 'ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ'].includes(v) || 'โปรดเลือกสาขาจากรายการที่ให้ไว้'
                             ]"></v-combobox>
                             </v-col>
                             <v-col cols="12">
@@ -136,10 +135,13 @@ function float32ArrayToBase64(float32Array) {
                             ]"></v-combobox>
                             </v-col>
                             <!-- {{ userStore.editUser.files }} -->
-                            <v-col cols="12" md="6">
+                            <!-- <v-col cols="12" md="6"> -->
                                 <!-- File Input -->
-                                <v-file-input label="อัพโหลดรูปภาพ" prepend-icon="mdi-camera" filled multiple
+                                <!-- <v-file-input label="อัพโหลดรูปภาพ" prepend-icon="mdi-camera" filled multiple
                                     v-model="userStore.editUser.files" accept="image/*" outlined></v-file-input>
+                            </v-col> -->
+                            <v-col cols="12">
+                                <v-btn color="blue" @click="userStore.showImageDialog = true">แสดงรูปภาพทั้งหมด</v-btn>
                             </v-col>
 
                         </v-row>
@@ -152,6 +154,9 @@ function float32ArrayToBase64(float32Array) {
             </v-card>
         </v-row>
     </v-container>
+    <v-dialog v-model="userStore.showImageDialog" persistent>
+        <ImageEditDialog></ImageEditDialog>
+    </v-dialog>
 
 </template>
 <style>
