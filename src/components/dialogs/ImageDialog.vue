@@ -54,9 +54,9 @@ async function loadModels() {
 
   try {
     await Promise.all([
+    faceapi.nets.ssdMobilenetv1.loadFromUri("/models"),
       faceapi.nets.faceRecognitionNet.loadFromUri("/models"),
       faceapi.nets.faceLandmark68Net.loadFromUri("/models"),
-      faceapi.nets.ssdMobilenetv1.loadFromUri("/models"),
     ]);
     userStore.users.forEach((user) => {
       const descriptors: Float32Array[] = [];
@@ -293,6 +293,8 @@ async function saveUserUpdate() {
   }
 }
 async function save() {
+  if(userStore.currentUser?.registerStatus != 'notConfirmed')
+{
   if (imageUrls.value && imageUrls.value.length > 0) {
     await Promise.all(imageUrls.value.map((url, index) => loadImageAndProcess(url, index)));
     // Convert user's face description from base64 string to Float32Array
@@ -383,13 +385,16 @@ async function save() {
 
 
     await close();
-    // add sweet alert complete
-
-
-
+    // add sweet alert complete\
   } else {
     messageStore.showError("No images available to send.");
   }
+}else{
+  await saveUserUpdate();
+  await close();
+
+}
+
 }
 
 
