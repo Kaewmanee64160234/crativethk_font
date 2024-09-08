@@ -6,7 +6,6 @@ import Swal from 'sweetalert2';
 import { useMessageStore } from '@/stores/message';
 import type { User } from '@/stores/types/User';
 import Loader from "@/components/loader/Loader.vue";
-import axios from 'axios';
 import { useNotiforupdate } from '@/stores/notiforUpdate.store';
 
 interface CanvasRefs {
@@ -47,6 +46,7 @@ async function close() {
 onMounted(async () => {
   await loadModels()
   await userStore.getUsersById(userStore.currentUser?.userId!);
+  await userStore.getCurrentUser();
   images.value = userStore.currentUser?.images?.map((image: string) => `${url}/users/image/filename/${image}`) ?? [];
 });
 
@@ -280,9 +280,9 @@ async function saveUserUpdate() {
     // Uncomment these lines once the issue is resolved
     try {
       await userStore.saveUser();
+
       showDialog.value = false;
       messageStore.showInfo('Image upload completed.');
-      window.location.reload();
 
     } catch (error) {
       messageStore.showError('Failed to save user data.');
@@ -358,7 +358,7 @@ async function save() {
           });
 
           // Add userId to formData
-          formData.append("userId", userStore.currentUser!.userId!);
+          formData.append("userId", userStore.currentUser?.userId!);
 
           // Log the form data entries for debugging
           for (const pair of formData.entries()) {
@@ -481,6 +481,13 @@ const hasUploadedImages = computed(() => imageUrls.value.length > 0);
 
 const canUpload = computed(() => imageFiles.value.length === 5);
 
+
+const deleteImage = (index: number) => {
+  imageUrls.value.splice(index, 1);
+  imageFiles.value.splice(index, 1);
+  console.log("image",imageUrls.value)
+  
+};
 </script>
 
 <template>
@@ -522,7 +529,9 @@ const canUpload = computed(() => imageFiles.value.length === 5);
             </v-col>
             <v-col v-for="(image, index) in imageUrls" :key="'uploaded-' + index" cols="2" md="2" lg="2"
               class="image-container">
-              <v-img :src="image" aspect-ratio="1" class="rounded-lg ma-2 d-flex align-center justify-center"></v-img>
+              <v-img :src="image" aspect-ratio="1" class="rounded-lg ma-2 d-flex align-center justify-center">
+                <v-icon class="remove-btn" color="red" @click="() => deleteImage(index)" size="40">mdi mdi-close-circle-outline</v-icon>
+              </v-img>
             </v-col>
           </v-row>
 
@@ -530,8 +539,8 @@ const canUpload = computed(() => imageFiles.value.length === 5);
           <v-row>
             <v-col cols="12" class="mt-4">
               <v-file-input :key="fileInputKey" label="อัปโหลดรูปภาพ" multiple prepend-icon="mdi-camera" filled
-                @change="handleFileChange" accept="image/*" variant="outlined"
-                :rules="[() => canUpload || imageUrls.length < 5 ? true : 'ต้องอัปโหลดรูปภาพให้ครบ 5 รูป']"></v-file-input>
+                @change="handleFileChange" accept="image/*" variant="outlined" 
+                :rules="[() => canUpload ? true : 'ต้องอัปโหลดรูปภาพให้ครบ 5 รูป']"></v-file-input>
             </v-col>
           </v-row>
 
@@ -587,5 +596,11 @@ const canUpload = computed(() => imageFiles.value.length === 5);
   align-items: center;
   justify-content: center;
   border-radius: 8px;
+}
+
+.remove-btn {
+  position: absolute;
+  top: 0px;
+  right: 27px;
 }
 </style>

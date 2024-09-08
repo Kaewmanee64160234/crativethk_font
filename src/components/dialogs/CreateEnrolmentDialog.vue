@@ -16,7 +16,7 @@ const messageStore = useMessageStore();
 
 onMounted(async () => {
   courseStore.getCourses();
-  await userStore.getCurrentUser();
+  await userStore.getUsersById(userStore.currentUser?.userId!);
 
 });
 const saveEnrollment = () => {
