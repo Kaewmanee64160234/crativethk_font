@@ -273,7 +273,7 @@ async function saveUserUpdate() {
 
       showDialog.value = false;
       messageStore.showInfo('Image upload completed.');
-      await userStore.getUsersById(userStore.currentUser?.userId!);
+      // await userStore.getUsersById(userStore.currentUser?.userId!);
 
     } catch (error) {
       messageStore.showError('Failed to save user data.');
@@ -304,12 +304,14 @@ async function save() {
     // Check similarity threshold (e.g., 0.6) for face matching
     if (distance < 0.4) {
       await saveUserUpdate();
-      Swal.fire(
-        'อัปโหลดรูปภาพสำเร็จ',
-        'ระบบกำลังประมวลผลข้อมูล',
-        'success'
-      )
-      await userStore.getUsersById(userStore.currentUser?.userId!);
+      messageStore.showConfirm('อัปโหลดรูปภาพสำเร็จ')
+      // Swal.fire(
+      //   'อัปโหลดรูปภาพสำเร็จ',
+      //   'ระบบกำลังประมวลผลข้อมูล',
+      //   'success'
+      // )
+      window.location.reload();
+      // await userStore.getUsersById(userStore.currentUser?.userId!);
     } else {
       await close();
       // Add sweet alert to confirm send to teacher
