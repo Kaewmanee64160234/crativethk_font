@@ -14,8 +14,8 @@ export interface User {
   registerStatus?: string;
   profileImage?: string;
   faceDescriptions?: string[];
-  createdAt?: Date;
-  updatedAt?: Date;
+  createdDate?: Date;
+  updatedDate?: Date;
   access_token?: string;
   images?:string[];
 }
@@ -57,8 +57,8 @@ export function mapToUser(data: any): User {
     // faceDescriptions: faceDescriptions,
     picture: data.picture,
     profileImage: data.profileImage,
-    createdAt: data.createdAt ? new Date(data.createdAt) : undefined,
-    updatedAt: data.updatedAt ? new Date(data.updatedAt) : undefined,
+    createdDate: data.createdDate ? new Date(data.createdDate) : undefined,
+    updatedDate: data.updatedDate ? new Date(data.updatedDate) : undefined,
     images: images,
   };
 }

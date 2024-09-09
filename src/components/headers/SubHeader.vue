@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { useUserStore } from "@/stores/user.store";
-
 const userStore = useUserStore();
 </script>
 <template>
@@ -10,7 +9,7 @@ const userStore = useUserStore();
           <div v-if="userStore.currentUser?.teacherId">
             <v-list-item link to="/courseManagement" prepend-icon="mdi-human-male-board" title="รายวิชาที่สอน" value="my-courses"></v-list-item>
           </div>
-          <div v-if="userStore.currentUser?.studentId && userStore.currentUser?.registerStatus == 'confirmed'">
+          <div v-if="userStore.currentUser?.registerStatus === 'confirmed'">
             <v-list-item link to="/enrolmentManagement" prepend-icon="mdi-account-school" title="รายวิชาที่ลงทะเบียน" value="my-enrollment"></v-list-item>
           </div>
           <div v-if="userStore.currentUser?.role === 'แอดมิน'">

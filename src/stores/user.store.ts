@@ -199,13 +199,13 @@ const updateRegisterStatus = async (userId: number, user:User) => {
 //getUsersById
 const getUsersById = async (id: number) => {
   try {
-      const res = await userService.getUserById(id);
-      console.log("res", res.data);
-      currentUser.value = mapToUser(res.data); // Directly map the single user object
+    const res = await userService.getUserById(id);
+    console.log("API response:", res.data);
+    currentUser.value = mapToUser(res.data); // Ensure mapToUser maps 'updatedAt'
   } catch (e) {
-      console.log(e);
+    console.error("Failed to fetch user by ID:", e);
   }
-}
+};
 
 const getUsersByStdId = async (id: string) => {
   try {

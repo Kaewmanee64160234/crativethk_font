@@ -6,7 +6,6 @@ import Swal from 'sweetalert2';
 import { useMessageStore } from '@/stores/message';
 import type { User } from '@/stores/types/User';
 import Loader from "@/components/loader/Loader.vue";
-import axios from 'axios';
 import { useNotiforupdate } from '@/stores/notiforUpdate.store';
 
 interface CanvasRefs {
@@ -93,28 +92,28 @@ async function loadModels() {
   }
 }
 
-function base64ToFloat32Array(base64: string): Float32Array {
-  try {
-    // Remove metadata from base64 string if present (e.g., "data:image/jpeg;base64,")
-    const base64Data = base64.includes(',') ? base64.split(',')[1] : base64;
+function base64ToFloat32Array(base64: string | undefined): Float32Array {
+  if (!base64) {
+    console.error("base64 string is undefined or not provided");
+    return new Float32Array(); // Return an empty array to safely handle this case
+  }
 
-    // Convert base64 to binary string
+  // Ensure the string contains the expected structure and split correctly
+  const base64Data = base64.includes(',') ? base64.split(',')[1] : base64;
+  try {
     const binaryString = atob(base64Data);
     const len = binaryString.length;
     const bytes = new Uint8Array(len);
-
-    // Convert binary string to bytes
     for (let i = 0; i < len; i++) {
       bytes[i] = binaryString.charCodeAt(i);
     }
-
-    // Convert bytes to Float32Array
     return new Float32Array(bytes.buffer);
   } catch (error) {
-    console.error("Failed to decode base64 string:", base64, error);
-    throw error;
+    console.error("Error converting base64 to bytes:", error);
+    return new Float32Array();
   }
 }
+
 
 
 
@@ -147,27 +146,17 @@ async function processImage(image: HTMLImageElement, index: number) {
   const ctx = canvas.getContext("2d");
 
   try {
-
-
     const detections = await faceapi.detectAllFaces(image).withFaceLandmarks().withFaceDescriptors();
-
-    detections.forEach((detection) => {
-      // const bestMatch = findBestUserMatch(detection.descriptor);
-      const cropCanvas = document.createElement("canvas");
-      const cropCtx = cropCanvas.getContext("2d");
-      const { x, y, width, height } = detection.detection.box;
-      cropCanvas.width = width;
-      cropCanvas.height = height;
-      cropCtx!.drawImage(image, x, y, width, height, 0, 0, width, height);
-
-      const croppedDataURL = cropCanvas.toDataURL();
-      croppedImagesDataUrls.value.push(croppedDataURL);
-      // chnage floadt 32 array to base 64 and save in faceDescriptionFields
+    detections.forEach(detection => {
+      if (!detection.descriptor) {
+        console.error("Descriptor is missing for the detected face");
+        return; // Skip this iteration if the descriptor is not available
+      }
       const base64Descriptor = float32ArrayToBase64(detection.descriptor);
-      faceDescriptionFields.value.push(base64Descriptor);
-
-
-
+      if (base64Descriptor) {
+        const float32Array = base64ToFloat32Array(base64Descriptor);
+        // Continue processing with float32Array
+      }
     });
   } catch (error) {
     console.error("Failed to process face detection:", error);
@@ -176,6 +165,7 @@ async function processImage(image: HTMLImageElement, index: number) {
     console.timeEnd(`Image Detection and Descriptor Time - Image ${index}`);
   }
 }
+
 
 
 function float32ArrayToBase64(float32Array: Float32Array): string {
@@ -278,9 +268,10 @@ async function saveUserUpdate() {
     // Uncomment these lines once the issue is resolved
     try {
       await userStore.saveUser();
+
       showDialog.value = false;
       messageStore.showInfo('Image upload completed.');
-      window.location.reload();
+      // await userStore.getUsersById(userStore.currentUser?.userId!);
 
     } catch (error) {
       messageStore.showError('Failed to save user data.');
@@ -311,11 +302,14 @@ async function save() {
     // Check similarity threshold (e.g., 0.6) for face matching
     if (distance < 0.4) {
       await saveUserUpdate();
-      Swal.fire(
-        'อัปโหลดรูปภาพสำเร็จ',
-        'ระบบกำลังประมวลผลข้อมูล',
-        'success'
-      )
+      messageStore.showConfirm('อัปโหลดรูปภาพสำเร็จ')
+      // Swal.fire(
+      //   'อัปโหลดรูปภาพสำเร็จ',
+      //   'ระบบกำลังประมวลผลข้อมูล',
+      //   'success'
+      // )
+      window.location.reload();
+      // await userStore.getUsersById(userStore.currentUser?.userId!);
     } else {
       await close();
       // Add sweet alert to confirm send to teacher
@@ -356,7 +350,7 @@ async function save() {
           });
 
           // Add userId to formData
-          formData.append("userId", userStore.currentUser!.userId!);
+          formData.append("userId", userStore.currentUser?.userId!);
 
           // Log the form data entries for debugging
           for (const pair of formData.entries()) {
@@ -370,7 +364,7 @@ async function save() {
             'ระบบกำลังประมวลผลข้อมูล',
             'success'
           )
-        }else{
+        } else {
           // open dialog
           showDialog.value = true;
         }
@@ -382,9 +376,6 @@ async function save() {
 
     await close();
     // add sweet alert complete
-
-
-
   } else {
     messageStore.showError("No images available to send.");
   }
@@ -477,6 +468,31 @@ const hasUploadedImages = computed(() => imageUrls.value.length > 0);
 
 const canUpload = computed(() => imageFiles.value.length === 5);
 
+
+const deleteImage = (index: number) => {
+  imageUrls.value.splice(index, 1);
+  imageFiles.value.splice(index, 1);
+  // console.log("image", imageUrls.value)
+
+};
+const checkConfirmImage = () => {
+  const created = new Date(userStore.currentUser?.createdDate!);
+  const updated = new Date(userStore.currentUser?.updatedDate!);
+  
+  // This will compare full date and time
+  const isSameDateTime = created.getTime() !== updated.getTime(); // Compares timestamp
+  
+  console.log("isSameDateTime", isSameDateTime)
+  if (isSameDateTime && userStore.currentUser?.registerStatus === "notConfirmed") {
+    console.log("ya1");
+    return true;
+  } else {
+    console.log("ya2");
+    return false;
+  }
+};
+console.log("user2", userStore.currentUser)
+
 </script>
 
 <template>
@@ -519,7 +535,10 @@ const canUpload = computed(() => imageFiles.value.length === 5);
             </v-col>
             <v-col v-for="(image, index) in imageUrls" :key="'uploaded-' + index" cols="2" md="2" lg="2"
               class="image-container">
-              <v-img :src="image" aspect-ratio="1" class="rounded-lg ma-2 d-flex align-center justify-center"></v-img>
+              <v-img :src="image" aspect-ratio="1" class="rounded-lg ma-2 d-flex align-center justify-center">
+                <v-icon class="remove-btn" color="red" @click="() => deleteImage(index)" size="40">mdi
+                  mdi-close-circle-outline</v-icon>
+              </v-img>
             </v-col>
           </v-row>
 
@@ -527,8 +546,8 @@ const canUpload = computed(() => imageFiles.value.length === 5);
           <v-row>
             <v-col cols="12" class="mt-4">
               <v-file-input :key="fileInputKey" label="อัปโหลดรูปภาพ" multiple prepend-icon="mdi-camera" filled
-                @change="handleFileChange" accept="image/*" variant="outlined"
-                :rules="[() => canUpload || imageUrls.length < 5 ? true : 'ต้องอัปโหลดรูปภาพให้ครบ 5 รูป']"></v-file-input>
+                @change="handleFileChange" accept="image/*" variant="outlined" :disabled="checkConfirmImage()"
+                :rules="[() => canUpload ? true : 'ต้องอัปโหลดรูปภาพให้ครบ 5 รูป']"></v-file-input>
             </v-col>
           </v-row>
 
@@ -584,5 +603,11 @@ const canUpload = computed(() => imageFiles.value.length === 5);
   align-items: center;
   justify-content: center;
   border-radius: 8px;
+}
+
+.remove-btn {
+  position: absolute;
+  top: 0px;
+  right: 27px;
 }
 </style>
