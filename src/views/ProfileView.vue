@@ -28,7 +28,7 @@ const showChekingHistory = (course: Course) => {
 };
 
 onMounted(async () => {
-    await userStore.getCurrentUser()
+    await userStore.getCurrentUser();
     if (isTeacher.value && userStore.currentUser!.teacherId) {
         await courseStore.getCourseByTeachId(userStore.currentUser!.teacherId!);
     }
