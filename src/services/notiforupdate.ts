@@ -37,4 +37,9 @@ function getAllNotiforupdates() {
   return http.get("/notiforupdates");
 }
 
-export default { getAllNotiforupdates,createNotificationUpdate,getNotiforupdateById,updateNotiforupdate, deleteNotiforupdate, getNotiforupdateByUserId };
+//getNotificationByUserReceive
+function getNotificationByUserReceive(userReceive:string) {
+  return http.get(`/notiforupdates/userReceive/${userReceive}`);
+}
+
+export default { getNotificationByUserReceive,getAllNotiforupdates,createNotificationUpdate,getNotiforupdateById,updateNotiforupdate, deleteNotiforupdate, getNotiforupdateByUserId };

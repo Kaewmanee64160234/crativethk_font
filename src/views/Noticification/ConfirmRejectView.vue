@@ -120,7 +120,7 @@ const resizeAndConvertToBase64 = (
 
 const cancelNotice = async () => {
   messageStore.showInfo("Confirm rejection of notice");
-  await userStore.updateRegisterStatus(userStore.regisUser!.userId!, userStore.regisUser!);
+  // await userStore.updateRegisterStatus(userStore.regisUser!.userId!, userStore.regisUser!);
   router.push(`/userManagement`);
 };
 

@@ -46,6 +46,16 @@ export const useNotiforupdate = defineStore("notiforupdateStore", () => {
         }
     }
 
+    //getNotificationByUserReceive
+    const getNotificationByUserReceive = async (userReceive:User) => {
+        try {
+        const res = await notiforupdateService.getNotificationByUserReceive(userReceive!.userId!);
+        notiforupdates.value = res.data;
+        } catch (error) {
+        console.log(error);
+        }
+    }
+
   return {
     notiforupdates, // Make sure this is returned so the list can be used in components
     currentNotiforupdate,
@@ -54,5 +64,6 @@ export const useNotiforupdate = defineStore("notiforupdateStore", () => {
     createNotiforupdate,
     // deleteNotiforupdate,
     getNotiforupdateByUserId,
+    getNotificationByUserReceive,
   };
 });

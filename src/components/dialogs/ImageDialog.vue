@@ -31,7 +31,7 @@ const identifications = ref<Identification[]>([]);
 const canvasRefs = reactive<CanvasRefs>({});
 const croppedImagesDataUrls = ref<string[]>([]);
 const userDescriptors = new Map<string, Float32Array[]>();
-const url = import.meta.env.VITE_API_URL;
+const url = 'http://localhost:3000';
 const imageUrls = ref<string[]>([]);
 const imageFiles = ref<File[]>([]);
 const fileInputKey = ref(Date.now()); // Key to reset the file input field
@@ -504,6 +504,7 @@ const canUpload = computed(() => imageFiles.value.length === 5);
           </v-row>
 
           <!-- Existing Images -->
+        <!-- {{ images }} -->
           <v-row>
             <v-col v-for="(image, index) in images" :key="'existing-' + index" cols="2" md="2" lg="2"
               class="image-container">
