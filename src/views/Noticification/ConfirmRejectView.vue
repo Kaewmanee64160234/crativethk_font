@@ -2,23 +2,25 @@
 import { useMessageStore } from '@/stores/message';
 import type { User } from '@/stores/types/User';
 import { useUserStore } from '@/stores/user.store';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import * as faceapi from "face-api.js";
 import { useRoute, useRouter } from 'vue-router';
 import Loader from "@/components/loader/Loader.vue";
+import { useNotiforupdate } from '@/stores/notiforUpdate.store';
 
 const userStore = useUserStore();
+const notiforupdateStore = useNotiforupdate();
+const firstNotification = computed(() => notiforupdateStore.notiforupdates[0]);
 const stdId = ref();
 const user = ref<User | undefined>(undefined);
+const url = 'http://localhost:3000';
 const route = useRoute();
 const router = useRouter();
 const isLoading = ref(false);
-const images = ref<string[]>([]);
 const faceDescriptors = ref<Float32Array[]>([]); // To hold the face descriptors for similarity comparison
 const similarityScores = ref<number[]>([]); // To store similarity scores between images
 
 const imageStdUrl = import.meta.env.VITE_API_STD_URL;
-const url = import.meta.env.VITE_API_URL;
 const messageStore = useMessageStore();
 stdId.value = route.params.stdId as string;
 
@@ -43,6 +45,7 @@ onMounted(async () => {
 
             // Calculate similarity scores between images
             calculateSimilarity();
+            images.value = userStore.currentUser?.images?.map((image: string) => `${url}/users/image/filename/${image}`) ?? [];
         }
     } catch (error) {
         console.error("Error loading images:", error);
@@ -50,7 +53,13 @@ onMounted(async () => {
         isLoading.value = false;
     }
 });
-
+const images = computed(() => {
+  // Check if the notification exists and has a userSender with images
+  const notificationUserImages = firstNotification.value?.userSender?.images;
+  
+  // Map the image names to complete URLs or return an empty array if no images are available
+  return notificationUserImages?.map((image: string) => `${url}/notiforupdates/image/filename/${image}`) ?? [];
+});
 // Calculate similarity between all face descriptors
 const calculateSimilarity = () => {
     similarityScores.value = [];
@@ -152,16 +161,20 @@ const confirmNotice = async () => {
             <h1>ยืนยันการเปลี่ยนรูปนิสิต</h1>
           </v-col>
         </v-row>
-        <v-row>
-          <v-col style="text-align: center;">
-            <h3>{{ userStore.notiUser?.studentId + " " + userStore.notiUser?.firstName + " " +
-              userStore.notiUser?.lastName }}</h3>
+        <!-- Check if notifications exist and show only the first one -->
+        <v-row v-if="firstNotification" class="d-flex justify-center">
+          <!-- Display the first notification -->
+          <v-col cols="12" class="text-center">
+            <h3>
+              {{ firstNotification.userSender?.studentId }} 
+              {{ firstNotification.userSender?.firstName }} 
+              {{ firstNotification.userSender?.lastName }}
+            </h3>
           </v-col>
-        </v-row>
-        <v-row class="d-flex justify-center">
-          <v-col v-for="(image, index) in images" :key="'existing-' + index" cols="2" md="2" lg="2"
-            class="image-container">
-            <v-img :src="image" aspect-ratio="1" class="rounded-lg d-flex align-center justify-center"></v-img>
+          
+          <!-- Display user images -->
+          <v-col cols="12" class="d-flex justify-center">
+            <v-img v-for="(image, index) in images" :key="index" :src="image" class="mb-2" max-width="100px" max-height="100px" />
           </v-col>
         </v-row>
 

@@ -3,19 +3,58 @@ import { useMessageStore } from '@/stores/message';
 import { useUserStore } from '@/stores/user.store';
 import * as faceapi from 'face-api.js';
 import ImageEditDialog from '@/components/dialogs/ImageEditDialog.vue';
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 onMounted(async () => {
     await loadModels();
 });
 
 const userStore = useUserStore();
 const url = import.meta.env.VITE_API_URL;
+// Snackbar state
+const snackbarVisible = ref(false);
+const snackbarMessage = ref('');
+const snackbarColor = ref('error');
+
+function showSnackbar(message: string, color: string = 'error') {
+    snackbarMessage.value = message;
+    snackbarColor.value = color;
+    snackbarVisible.value = true;
+}
+
 async function save() {
     const faceDescriptions = await processFiles(userStore.editUser.files);
     const dataFaceBase64 = faceDescriptions.map((faceDescription) => float32ArrayToBase64(faceDescription));
     userStore.editUser.faceDescriptions = dataFaceBase64;
     console.log(userStore.editUser.faceDescriptions);
-
+//check if studentId is empty and not 8 numbers
+    if (!userStore.editUser.studentId || !/^[0-9]{8}$/.test(userStore.editUser.studentId)) {
+        return;
+    }else if (!userStore.editUser.firstName || !userStore.editUser.lastName ||
+        !/^[A-Za-zก-๙]+$/.test(userStore.editUser.firstName) ||
+        !/^[A-Za-zก-๙]+$/.test(userStore.editUser.lastName)) {
+        showSnackbar('โปรดกรอกชื่อและนามสกุลที่ไม่มีตัวเลข');
+        return;
+    }
+    //check if year is empty and not 2 numbers
+    else if (!userStore.editUser.year || !/^[0-9]{2}$/.test(userStore.editUser.year)) {
+        showSnackbar('โปรดกรอกชั้นปีให้ถูกต้อง');
+        return;
+    }
+    //check if major is empty and not วิทยาการคอมพิวเตอร์, เมคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจดทัล, วิศวกรรมซอฟต์แวร์, ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ
+    else if (!userStore.editUser.major || !['วิทยาการคอมพิวเตอร์', 'เมคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจดทัล', 'วิศวกรรมซอฟต์แวร์', 'ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ'].includes(userStore.editUser.major)) {
+        showSnackbar('โปรดเลือกสาขาให้ถูกต้อง');
+        return;
+    }
+    //check if role is not นิสิต
+    else if (userStore.editUser.role != 'นิสิต') {
+        showSnackbar('โปรดเลือกตำแหน่งที่ถูกต้อง');
+        return;
+    }
+    //check if status is not กำลังศึกษา, พ้นสภาพนิสิต, สำเร็จการศึกษา
+    else if (!['กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา'].includes(userStore.editUser.status ?? '')) {
+        showSnackbar('โปรดเลือกสถานะภาพที่ถูกต้อง');
+        return;
+    }
     await userStore.saveUser();
     userStore.resetUser();
     // window.location.reload();
@@ -146,6 +185,15 @@ function float32ArrayToBase64(float32Array) {
                 </v-card-actions>
             </v-card>
         </v-row>
+        <!-- Snackbar for showing errors -->
+        <v-snackbar v-model="snackbarVisible" :color="snackbarColor" top right :timeout="3000">
+            {{ snackbarMessage }}
+            <template v-slot:action="{ attrs }">
+                <v-btn color="white" text v-bind="attrs" @click="snackbarVisible = false">
+                    Close
+                </v-btn>
+            </template>
+        </v-snackbar>
     </v-container>
     <v-dialog v-model="userStore.showImageDialog" persistent>
         <ImageEditDialog></ImageEditDialog>

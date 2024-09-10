@@ -218,7 +218,7 @@ const router = createRouter({
     },
     // confirmRejectNotic
     {
-      path: "/confirmRejectNotic",
+      path: "/confirmRejectNotic/:noticId",
       name: "confirmRejectNotic",
       components: {
         default: () => import("../views/Noticification/ConfirmRejectView.vue"),

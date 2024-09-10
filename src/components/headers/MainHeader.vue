@@ -17,7 +17,7 @@ onMounted(async () => {
 
 //function click to the ConfirmRejectView.vue
 function click() {
-  router.push('/confirmRejectNotic');
+  router.push('/confirmRejectNotic/:noticId');
 }
 </script>
 

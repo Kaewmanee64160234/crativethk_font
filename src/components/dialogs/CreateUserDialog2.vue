@@ -1,75 +1,124 @@
 <script lang="ts" setup>
+import { useMessageStore } from '@/stores/message';
 import { useUserStore } from '@/stores/user.store';
 import * as faceapi from 'face-api.js';
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 
 const userStore = useUserStore();
+const messageStore = useMessageStore();
+
+// Snackbar state
+const snackbarVisible = ref(false);
+const snackbarMessage = ref('');
+const snackbarColor = ref('error');
+
 onMounted(async () => {
-  await loadModels();
+    await loadModels();
 });
 
 async function loadModels() {
-  await faceapi.nets.ssdMobilenetv1.loadFromUri('/models');
-  await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
-  await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
+    await faceapi.nets.ssdMobilenetv1.loadFromUri('/models');
+    await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
+    await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
 }
+
 async function save() {
-    // loop create faceDescription
-    // const faceDescriptions = await processFiles(userStore.editUser.files);
-    // userStore.editUser.faceDescriptions = faceDescriptions;
+    // check if teacherId is empty and not 8 digits
+    if (!userStore.editUser.teacherId || !/^[0-9]{8}$/.test(userStore.editUser.teacherId)) {
+        showSnackbar('โปรดกรอกรหัสอาจารย์ 8 หลัก');
+        return;
+    } else if (!userStore.editUser.firstName || !userStore.editUser.lastName ||
+        !/^[A-Za-zก-๙]+$/.test(userStore.editUser.firstName) ||
+        !/^[A-Za-zก-๙]+$/.test(userStore.editUser.lastName)) {
+        showSnackbar('โปรดกรอกชื่อและนามสกุลที่ไม่มีตัวเลข');
+        return;
+    }
+    // check if role is not "อาจารย์"
+    else if (userStore.editUser.role !== 'อาจารย์') {
+        showSnackbar('โปรดเลือกตำแหน่งที่ถูกต้อง');
+        return;
+    }
+
+    // check if status is not valid
+    else if (!['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง'].includes(userStore.editUser.status ?? '')) {
+        showSnackbar('โปรดเลือกสถานะภาพที่ถูกต้อง');
+        return;
+    }
+    // check if email is empty and follows the email format
+    else if (!userStore.editUser.email || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(userStore.editUser.email)) {
+        showSnackbar('โปรดกรอกอีเมลให้ถูกต้อง');
+        return;
+    }
+    // check if files are present
+    else if (!userStore.editUser.files || userStore.editUser.files.length === 0) {
+        showSnackbar('โปรดอัปโหลดรูปภาพ 1 รูป');
+        return;
+    }
+
+    // Proceed to save the user if all validations pass
     await userStore.saveUser();
     await userStore.resetUser();
+    await userStore.closeDialog();
 }
 
 async function cancel() {
     userStore.resetUser();
     userStore.closeDialog();
 }
-const onImageError = (event: any) => {
-  event.target.src = 'path_to_default_image'; // Provide the path to a default image
-};
-async function createImageElement(file: File): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    
-    reader.onload = () => {
-      const img = new Image();
-      img.src = reader.result as string;
-      img.onload = () => resolve(img);
-      img.onerror = reject;
-    };
-    
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-async function processFiles(files: File[]): Promise<Float32Array[]> {
-  const faceDescriptions: Float32Array[] = [];
 
-  for (const file of files) {
-    const imgElement = await createImageElement(file);
-    const faceDescription = await faceapi
-      .detectSingleFace(imgElement, new faceapi.SsdMobilenetv1Options())
-      .withFaceLandmarks()
-      .withFaceDescriptor();
-    
-    if (faceDescription) {
-      faceDescriptions.push(faceDescription.descriptor);
+const onImageError = (event: any) => {
+    event.target.src = 'path_to_default_image'; // Provide the path to a default image
+};
+
+async function createImageElement(file: File): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = () => {
+            const img = new Image();
+            img.src = reader.result as string;
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+        };
+
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+async function processFiles(files: File[]): Promise<Float32Array[]> {
+    const faceDescriptions: Float32Array[] = [];
+
+    for (const file of files) {
+        const imgElement = await createImageElement(file);
+        const faceDescription = await faceapi
+            .detectSingleFace(imgElement, new faceapi.SsdMobilenetv1Options())
+            .withFaceLandmarks()
+            .withFaceDescriptor();
+
+        if (faceDescription) {
+            faceDescriptions.push(faceDescription.descriptor);
+        }
+
+        // Clean up the created image element
+        imgElement.remove();
     }
 
-    // Clean up the created image element
-    imgElement.remove();
-  }
+    return faceDescriptions;
+}
 
-  return faceDescriptions;
+function showSnackbar(message: string, color: string = 'error') {
+    snackbarMessage.value = message;
+    snackbarColor.value = color;
+    snackbarVisible.value = true;
 }
 
 // Set the default value for role
 if (!userStore.editUser.role) {
-  userStore.editUser.role = 'อาจารย์';
+    userStore.editUser.role = 'อาจารย์';
 }
-
 </script>
+
 <template>
     <v-container>
         <v-row justify="center">
@@ -103,12 +152,12 @@ if (!userStore.editUser.role) {
                                     :rules="[(v) => !!v || 'โปรดกรอกอีเมล']"></v-text-field>
                             </v-col>
                             <v-col cols="12">
-                                <v-text-field label="ตำแหน่ง" dense solo required v-model="userStore.editUser.role" 
+                                <v-text-field label="ตำแหน่ง" dense solo required v-model="userStore.editUser.role"
                                     :rules="[(v) => !!v || 'โปรดกรอกตำแหน่ง']"></v-text-field>
                             </v-col>
                             <v-col cols="12">
-                                <v-combobox label="สถานะภาพ" :items="['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง']" dense solo required
-                                    v-model="userStore.editUser.status" :rules="[
+                                <v-combobox label="สถานะภาพ" :items="['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง']" dense
+                                    solo required v-model="userStore.editUser.status" :rules="[
                                         v => !!v || 'โปรดเลือกสถานะภาพ',
                                         v => ['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง'].includes(v) || 'โปรดเลือกสถานะภาพจากรายการที่ให้ไว้'
                                     ]"></v-combobox>
@@ -129,9 +178,19 @@ if (!userStore.editUser.role) {
                 </v-card-actions>
             </v-card>
         </v-row>
-    </v-container>
 
+        <!-- Snackbar for showing errors -->
+        <v-snackbar v-model="snackbarVisible" :color="snackbarColor" top right :timeout="3000">
+            {{ snackbarMessage }}
+            <template v-slot:action="{ attrs }">
+                <v-btn color="white" text v-bind="attrs" @click="snackbarVisible = false">
+                    Close
+                </v-btn>
+            </template>
+        </v-snackbar>
+    </v-container>
 </template>
+
 <style>
 .actions {
     justify-content: flex-end;
