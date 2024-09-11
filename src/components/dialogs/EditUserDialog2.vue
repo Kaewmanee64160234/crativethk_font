@@ -1,11 +1,44 @@
 <script lang="ts" setup>
 import { useUserStore } from '@/stores/user.store';
+import { ref } from 'vue';
 const userStore = useUserStore();
 const url = import.meta.env.VITE_API_URL;
+// Snackbar state
+const snackbarVisible = ref(false);
+const snackbarMessage = ref('');
+const snackbarColor = ref('error');
+
+function showSnackbar(message: string, color: string = 'error') {
+    snackbarMessage.value = message;
+    snackbarColor.value = color;
+    snackbarVisible.value = true;
+}
 
 async function save() {
+    // check if teacherId is empty and not 8 digits
+    if (!userStore.editUser.teacherId || !/^[0-9]{8}$/.test(userStore.editUser.teacherId)) {
+        showSnackbar('โปรดกรอกรหัสอาจารย์ 8 หลัก');
+        return;
+    }
+    else if (!userStore.editUser.firstName || !userStore.editUser.lastName ||
+        !/^[A-Za-zก-๙]+$/.test(userStore.editUser.firstName) ||
+        !/^[A-Za-zก-๙]+$/.test(userStore.editUser.lastName)) {
+            showSnackbar('โปรดกรอกชื่อและนามสกุลที่ไม่มีตัวเลข');
+        return;
+    }
+    // check if role is not "อาจารย์"
+    else if (userStore.editUser.role !== 'อาจารย์') {
+        showSnackbar('โปรดเลือกตำแหน่งที่ถูกต้อง');
+        return;
+    }
+
+    // check if status is not valid
+    else if (!['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง'].includes(userStore.editUser.status ?? '')) {
+        showSnackbar('โปรดเลือกสถานะภาพที่ถูกต้อง');
+        return;
+    }
         await userStore.saveUser();
-        userStore.resetUser();
+        await userStore.resetUser();
         window.location.reload(); 
 }
 
@@ -76,6 +109,15 @@ if (!userStore.editUser.role) {
                 </v-card-actions>
             </v-card>
         </v-row>
+        <!-- Snackbar for showing errors -->
+        <v-snackbar v-model="snackbarVisible" :color="snackbarColor" top right :timeout="3000">
+            {{ snackbarMessage }}
+            <template v-slot:action="{ attrs }">
+                <v-btn color="white" text v-bind="attrs" @click="snackbarVisible = false">
+                    Close
+                </v-btn>
+            </template>
+        </v-snackbar>
     </v-container>
 
 </template>

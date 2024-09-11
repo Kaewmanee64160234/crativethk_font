@@ -24,6 +24,7 @@ export const useUserStore = defineStore("userStore", () => {
   const messageStore = useMessageStore()
   const currentUser = ref<User>();
   const regisUser = ref<User>();
+  const notiUser = ref<User>();
 
   const editUser = ref<User & { files: File[] }>({
     userId: 0,
@@ -109,7 +110,7 @@ export const useUserStore = defineStore("userStore", () => {
         }
 
         await getUsers(); // Refresh or reload user list
-        closeDialog();  // Close the dialog
+        // closeDialog();
     } catch (e) {
         console.error("Failed to save user:", e);
         messageStore.showError("Failed to save user.");
@@ -292,6 +293,7 @@ const getUserFromLocalStorage = () => {
     getUsersByStdId,
     QR,
     regisUser,
+    notiUser,
     updateRegisterStatus
   };
 });

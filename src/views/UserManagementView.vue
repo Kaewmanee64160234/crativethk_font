@@ -34,10 +34,10 @@ const sortedTeachers = computed(() => {
 });
 const sortedAdmins = computed(() => {
   return userStore.users
-    .filter(user => user.adminId)
+    .filter(user => user.role === 'แอดมิน')
     .sort((a, b) => {
-      if (a.adminId && b.adminId) {
-        return a.adminId.localeCompare(b.adminId);
+      if (a.role && b.role) {
+        return a.role.localeCompare(b.role);
       }
       return 0;
     });
@@ -52,17 +52,17 @@ onMounted(async () => {
 })
 
 const showEditedDialog = (user: User) => {
-  if (user.studentId) {
+  if (user.role == 'นิสิต' ) {
     // Show the student edit dialog
     userStore.showEditDialog = true;
     userStore.editUser = { ...user, files: [] };
     console.log('Student ID user', userStore.editUser);
-  } else if (user.teacherId) {
+  } else if (user.role == 'อาจารย์' ) {
     // Show the teacher edit dialog
     userStore.showEditDialog2 = true;
     userStore.editUser = { ...user, files: [] };
     console.log('Teacher ID user', userStore.editUser);
-  } else if (user.adminId) {
+  } else if (user.role == 'แอดมิน') {
     // Show the admin edit dialog
     userStore.showEditDialog3 = true;
     userStore.editUser = { ...user, files: [] };
@@ -118,7 +118,7 @@ const tab = ref(0);
           <v-text-field v-model="userStore.searchQuery" label="ค้าหารหัสนิสิต" append-inner-icon="mdi-magnify"
             hide-details dense variant="solo" class="search-bar"></v-text-field>
         </v-col>
-        <v-col cols="auto">
+        <!-- <v-col cols="auto">
           <v-btn color="primary" variant="elevated" @click="userStore.showDialog = true" class="custom-btn">
             <v-icon left>mdi-plus</v-icon>
             เพิ่มผู้ใช้นิสิต
@@ -126,7 +126,7 @@ const tab = ref(0);
               <CreateUserDialog></CreateUserDialog>
             </v-dialog>
           </v-btn>
-        </v-col>
+        </v-col> -->
         <v-col cols="auto">
           <v-btn color="primary" variant="elevated" @click="userStore.showDialog2 = true" class="custom-btn">
             <v-icon left>mdi-plus</v-icon>
@@ -161,7 +161,7 @@ const tab = ref(0);
             <thead>
               <tr>
                 <th class="text-left"></th>
-                <th class="text-left">ภาพ</th>
+                <!-- <th class="text-left">ภาพ</th> -->
                 <th class="text-left">รหัสนิสิต</th>
                 <th class="text-left">ชื่อ-นามสกุล</th>
                 <th class="text-left">ชั้นปี</th>
@@ -174,7 +174,7 @@ const tab = ref(0);
             <tbody>
               <tr v-for="(item, index) of sortedStudents" :key="index">
                 <td>{{ index + 1 }}</td>
-                <img :src="`${url}/users/${item.userId}/image`" style="width: 100px; height: 100px;">
+                <!-- <img :src="`${url}/users/${item.userId}/image`" style="width: 100px; height: 100px;"> -->
                 <td>{{ item.studentId }}</td>
                 <td>{{ item.firstName + " " + item.lastName }}</td>
                 <td>{{ item.year }}</td>
@@ -245,7 +245,6 @@ const tab = ref(0);
               <tr>
                 <th class="text-left"></th>
                 <th class="text-left">ภาพ</th>
-                <th class="text-left">รหัสแอดมิน</th>
                 <th class="text-left">ชื่อ-นามสกุล</th>
                 <th class="text-left">ตำแหน่ง</th>
                 <th class="text-left">สถานะภาพ</th>
@@ -256,7 +255,6 @@ const tab = ref(0);
               <tr v-for="(item, index) of sortedAdmins" :key="index">
                 <td>{{ index + 1 }}</td>
                 <img :src="`${url}/users/${item.userId}/image`" style="width: 100px; height: 100px;">
-                <td>{{ item.adminId }}</td>
                 <td>{{ item.firstName + " " + item.lastName }}</td>
                 <td>{{ item.role }}</td>
                 <td style="color: seagreen;">{{ item.status }}</td>

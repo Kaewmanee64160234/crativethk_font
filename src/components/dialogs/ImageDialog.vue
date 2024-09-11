@@ -30,7 +30,7 @@ const identifications = ref<Identification[]>([]);
 const canvasRefs = reactive<CanvasRefs>({});
 const croppedImagesDataUrls = ref<string[]>([]);
 const userDescriptors = new Map<string, Float32Array[]>();
-const url = import.meta.env.VITE_API_URL;
+const url = 'http://localhost:3000';
 const imageUrls = ref<string[]>([]);
 const imageFiles = ref<File[]>([]);
 const fileInputKey = ref(Date.now()); // Key to reset the file input field
@@ -183,7 +183,6 @@ async function resizeAndConvertToBase64(imageUrl: string, maxWidth: number, maxH
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
       if (!ctx) return reject(new Error("Canvas context not available"));
-
       // Calculate the aspect ratio and resize
       const ratio = Math.min(maxWidth / img.width, maxHeight / img.height);
       const width = img.width * ratio;
@@ -204,7 +203,6 @@ async function resizeAndConvertToBase64(imageUrl: string, maxWidth: number, maxH
     img.src = imageUrl;
   });
 }
-
 // base64ToBlob
 function base64ToBlob(base64: string, type: string): Blob {
   const binaryString = atob(base64.split(",")[1]);
@@ -382,8 +380,6 @@ async function save() {
     messageStore.showError("No images available to send.");
   }
 }
-
-
 const handleFileChange = (event: Event) => {
   const input = event.target as HTMLInputElement;
   if (input.files && input.files.length > 0) {
@@ -524,6 +520,7 @@ console.log("user2", userStore.currentUser)
           </v-row>
 
           <!-- Existing Images -->
+        <!-- {{ images }} -->
           <v-row>
             <v-col v-for="(image, index) in images" :key="'existing-' + index" cols="2" md="2" lg="2"
               class="image-container">
