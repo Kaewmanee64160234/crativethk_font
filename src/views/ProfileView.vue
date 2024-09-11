@@ -44,7 +44,7 @@ onMounted(async () => {
         console.log("image",images.value)
     }
     await userStore.getUsersById(userStore.currentUser?.userId!);
-    await userStore.getCurrentUser();
+    // await userStore.getCurrentUser();
     
 });
 </script>
