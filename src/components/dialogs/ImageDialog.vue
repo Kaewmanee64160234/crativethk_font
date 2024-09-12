@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { onMounted, ref, computed, reactive } from 'vue';
+import { onMounted, ref, computed, reactive, nextTick } from 'vue';
 import { useUserStore } from '@/stores/user.store';
 import * as faceapi from 'face-api.js';
 import Swal from 'sweetalert2';
@@ -216,9 +216,20 @@ function base64ToBlob(base64: string, type: string): Blob {
 
 // Function to calculate Euclidean distance between two face descriptors
 function calculateEuclideanDistance(descriptor1: Float32Array, descriptor2: Float32Array): number {
+  if (!descriptor1 || !descriptor2) {
+    console.error("One of the descriptors is undefined.");
+    return -1; // Returning -1 or another error value to indicate failure
+  }
+
+  if (descriptor1.length !== descriptor2.length) {
+    console.error(`Descriptor lengths are not equal. Descriptor1 length: ${descriptor1.length}, Descriptor2 length: ${descriptor2.length}`);
+    return -1; // Handle this error case appropriately in your application logic
+  }
+
   const distance = faceapi.euclideanDistance(descriptor1, descriptor2);
   return distance;
 }
+
 async function saveUserUpdate() {
   if (canUpload.value) {
     isLoading.value = true;
@@ -303,6 +314,10 @@ async function save() {
     if (distance < 0.4) {
       await saveUserUpdate();
       messageStore.showConfirm('อัปโหลดรูปภาพสำเร็จ')
+      if(userStore.currentUser!.registerStatus !== 'confirmed') {
+        userStore.currentUser!.registerStatus = 'notConfirmed';
+        await userStore.updateRegisterStatus(userStore.currentUser!.userId!, userStore.currentUser!);
+      }
       // Swal.fire(
       //   'อัปโหลดรูปภาพสำเร็จ',
       //   'ระบบกำลังประมวลผลข้อมูล',
@@ -380,30 +395,33 @@ async function save() {
     messageStore.showError("No images available to send.");
   }
 }
-const handleFileChange = (event: Event) => {
-  const input = event.target as HTMLInputElement;
-  if (input.files && input.files.length > 0) {
-    Array.from(input.files).forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const result = e.target?.result as string;
-        if (result) {
-          try {
-            const resizedImage = await resizeAndConvertImageToBase64(result, 800, 600);
 
-            // Check for duplicate images
-            const isDuplicate = checkDuplicateImage(resizedImage);
-            if (!isDuplicate) {
-              imageUrls.value.push(resizedImage);
-              imageFiles.value.push(file);
+const handleFileChange = (event: Event) => {
+  const input = event.target as HTMLInputElement | null;
+  if (input) {
+    if (input.files && input.files.length > 0) {
+      Array.from(input.files).forEach((file) => {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const result = e.target?.result as string;
+          if (result) {
+            try {
+              const resizedImage = await resizeAndConvertImageToBase64(result, 800, 600);
+
+              // Check for duplicate images
+              const isDuplicate = checkDuplicateImage(resizedImage);
+              if (!isDuplicate) {
+                imageUrls.value.push(resizedImage);
+                imageFiles.value.push(file);
+              }
+            } catch (error) {
+              console.error("Error resizing image:", error);
             }
-          } catch (error) {
-            console.error("Error resizing image:", error);
           }
-        }
-      };
-      reader.readAsDataURL(file);
-    });
+        };
+        reader.readAsDataURL(file);
+      });
+    }
   }
 };
 
@@ -467,7 +485,9 @@ function checkDuplicateImage(newImageBase64: string): boolean {
 const hasUploadedImages = computed(() => imageUrls.value.length > 0);
 
 const canUpload = computed(() => imageFiles.value.length === 5);
-
+const uploadRules = computed(() => [
+  () => (imageFiles.value.length === 5 ? true : 'ต้องอัปโหลดรูปภาพให้ครบ 5 รูป'),
+]);
 
 const deleteImage = (index: number) => {
   imageUrls.value.splice(index, 1);
@@ -547,7 +567,7 @@ console.log("user2", userStore.currentUser)
             <v-col cols="12" class="mt-4">
               <v-file-input :key="fileInputKey" label="อัปโหลดรูปภาพ" multiple prepend-icon="mdi-camera" filled
                 @change="handleFileChange" accept="image/*" variant="outlined" :disabled="checkConfirmImage()"
-                :rules="[() => canUpload ? true : 'ต้องอัปโหลดรูปภาพให้ครบ 5 รูป']"></v-file-input>
+                :rules="uploadRules"></v-file-input>
             </v-col>
           </v-row>
 

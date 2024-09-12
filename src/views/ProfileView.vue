@@ -28,7 +28,7 @@ const showChekingHistory = (course: Course) => {
 };
 
 onMounted(async () => {
-    await userStore.getCurrentUser();
+    // await userStore.getCurrentUser();    
     if (isTeacher.value && userStore.currentUser!.teacherId) {
         await courseStore.getCourseByTeachId(userStore.currentUser!.teacherId!);
     }
@@ -38,7 +38,7 @@ onMounted(async () => {
         await userStore.getUsersByStdId(userStore.currentUser!.studentId!);
         user.value = userStore.regisUser;
         images.value = user.value?.images?.map((image: string) => `${url}/users/image/filename/${image}`) ?? [];
-        if (images.value.length > 0 && user.value?.registerStatus == 'notConfirmed') {
+        if (images.value.length > 0 && user.value?.registerStatus == 'notConfirmed' || user.value?.registerStatus == 'reConfirmed') {
             userStore.createQrByStdId(user.value.studentId!);
         }
         console.log("image",images.value)
