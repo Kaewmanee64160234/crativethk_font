@@ -23,7 +23,7 @@ async function save() {
     else if (!userStore.editUser.firstName || !userStore.editUser.lastName ||
         !/^[A-Za-zก-๙]+$/.test(userStore.editUser.firstName) ||
         !/^[A-Za-zก-๙]+$/.test(userStore.editUser.lastName)) {
-            showSnackbar('โปรดกรอกชื่อและนามสกุลที่ไม่มีตัวเลข');
+        showSnackbar('โปรดกรอกชื่อและนามสกุลที่ไม่มีตัวเลข');
         return;
     }
     // check if role is not "อาจารย์"
@@ -37,9 +37,9 @@ async function save() {
         showSnackbar('โปรดเลือกสถานะภาพที่ถูกต้อง');
         return;
     }
-        await userStore.saveUser();
-        await userStore.resetUser();
-        window.location.reload(); 
+    await userStore.saveUser();
+    await userStore.resetUser();
+    window.location.reload();
 }
 
 async function cancel() {
@@ -49,7 +49,7 @@ async function cancel() {
 
 // Set the default value for role
 if (!userStore.editUser.role) {
-  userStore.editUser.role = 'อาจารย์';
+    userStore.editUser.role = 'อาจารย์';
 }
 
 </script>
@@ -73,23 +73,20 @@ if (!userStore.editUser.role) {
                                     :rules="[(v) => !!v || 'โปรดกรอกรหัสอาจารย์', (v) => /^[0-9]{8}$/.test(v) || 'โปรดกรอกข้อมูลเฉพาะตัวเลข 8 หลัก']"></v-text-field>
                             </v-col>
                             <v-col cols="12">
-                                <v-text-field label="ชื่อ" dense solo required
-                                    v-model="userStore.editUser.firstName"
+                                <v-text-field label="ชื่อ" dense solo required v-model="userStore.editUser.firstName"
                                     :rules="[(v) => !!v || 'โปรดกรอกขื่อ']"></v-text-field>
                             </v-col>
                             <v-col cols="12">
-                                <v-text-field label="นามสกุล" dense solo required
-                                    v-model="userStore.editUser.lastName"
+                                <v-text-field label="นามสกุล" dense solo required v-model="userStore.editUser.lastName"
                                     :rules="[(v) => !!v || 'โปรดกรอกนามสกุล']"></v-text-field>
                             </v-col>
                             <v-col cols="12">
-                                <v-text-field label="ตำแหน่ง" dense solo required 
-                                    v-model="userStore.editUser.role"
+                                <v-text-field label="ตำแหน่ง" dense solo required v-model="userStore.editUser.role"
                                     :rules="[(v) => !!v || 'โปรดกรอกตำแหน่ง']"></v-text-field>
                             </v-col>
                             <v-col cols="12">
-                                <v-combobox label="สถานะภาพ" :items="['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง']" dense solo required
-                                    v-model="userStore.editUser.status" :rules="[
+                                <v-combobox label="สถานะภาพ" :items="['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง']" dense
+                                    solo required v-model="userStore.editUser.status" :rules="[
                                         v => !!v || 'โปรดเลือกสถานะภาพ',
                                         v => ['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง'].includes(v) || 'โปรดเลือกสถานะภาพจากรายการที่ให้ไว้'
                                     ]"></v-combobox>
@@ -104,7 +101,7 @@ if (!userStore.editUser.role) {
                     </v-col>
                 </v-row>
                 <v-card-actions class="justify-end">
-                    <v-btn color="blue" text="บันทึก" @click="save" ></v-btn>
+                    <v-btn color="blue" text="บันทึก" @click="save"></v-btn>
                     <v-btn text="ยกเลิก" @click="cancel"></v-btn>
                 </v-card-actions>
             </v-card>
@@ -112,11 +109,12 @@ if (!userStore.editUser.role) {
         <!-- Snackbar for showing errors -->
         <v-snackbar v-model="snackbarVisible" :color="snackbarColor" top right :timeout="3000">
             {{ snackbarMessage }}
-            <template v-slot:action="{ attrs }">
-                <v-btn color="white" text v-bind="attrs" @click="snackbarVisible = false">
+            <template v-slot:actions>
+                <v-btn color="white"   @click="snackbarVisible = false">
                     Close
                 </v-btn>
             </template>
+
         </v-snackbar>
     </v-container>
 

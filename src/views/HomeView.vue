@@ -18,20 +18,20 @@ const callback = (response: any) => {
   console.log(response);
 
   if (response.credential) {
-    const user = decodeCredential(response.credential);
+    const user:any = decodeCredential(response.credential);
     console.log('User:', user);
-    console.log(user.hd);
-    if (user.hd !== 'go.buu.ac.th') {
+    console.log(user!.hd!);
+    if (user!.hd! !== 'go.buu.ac.th') {
       alert(response.hd + ' is not a go.buu.ac.th domain');
     } else {
       authStore.currentUser = {
         email: user.email,
         firstName: user.given_name,
         lastName: user.family_name,
-        id: "",
+     
         picture: user.picture,
       }
-      authStore.login();
+      // authStore.login();
       router.push('/courseManagement');
 
     }
@@ -42,7 +42,7 @@ const callback = (response: any) => {
 };
 
 function findGalleryItemByEmail() {
-  const username = authStore.currentUser.email.split('@')[0];
+  const username = authStore.currentUser.email!.split('@')[0];
   const galleryItem = authStore.gallery.find(item => item.idStudent === username);
   const uint8Image = convertFloat32ToUint8(galleryItem?.descriptor);
 

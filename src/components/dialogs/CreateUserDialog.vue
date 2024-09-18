@@ -70,7 +70,7 @@ async function processFiles(files: File[]): Promise<Float32Array[]> {
 
     return faceDescriptions;
 }
-function float32ArrayToBase64(float32Array) {
+function float32ArrayToBase64(float32Array:any) {
   const uint8Array = new Uint8Array(float32Array.buffer);
   let binary = '';
   for (let i = 0; i < uint8Array.byteLength; i++) {
@@ -88,7 +88,7 @@ function float32ArrayToBase64(float32Array) {
                     <!-- Image Column -->
                     <v-col cols="12" md="4" class="d-flex justify-center align-center">
                         <v-avatar size="192">
-                            <img :src="userStore.currentUser?.imageProfile" @error="onImageError" alt="User Profile">
+                            <img :src="userStore.currentUser!.images ? userStore.currentUser!.images[0] : 'path_to_default_image'" @error="onImageError" alt="User Profile">
                         </v-avatar>
                     </v-col>
                     <!-- Text Fields Column -->
@@ -97,41 +97,41 @@ function float32ArrayToBase64(float32Array) {
                             <v-col cols="12">
                                 <v-text-field label="รหัสนิสิต" dense solo required
                                     v-model="userStore.editUser.studentId"
-                                    :rules="[(v) => !!v || 'โปรดกรอกรหัสนิสิต', (v) => /^[0-9]{8}$/.test(v) || 'โปรดกรอกข้อมูลเฉพาะตัวเลข 8 หลัก']"></v-text-field>
+                                    :rules="[(v:any) => !!v || 'โปรดกรอกรหัสนิสิต', (v:any) => /^[0-9]{8}$/.test(v) || 'โปรดกรอกข้อมูลเฉพาะตัวเลข 8 หลัก']"></v-text-field>
                             </v-col>
                             <v-col cols="12">
                                 <v-text-field label="ชื่อ" dense solo required v-model="userStore.editUser.firstName"
-                                    :rules="[(v) => !!v || 'โปรดกรอกขื่อ']"></v-text-field>
+                                    :rules="[(v:any) => !!v || 'โปรดกรอกขื่อ']"></v-text-field>
                             </v-col>
                             <v-col cols="12">
                                 <v-text-field label="นามสกุล" dense solo required v-model="userStore.editUser.lastName"
-                                    :rules="[(v) => !!v || 'โปรดกรอกนามสกุล']"></v-text-field>
+                                    :rules="[(v:any) => !!v || 'โปรดกรอกนามสกุล']"></v-text-field>
                             </v-col>
                             <v-col cols="12">
                                 <v-text-field label="อีเมล" dense solo required v-model="userStore.editUser.email"
-                                    :rules="[(v) => !!v || 'โปรดกรอกอีเมล']"></v-text-field>
+                                    :rules="[(v:any) => !!v || 'โปรดกรอกอีเมล']"></v-text-field>
                             </v-col>
                             <v-col cols="12">
                                 <v-text-field label="ชั้นปี" dense solo required
                                     v-model="userStore.editUser.year"
-                                    :rules="[(v) => !!v || 'โปรดใส่ชั้นปีเช่น 63, 64, 65', (v) => /^[0-9]{2}$/.test(v) || 'โปรดกรอกข้อมูลเฉพาะตัวเลข 2 หลัก']"></v-text-field>
+                                    :rules="[(v:any) => !!v || 'โปรดใส่ชั้นปีเช่น 63, 64, 65', (v:any) => /^[0-9]{2}$/.test(v) || 'โปรดกรอกข้อมูลเฉพาะตัวเลข 2 หลัก']"></v-text-field>
                             </v-col>
                             <v-col cols="12">
                                 <v-combobox label="สาขา" :items="['วิทยาการคอมพิวเตอร์', 'เมคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจดทัล', 'วิศวกรรมซอฟต์แวร์', 'ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ']"
                                     dense solo required v-model="userStore.editUser.major" :rules="[
-                                v => !!v || 'โปรดเลือกสาขา',
-                                v =>['วิทยาการคอมพิวเตอร์', 'เมคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจดทัล', 'วิศวกรรมซอฟต์แวร์', 'ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ'].includes(v) || 'โปรดเลือกสาขาจากรายการที่ให้ไว้'
+                                (v:any) => !!v || 'โปรดเลือกสาขา',
+                                (v:any) =>['วิทยาการคอมพิวเตอร์', 'เมคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจดทัล', 'วิศวกรรมซอฟต์แวร์', 'ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ'].includes(v) || 'โปรดเลือกสาขาจากรายการที่ให้ไว้'
                             ]"></v-combobox>
                             </v-col>
                             <v-col cols="12">
                                 <v-text-field label="ตำแหน่ง" dense solo required v-model="userStore.editUser.role" 
-                                    :rules="[(v) => !!v || 'โปรดกรอกตำแหน่ง']"></v-text-field>
+                                    :rules="[(v:any) => !!v || 'โปรดกรอกตำแหน่ง']"></v-text-field>
                             </v-col>
                             <v-col cols="12">
                                 <v-combobox label="สถานะภาพ" :items="['กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา']"
                                     dense solo required v-model="userStore.editUser.status" :rules="[
-                                v => !!v || 'โปรดเลือกสถานะภาพ',
-                                v => ['กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา'].includes(v) || 'โปรดเลือกสถานะภาพจากรายการที่ให้ไว้'
+                                (v:any) => !!v || 'โปรดเลือกสถานะภาพ',
+                                (v:any) => ['กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา'].includes(v) || 'โปรดเลือกสถานะภาพจากรายการที่ให้ไว้'
                             ]"></v-combobox>
                             </v-col>
                             <!-- {{ userStore.editUser.files }} -->

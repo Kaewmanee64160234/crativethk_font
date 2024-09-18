@@ -8,7 +8,8 @@ const userStore = useUserStore();
 const showDialog = ref(true);
 const alertDialog = ref(false);
 const alertMessage = ref('');
-const url = "http://localhost:3000";
+const url = import.meta.env.BASE_URL;
+
 const imageUrls = ref<string[]>([]);
 const imageFiles = ref<File[]>([]);
 const fileInputKey = ref(Date.now()); // Key to reset the file input field
@@ -226,7 +227,7 @@ const canUpload = computed(() => imageUrls.value.length === 5);
         <v-card-text>
           <v-row v-if="!canUpload" class="mt-2">
             <v-col cols="12" class="text-center">
-              <v-alert type="info" class="mt-3" border="left">
+              <v-alert type="info" class="mt-3" >
                 <v-icon left>mdi-information-outline</v-icon>
                 กรุณาอัปโหลดรูปภาพให้ครบ 5 รูป
               </v-alert>

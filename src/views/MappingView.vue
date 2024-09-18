@@ -96,15 +96,15 @@ async function processImage(imgElement: HTMLImageElement, descriptorsRef: { valu
   // Consider logging here to ensure descriptors are set
 }
 
-const onFirstImageChange = async (event: Event) => {
+const onFirstImageChange = async (event: any) => {
   comparisonResult.value = null; // Reset comparison result
   await handleImageUpload(event, firstImageDescriptors);
-  firstImageSrc.value = URL.createObjectURL(event.target!.files[0]); // Update image src
+  firstImageSrc.value = URL.createObjectURL(event.target!.files![0]); // Update image src
 };
 
-const onSecondImageChange = async (event: Event) => {
+const onSecondImageChange = async (event: any) => {
   await handleImageUpload(event, secondImageDescriptors);
-  secondImageSrc.value = URL.createObjectURL(event.target!.files[0]); // Update image src
+  secondImageSrc.value = URL.createObjectURL(event.target!.files![0]); // Update image src
 };
 
 watch([firstImageDescriptors, secondImageDescriptors], ([first, second], [oldFirst, oldSecond]) => {

@@ -51,7 +51,7 @@ const deleteAssignment = async () => {
             'Cancel'
         )
 
-        await assignmentStore.deleteAssignment(props.post.assignmentId!);
+        await assignmentStore.deleteAssignment(props.post!.assignmentId!+'');
         await assignmentStore.getAssignmentByCourseId(id.value.toString());
 
         window.location.reload();
@@ -327,7 +327,7 @@ function close() {
             <!-- Dialog content with form -->
             <v-card-text>
                 <v-form ref="form" @submit.prevent="save">
-                    <v-text-field v-model="props.post.nameAssignment" label="Assignment Name" required></v-text-field>
+                    <v-text-field v-model="props.post.nameAssignment!" label="Assignment Name" required></v-text-field>
                 </v-form>
             </v-card-text>
             <!-- Dialog actions with Confirm and Cancel buttons -->

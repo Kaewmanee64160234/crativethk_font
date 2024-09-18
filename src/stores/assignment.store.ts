@@ -9,8 +9,7 @@ export const useAssignmentStore = defineStore("assignmentStore", () => {
       assignmentId: 0,
 
       assignmentTime: new Date(),
-      imageAssignments: [],
-      assignmentManual: false,
+  
       statusAssignment: "",
       nameAssignment: "",
       course: {

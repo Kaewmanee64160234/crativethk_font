@@ -13,15 +13,15 @@ const props = defineProps<{
 }>();
 
 // Initialize editAssignment with assignmentId
-const editAssignment = ref<Assignment>({
+const editAssignment = ref<any>({
   assignmentId: props.assignmentId ? props.assignmentId : assignmentStore.currentAssignment?.assignmentId ,
   nameAssignment: assignmentStore.currentAssignment?.nameAssignment || '',
-  assignmentTime: props.post.assignmentTime ? props.post.assignmentTime : assignmentStore.currentAssignment?.assignmentTime,
+  assignmentTime: props.post.assignmentTime ? props.post.assignmentTime : assignmentStore.currentAssignment?.assignmentTime!,
   assignmentImages: props.post.assignmentImages ? props.post.assignmentImages : assignmentStore.currentAssignment?.assignmentImages,
-  statusAssignment: props.post.statusAssignment ? props.post.statusAssignment : assignmentStore.currentAssignment?.statusAssignment,
+  statusAssignment: props.post.statusAssignment ? props.post.statusAssignment : assignmentStore.currentAssignment?.statusAssignment!,
   room: props.post.room ? props.post.room : assignmentStore.currentAssignment?.room,
   attdances: props.post.attdances ? props.post.attdances : assignmentStore.currentAssignment?.attdances,
-  course: props.post.course ? props.post.course : assignmentStore.currentAssignment?.course,
+  course: props.post.course ? props.post.course : assignmentStore.currentAssignment?.course!,
 });
 // Function to save changes
 async function save() {
@@ -30,7 +30,7 @@ async function save() {
     console.log('Assignment ID to update:', editAssignment.value.assignmentId);
 
     // Ensure that assignmentId is valid
-    if (!editAssignment.value.assignmentId || parseInt(editAssignment.value.assignmentId) === 0) {
+    if (!editAssignment.value.assignmentId || parseInt(editAssignment.value.assignmentId+'') === 0) {
       throw new Error('Invalid assignment ID');
     }
 
@@ -58,9 +58,10 @@ onMounted(() => {
 // Function to initialize the assignment data
 function initializeEditAssignment() {
   editAssignment.value = {
-    assignmentId: props.assignmentId?.toString() || assignmentStore.currentAssignment?.assignmentId?.toString() || '',
-    nameAssignment: assignmentStore.currentAssignment?.nameAssignment || '',
-  };
+  assignmentId: props.assignmentId || assignmentStore.currentAssignment?.assignmentId || 0,
+  nameAssignment: assignmentStore.currentAssignment?.nameAssignment || '',
+};
+
 }
 console.log('Props:', props);
 console.log('Edit Assignment ID:', editAssignment.value.assignmentId);

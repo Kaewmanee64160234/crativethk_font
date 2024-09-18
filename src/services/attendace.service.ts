@@ -62,7 +62,7 @@ function getAttendanceByUserId(userId: string) {
 
 // updateAttendance
 
-function updateAttendance(attendance: Attendance, file: File) {
+function updateAttendance(attendance: Attendance, file?: File) {
   const formData = new FormData();
   if (attendance.user!.studentId === undefined) {
     formData.append("studentId", "null");

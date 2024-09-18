@@ -135,7 +135,7 @@ const detectFaces = async () => {
         // Set face description with details
         faceDescription.value = resizedDetections.map((detection, index) => {
           const box = detection.detection.box;
-          const descriptor = detection.descriptor.slice(0, 5).map(val => val.toFixed(2)).join(', ');
+          const descriptor = detection.descriptor.slice(0, 5).map((val:any) => val.toFixed(2)).join(', ');
           return `Face ${index + 1}: Box [${box.x.toFixed(1)}, ${box.y.toFixed(1)}, ${box.width.toFixed(1)}, ${box.height.toFixed(1)}], Descriptor [${descriptor}]`;
         }).join('; ');
       }

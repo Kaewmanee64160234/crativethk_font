@@ -13,7 +13,7 @@ const notiforupdateStore = useNotiforupdate();
 const firstNotification = computed(() => notiforupdateStore.notiforupdates[0]);
 const stdId = ref();
 const user = ref<User | undefined>(undefined);
-const url = 'http://localhost:3000';
+const url = import.meta.env.BASE_URL;
 const route = useRoute();
 const router = useRouter();
 const isLoading = ref(false);
@@ -53,7 +53,7 @@ onMounted(async () => {
         isLoading.value = false;
     }
 });
-const images = computed(() => {
+const images:any = computed(() => {
   // Check if the notification exists and has a userSender with images
   const notificationUserImages = firstNotification.value?.userSender?.images;
   

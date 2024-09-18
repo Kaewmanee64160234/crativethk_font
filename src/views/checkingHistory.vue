@@ -6,10 +6,10 @@ import { useAssignmentStore } from "@/stores/assignment.store";
 import { useAttendanceStore } from "@/stores/attendance.store";
 import { useUserStore } from "@/stores/user.store";
 import { useEnrollmentStore } from "@/stores/enrollment.store";
-import type Attendance from "@/stores/types/Attendance";
 import type Assignment from "@/stores/types/Assignment";
 import type { User } from "@/stores/types/User";
 import UpdateAttendantDialogView from "@/components/attendant/updateAttendantDialog.vue";
+import type Attendance from "@/stores/types/Attendances";
 
 const router = useRouter();
 const courseName = ref("OOAD 2023");
