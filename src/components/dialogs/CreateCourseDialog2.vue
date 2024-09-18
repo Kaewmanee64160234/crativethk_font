@@ -1,200 +1,107 @@
 <script lang="ts" setup>
 import { useCourseStore } from "@/stores/course.store";
-import { ref, watch } from "vue";
-import { useUserStore } from "@/stores/user.store";
-import { useMessageStore } from "@/stores/message";
 
 const courseStore = useCourseStore();
-const userStore = useUserStore();
-const selectedDate = ref(new Date());
-const showDatePicker = ref(false);
-const selectedTime = ref("00:00");
-const showTimePicker = ref(false);
-const selectedTime2 = ref("00:00");
-const showTimePicker2 = ref(false);
-const selectedDate3 = ref(new Date());
-const showDatePicker3 = ref(false);
-const selectedTime3 = ref("00:00");
-const showTimePicker3 = ref(false);
-const selectedTime4 = ref("00:00");
-const showTimePicker4 = ref(false);
-const messageStore = useMessageStore();
-
-// courseStore.timeInLec = new Date(formatISODateTime(selectedDate.value, selectedTime.value));
-// courseStore.timeOutLec = new Date(formatISODateTime(selectedDate.value, selectedTime2.value));
-// if (courseStore.typeCourse === "เลคเชอร์และแลป") {
-//   courseStore.timeInLab = new Date(formatISODateTime(selectedDate3.value, selectedTime3.value));
-//   courseStore.timeOutLab = new Date(formatISODateTime(selectedDate.value, selectedTime4.value));
-// }
-
-function formatThaiDate(date: Date) {
-  return date
-    .toLocaleDateString("th-TH", {
-      weekday: "long", // Full weekday name
-    })
-    .replace(".", "");
-}
-
-function formatISODateTime(date: Date, time: string): string {
-  const [hours, minutes] = time.split(":");
-  date.setHours(parseInt(hours), parseInt(minutes));
-  return date.toISOString();
-}
-
-// Watchers to update courseStore properties
-watch([selectedDate, selectedTime], ([newDate, newTime]) => {
-  courseStore.timeInLec = new Date(formatISODateTime(newDate, newTime));
-});
-
-watch([selectedDate, selectedTime2], ([newDate, newTime]) => {
-  courseStore.timeOutLec = new Date(formatISODateTime(newDate, newTime));
-});
-
-watch([selectedDate3, selectedTime3], ([newDate, newTime]) => {
-  if (courseStore.typeCourse === "เลคเชอร์และแลป") {
-    courseStore.timeInLab = new Date(formatISODateTime(newDate, newTime));
-  }
-});
-
-watch([selectedDate3, selectedTime4], ([newDate, newTime]) => {
-  if (courseStore.typeCourse === "เลคเชอร์และแลป") {
-    courseStore.timeOutLab = new Date(formatISODateTime(newDate, newTime));
-  }
-});
 
 </script>
 
 <template>
-    <!-- <v-card-title>
-                <h3>รายละเอียดวิชา</h3>
-              </v-card-title> -->
-    <v-card-text>
+  <v-card-title>
+    <h3>แก้ไขรายละเอียดวิชา</h3>
+  </v-card-title>
+  <v-card-text>
+    <v-card class="mb-4">
       <v-row>
         <v-col>
-          <p>จำนวนหน่วยกิต</p>
-          <v-select :items="['1', '2', '3']" variant="outlined"
-          v-model="courseStore.credit"  :rules="[(v: any) => !!v || 'โปรดเลือกจำนวนหน่วยกิต']"></v-select>
+          <v-card-title>
+            <h5>รายละเอียดวิชา</h5>
+          </v-card-title>
+          <v-card-text>
+            <p>กลุ่มเรียนที่</p>
+            <v-select :items="['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']" variant="outlined"
+              v-model="courseStore.session" :rules="[(v: any) => !!v || 'โปรดเลือกกลุ่มที่เรียน']"></v-select>
+          </v-card-text>
         </v-col>
         <v-col>
-          <p>กลุ่มเรียนที่</p>
-          <v-select :items="['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']" variant="outlined"
-          v-model="courseStore.session"  :rules="[(v: any) => !!v || 'โปรดเลือกกลุ่มที่เรียน']"></v-select>
+          <v-card-text>
+            <p>จำนวนหน่วยกิต</p>
+            <v-select :items="['1', '2', '3']" variant="outlined" v-model="courseStore.credit"
+              :rules="[(v: any) => !!v || 'โปรดเลือกจำนวนหน่วยกิต']"></v-select>
+          </v-card-text>
+        </v-col>
+        <v-col>
+          <v-card-text>
+          <p>คะแนนเต็ม</p>
+          <v-text-field variant="outlined" v-model="courseStore.fullScore" :rules="[
+            (v: any) => !!v || 'โปรดกรอกคะแนนเต็มให้ถูกต้อง',
+            (v: string) => /^[0-9]+$/.test(v) || 'โปรดกรอกตัวเลขเท่านั้น',
+            (v: number) => v >= 1 && v <= 100 || 'โปรดกรอกคะแนนตั้งแต่ 1 ถึง 100'
+          ]"></v-text-field>
+        </v-card-text>
         </v-col>
       </v-row>
       <v-row>
-        <!-- <v-col>
-          <p>จำนวนนักเรียน</p>
-          <v-text-field variant="outlined" v-model="courseStore.stdAmount" :rules="[
-            (v: any) => !!v || 'โปรดกรอกจำนวนนักเรียนให้ถูกต้อง',
+        <v-col>
+          <v-card-title>
+            <h5>วันเวลาเรียนเลคเชอร์</h5>
+          </v-card-title>
+          <v-card-text>
+          <p>วันที่เรียนเลคเชอร์</p>
+          <v-select :items="['วันจันทร์', 'วันอังคาร', 'วันพุธ', 'วันพฤหัสบดี', 'วันศุกร์']" variant="outlined"
+          v-model="courseStore.dayInLec" :rules="[(v: any) => !!v || 'โปรดเลือกวันที่เรียนเลคเชอร์']"></v-select>
+        </v-card-text>
+        </v-col>
+        <v-col>
+          <v-card-text>
+          <p>เวลาเริ่มเรียนเลคเชอร์</p>
+          <v-text-field variant="outlined" v-model="courseStore.timeInLec" :rules="[
+            (v: any) => !!v || 'โปรดกรอกเวลาเริ่มเรียนเลคเชอร์ให้ถูกต้อง',
             (v: string) => /^[0-9]+$/.test(v) || 'โปรดกรอกตัวเลขเท่านั้น',
           ]"></v-text-field>
-        </v-col> -->
-        <v-col>
-          <p>คะแนนเต็ม</p>
-          <v-text-field
-            variant="outlined"
-            v-model="courseStore.fullScore"
-            :rules="[
-              (v: any) => !!v || 'โปรดกรอกคะแนนเต็มให้ถูกต้อง', 
-              (v: string) => /^[0-9]+$/.test(v) || 'โปรดกรอกตัวเลขเท่านั้น',
-              (v: number) => v >= 1 && v <= 100 || 'โปรดกรอกคะแนนตั้งแต่ 1 ถึง 100'
-            ]"
-          ></v-text-field>
+        </v-card-text>
         </v-col>
         <v-col>
-          <p>วันที่</p>
-          <v-menu v-model="showDatePicker" :close-on-content-click="false" transition="scale-transition" offset-y
-            position-x="right">
-            <template v-slot:activator="{ props }">
-              <v-text-field label="วันที่เริ่มเลคเชอร์" v-model="selectedDate" :value="formatThaiDate(selectedDate)"
-                variant="outlined" readonly @click:append="showDatePicker = !showDatePicker">
-                <template v-slot:append>
-                  <v-icon v-bind="props">mdi-calendar-clock-outline</v-icon>
-                </template>
-              </v-text-field>
-            </template>
-            <v-date-picker v-model="selectedDate" show-adjacent-month></v-date-picker>
-          </v-menu>
-        </v-col>
-      </v-row>
-      <v-row>
-        <v-col>
-          <p>เวลา</p>
-          <v-menu v-model="showTimePicker" :close-on-content-click="false" transition="scale-transition" offset-y
-            position-x="right">
-            <template v-slot:activator="{ props }">
-              <v-text-field v-model="selectedTime" variant="outlined" readonly label="เวลาเริ่มเลคเชอร์">
-                <template v-slot:append>
-                  <v-icon v-bind="props">mdi-clock-outline</v-icon>
-                </template>
-              </v-text-field>
-            </template>
-            <v-time-picker v-model="selectedTime" format="24hr"></v-time-picker>
-          </v-menu>
-        </v-col>
-        <v-col>
-          <p>เวลา</p>
-          <v-menu v-model="showTimePicker2" :close-on-content-click="false" transition="scale-transition" offset-y
-            position-x="right">
-            <template v-slot:activator="{ props }">
-              <v-text-field v-model="selectedTime2" variant="outlined" readonly label="เวลาเลิกเลคเชอร์">
-                <template v-slot:append>
-                  <v-icon v-bind="props">mdi-clock-outline</v-icon>
-                </template>
-              </v-text-field>
-            </template>
-            <v-time-picker v-model="selectedTime2" format="24hr"></v-time-picker>
-          </v-menu>
+          <v-card-text>
+          <p>เวลาเลิกเรียนเลคเชอร์</p>
+          <v-text-field variant="outlined" v-model="courseStore.timeOutLec" :rules="[
+            (v: any) => !!v || 'โปรดกรอกเวลาเลิกเรียนเลคเชอร์ให้ถูกต้อง',
+            (v: string) => /^[0-9]+$/.test(v) || 'โปรดกรอกตัวเลขเท่านั้น',
+          ]"></v-text-field>
+        </v-card-text>
         </v-col>
       </v-row>
       <v-row v-if="courseStore.typeCourse === 'เลคเชอร์และแลป'">
         <v-col>
-          <p>วันที่</p>
-          <v-menu v-model="showDatePicker3" :close-on-content-click="false" transition="scale-transition" offset-y
-            position-x="right">
-            <template v-slot:activator="{ props }">
-              <v-text-field label="วันที่เริ่มแลป" v-model="selectedDate3" :value="formatThaiDate(selectedDate3)"
-                variant="outlined" readonly @click:append="showDatePicker3 = !showDatePicker3">
-                <template v-slot:append>
-                  <v-icon v-bind="props">mdi-calendar-clock-outline</v-icon>
-                </template>
-              </v-text-field>
-            </template>
-            <v-date-picker v-model="selectedDate3" show-adjacent-month></v-date-picker>
-          </v-menu>
+          <v-card-title>
+            <h5>วันเวลาเรียนแลป</h5>
+          </v-card-title>
+          <v-card-text>
+          <p>วันที่เริ่มเรียนแลป</p>
+          <v-select :items="['วันจันทร์', 'วันอังคาร', 'วันพุธ', 'วันพฤหัสบดี', 'วันศุกร์']" variant="outlined"
+          v-model="courseStore.dayInLab" :rules="[(v: any) => !!v || 'โปรดเลือกวันที่เรียนแลป']"></v-select>
+        </v-card-text>
         </v-col>
         <v-col>
-          <p>เวลา</p>
-          <v-menu v-model="showTimePicker3" :close-on-content-click="false" transition="scale-transition" offset-y
-            position-x="right">
-            <template v-slot:activator="{ props }">
-              <v-text-field v-model="selectedTime3" variant="outlined" readonly label="เวลาเริ่มแลป">
-                <template v-slot:append>
-                  <v-icon v-bind="props">mdi-clock-outline</v-icon>
-                </template>
-              </v-text-field>
-            </template>
-            <v-time-picker v-model="selectedTime3" format="24hr"></v-time-picker>
-          </v-menu>
+          <v-card-text>
+          <p>เวลาเริ่มเรียนแลป</p>
+          <v-text-field variant="outlined" v-model="courseStore.timeInLab" :rules="[
+            (v: any) => !!v || 'โปรดกรอกเวลาเริ่มเรียนแลปให้ถูกต้อง',
+            (v: string) => /^[0-9]+$/.test(v) || 'โปรดกรอกตัวเลขเท่านั้น',
+          ]"></v-text-field>
+        </v-card-text>
         </v-col>
-      </v-row>
-      <v-row v-if="courseStore.typeCourse === 'เลคเชอร์และแลป'">
         <v-col>
-          <p>เวลา</p>
-          <v-menu v-model="showTimePicker4" :close-on-content-click="false" transition="scale-transition" offset-y
-            position-x="right">
-            <template v-slot:activator="{ props }">
-              <v-text-field v-model="selectedTime4" variant="outlined" readonly label="เวลาเลิกแลป">
-                <template v-slot:append>
-                  <v-icon v-bind="props">mdi-clock-outline</v-icon>
-                </template>
-              </v-text-field>
-            </template>
-            <v-time-picker v-model="selectedTime4" format="24hr"></v-time-picker>
-          </v-menu>
+          <v-card-text>
+          <p>เวลาเลิกเรียนแลป</p>
+          <v-text-field variant="outlined" v-model="courseStore.timeOutLab" :rules="[
+            (v: any) => !!v || 'โปรดกรอกเวลาเลิกเรียนแลปให้ถูกต้อง',
+            (v: string) => /^[0-9]+$/.test(v) || 'โปรดกรอกตัวเลขเท่านั้น',
+          ]"></v-text-field>
+        </v-card-text>
         </v-col>
       </v-row>
-    </v-card-text>
+    </v-card>
+  </v-card-text>
 </template>
 
 <style scoped>

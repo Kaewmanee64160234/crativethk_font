@@ -5,9 +5,9 @@ const userStore = useUserStore();
 <template>
   <v-card>
     <v-navigation-drawer expand-on-hover rail permanent color="#F1F1F1">
-        <v-list>
+        <v-list color="#2D4C7A">
           <div v-if="userStore.currentUser?.teacherId">
-            <v-list-item link to="/courseManagement" prepend-icon="mdi-human-male-board" title="รายวิชาที่สอน" value="my-courses"></v-list-item>
+            <v-list-item link to="/courseManagement" prepend-icon="mdi-home-circle" title="รายวิชาที่สอน" value="my-courses"></v-list-item>
           </div>
           <div v-if="userStore.currentUser?.registerStatus === 'confirmed'">
             <v-list-item link to="/enrolmentManagement" prepend-icon="mdi-account-school" title="รายวิชาที่ลงทะเบียน" value="my-enrollment"></v-list-item>

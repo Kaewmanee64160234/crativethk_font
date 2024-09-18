@@ -18,20 +18,13 @@ const deleteCourse = async (idCourse: string) => {
   <v-container>
     <v-row justify="center">
       <v-card class="cardText">
-        <v-card-title>
-          <h2>ต้องการลบรายวิชา?</h2></v-card-title>
-        <v-card-title style="text-align: center"
-          >ต้องการลบรายวิชา
-          {{ courseStore.currentCourse?.nameCourses }} ใช่หรือไม่</v-card-title
-        >
-        <v-card-actions class="actions">
-          <v-btn @click="courseStore.showDeleteDialog = false"
-            >ไม่ยกเลิก</v-btn
-          >
-          <v-btn
-            class="colorText"
-            @click="deleteCourse(courseStore.currentCourse!.coursesId)"
-            >ยืนยันการลบรายวิชา
+       <v-icon>mdi-delete-circle</v-icon>
+        <v-card-title style="text-align: center">ยืนยันการลบรายวิชา
+          {{ courseStore.currentCourse?.nameCourses }} ใช่หรือไม่</v-card-title>
+        <v-card-actions>
+          <v-btn @click="courseStore.showDeleteDialog = false">ยกเลิก</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn class="colorText" @click="deleteCourse(courseStore.currentCourse!.coursesId)">ยืนยัน
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -44,13 +37,16 @@ const deleteCourse = async (idCourse: string) => {
   justify-content: flex-end;
   margin-top: 3%;
 }
+
 .colorText {
   color: #c52a2a;
 }
+
 .cardText {
   width: auto;
   height: auto;
 }
+
 .cut {
   word-wrap: break-word;
   white-space: normal;
