@@ -29,7 +29,7 @@ const randomImage = () => {
 }
 
 onMounted(async () => {
-  await userStore.getCurrentUser();
+  await userStore.getUsersById(userStore.currentUser?.userId!);
   await enrollmentStore.getCourseByStudentId(userStore.currentUser!.studentId!);
 });
 const formatThaiDate = (isoDateTime: string | undefined): string => {

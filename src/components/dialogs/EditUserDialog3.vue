@@ -1,9 +1,37 @@
 <script lang="ts" setup>
 import { useUserStore } from '@/stores/user.store';
+import { ref } from 'vue';
 const userStore = useUserStore();
 const url = 'http://localhost:3000';
+// Snackbar state
+const snackbarVisible = ref(false);
+const snackbarMessage = ref('');
+const snackbarColor = ref('error');
+
+function showSnackbar(message: string, color: string = 'error') {
+    snackbarMessage.value = message;
+    snackbarColor.value = color;
+    snackbarVisible.value = true;
+}
 
 async function save() {
+if (!userStore.editUser.firstName || !userStore.editUser.lastName ||
+        !/^[A-Za-zก-๙]+$/.test(userStore.editUser.firstName) ||
+        !/^[A-Za-zก-๙]+$/.test(userStore.editUser.lastName)) {
+            showSnackbar('โปรดกรอกชื่อและนามสกุลที่ไม่มีตัวเลข');
+        return;
+    }
+    // check if role is not "แอดมิน"
+    else if (userStore.editUser.role !== 'แอดมิน') {
+        showSnackbar('โปรดเลือกตำแหน่งที่ถูกต้อง');
+        return;
+    }
+
+    // check if status is not valid
+    else if (!['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง'].includes(userStore.editUser.status ?? '')) {
+        showSnackbar('โปรดเลือกสถานะภาพที่ถูกต้อง');
+        return;
+    }
         await userStore.saveUser();
         await userStore.resetUser();
         window.location.reload(); 
@@ -16,7 +44,7 @@ async function cancel() {
 
 // Set the default value for role
 if (!userStore.editUser.role) {
-  userStore.editUser.role = 'อาจารย์';
+  userStore.editUser.role = 'แอดมิน';
 }
 
 </script>
@@ -34,11 +62,6 @@ if (!userStore.editUser.role) {
                     <!-- Text Fields Column -->
                     <v-col cols="12" md="8">
                         <v-row align="center">
-                            <v-col cols="12">
-                                <v-text-field label="รหัสแอดมิน" dense solo required
-                                    v-model="userStore.editUser.adminId"
-                                    :rules="[(v) => !!v || 'โปรดกรอกรหัสแอดมิน', (v) => /^[0-9]{8}$/.test(v) || 'โปรดกรอกข้อมูลเฉพาะตัวเลข 8 หลัก']"></v-text-field>
-                            </v-col>
                             <v-col cols="12">
                                 <v-text-field label="ชื่อ" dense solo required
                                     v-model="userStore.editUser.firstName"
@@ -66,7 +89,6 @@ if (!userStore.editUser.role) {
                                 <v-file-input label="อัพโหลดรูปภาพ" prepend-icon="mdi-camera" filled multiple
                                     v-model="userStore.editUser.files" accept="image/*" outlined></v-file-input>
                             </v-col>
-
                         </v-row>
                     </v-col>
                 </v-row>
@@ -76,6 +98,15 @@ if (!userStore.editUser.role) {
                 </v-card-actions>
             </v-card>
         </v-row>
+        <!-- Snackbar for showing errors -->
+        <v-snackbar v-model="snackbarVisible" :color="snackbarColor" top right :timeout="3000">
+            {{ snackbarMessage }}
+            <template v-slot:action="{ attrs }">
+                <v-btn color="white" text v-bind="attrs" @click="snackbarVisible = false">
+                    Close
+                </v-btn>
+            </template>
+        </v-snackbar>
     </v-container>
 
 </template>

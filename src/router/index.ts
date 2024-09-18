@@ -216,6 +216,16 @@ const router = createRouter({
         menu: () => import("../components/headers/SubHeader.vue"),
       },
     },
+    // confirmRejectNotic
+    {
+      path: "/confirmRejectNotic/:noticId",
+      name: "confirmRejectNotic",
+      components: {
+        default: () => import("../views/Noticification/ConfirmRejectView.vue"),
+        header: () => import("../components/headers/MainHeader.vue"),
+        menu: () => import("../components/headers/SubHeader.vue"),
+      },
+    },
     {
       path: "/checkingHistory/:courseId",
       name: "checkingHistory",

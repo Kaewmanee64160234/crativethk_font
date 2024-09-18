@@ -42,13 +42,24 @@ onMounted(async () => {
 });
 
 const cancelRegister = async () => {
-  messageStore.showInfo("Confirm rejection register");
-  await userStore.updateRegisterStatus(userStore.regisUser!.userId!, userStore.regisUser!);
-  if (userStore.currentUser?.role == 'อาจารย์') {
-    router.push(`/courseManagement`);
-  }
-  if (userStore.currentUser?.role == 'แอดมิน') {
-    router.push('/userManagement');
+  if (userStore.regisUser) {
+    userStore.regisUser.registerStatus = 'reConfirmed';
+    console.log("register", userStore.regisUser.registerStatus);
+    try {
+      await userStore.updateRegisterStatus(userStore.regisUser.userId!, userStore.regisUser);
+      messageStore.showInfo("Confirm rejection register");
+
+      if (userStore.currentUser?.role === 'อาจารย์') {
+        router.push(`/courseManagement`);
+      } else if (userStore.currentUser?.role === 'แอดมิน') {
+        router.push('/userManagement');
+      }
+    } catch (e) {
+      console.error("Error in confirmRegister:", e);
+      messageStore.showError("Failed to update register status");
+    }
+  } else {
+    messageStore.showError("Registration user not found");
   }
 };
 

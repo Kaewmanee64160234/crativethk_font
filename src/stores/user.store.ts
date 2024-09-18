@@ -24,6 +24,7 @@ export const useUserStore = defineStore("userStore", () => {
   const messageStore = useMessageStore()
   const currentUser = ref<User>();
   const regisUser = ref<User>();
+  const notiUser = ref<User>();
 
   const editUser = ref<User & { files: File[] }>({
     userId: 0,
@@ -109,7 +110,7 @@ export const useUserStore = defineStore("userStore", () => {
         }
 
         await getUsers(); // Refresh or reload user list
-        closeDialog();  // Close the dialog
+        // closeDialog();
     } catch (e) {
         console.error("Failed to save user:", e);
         messageStore.showError("Failed to save user.");
@@ -198,13 +199,13 @@ const updateRegisterStatus = async (userId: number, user:User) => {
 //getUsersById
 const getUsersById = async (id: number) => {
   try {
-      const res = await userService.getUserById(id);
-      console.log("res", res.data);
-      currentUser.value = mapToUser(res.data); // Directly map the single user object
+    const res = await userService.getUserById(id);
+    console.log("API response:", res.data);
+    currentUser.value = mapToUser(res.data); // Ensure mapToUser maps 'updatedAt'
   } catch (e) {
-      console.log(e);
+    console.error("Failed to fetch user by ID:", e);
   }
-}
+};
 
 const getUsersByStdId = async (id: string) => {
   try {
@@ -292,6 +293,7 @@ const getUserFromLocalStorage = () => {
     getUsersByStdId,
     QR,
     regisUser,
+    notiUser,
     updateRegisterStatus
   };
 });

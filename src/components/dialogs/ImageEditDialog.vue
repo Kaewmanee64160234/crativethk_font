@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+ <script lang="ts" setup>
 import { onMounted, ref, computed } from 'vue';
 import { useUserStore } from '@/stores/user.store';
 import * as faceapi from 'face-api.js';
@@ -130,7 +130,7 @@ async function save() {
     await userStore.saveUser();
     showDialog.value = false;
     await userStore.closeImageDialog();
-    window.location.reload();
+    // window.location.reload();
 
     await userStore.getUsersById(userStore.editUser?.userId!);
     showDialog.value = true;

@@ -15,7 +15,7 @@ export const useEnrollmentStore = defineStore("enrollmentStore", () => {
       const res = await enrollmentService.getCourseByStudentId(userId);
       enrollments.value = res.data;
       // console.log(enrollments.value);
-    } catch (error) {
+    }   catch (error) {
       console.log(error);
     }
   }

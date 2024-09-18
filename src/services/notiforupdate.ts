@@ -1,10 +1,6 @@
 import type Notiforupdate from "@/stores/types/NotiforUpdate";
 import http from "./axios";
 
-function getNotiforupdate() {
-  return http.get("/notiforupdates");
-}
-
 function getNotiforupdateById(id:string) {
   return http.get(`/notiforupdates/${id}`);
 }
@@ -36,6 +32,14 @@ function getNotiforupdateByUserId(userId:string) {
   return http.get(`/notiforupdates/user/${userId}`);
 }
 
+//getAllNotiforupdates
+function getAllNotiforupdates() {
+  return http.get("/notiforupdates");
+}
 
+//getNotificationByUserReceive
+function getNotificationByUserReceive(userReceive:string) {
+  return http.get(`/notiforupdates/userReceive/${userReceive}`);
+}
 
-export default { getNotiforupdate,createNotificationUpdate,getNotiforupdateById,updateNotiforupdate, deleteNotiforupdate, getNotiforupdateByUserId };
+export default { getNotificationByUserReceive,getAllNotiforupdates,createNotificationUpdate,getNotiforupdateById,updateNotiforupdate, deleteNotiforupdate, getNotiforupdateByUserId };

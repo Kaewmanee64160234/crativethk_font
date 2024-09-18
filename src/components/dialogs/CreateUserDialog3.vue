@@ -1,9 +1,13 @@
 <script lang="ts" setup>
 import { useUserStore } from '@/stores/user.store';
 import * as faceapi from 'face-api.js';
-import { onMounted } from 'vue';
+import { onMounted, ref} from 'vue';
 
 const userStore = useUserStore();
+// Snackbar state
+const snackbarVisible = ref(false);
+const snackbarMessage = ref('');
+const snackbarColor = ref('error');
 onMounted(async () => {
   await loadModels();
 });
@@ -13,10 +17,41 @@ async function loadModels() {
   await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
   await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
 }
+
+function showSnackbar(message: string, color: string = 'error') {
+    snackbarMessage.value = message;
+    snackbarColor.value = color;
+    snackbarVisible.value = true;
+}
+
 async function save() {
-    // loop create faceDescription
-    // const faceDescriptions = await processFiles(userStore.editUser.files);
-    // userStore.editUser.faceDescriptions = faceDescriptions;
+    if (!userStore.editUser.firstName || !userStore.editUser.lastName ||
+        !/^[A-Za-zก-๙]+$/.test(userStore.editUser.firstName) ||
+        !/^[A-Za-zก-๙]+$/.test(userStore.editUser.lastName)) {
+        showSnackbar('โปรดกรอกชื่อและนามสกุลที่ไม่มีตัวเลข');
+        return;
+    }
+    // check if role is not "แอดมิน"
+    else if (userStore.editUser.role !== 'แอดมิน') {
+        showSnackbar('โปรดเลือกตำแหน่งที่ถูกต้อง');
+        return;
+    }
+
+    // check if status is not valid
+    else if (!['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง'].includes(userStore.editUser.status ?? '')) {
+        showSnackbar('โปรดเลือกสถานะภาพที่ถูกต้อง');
+        return;
+    }
+    // check if email empty and email format
+    else if (!userStore.editUser.email || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(userStore.editUser.email)) {
+        showSnackbar('โปรดกรอกอีเมลให้ถูกต้อง');
+        return;
+    }
+    // check if files are present
+    else if (!userStore.editUser.files || userStore.editUser.files.length === 0) {
+        showSnackbar('โปรดอัปโหลดรูปภาพ 1 รูป');
+        return;
+    }
     await userStore.saveUser();
     await userStore.resetUser();
 }
@@ -86,11 +121,6 @@ if (!userStore.editUser.role) {
                     <v-col cols="12" md="8">
                         <v-row align="center">
                             <v-col cols="12">
-                                <v-text-field label="รหัสแอดมิน" dense solo required
-                                    v-model="userStore.editUser.adminId"
-                                    :rules="[(v) => !!v || 'โปรดกรอกแอดมิน', (v) => /^[0-9]{8}$/.test(v) || 'โปรดกรอกข้อมูลเฉพาะตัวเลข 8 หลัก']"></v-text-field>
-                            </v-col>
-                            <v-col cols="12">
                                 <v-text-field label="ชื่อ" dense solo required v-model="userStore.editUser.firstName"
                                     :rules="[(v) => !!v || 'โปรดกรอกขื่อ']"></v-text-field>
                             </v-col>
@@ -129,6 +159,15 @@ if (!userStore.editUser.role) {
                 </v-card-actions>
             </v-card>
         </v-row>
+        <!-- Snackbar for showing errors -->
+        <v-snackbar v-model="snackbarVisible" :color="snackbarColor" top right :timeout="3000">
+            {{ snackbarMessage }}
+            <template v-slot:action="{ attrs }">
+                <v-btn color="white" text v-bind="attrs" @click="snackbarVisible = false">
+                    Close
+                </v-btn>
+            </template>
+        </v-snackbar>
     </v-container>
 
 </template>
