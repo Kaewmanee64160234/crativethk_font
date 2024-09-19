@@ -30,16 +30,15 @@ export const useAuthStore = defineStore('authStore', () => {
     try {
       currentUser.value.email = value;
       const response = await auth.login(currentUser.value);
-      console.log(currentUser.value);
-      console.log(response);
+      console.log('res',response);
       // console.log()
       if (response.status === 201 || response.status === 200) {
         const token = response.data.access_token;
         accessToken.value = token;
-        setCurrentUser(response.data);
+        setCurrentUser(response.data.user);
         localStorage.setItem('token', token);
         console.log('Stored token:', localStorage.getItem('token'));
-        localStorage.setItem('users',JSON.stringify(currentUser.value));
+        localStorage.setItem('users',JSON.stringify(response.data.user));
         console.log("current user" ,(currentUser.value));
         if (currentUser.value.role === 'อาจารย์') {
           router.push('/courseManagement');

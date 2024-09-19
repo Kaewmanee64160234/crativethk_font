@@ -17,7 +17,7 @@ const userStore = useUserStore();
 const loaderStore = useLoaderStore();
 // get user data fro local storage when on mounted
 onMounted(() => {
-  userStore.getUserFromLocalStorage();
+  userStore.getCurrentUser();
 });
 </script>
 

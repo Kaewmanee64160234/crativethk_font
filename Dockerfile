@@ -1,16 +1,25 @@
-# Step 1: Use a Node.js image for building the Vue.js application
+# Stage 1: Build the Vue.js application
 FROM node:16-alpine AS build-stage
 
-# Set the working directory in the container
+# Install required packages for canvas
+RUN apk add --no-cache \
+    build-base \
+    cairo-dev \
+    jpeg-dev \
+    pango-dev \
+    giflib-dev \
+    librsvg-dev
+
+# Set working directory in the container
 WORKDIR /app
 
-# Copy the package.json and package-lock.json files
+# Copy package.json and package-lock.json to the container
 COPY package*.json ./
 
 # Install dependencies
 RUN npm install
 
-# Copy the source code into the container
+# Copy all files from the host to the container
 COPY . .
 
 # Set environment variables
@@ -18,20 +27,17 @@ ARG VITE_API_URL
 ARG VITE_APP_GOOGLE_CLIENT_ID
 ARG VITE_API_STD_URL
 
-# Build the application
+# Build the Vue.js app with environment variables
 RUN VITE_API_URL=$VITE_API_URL VITE_APP_GOOGLE_CLIENT_ID=$VITE_APP_GOOGLE_CLIENT_ID VITE_API_STD_URL=$VITE_API_STD_URL npm run build
 
-# Step 2: Use an Nginx image to serve the built files
+# Stage 2: Serve the built files using Nginx
 FROM nginx:stable-alpine AS production-stage
 
-# Copy the built files from the previous stage to the Nginx directory
+# Copy the build output to the Nginx web server directory
 COPY --from=build-stage /app/dist /usr/share/nginx/html
-
-# Copy custom Nginx configuration file if needed
-COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose port 80
 EXPOSE 80
 
-# Start Nginx server
+# Start Nginx
 CMD ["nginx", "-g", "daemon off;"]
