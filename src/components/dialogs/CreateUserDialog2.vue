@@ -141,15 +141,15 @@ if (!userStore.editUser.role) {
                             </v-col>
                             <v-col cols="12">
                                 <v-text-field label="ชื่อ" dense solo required v-model="userStore.editUser.firstName"
-                                    :rules="[(v) => !!v || 'โปรดกรอกขื่อ']"></v-text-field>
+                                    :rules="[(v) => !!v || 'โปรดกรอกขื่อ',(v) => /^[A-Za-zก-๙\s]+$/.test(v) || 'ชื่อต้องไม่เป็นตัวเลข']"></v-text-field>
                             </v-col>
                             <v-col cols="12">
                                 <v-text-field label="นามสกุล" dense solo required v-model="userStore.editUser.lastName"
-                                    :rules="[(v) => !!v || 'โปรดกรอกนามสกุล']"></v-text-field>
+                                    :rules="[(v) => !!v || 'โปรดกรอกนามสกุล', (v) => /^[A-Za-zก-๙\s]+$/.test(v) || 'นามสกุลต้องไม่เป็นตัวเลข']"></v-text-field>
                             </v-col>
                             <v-col cols="12">
                                 <v-text-field label="อีเมล" dense solo required v-model="userStore.editUser.email"
-                                    :rules="[(v) => !!v || 'โปรดกรอกอีเมล']"></v-text-field>
+                                    :rules="[(v) => !!v || 'โปรดกรอกอีเมล', (v) => /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test || 'กรอกอีเมลให้ถูกต้อง']"></v-text-field>
                             </v-col>
                             <v-col cols="12">
                                 <v-text-field label="ตำแหน่ง" dense solo required v-model="userStore.editUser.role"

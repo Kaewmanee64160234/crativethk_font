@@ -216,7 +216,6 @@ const getUsersByStdId = async (id: string) => {
       console.log(e);
   }
 }
-
 // getUserFromLocalStorage
 const getUserFromLocalStorage = () => {
     const userString = localStorage.getItem("users");

@@ -10,203 +10,235 @@ import { useNotiforupdate } from '@/stores/notiforUpdate.store';
 
 const userStore = useUserStore();
 const notiforupdateStore = useNotiforupdate();
-const firstNotification = computed(() => notiforupdateStore.notiforupdates[0]);
-const stdId = ref();
+const noticId = ref();
+// const firstNotification = computed(() => notiforupdateStore.notiforupdates[0]);
+
+//Notification find by UserId
+const firstNotification = computed(() => {
+  return notiforupdateStore.notiforupdates.find((notification) => notification.userReceive?.studentId === noticId.value);
+});
+
 const user = ref<User | undefined>(undefined);
 const url = 'http://localhost:3000';
+const imageUrls = ref<string[]>([]);
+const imageUrls2 = ref<string[]>([]);
 const route = useRoute();
 const router = useRouter();
 const isLoading = ref(false);
-const faceDescriptors = ref<Float32Array[]>([]); // To hold the face descriptors for similarity comparison
-const similarityScores = ref<number[]>([]); // To store similarity scores between images
+const faceDescriptors = ref<Float32Array[]>([]);
+const similarityScores = ref<number[]>([]);
 
-const imageStdUrl = import.meta.env.VITE_API_STD_URL;
+
 const messageStore = useMessageStore();
-stdId.value = route.params.stdId as string;
-
 onMounted(async () => {
-    isLoading.value = true;
-    try {
-        await faceapi.nets.ssdMobilenetv1.loadFromUri("/models");
-        await faceapi.nets.faceRecognitionNet.loadFromUri("/models"); // Load face recognition model
-
-        if (stdId.value) {
-            await userStore.getUsersByStdId(stdId.value);
-            user.value = userStore.regisUser;
-            images.value = await Promise.all(
-                (user.value?.images?.map(async (image: string) => {
-                    const fullImageUrl = `${url}/users/image/filename/${image}`;
-                    const base64Image = await resizeAndConvertToBase64(fullImageUrl, 800, 600);
-                    const faceDescriptor = await getFaceDescriptor(fullImageUrl); // Get face descriptor for each image
-                    if (faceDescriptor) faceDescriptors.value.push(faceDescriptor); // Store descriptor
-                    return base64Image;
-                }) ?? [])
-            );
-
-            // Calculate similarity scores between images
-            calculateSimilarity();
-            images.value = userStore.currentUser?.images?.map((image: string) => `${url}/users/image/filename/${image}`) ?? [];
-        }
-    } catch (error) {
-        console.error("Error loading images:", error);
-    } finally {
-        isLoading.value = false;
+  isLoading.value = true;
+  try {
+    //getNotificationById
+    noticId.value = route.params.noticId as string;
+    console.log("stdId", noticId.value);
+    await notiforupdateStore.getNotiforupdateById(noticId.value);
+    console.log("notiforupdateStore", notiforupdateStore.currentNotiforupdate);
+    imageUrls.value = notiforupdateStore.currentNotiforupdate!.images!.map((image: string) => `${url}/notiforupdates/image/filename/${image}`);
+    // imageUrls2 get by userId
+    const userId = notiforupdateStore.currentNotiforupdate?.userSender?.userId;
+    if (userId) {
+      const response = await fetch(`${url}/users/${userId}/images`);
+      if (!response.ok) {
+        const errorData = await response.text();
+        throw new Error(`Failed to fetch images for user ${userId}: ${errorData}`);
+      }
+      const data = await response.json();
+      if (data.images) {
+        const userImages = data.images.map((image: string) => `${url}/users/image/filename/${image}`);
+        imageUrls2.value = [...imageUrls2.value, ...userImages];
+        console.log("User's Previous Image URLs:", userImages);
+      } else {
+        console.warn(`No images found for user ${userId}`);
+      }
     }
+
+
+  } catch (error) {
+    console.error('Error fetching notification images:', error);
+  } finally {
+    isLoading.value = false;
+  }
 });
-const images = computed(() => {
-  // Check if the notification exists and has a userSender with images
-  const notificationUserImages = firstNotification.value?.userSender?.images;
-  
-  // Map the image names to complete URLs or return an empty array if no images are available
-  return notificationUserImages?.map((image: string) => `${url}/notiforupdates/image/filename/${image}`) ?? [];
-});
+
+
+
+
+// const fetchUserImagesById = async (userId: number) => {
+//     try {
+//         const response = await fetch(`${url}/users/${userId}/images`);
+//         if (!response.ok) {
+//             const errorData = await response.text(); // Get error message from response
+//             throw new Error(`Failed to fetch images for user ${userId}: ${errorData}`);
+//         }
+
+//         const data = await response.json();
+//         if (data.images) {
+//             const userImages = data.images.map((image: string) => `${url}/users/image/filename/${image}`);
+//             imageUrls.value = [...imageUrls.value, ...userImages];
+//             console.log("User's Previous Image URLs:", userImages);
+//         } else {
+//             console.warn(`No images found for user ${userId}`);
+//         }
+//     } catch (error) {
+//         console.error("Failed to fetch user images:", error);
+//     }
+// };
+
+
+
+
+// Add user's own images to the imageUrls array using the sender's userId
+// if (firstNotification.value?.userSender?.userId) {
+//     const userSenderId = firstNotification.value.userSender.userId;
+//     await fetchUserImagesById(userSenderId);
+// }
+
+
 // Calculate similarity between all face descriptors
 const calculateSimilarity = () => {
-    similarityScores.value = [];
+  similarityScores.value = [];
 
-    // Compare all combinations of face descriptors and calculate Euclidean distance
-    for (let i = 0; i < faceDescriptors.value.length - 1; i++) {
-        for (let j = i + 1; j < faceDescriptors.value.length; j++) {
-            const score = faceapi.euclideanDistance(faceDescriptors.value[i], faceDescriptors.value[j]);
-            similarityScores.value.push(score); // Push the similarity score (distance) between images
-        }
+  for (let i = 0; i < faceDescriptors.value.length - 1; i++) {
+    for (let j = i + 1; j < faceDescriptors.value.length; j++) {
+      const score = faceapi.euclideanDistance(faceDescriptors.value[i], faceDescriptors.value[j]);
+      similarityScores.value.push(score);
     }
-};
-
-// Extract face descriptor for a given image URL
-const getFaceDescriptor = async (imgUrl: string): Promise<Float32Array | null> => {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.crossOrigin = 'Anonymous';
-        img.src = imgUrl;
-        img.onload = async () => {
-            const detections = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
-            if (detections && detections.descriptor) {
-                resolve(detections.descriptor);
-            } else {
-                reject("No face detected");
-            }
-        };
-        img.onerror = (error) => reject(error);
-    });
-};
-
-// Function to resize and convert image to Base64
-const resizeAndConvertToBase64 = (
-    imgUrl: string,
-    maxWidth: number,
-    maxHeight: number
-): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.crossOrigin = 'Anonymous';
-        img.src = imgUrl;
-        img.onload = () => {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-
-            if (!ctx) {
-                reject('Could not get canvas context');
-                return;
-            }
-
-            const ratio = Math.min(maxWidth / img.width, maxHeight / img.height);
-            const width = img.width * ratio;
-            const height = img.height * ratio;
-
-            canvas.width = width;
-            canvas.height = height;
-
-            ctx.drawImage(img, 0, 0, width, height);
-            const dataUrl = canvas.toDataURL('image/jpeg');
-            resolve(dataUrl);
-        };
-        img.onerror = (error) => {
-            reject(error);
-        };
-    });
-};
-
-const cancelNotice = async () => {
-  messageStore.showInfo("Confirm rejection of notice");
-  // await userStore.updateRegisterStatus(userStore.regisUser!.userId!, userStore.regisUser!);
-  router.push(`/userManagement`);
-};
-
-const confirmNotice = async () => {
-  if (userStore.regisUser) {
-    userStore.regisUser.registerStatus = 'confirmed';
-    try {
-      await userStore.updateRegisterStatus(userStore.regisUser.userId!, userStore.regisUser);
-      messageStore.showInfo("Successfully confirmed notice");
-      router.push('/userManagement');
-    } catch (e) {
-      console.error("Error in confirmNotice:", e);
-      messageStore.showError("Failed to update notice status");
-    }
-  } else {
-    messageStore.showError("Notice user not found");
   }
 };
+
+//cancelNotice
+const cancelNotice = async () => {
+  try {
+    if (notiforupdateStore.currentNotiforupdate) {
+      const notiforupdateId = notiforupdateStore.currentNotiforupdate.notiforupdateId;
+      if (notiforupdateId) {
+        // Call the store method to update the notification status
+        await notiforupdateStore.updateNotiforupdateReject(
+          String(notiforupdateId),
+          notiforupdateStore.currentNotiforupdate
+        );
+        // Update local state to reflect the status change
+        notiforupdateStore.currentNotiforupdate.statusconfirmation = 'rejected';
+      } else {
+        throw new Error('Notification ID is undefined.');
+      }
+      messageStore.showInfo('Notification rejected successfully.');
+      // Optionally, navigate to another route
+      router.push('/courseManagement');
+    } else {
+      console.error('No notification to reject.');
+    }
+  } catch (error) {
+    messageStore.showError('Failed to reject notification.');
+    console.error('Error rejecting notice:', error);
+  }
+};
+
+//confirmNotification
+const confirmNotice = async () => {
+  try {
+    if (notiforupdateStore.currentNotiforupdate) {
+      const notiforupdateId = notiforupdateStore.currentNotiforupdate.notiforupdateId;
+      
+      if (notiforupdateId) {
+        // Call the store method to update the notification status
+        await notiforupdateStore.updateNotiforupdateConfirm(
+          String(notiforupdateId),
+          notiforupdateStore.currentNotiforupdate
+        );
+        
+        // Update local state to reflect the status change
+        notiforupdateStore.currentNotiforupdate.statusconfirmation = 'confirmed';
+
+        console.log(notiforupdateStore.currentNotiforupdate);
+        
+      } else {
+        throw new Error('Notification ID is undefined.');
+      }
+      messageStore.showInfo('Notification confirmed successfully.');
+      // Optionally, navigate to another route
+      router.push('/courseManagement');
+    } else {
+      console.error('No notification to confirm.');
+    }
+  } catch (error) {
+    messageStore.showError('Failed to confirm notification.');
+    console.error('Error confirming notice:', error);
+  }
+};
+
+
+
+
 </script>
 
 <template>
-    <v-container style="padding-top: 120px;">
-      <v-card>
-        <div v-if="isLoading" class="loader-overlay">
-          <Loader></Loader>
-        </div>
-        <v-row>
-          <v-col style="text-align: center;">
-            <h1>ยืนยันการเปลี่ยนรูปนิสิต</h1>
-          </v-col>
-        </v-row>
-        <!-- Check if notifications exist and show only the first one -->
-        <v-row v-if="firstNotification" class="d-flex justify-center">
-          <!-- Display the first notification -->
-          <v-col cols="12" class="text-center">
-            <h3>
-              {{ firstNotification.userSender?.studentId }} 
-              {{ firstNotification.userSender?.firstName }} 
-              {{ firstNotification.userSender?.lastName }}
-            </h3>
-          </v-col>
-          
-          <!-- Display user images -->
-          <v-col cols="12" class="d-flex justify-center">
-            <v-img v-for="(image, index) in images" :key="index" :src="image" class="mb-2" max-width="100px" max-height="100px" />
-          </v-col>
-        </v-row>
+  <v-container style="padding-top: 120px;">
+    <v-card>
+      <div v-if="isLoading" class="loader-overlay">
+        <Loader></Loader>
+      </div>
+      <v-row>
+        <v-col style="text-align: center;">
+          <h1>ยืนยันการเปลี่ยนรูปนิสิต</h1>
+        </v-col>
+      </v-row>
 
-        <!-- Display Similarity Scores -->
-        <v-row class="d-flex justify-center">
-          <v-col cols="12" class="text-center">
-            <h3>Face Similarity Scores</h3>
-            <div v-if="similarityScores.length > 0">
-              <div v-for="(score, index) in similarityScores" :key="index">
-                <p>Comparison {{ index + 1 }}: Distance: {{ score.toFixed(2) }}</p>
-              </div>
-            </div>
-            <div v-else>
-              <p>No similarities detected.</p>
-            </div>
-          </v-col>
-        </v-row>
+      <!-- Check if notifications exist and show only the first one -->
+      <v-row class="d-flex justify-center">
+        <v-col cols="12" class="text-center">
+          <h3>
+            {{ notiforupdateStore.currentNotiforupdate?.userSender?.studentId }}
+            {{ notiforupdateStore.currentNotiforupdate?.userSender?.firstName }}
+            {{ notiforupdateStore.currentNotiforupdate?.userSender?.lastName }}
+          </h3>
+        </v-col>
 
-        <v-card-actions>
-          <v-btn color="error" @click="cancelNotice">ปฎิเสธ</v-btn>
-          <v-spacer></v-spacer>
-          <v-btn color="success" @click="confirmNotice">ยืนยัน</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-container>
+        <!-- Display notification images -->
+        <v-col cols="12" class="text-center">
+          <h3>รูปนิสิตใหม่</h3>
+        </v-col>
+        <v-col v-for="(image, index) in imageUrls" :key="'notification-image-' + index" cols="2" md="2" lg="2"
+          class="image-container">
+          <v-img :src="image" aspect-ratio="1" class="rounded-lg ma-2 d-flex align-center justify-center">
+          </v-img>
+        </v-col>
+      </v-row>
+
+      <!-- Display User Images Below the Notification Images -->
+      <v-row class="d-flex justify-center">
+        <v-col cols="12" class="text-center">
+          <h3>รูปนิสิตเดิม</h3>
+        </v-col>
+        <!-- {{  notiforupdateStore.currentNotiforupdate?.images }} -->
+
+        <v-col v-for="(image, index) in imageUrls2" :key="'user-image-' + index" cols="2" md="2" lg="2"
+          class="image-container">
+          <v-img :src="image" aspect-ratio="1" class="rounded-lg ma-2 d-flex align-center justify-center">
+          </v-img>
+        </v-col>
+      </v-row>
+      <v-card-actions>
+        <v-btn color="error" @click="cancelNotice">ปฎิเสธ</v-btn>
+        <v-spacer></v-spacer>
+        <v-btn color="success" @click="confirmNotice">ยืนยัน</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-container>
 </template>
+
 
 <style>
 .image-container {
   position: relative;
   margin-bottom: 1rem;
 }
+
 .loader-overlay {
   position: absolute;
   top: 0;

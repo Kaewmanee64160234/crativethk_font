@@ -3,6 +3,7 @@ import { ref } from "vue";
 import type Notiforupdate from "./types/NotiforUpdate";
 import notiforupdateService from "@/services/notiforupdate";
 import type { User } from "./types/User";
+import { mapToNotice } from "./types/NotiforUpdate";
 
 export const useNotiforupdate = defineStore("notiforupdateStore", () => {
   const notiforupdates = ref<Notiforupdate[]>([]);
@@ -22,39 +23,67 @@ export const useNotiforupdate = defineStore("notiforupdateStore", () => {
   const getNotiforupdateById = async (id: string) => {
     try {
       const res = await notiforupdateService.getNotiforupdateById(id);
-      currentNotiforupdate.value = res.data;
+      currentNotiforupdate.value = mapToNotice(res.data);
+      console.log("res data", res.data);
+      
     } catch (error) {
       console.log(error);
     }
   };
-    // create notification
-    const createNotiforupdate = async (notiforupdate:FormData) => {
-        try {
-        const res = await notiforupdateService.createNotificationUpdate(notiforupdate);
-        } catch (e) {
-        console.error('Error creating notiforupdate:', e);
-        }
-    };
-
-    // get notifications by userId
-    const getNotiforupdateByUserId = async (userId:string) => {
-        try {
-        const res = await notiforupdateService.getNotiforupdateByUserId(userId);
-        notiforupdates.value = res.data;
-        } catch (error) {
-        console.log(error);
-        }
+  // create notification
+  const createNotiforupdate = async (formData: FormData) => {
+    try {
+      await notiforupdateService.createNotificationUpdate(formData);
+    } catch (error: any) {
+      // Enhanced error logging
+      if (error.response) {
+        console.log('Error response data:', error.response.data);
+        console.log('Error response status:', error.response.status);
+      } else {
+        console.log('Error:', error.message);
+      }
     }
+  };
 
-    //getNotificationByUserReceive
-    const getNotificationByUserReceive = async (userReceive:User) => {
-        try {
-        const res = await notiforupdateService.getNotificationByUserReceive(userReceive!.userId!);
-        notiforupdates.value = res.data;
-        } catch (error) {
-        console.log(error);
-        }
+// normal updateNotiforupdate  
+  const updateNotiforupdateConfirm = async (id: string, data: Notiforupdate) => {
+    try {
+      await notiforupdateService.updateNotiforupdateConfirm(id, data);
+      console.log('Updated notification:', data);
+    } catch (error) {
+      console.log(error);
     }
+  };
+  // updateNotiforupdateReject
+  const updateNotiforupdateReject = async (id: string, data: Notiforupdate) => {
+    try {
+      await notiforupdateService.updateNotiforupdateReject(id, data);
+      console.log('Updated notification:', data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  // get notifications by userId
+  const getNotiforupdateByUserId = async (userId: string) => {
+    try {
+      const res = await notiforupdateService.getNotiforupdateByUserId(userId);
+      notiforupdates.value = res.data;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  //getNotificationByUserReceive
+  const getNotificationByUserReceive = async (userReceive: User) => {
+    try {
+      const res = await notiforupdateService.getNotificationByUserReceive(userReceive!.userId!);
+      notiforupdates.value = res.data;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
 
   return {
     notiforupdates, // Make sure this is returned so the list can be used in components
@@ -65,5 +94,7 @@ export const useNotiforupdate = defineStore("notiforupdateStore", () => {
     // deleteNotiforupdate,
     getNotiforupdateByUserId,
     getNotificationByUserReceive,
+    updateNotiforupdateConfirm,
+    updateNotiforupdateReject
   };
 });

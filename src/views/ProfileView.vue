@@ -27,8 +27,7 @@ const showChekingHistory = (course: Course) => {
     router.push('/checkingHistory/' + course.coursesId);
 };
 
-onMounted(async () => {
-    // await userStore.getCurrentUser();    
+onMounted(async () => { 
     if (isTeacher.value && userStore.currentUser!.teacherId) {
         await courseStore.getCourseByTeachId(userStore.currentUser!.teacherId!);
     }
@@ -44,7 +43,7 @@ onMounted(async () => {
         console.log("image",images.value)
     }
     await userStore.getUsersById(userStore.currentUser?.userId!);
-    // await userStore.getCurrentUser();
+    await userStore.getCurrentUser();
     
 });
 </script>

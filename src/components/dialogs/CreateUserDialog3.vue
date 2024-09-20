@@ -54,6 +54,7 @@ async function save() {
     }
     await userStore.saveUser();
     await userStore.resetUser();
+    await userStore.closeDialog();
 }
 
 async function cancel() {

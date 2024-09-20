@@ -34,7 +34,7 @@ const url = 'http://localhost:3000';
 const imageUrls = ref<string[]>([]);
 const imageFiles = ref<File[]>([]);
 const fileInputKey = ref(Date.now()); // Key to reset the file input field
-const faceDescriptionFields = ref<string[]>([]);
+const faceDescriptionFields = ref<Float32Array[]>([]);
 const notiStore = useNotiforupdate();
 
 // Fetching existing images from the user store
@@ -57,25 +57,27 @@ async function loadModels() {
       faceapi.nets.faceLandmark68Net.loadFromUri("/models"),
       faceapi.nets.ssdMobilenetv1.loadFromUri("/models"),
     ]);
-    userStore.users.forEach((user) => {
-      const descriptors: Float32Array[] = [];
-      const faceDescriptionFields = user.faceDescriptions || [];
+    // userStore.users.forEach((user) => {
+    //   const descriptors: Float32Array[] = [];
+    //   const faceDescriptionFields = user.faceDescriptions || [];
+    //   console.log("faceDescriptionFields", faceDescriptionFields);
+      
 
-      faceDescriptionFields.forEach((description, idx) => {
-        if (description) {
-          try {
-            const float32Array = base64ToFloat32Array(description);
-            descriptors.push(float32Array);
-          } catch (error) {
-            console.error(`Error decoding face description ${idx + 1} for user: ${user.email}`, error);
-          }
-        }
-      });
+    //   faceDescriptionFields.forEach((description, idx) => {
+    //     if (description) {
+    //       try {
+    //         const float32Array = base64ToFloat32Array(description);
+    //         descriptors.push(float32Array);
+    //       } catch (error) {
+    //         console.error(`Error decoding face description ${idx + 1} for user: ${user.email}`, error);
+    //       }
+    //     }
+    //   });
 
-      if (descriptors.length > 0) {
-        userDescriptors.set(user.studentId!, descriptors);
-      }
-    });
+    //   if (descriptors.length > 0) {
+    //     userDescriptors.set(user.studentId!, descriptors);
+    //   }
+    // });
     console.timeEnd("Face Description Processing Time");
     const urls: string[] = JSON.parse(localStorage.getItem('images') || '[]');
 
@@ -216,6 +218,9 @@ function base64ToBlob(base64: string, type: string): Blob {
 
 // Function to calculate Euclidean distance between two face descriptors
 function calculateEuclideanDistance(descriptor1: Float32Array, descriptor2: Float32Array): number {
+  console.log("descriptor1", descriptor1);
+  console.log("descriptor2", descriptor2);
+  
   if (!descriptor1 || !descriptor2) {
     console.error("One of the descriptors is undefined.");
     return -1; // Returning -1 or another error value to indicate failure
@@ -241,7 +246,7 @@ async function saveUserUpdate() {
       base64ToFile(base64, `image-${index + 1}.jpg`)
     );
 
-    const faceDescriptionsArray: string[] = [];
+
 
     for (const image of imageFiles.value) {
       const img = new Image();
@@ -253,7 +258,7 @@ async function saveUserUpdate() {
             if (detection) {
               const descriptor = detection.descriptor;
               const base64Descriptor = float32ArrayToBase64(descriptor);
-              faceDescriptionsArray.push(base64Descriptor); // Store as Base64 string
+              faceDescriptionFields.value.push(detection.descriptor); // Store as Base64 string
             }
             resolve();
           } catch (error) {
@@ -267,6 +272,9 @@ async function saveUserUpdate() {
         };
       });
     }
+    // map base64Descriptor to base 64 in faceDescriptionsArray
+    const faceDescriptionsArray = faceDescriptionFields.value.map((descriptor) => float32ArrayToBase64(descriptor));
+
     userStore.editUser = {
       ...userStore.currentUser,
       firstName: userStore.currentUser!.firstName || '',
@@ -294,106 +302,150 @@ async function saveUserUpdate() {
 }
 async function save() {
   if (imageUrls.value && imageUrls.value.length > 0) {
-    await Promise.all(imageUrls.value.map((url, index) => loadImageAndProcess(url, index)));
-    // Convert user's face description from base64 string to Float32Array
-    const userFaceDescriptionBase64 = userStore.currentUser?.faceDescriptions![0]; // Assuming first descriptor
-    const userFaceDescriptor = base64ToFloat32Array(userFaceDescriptionBase64!);
+    try {
+      await Promise.all(imageUrls.value.map((url, index) => loadImageAndProcess(url, index)));
 
-    // Assuming croppedImagesDataUrls.value contains face descriptors in base64
-    const croppedImageDescriptorBase64 = faceDescriptionFields.value[0]; // First cropped face descriptor
-    const croppedFaceDescriptor = base64ToFloat32Array(croppedImageDescriptorBase64);
-
-    console.log("User face descriptor (Float32Array):", userFaceDescriptor);
-    console.log("Cropped face descriptor (Float32Array):", croppedFaceDescriptor);
-
-    // Compare image
-    const distance = calculateEuclideanDistance(userFaceDescriptor, croppedFaceDescriptor);
-    console.log("Distance:", distance);
-
-    // Check similarity threshold (e.g., 0.6) for face matching
-    if (distance < 0.4) {
-      await saveUserUpdate();
-      messageStore.showConfirm('อัปโหลดรูปภาพสำเร็จ')
-      if(userStore.currentUser!.registerStatus !== 'confirmed') {
-        userStore.currentUser!.registerStatus = 'notConfirmed';
-        await userStore.updateRegisterStatus(userStore.currentUser!.userId!, userStore.currentUser!);
+      // Convert the user's latest image to a face descriptor
+      const latestUserImage = images.value[0]; // Assuming the first image is the latest
+      const croppedFaceDescriptor = await extractFaceDescriptorFromImage(latestUserImage);
+      
+      if (!croppedFaceDescriptor) {
+        console.error("Failed to extract face descriptor from the latest user image.");
+        messageStore.showError("Failed to extract face descriptor.");
+        return;
       }
-      // Swal.fire(
-      //   'อัปโหลดรูปภาพสำเร็จ',
-      //   'ระบบกำลังประมวลผลข้อมูล',
-      //   'success'
-      // )
-      window.location.reload();
-      // await userStore.getUsersById(userStore.currentUser?.userId!);
-    } else {
-      await close();
-      // Add sweet alert to confirm send to teacher
-      await Swal.fire({
-        title: 'รูปภาพไม่ตรงกับข้อมูล',
-        text: 'คุณต้องการส่งรูปภาพไปยังครูหรือไม่',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'ส่ง',
-        cancelButtonText: 'ยกเลิก',
-      }).then(async (result) => {
-        if (result.isConfirmed) {
-          const formData = new FormData();
 
-          console.log("croppedImagesDataUrls", croppedImagesDataUrls.value);
+      // Convert user's saved face description from base64 string to Float32Array
+      const userFaceDescriptionBase64 = userStore.currentUser?.faceDescriptions?.[0];
+      const userFaceDescriptor = userFaceDescriptionBase64 ? base64ToFloat32Array(userFaceDescriptionBase64) : null;
 
-          // Process and append cropped images to formData as files
-          for (let i = 0; i < croppedImagesDataUrls.value.length; i++) {
-            const croppedImageDataUrl = croppedImagesDataUrls.value[i];
+      if (!userFaceDescriptor || !croppedFaceDescriptor) {
+        console.error("Failed to obtain face descriptors.");
+        messageStore.showError("Failed to obtain face descriptors.");
+        return;
+      }
 
-            // Resize the image and convert to base64
-            const resizedImageBase64 = await resizeAndConvertToBase64(croppedImageDataUrl, 800, 600);
+      console.log("User face descriptor (Float32Array):", userFaceDescriptor);
+      console.log("Cropped face descriptor (Float32Array):", croppedFaceDescriptor);
 
-            // Convert the resized base64 image to a Blob and then to a File
-            const blob = base64ToBlob(resizedImageBase64, "image/jpeg");
-            const imageFile = new File([blob], `croppedImage_${i + 1}_${Date.now()}.jpg`, {
-              type: "image/jpeg",
-            });
+      // Compare descriptors
+      const distance = calculateEuclideanDistance(userFaceDescriptor, croppedFaceDescriptor);
+      console.log("Distance:", distance < 0.4);
 
-            // Append the image file to the formData
+      if (distance > 0.4) {
+        await saveUserUpdate();
+        messageStore.showConfirm('อัปโหลดรูปภาพสำเร็จ');
+
+        if (userStore.currentUser!.registerStatus !== 'confirmed') {
+          userStore.currentUser!.registerStatus = 'notConfirmed';
+          await userStore.updateRegisterStatus(userStore.currentUser!.userId!, userStore.currentUser!);
+        }
+
+        await userStore.getUsersById(userStore.currentUser?.userId!);
+      } else {
+        console.log("Face descriptors do not match.");
+        await close();
+        await Swal.fire({
+          title: 'รูปภาพไม่ตรงกับข้อมูล',
+          text: 'คุณต้องการส่งรูปภาพไปยังครูหรือไม่',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'ส่ง',
+          cancelButtonText: 'ยกเลิก',
+        }).then(async (result) => {
+          if (result.isConfirmed) {
+  try {
+    const formData = new FormData();
+
+    // Detect faces and get descriptors for each image file
+    for (let i = 0; i < imageFiles.value.length; i++) {
+      const imageFile = imageFiles.value[i];
+      const img = new Image();
+      img.src = URL.createObjectURL(imageFile);
+
+      await new Promise<void>((resolve, reject) => {
+        img.onload = async () => {
+          try {
+            const detection = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
+            if (detection) {
+              const descriptor = detection.descriptor;
+              const base64Descriptor = float32ArrayToBase64(descriptor);
+
+              // Append face descriptor to formData
+              formData.append(`faceDescriptor${i + 1}`, base64Descriptor);
+              console.log("Appended face descriptor:", base64Descriptor);
+            } else {
+              console.warn(`No face detected in image ${i + 1}`);
+            }
+
+            // Append the image file to formData
             formData.append("files", imageFile, imageFile.name);
             console.log("Appended file:", imageFile.name);
+            
+            resolve();
+          } catch (error) {
+            console.error("Face detection failed:", error);
+            reject(error);
           }
-
-          // Add face descriptors to formData
-          faceDescriptionFields.value.forEach((faceDescription, index) => {
-            formData.append(`faceDescriptor${index + 1}`, faceDescription);
-          });
-
-          // Add userId to formData
-          formData.append("userId", userStore.currentUser?.userId!);
-
-          // Log the form data entries for debugging
-          for (const pair of formData.entries()) {
-            console.log(`${pair[0]}: ${pair[1]}`);
-          }
-
-          await notiStore.createNotiforupdate(formData);
-          // close dialog
-          Swal.fire(
-            'อัปโหลดรูปภาพสำเร็จ',
-            'ระบบกำลังประมวลผลข้อมูล',
-            'success'
-          )
-        } else {
-          // open dialog
-          showDialog.value = true;
-        }
+        };
+        img.onerror = (error) => {
+          console.error("Error loading image:", error);
+          reject(error);
+        };
       });
-
-
     }
 
+    // Add userId to formData
+    formData.append("userId", userStore.currentUser?.userId!);
 
-    await close();
-    // add sweet alert complete
+    console.log('Sending formData to create notification...');
+    await notiStore.createNotiforupdate(formData);
+    console.log('Notification created successfully.');
+
+    Swal.fire('อัปโหลดรูปภาพสำเร็จ', 'ระบบกำลังประมวลผลข้อมูล', 'success');
+  } catch (error) {
+    console.error("Failed to create notification:", error);
+    messageStore.showError("Failed to create notification.");
+  }
+} else {
+  showDialog.value = true;
+}
+
+        });
+      }
+    } catch (error) {
+      console.error("Error in save function:", error);
+      messageStore.showError("An error occurred during the save process.");
+    }
   } else {
     messageStore.showError("No images available to send.");
   }
+}
+
+// Helper function to extract face descriptor from an image URL
+async function extractFaceDescriptorFromImage(imageUrl: string): Promise<Float32Array | null> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "Anonymous";
+    img.onload = async () => {
+      try {
+        const detection = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
+        if (detection && detection.descriptor) {
+          resolve(detection.descriptor);
+        } else {
+          resolve(null);
+        }
+      } catch (error) {
+        console.error("Face detection failed for the image:", imageUrl, error);
+        resolve(null);
+      }
+    };
+    img.onerror = (error) => {
+      console.error("Error loading image for face descriptor extraction:", error);
+      resolve(null);
+    };
+    img.src = imageUrl;
+  });
 }
 
 const handleFileChange = (event: Event) => {
@@ -498,10 +550,10 @@ const deleteImage = (index: number) => {
 const checkConfirmImage = () => {
   const created = new Date(userStore.currentUser?.createdDate!);
   const updated = new Date(userStore.currentUser?.updatedDate!);
-  
+
   // This will compare full date and time
   const isSameDateTime = created.getTime() !== updated.getTime(); // Compares timestamp
-  
+
   console.log("isSameDateTime", isSameDateTime)
   if (isSameDateTime && userStore.currentUser?.registerStatus === "notConfirmed") {
     console.log("ya1");
@@ -540,7 +592,7 @@ console.log("user2", userStore.currentUser)
           </v-row>
 
           <!-- Existing Images -->
-        <!-- {{ images }} -->
+          <!-- {{ images }} -->
           <v-row>
             <v-col v-for="(image, index) in images" :key="'existing-' + index" cols="2" md="2" lg="2"
               class="image-container">

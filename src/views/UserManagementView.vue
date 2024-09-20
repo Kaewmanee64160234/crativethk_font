@@ -115,7 +115,7 @@ const tab = ref(0);
       <v-spacer></v-spacer>
       <v-row align="center" justify="end">
         <v-col cols="auto">
-          <v-text-field v-model="userStore.searchQuery" label="ค้าหารหัสนิสิต" append-inner-icon="mdi-magnify"
+          <v-text-field v-model="userStore.searchQuery" label="ค้าหาผู้ใช้งาน" append-inner-icon="mdi-magnify"
             hide-details dense variant="solo" class="search-bar"></v-text-field>
         </v-col>
         <!-- <v-col cols="auto">
