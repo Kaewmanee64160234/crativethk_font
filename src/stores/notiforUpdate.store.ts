@@ -49,7 +49,7 @@ export const useNotiforupdate = defineStore("notiforupdateStore", () => {
     //getNotificationByUserReceive
     const getNotificationByUserReceive = async (userReceive:User) => {
         try {
-        const res = await notiforupdateService.getNotificationByUserReceive(userReceive!.userId!);
+        const res = await notiforupdateService.getNotificationByUserReceive(userReceive!.userId!+'');
         notiforupdates.value = res.data;
         } catch (error) {
         console.log(error);

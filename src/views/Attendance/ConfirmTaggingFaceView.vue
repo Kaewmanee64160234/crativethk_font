@@ -39,7 +39,7 @@ const fetchImages = async () => {
   imageUrls.value = images.map(image => `${import.meta.env.VITE_API_URL}/assignments/image/filename/${image}`);
 };
 
-const processImage = async (image: HTMLImageElement, index: number) => {
+const processImage = async (image: any, index: number) => {
   const canvas = canvasRefs[index];
   if (!canvas) return;
 
@@ -284,16 +284,16 @@ const stopCamera = () => {
       <v-col cols="12" md="6" v-for="(imageUrl, index) in imageUrls" :key="index">
         <div class="position-relative mb-3">
           <img :src="imageUrl" class="w-100 rounded-lg"
-            @load="(event) => { 
+            @load="(event:any) => { 
               const img = event.target; 
-              canvasRefs[index].width = img!.naturalWidth; 
-              canvasRefs[index].height = img!.naturalHeight; 
-              canvasRefs[index].style.width = img!.width + 'px'; 
-              canvasRefs[index].style.height = img!.height + 'px'; 
-              processImage(img, index); 
+              canvasRefs[index].width = img!.naturalWidth!; 
+              canvasRefs[index].height = img!.naturalHeight!; 
+              canvasRefs[index].style.width = img!.width! + 'px'; 
+              canvasRefs[index].style.height = img!.height! + 'px'; 
+              processImage(img!, index); 
             }" 
             style="object-fit: contain;" />
-          <canvas :ref="el => canvasRefs[index] = el" class="position-absolute top-0 left-0 w-100 h-100"></canvas>
+          <canvas :ref="(el:any) => canvasRefs[index] = el" class="position-absolute top-0 left-0 w-100 h-100"></canvas>
         </div>
       </v-col>
     </v-row>
@@ -337,7 +337,7 @@ const stopCamera = () => {
           <span class="headline">Confirm Identity</span>
         </v-card-title>
         <v-card-text class="text-center">
-          <img :src="croppedImage" alt="Cropped Face" class="rounded-lg mb-2" />
+          <img :src="croppedImage!" alt="Cropped Face" class="rounded-lg mb-2" />
           <p>Is this you?</p>
         </v-card-text>
         <v-card-actions class="justify-center">

@@ -21,14 +21,13 @@ const isStudent = computed(() => userStore.currentUser?.role === 'นิสิ�
 const isTeacher = computed(() => userStore.currentUser?.role === 'อาจารย์');
 const isAdmin = computed(() => userStore.currentUser?.role === 'แอดมิน');
 
-console.log(userStore.currentUser)
 
 const showChekingHistory = (course: Course) => {
     router.push('/checkingHistory/' + course.coursesId);
 };
 
 onMounted(async () => {
-    await userStore.getCurrentUser();    
+    await userStore.getCurrentUser();
     if (isTeacher.value && userStore.currentUser!.teacherId) {
         await courseStore.getCourseByTeachId(userStore.currentUser!.teacherId!);
     }

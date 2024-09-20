@@ -49,7 +49,7 @@ const reCheckAttendance = async (attendance: Attendance) => {
 
 
 
-    await attendanceStore.confirmAttendance(attendance, null);
+    await attendanceStore.confirmAttendance(attendance);
 
 
     router.push("/courseDetail/" + queryCourseId);
