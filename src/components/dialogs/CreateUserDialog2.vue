@@ -128,7 +128,7 @@ if (!userStore.editUser.role) {
                     <!-- Image Column -->
                     <v-col cols="12" md="4" class="d-flex justify-center align-center">
                         <v-avatar size="192">
-                            <img :src="userStore.currentUser?.imageProfile" @error="onImageError" alt="User Profile">
+                            <img :src="userStore.currentUser?.images?.[0]" @error="onImageError" alt="User Profile">
                         </v-avatar>
                     </v-col>
                     <!-- Text Fields Column -->
@@ -137,7 +137,7 @@ if (!userStore.editUser.role) {
                             <v-col cols="12">
                                 <v-text-field label="รหัสอาจารย์" dense solo required
                                     v-model="userStore.editUser.teacherId"
-                                    :rules="[(v) => !!v || 'โปรดกรอกรหัสอาจารย์', (v) => /^[0-9]{8}$/.test(v) || 'โปรดกรอกข้อมูลเฉพาะตัวเลข 8 หลัก']"></v-text-field>
+                                    :rules="[(v:any) => !!v || 'โปรดกรอกรหัสอาจารย์', (v:any) => /^[0-9]{8}$/.test(v) || 'โปรดกรอกข้อมูลเฉพาะตัวเลข 8 หลัก']"></v-text-field>
                             </v-col>
                             <v-col cols="12">
                                 <v-text-field label="ชื่อ" dense solo required v-model="userStore.editUser.firstName"
@@ -153,13 +153,13 @@ if (!userStore.editUser.role) {
                             </v-col>
                             <v-col cols="12">
                                 <v-text-field label="ตำแหน่ง" dense solo required v-model="userStore.editUser.role"
-                                    :rules="[(v) => !!v || 'โปรดกรอกตำแหน่ง']"></v-text-field>
+                                    :rules="[(v:any) => !!v || 'โปรดกรอกตำแหน่ง']"></v-text-field>
                             </v-col>
                             <v-col cols="12">
                                 <v-combobox label="สถานะภาพ" :items="['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง']" dense
                                     solo required v-model="userStore.editUser.status" :rules="[
-                                        v => !!v || 'โปรดเลือกสถานะภาพ',
-                                        v => ['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง'].includes(v) || 'โปรดเลือกสถานะภาพจากรายการที่ให้ไว้'
+                                        (v:any) => !!v || 'โปรดเลือกสถานะภาพ',
+                                        (v:any) => ['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง'].includes(v) || 'โปรดเลือกสถานะภาพจากรายการที่ให้ไว้'
                                     ]"></v-combobox>
                             </v-col>
                             <!-- {{ userStore.editUser.files }} -->
@@ -182,8 +182,8 @@ if (!userStore.editUser.role) {
         <!-- Snackbar for showing errors -->
         <v-snackbar v-model="snackbarVisible" :color="snackbarColor" top right :timeout="3000">
             {{ snackbarMessage }}
-            <template v-slot:action="{ attrs }">
-                <v-btn color="white" text v-bind="attrs" @click="snackbarVisible = false">
+            <template v-slot:actions>
+                <v-btn color="white"   @click="snackbarVisible = false">
                     Close
                 </v-btn>
             </template>

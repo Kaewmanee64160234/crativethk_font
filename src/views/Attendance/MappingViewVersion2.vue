@@ -172,7 +172,12 @@ async function processImage(image: HTMLImageElement, index: number) {
           studentId: "N/A",
           imageUrl: croppedDataURL!,
           score: 0,
-          user: null,
+          user: {
+            studentId: "N/A",
+            firstName: "Unknown",
+            lastName: "Unknown",
+            faceDescriptions: [],
+          },
         });
       }
     });
@@ -205,9 +210,10 @@ function loadImageAndProcess(dataUrl: string, index: number): Promise<void> {
 
 function findBestUserMatch(
   descriptor: Float32Array
-): { user: User | null; score: number } {
+) {
   const threshold = 0.6; // Set the threshold for best match
-  let bestMatch = { user: null, score: threshold }; // Initialize best match with threshold score
+  let bestMatch: { user?: User, score: number } = {  score: threshold };
+  // Initialize best match with threshold score
 
   // Iterate over each user's descriptors
   userDescriptors.forEach((descriptors, studentId) => {
@@ -235,7 +241,7 @@ function findBestUserMatch(
         console.log("Best match updated:", studentId, distance);
 
         bestMatch = {
-          user: userStore.users.find((u) => u.studentId === studentId)!, // Find the matching user by student ID
+          user: userStore.users.find((u) => u.studentId === studentId) , // Find the matching user by student ID
           score: distance, // Update the score with the new best distance
         };
       }

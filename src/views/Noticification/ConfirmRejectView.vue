@@ -65,40 +65,6 @@ onMounted(async () => {
   }
 });
 
-
-
-
-// const fetchUserImagesById = async (userId: number) => {
-//     try {
-//         const response = await fetch(`${url}/users/${userId}/images`);
-//         if (!response.ok) {
-//             const errorData = await response.text(); // Get error message from response
-//             throw new Error(`Failed to fetch images for user ${userId}: ${errorData}`);
-//         }
-
-//         const data = await response.json();
-//         if (data.images) {
-//             const userImages = data.images.map((image: string) => `${url}/users/image/filename/${image}`);
-//             imageUrls.value = [...imageUrls.value, ...userImages];
-//             console.log("User's Previous Image URLs:", userImages);
-//         } else {
-//             console.warn(`No images found for user ${userId}`);
-//         }
-//     } catch (error) {
-//         console.error("Failed to fetch user images:", error);
-//     }
-// };
-
-
-
-
-// Add user's own images to the imageUrls array using the sender's userId
-// if (firstNotification.value?.userSender?.userId) {
-//     const userSenderId = firstNotification.value.userSender.userId;
-//     await fetchUserImagesById(userSenderId);
-// }
-
-
 // Calculate similarity between all face descriptors
 const calculateSimilarity = () => {
   similarityScores.value = [];

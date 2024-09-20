@@ -48,7 +48,6 @@ onMounted(async () => {
   await userStore.getUsersById(userStore.currentUser?.userId!);
   await userStore.getCurrentUser()
   await userStore.getUsers();
-  await userStore.getUserFromLocalStorage();
 })
 
 const showEditedDialog = (user: User) => {

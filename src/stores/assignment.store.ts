@@ -9,8 +9,7 @@ export const useAssignmentStore = defineStore("assignmentStore", () => {
       assignmentId: 0,
 
       assignmentTime: new Date(),
-      imageAssignments: [],
-      assignmentManual: false,
+  
       statusAssignment: "",
       nameAssignment: "",
       course: {
@@ -21,8 +20,8 @@ export const useAssignmentStore = defineStore("assignmentStore", () => {
         nameCourses: "",
         session: "",
         stdAmount: 0,
-        timeInLec: new Date(),
-        timeOutLec: new Date(),
+        timeInLec: "",
+        timeOutLec: "",
         typeCourses: "",
         codeCourses: "",
         user: {

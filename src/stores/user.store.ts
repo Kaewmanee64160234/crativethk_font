@@ -155,12 +155,14 @@ export const useUserStore = defineStore("userStore", () => {
   const getCurrentUser = async () => {
     const userString = localStorage.getItem("users");
     console.log("userString", userString);
-
+    
     if (userString !== null) {
         try {
             const userObject = JSON.parse(userString);
-            if (userObject.user) { // Access the nested 'user' object
-                currentUser.value = mapToUser(userObject.user);
+            
+            // Directly assign the parsed userObject to currentUser.value
+            if (userObject && typeof userObject === 'object') {
+                currentUser.value = mapToUser(userObject);
                 console.log("currentUser", currentUser.value);
             } else {
                 console.error("User data is not properly formatted.");
@@ -168,8 +170,11 @@ export const useUserStore = defineStore("userStore", () => {
         } catch (error) {
             console.error("Error parsing user data:", error);
         }
+    } else {
+        console.error("No user data found in localStorage.");
     }
 };
+
 
 
 
@@ -217,21 +222,7 @@ const getUsersByStdId = async (id: string) => {
   }
 }
 // getUserFromLocalStorage
-const getUserFromLocalStorage = () => {
-    const userString = localStorage.getItem("users");
-    if (userString !== null) {
-        try {
-            const userObject = JSON.parse(userString);
-            if (userObject.user) {
-                currentUser.value = mapToUser(userObject.user);
-            } else {
-                console.error("User data is not properly formatted.");
-            }
-        } catch (error) {
-            console.error("Error parsing user data:", error);
-        }
-    }
-  }
+
 
   const getFileUser = async (file: File) => {
     try {
@@ -283,7 +274,7 @@ const getUserFromLocalStorage = () => {
     resetUser,
     searchQuery,
     getUserByCourseId,
-    getUserFromLocalStorage,
+    
     getFileUser,
     showImageDialog,
     closeImageDialog,

@@ -17,10 +17,12 @@ export const useCourseStore = defineStore("courseStore", () => {
   const credit = ref(1);
   const stdAmount = ref(0);
   const fullScore = ref(0);
-  const timeInLab = ref(new Date());
-  const timeOutLab = ref(new Date());
-  const timeInLec = ref(new Date());
-  const timeOutLec = ref(new Date());
+  const dayInLab = ref("วันจันทร์");
+  const dayInLec = ref("วันจันทร์");
+  const timeInLab = ref("00:00");
+  const timeOutLab = ref("00:00");
+  const timeInLec = ref("00:00");
+  const timeOutLec = ref("00:00");
   const showCreateDialog = ref(false);
   const showCreateDialog2 = ref(false);
   const showEditDialog = ref(false);
@@ -47,7 +49,7 @@ export const useCourseStore = defineStore("courseStore", () => {
     }
   };
 
-  const getCourseByTeachId = async (userId: string) => {
+  const getCourseByTeachId = async (userId: number) => {
     try {
       const res = await courseService.getCourseByTeachId(userId);
       courses.value = res.data;
@@ -112,6 +114,8 @@ export const useCourseStore = defineStore("courseStore", () => {
 
 
   return {
+    dayInLab,
+    dayInLec,
     session,
     credit,
     stdAmount,

@@ -1,26 +1,7 @@
 <script lang="ts" setup>
 import { useCourseStore } from "@/stores/course.store";
-import EditCourseDialog2 from "./EditCourseDialog2.vue";
-import course from "@/services/course";
 const courseStore = useCourseStore();
 
-const editCourse = () => {
-  if (courseStore.currentCourse) {
-    if (
-      courseStore.currentCourse.nameCourses === "" ||
-      courseStore.currentCourse.typeCourses === ""
-    ) {
-      console.log("no data");
-      return;
-    } else {
-      // courseStore.updateCourse(
-      //   courseStore.currentCourse.coursesId,
-      //   courseStore.currentCourse
-      // );
-      courseStore.showEditDialog = true;
-    }
-  }
-};
 </script>
 
 <template>
@@ -53,13 +34,6 @@ const editCourse = () => {
         </v-card-text>
       </v-card>
     </v-card-text>
-    <!-- <v-card-actions class="d-flex justify-end">
-            <v-btn @click="courseStore.closeDialog2">ยกเลิก</v-btn>
-            <v-btn @click="editCourse" class="colorText">ต่อไป</v-btn>
-          </v-card-actions>
-          <v-dialog v-model="courseStore.showEditDialog2" persistent>
-            <EditCourseDialog2 />
-          </v-dialog> -->
   </v-col>
 </template>
 

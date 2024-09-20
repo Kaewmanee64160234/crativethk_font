@@ -8,10 +8,12 @@ export default interface Course {
     credit: number;
     session: string;
     stdAmount: number;
-    timeInLab?: Date;
-    timeOutLab?: Date;
-    timeInLec: Date;
-    timeOutLec: Date;
+    dayInLab?: string;
+    dayInLec: string;
+    timeInLab?: string;
+    timeOutLab?: string;
+    timeInLec: string;
+    timeOutLec: string;
     fullScore: number;
     userId: number;
     user?:User;

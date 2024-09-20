@@ -1,0 +1,15 @@
+services:
+  vue-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: "http://localhost:3000"
+        VITE_APP_GOOGLE_CLIENT_ID: "340551090181-5kdbme7veu6bf5radv3efb9o3j6mdpqu.apps.googleusercontent.com"
+        VITE_API_STD_URL: "https://reg.buu.ac.th/registrar/getstudentimage.asp?id="
+    ports:
+      - "5173:80"
+    environment:
+      - VITE_API_URL=http://localhost:3000
+      - VITE_APP_GOOGLE_CLIENT_ID=340551090181-5kdbme7veu6bf5radv3efb9o3j6mdpqu.apps.googleusercontent.com
+      - VITE_API_STD_URL=https://reg.buu.ac.th/registrar/getstudentimage.asp?id=

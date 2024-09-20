@@ -30,7 +30,8 @@ const identifications = ref<Identification[]>([]);
 const canvasRefs = reactive<CanvasRefs>({});
 const croppedImagesDataUrls = ref<string[]>([]);
 const userDescriptors = new Map<string, Float32Array[]>();
-const url = 'http://localhost:3000';
+  const url = import.meta.env.BASE_URL;
+
 const imageUrls = ref<string[]>([]);
 const imageFiles = ref<File[]>([]);
 const fileInputKey = ref(Date.now()); // Key to reset the file input field
@@ -53,9 +54,9 @@ async function loadModels() {
 
   try {
     await Promise.all([
+    faceapi.nets.ssdMobilenetv1.loadFromUri("/models"),
       faceapi.nets.faceRecognitionNet.loadFromUri("/models"),
       faceapi.nets.faceLandmark68Net.loadFromUri("/models"),
-      faceapi.nets.ssdMobilenetv1.loadFromUri("/models"),
     ]);
     // userStore.users.forEach((user) => {
     //   const descriptors: Float32Array[] = [];
@@ -301,6 +302,8 @@ async function saveUserUpdate() {
   }
 }
 async function save() {
+  if(userStore.currentUser?.registerStatus != 'notConfirmed')
+{
   if (imageUrls.value && imageUrls.value.length > 0) {
     try {
       await Promise.all(imageUrls.value.map((url, index) => loadImageAndProcess(url, index)));
@@ -397,7 +400,6 @@ async function save() {
 
     // Add userId to formData
     formData.append("userId", userStore.currentUser?.userId!);
-
     console.log('Sending formData to create notification...');
     await notiStore.createNotiforupdate(formData);
     console.log('Notification created successfully.');
@@ -420,6 +422,12 @@ async function save() {
   } else {
     messageStore.showError("No images available to send.");
   }
+}else{
+  await saveUserUpdate();
+  await close();
+
+}
+
 }
 
 // Helper function to extract face descriptor from an image URL
@@ -584,7 +592,7 @@ console.log("user2", userStore.currentUser)
         <v-card-text>
           <v-row v-if="!canUpload" class="mt-2">
             <v-col cols="12" class="text-center">
-              <v-alert type="info" class="mt-3" border="left">
+              <v-alert type="info" class="mt-3" >
                 <v-icon left>mdi-information-outline</v-icon>
                 กรุณาอัปโหลดรูปภาพให้ครบ 5 รูป
               </v-alert>
