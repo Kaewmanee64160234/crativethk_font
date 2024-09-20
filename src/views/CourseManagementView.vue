@@ -37,7 +37,7 @@ const messageStore = useMessageStore();
 console.log("user", courseStore.currentCourse?.user?.firstName);
 onMounted(async () => {
   await userStore.getCurrentUser();
-  await courseStore.getCourseByTeachId(userStore.currentUser!.teacherId!);
+  await courseStore.getCourseByTeachId(userStore.currentUser!.userId!);
 });
 
 //create function click and push to /courseDetail/:idCourse
@@ -80,7 +80,7 @@ const advanceStep = () => {
       ) {
         messageStore.showError("กรุณากรอกข้อมูลให้ครบถ้วน");
         courseStore.showEditDialog = false;
-        courseStore.getCourseByTeachId(userStore.currentUser!.teacherId!);
+        courseStore.getCourseByTeachId(userStore.currentUser!.userId!);
         return;
       }
     }
@@ -111,7 +111,7 @@ const advanceStep = () => {
       ) {
         messageStore.showError("กรุณากรอกข้อมูลให้ถูกต้อง");
         courseStore.showEditDialog = false;
-        courseStore.getCourseByTeachId(userStore.currentUser!.teacherId!);
+        courseStore.getCourseByTeachId(userStore.currentUser!.userId!);
         return;
       }
     }
@@ -205,7 +205,7 @@ const finishCreation = async () => {
   }
   courseStore.showCreateDialog = false;
   currentStep.value = 1; // Close the dialog after completion
-  courseStore.getCourseByTeachId(userStore.currentUser!.teacherId!);
+  courseStore.getCourseByTeachId(userStore.currentUser!.userId!);
 };
 
 const updateCourse = () => {

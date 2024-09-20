@@ -49,7 +49,7 @@ export const useCourseStore = defineStore("courseStore", () => {
     }
   };
 
-  const getCourseByTeachId = async (userId: string) => {
+  const getCourseByTeachId = async (userId: number) => {
     try {
       const res = await courseService.getCourseByTeachId(userId);
       courses.value = res.data;

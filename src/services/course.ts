@@ -22,8 +22,8 @@ function updateCourse(id: string, course: Course) {
 }
 
 // Ensure the teachId is a string
-function getCourseByTeachId(teachId: string) {
-  return http.get(`/courses/teach/${teachId}`);
+function getCourseByTeachId(userId: number) {
+  return http.get(`/courses/teach/${userId}`);
 }
 
 function createCourse(course: Course) {

@@ -20,15 +20,15 @@ const uploadFile = async () => {
             await userStore.getFileUser(selectedFile.value);
             for (let i = userStore.file_.length - 1; i >= 0; i--) {
                 for (let y = 0; y < userStore.users.length; y++) {
-                        if (userStore.users[y].studentId == userStore.file_[i].id || userStore.users[y].email == userStore.file_[i].id + "@go.buu.ac.th") {
-                            messageStore.showError("มีนิสิตที่มีรายชื่ออยู่ในระบบแล้ว");
-                            userStore.file_.splice(i, 1);
-                            break;
+                    if (userStore.users[y].studentId == userStore.file_[i].id || userStore.users[y].email == userStore.file_[i].id + "@go.buu.ac.th") {
+                        messageStore.showError("มีนิสิตที่มีรายชื่ออยู่ในระบบแล้ว");
+                        userStore.file_.splice(i, 1);
+                        break;
                     }
                 }
             }
-            if(userStore.file_.length === 0) {
-               selectedFile.value = null;
+            if (userStore.file_.length === 0) {
+                selectedFile.value = null;
             }
             console.log("Updated file list:", userStore.file_);
 
@@ -65,6 +65,7 @@ const saveUser = async () => {
         messageStore.showError("ไม่มีรายชื่อนิสิต กรุณาอัปโหลดไฟล์");
         return;
     }
+    console.log(userStore.file_.length);
     for (let i = 0; i < userStore.file_.length; i++) {
         const nameParts = userStore.file_[i].name.split(' ');
         const firstName = nameParts[0];
@@ -81,12 +82,11 @@ const saveUser = async () => {
             role: "นิสิต",
             status: "กำลังศึกษา",
         };
-    }
-
-    try {
-        await userStore.saveUser();
-    } catch (error) {
-        console.error("Failed to save user:", error);
+        try {
+            await userStore.saveUser();
+        } catch (error) {
+            console.error("Failed to save user:", error);
+        }
     }
     userStore.file_ = [];  // Clear the file list after processing
     selectedFile.value = null;
