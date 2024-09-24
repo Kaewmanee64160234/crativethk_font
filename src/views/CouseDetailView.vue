@@ -4,18 +4,19 @@ import { useRoute, useRouter } from "vue-router";
 import { useAssignmentStore } from "@/stores/assignment.store";
 import CardAssigment from "@/components/assigment/CardAssigment.vue";
 import { useCourseStore } from "@/stores/course.store";
-import { useAuthStore } from "@/stores/auth";
 import { useUserStore } from "@/stores/user.store";
 import { useAttendanceStore } from "@/stores/attendance.store";
 import type Assignment from "@/stores/types/Assignment";
 import type Attendance from "@/stores/types/Attendances";
-import { useMessageStore } from "@/stores/message";
 import UpdateAttendantDialogView from "@/components/attendant/updateAttendantDialog.vue";
 import type { User } from "@/stores/types/User";
-import Loader from "@/components/loader/Loader.vue";
+import * as XLSX from 'xlsx';
 import { useLoaderStore } from "@/stores/loader.store";
+import { useMessageStore } from "@/stores/message";
+import assignment from "@/services/assignment";
 
 const route = useRoute();
+const messageStore = useMessageStore();
 const id = ref(route.params.idCourse);
 const tabs = [
   { id: 1, title: "Posts" },
@@ -234,7 +235,7 @@ const createPost = async () => {
   console.timeEnd('Image storage and navigation');
 
   console.timeEnd('Total createPost execution time');
-  };
+};
 
 
 
@@ -324,6 +325,57 @@ const openDialog = (assignment: Assignment, user: User) => {
   attendanceStore.userAttendance = user;
   attendanceStore.showDialog = true;
 };
+
+const exportFile = () => {
+  messageStore.showConfirm_("ต้องการดาวน์โหลดไฟล์ Excel ใช่หรือไม่",confirmExportFile,cancelExportFile);
+};
+
+const confirmExportFile = () => {
+  const data = filteredUsers.value.map(user => {
+    const userData: {
+      รหัสนิสิต: string | undefined;
+      ชื่อ: string;
+      คะแนนรวม: number;
+      [key: string]: string | number | undefined;
+    } = {
+      รหัสนิสิต: user.studentId,
+      ชื่อ: user.firstName + " " + user.lastName,
+      คะแนนรวม: calculateTotalScore(user.userId!, assignmentStore.assignments)
+    };
+
+    assignmentStore.assignments.forEach(assignment => {
+      const status = getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!);
+      let translatedStatus = '';
+
+      if (status === 'present') {
+        translatedStatus = 'มา';
+      } else if (status === 'late') {
+        translatedStatus = 'สาย';
+      } else {
+        translatedStatus = 'ขาด';
+      }
+
+      userData[assignment.nameAssignment] = translatedStatus;
+    });
+
+    return userData;
+  });
+
+  console.log(data);
+
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Report");
+  XLSX.writeFile(wb, "Report.xlsx");
+
+  console.log('Export successful');
+};
+
+
+
+const cancelExportFile = () => {
+  console.log('export failed')
+}
 </script>
 
 <template>
@@ -519,7 +571,14 @@ const openDialog = (assignment: Assignment, user: User) => {
           </v-card-title>
         </v-card>
         <v-card class="mx-auto" outlined style="padding: 20px; margin-top: 10px">
-          <v-card-title>Assignment Attendance Details</v-card-title>
+          <v-row> 
+            <v-col col="12" sm="11">
+              <v-card-title>Assignment Attendance Details</v-card-title>
+            </v-col>
+            <v-col col="12" sm="1">
+              <v-btn color="success" @click="exportFile">Export</v-btn>
+            </v-col>
+          </v-row>
           <v-table>
             <thead>
               <tr>

@@ -43,6 +43,23 @@ export const useMessageStore = defineStore("message", () => {
     message.value = text;
     isShow.value = true;
   }
-  return { isShow, message, showError, showInfo, CalshowError,showConfirm };
+
+  function showConfirm_(text: string, onConfirm: () => void, onCancel?: () => void) {
+    Swal.fire({
+      title: 'Are you sure?',
+      text: text,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'ยืนยัน',
+      cancelButtonText: 'ยกเลิก',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        onConfirm();
+      } else if (result.isDismissed && onCancel) {
+        onCancel();
+      }
+    });
+  }
+  return { isShow, message, showError, showInfo, CalshowError,showConfirm , showConfirm_};
 });
 

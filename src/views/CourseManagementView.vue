@@ -34,7 +34,6 @@ const randomImage = () => {
 }
 
 const messageStore = useMessageStore();
-console.log("user", courseStore.currentCourse?.user?.firstName);
 onMounted(async () => {
   await userStore.getCurrentUser();
   await courseStore.getCourseByTeachId(userStore.currentUser!.userId!);
