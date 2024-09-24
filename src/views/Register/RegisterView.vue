@@ -99,20 +99,24 @@ const saveUser = async () => {
             <Loader></Loader>
         </div>
         <v-row>
-            <v-col col="6" style="text-align: center;">
-                <v-icon size="100" color="#819DA9" style="padding-bottom: 5%;">mdi mdi-folder-arrow-up-outline</v-icon>
-                <div></div>
+            <v-col cols="12" sm="1"></v-col>
+            <v-col cols="12" sm="10" style="text-align: center;">
+                <v-icon size="100" color="#819DA9" style="padding-bottom: 5%;">mdi mdi-folder</v-icon>
+                <div>อัปโหลดไฟล์</div>
                 <v-file-input
                     accept=".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                    label="Upload File" variant="outlined" prepend-icon="mdi-file-document-plus-outline"
+                    label="เลือกไฟล์อัปโหลด" variant="outlined" prepend-icon="mdi-file-document-plus-outline"
                     v-model="selectedFile" @change="uploadFile()"></v-file-input>
-                <div style="color: red;">*อัปโหลดได้เฉพาะ file Excel เท่านั้น</div>
+                <div style="color: red;">*อัปโหลดไฟล์ได้เฉพาะไฟล์ Excel*</div>
             </v-col>
-            <v-col col="6">
+            <v-col cols="12" sm="1"></v-col>
+        </v-row>
+        <v-row>
+            <div>รายชื่อนิสิตทั้งหมด</div>
+        </v-row>
+        <v-row>
+            <v-col>
                 <v-card>
-                    <v-card-title>
-                        <div>รายชื่อนิสิตทั้งหมด</div>
-                    </v-card-title>
                     <div v-if="userStore.file_.length > 0">
                         <v-row v-for="(item, index) in paginatedFiles" :key="index">
                             <v-col style="padding-left: 5%;">
@@ -128,14 +132,13 @@ const saveUser = async () => {
                     </div>
                     <v-pagination v-model="page" :length="pageCount" :total-visible="7"></v-pagination>
                 </v-card>
-                <v-card-actions class="actions">
-                    <v-btn color="error" variant="elevated" @click="cancel">
-                        <v-icon left>mdi-close-thick</v-icon>ยกเลิก</v-btn>
-                    <v-spacer></v-spacer>
-                    <v-btn color="success" variant="elevated" @click="saveUser()"><v-icon
-                            left>mdi-check-bold</v-icon>เสร็จสิ้น</v-btn>
-                </v-card-actions>
             </v-col>
+        </v-row>
+        <v-row class="justify-end">
+            <v-card-actions>
+                <v-btn color="error" variant="elevated" @click="cancel">ยกเลิก</v-btn>
+                <v-btn color="primary" variant="elevated" @click="saveUser()">เสร็จสิ้น</v-btn>
+            </v-card-actions>
         </v-row>
     </v-container>
 </template>
@@ -145,10 +148,6 @@ const saveUser = async () => {
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.actions {
-    justify-content: flex-end;
 }
 
 .loader-overlay {

@@ -68,8 +68,6 @@ const advanceStep = () => {
         !courseStore.courseId ||
         courseStore.courseId.length < 8
       ) {
-        messageStore.showError("กรุณากรอกข้อมูลให้ครบถ้วน");
-        closeDialog();
         return;
       }
     } else {
@@ -78,9 +76,6 @@ const advanceStep = () => {
         courseStore.currentCourse.nameCourses.length < 1 ||
         courseStore.currentCourse.nameCourses.length >= 100
       ) {
-        messageStore.showError("กรุณากรอกข้อมูลให้ครบถ้วน");
-        courseStore.showEditDialog = false;
-        courseStore.getCourseByTeachId(userStore.currentUser!.userId!);
         return;
       }
     }
@@ -95,8 +90,6 @@ const advanceStep = () => {
         courseStore.fullScore <= 0 ||
         courseStore.fullScore > 100
       ) {
-        messageStore.showError("กรุณากรอกข้อมูลให้ถูกต้อง");
-        closeDialog();
         return;
       }
     } else {
@@ -109,9 +102,6 @@ const advanceStep = () => {
         !courseStore.currentCourse.coursesId ||
         courseStore.currentCourse.coursesId.length < 8
       ) {
-        messageStore.showError("กรุณากรอกข้อมูลให้ถูกต้อง");
-        courseStore.showEditDialog = false;
-        courseStore.getCourseByTeachId(userStore.currentUser!.userId!);
         return;
       }
     }
@@ -319,7 +309,7 @@ const updateCourse = () => {
 
   <v-dialog v-model="courseStore.showEditDialog" persistent>
     <v-stepper v-model="currentStep" hide-actions
-      :items="['แก้ไขห้องเรียน', 'แก้ไขรายละเอียดห้องเรียน', 'แก้ไขรายชื่อนิสิต']" persistent>
+      :items="['แก้ไขวิชา', 'แก้ไขรายละเอียดวิชา', 'แก้ไขรายชื่อนิสิต']" persistent>
       <template v-slot:item.1>
         <EditCourseDialog />
         <v-card-actions>

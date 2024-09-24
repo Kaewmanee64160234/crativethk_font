@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import CreateUserDialog from '@/components/dialogs/CreateUserDialog.vue';
 import CreateUserDialog2 from '@/components/dialogs/CreateUserDialog2.vue';
 import CreateUserDialog3 from '@/components/dialogs/CreateUserDialog3.vue';
 import EditUserDialog from '@/components/dialogs/EditUserDialog.vue';
@@ -8,7 +7,7 @@ import EditUserDialog3 from '@/components/dialogs/EditUserDialog3.vue';
 import ConfirmDialog from '@/components/dialogs/ConfirmDialog.vue';
 import type { User } from '@/stores/types/User';
 import { useUserStore } from '@/stores/user.store';
-import { onMounted, ref, defineComponent, computed } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 const url = import.meta.env.VITE_API_URL;
 
 const userStore = useUserStore();

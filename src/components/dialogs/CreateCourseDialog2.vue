@@ -7,7 +7,7 @@ const courseStore = useCourseStore();
 
 <template>
   <v-card-title>
-    <h3>แก้ไขรายละเอียดวิชา</h3>
+    <h3>เพิ่มรายละเอียดวิชา</h3>
   </v-card-title>
   <v-card-text>
     <v-card class="mb-4">
@@ -23,6 +23,9 @@ const courseStore = useCourseStore();
           </v-card-text>
         </v-col>
         <v-col>
+          <v-card-title>
+            <h5>&nbsp;</h5>
+          </v-card-title>
           <v-card-text>
             <p>จำนวนหน่วยกิต</p>
             <v-select :items="['1', '2', '3']" variant="outlined" v-model="courseStore.credit"
@@ -30,14 +33,17 @@ const courseStore = useCourseStore();
           </v-card-text>
         </v-col>
         <v-col>
+          <v-card-title>
+            <h5>&nbsp;</h5>
+          </v-card-title>
           <v-card-text>
-          <p>คะแนนเต็ม</p>
-          <v-text-field variant="outlined" v-model="courseStore.fullScore" :rules="[
-            (v: any) => !!v || 'โปรดกรอกคะแนนเต็มให้ถูกต้อง',
-            (v: string) => /^[0-9]+$/.test(v) || 'โปรดกรอกตัวเลขเท่านั้น',
-            (v: number) => v >= 1 && v <= 100 || 'โปรดกรอกคะแนนตั้งแต่ 1 ถึง 100'
-          ]"></v-text-field>
-        </v-card-text>
+            <p>คะแนนเต็ม</p>
+            <v-text-field variant="outlined" v-model="courseStore.fullScore" :rules="[
+              (v: any) => !!v || 'โปรดกรอกคะแนนเต็มให้ถูกต้อง',
+              (v: string) => /^[0-9]+$/.test(v) || 'โปรดกรอกตัวเลขเท่านั้น',
+              (v: number) => v >= 1 && v <= 100 || 'โปรดกรอกคะแนนตั้งแต่ 1 ถึง 100'
+            ]"></v-text-field>
+          </v-card-text>
         </v-col>
       </v-row>
       <v-row>
@@ -46,28 +52,35 @@ const courseStore = useCourseStore();
             <h5>วันเวลาเรียนเลคเชอร์</h5>
           </v-card-title>
           <v-card-text>
-          <p>วันที่เรียนเลคเชอร์</p>
-          <v-select :items="['วันจันทร์', 'วันอังคาร', 'วันพุธ', 'วันพฤหัสบดี', 'วันศุกร์']" variant="outlined"
-          v-model="courseStore.dayInLec" :rules="[(v: any) => !!v || 'โปรดเลือกวันที่เรียนเลคเชอร์']"></v-select>
-        </v-card-text>
+            <p>วันที่เรียนเลคเชอร์</p>
+            <v-select prepend-icon="mdi-calendar-month"
+              :items="['วันจันทร์', 'วันอังคาร', 'วันพุธ', 'วันพฤหัสบดี', 'วันศุกร์']" variant="outlined"
+              v-model="courseStore.dayInLec" :rules="[(v: any) => !!v || 'โปรดเลือกวันที่เรียนเลคเชอร์']"></v-select>
+          </v-card-text>
         </v-col>
         <v-col>
+          <v-card-title>
+            <h5>&nbsp;</h5>
+          </v-card-title>
           <v-card-text>
-          <p>เวลาเริ่มเรียนเลคเชอร์</p>
-          <v-text-field variant="outlined" v-model="courseStore.timeInLec" :rules="[
-            (v: any) => !!v || 'โปรดกรอกเวลาเริ่มเรียนเลคเชอร์ให้ถูกต้อง',
-            (v: string) => /^[0-9]+$/.test(v) || 'โปรดกรอกตัวเลขเท่านั้น',
-          ]"></v-text-field>
-        </v-card-text>
+            <p>เวลาเริ่มเรียนเลคเชอร์</p>
+            <v-text-field prepend-icon="mdi-clock-time-four" variant="outlined" v-model="courseStore.timeInLec" :rules="[
+              (v: any) => !!v || 'โปรดกรอกเวลาเริ่มเรียนเลคเชอร์ให้ถูกต้อง',
+              (v: string) => /^([01]\d|2[0-3]):([0-5]\d)$/.test(v) || 'โปรดกรอกเวลาในรูปแบบ HH:MM',
+            ]"></v-text-field>
+          </v-card-text>
         </v-col>
         <v-col>
+          <v-card-title>
+            <h5>&nbsp;</h5>
+          </v-card-title>
           <v-card-text>
-          <p>เวลาเลิกเรียนเลคเชอร์</p>
-          <v-text-field variant="outlined" v-model="courseStore.timeOutLec" :rules="[
-            (v: any) => !!v || 'โปรดกรอกเวลาเลิกเรียนเลคเชอร์ให้ถูกต้อง',
-            (v: string) => /^[0-9]+$/.test(v) || 'โปรดกรอกตัวเลขเท่านั้น',
-          ]"></v-text-field>
-        </v-card-text>
+            <p>เวลาเลิกเรียนเลคเชอร์</p>
+            <v-text-field prepend-icon="mdi-clock-time-four" variant="outlined" v-model="courseStore.timeOutLec" :rules="[
+              (v: any) => !!v || 'โปรดกรอกเวลาเริ่มเรียนเลคเชอร์ให้ถูกต้อง',
+              (v: string) => /^([01]\d|2[0-3]):([0-5]\d)$/.test(v) || 'โปรดกรอกเวลาในรูปแบบ HH:MM',
+            ]"></v-text-field>
+          </v-card-text>
         </v-col>
       </v-row>
       <v-row v-if="courseStore.typeCourse === 'เลคเชอร์และแลป'">
@@ -76,28 +89,35 @@ const courseStore = useCourseStore();
             <h5>วันเวลาเรียนแลป</h5>
           </v-card-title>
           <v-card-text>
-          <p>วันที่เริ่มเรียนแลป</p>
-          <v-select :items="['วันจันทร์', 'วันอังคาร', 'วันพุธ', 'วันพฤหัสบดี', 'วันศุกร์']" variant="outlined"
-          v-model="courseStore.dayInLab" :rules="[(v: any) => !!v || 'โปรดเลือกวันที่เรียนแลป']"></v-select>
-        </v-card-text>
+            <p>วันที่เรียนแลป</p>
+            <v-select prepend-icon="mdi-calendar-month"
+              :items="['วันจันทร์', 'วันอังคาร', 'วันพุธ', 'วันพฤหัสบดี', 'วันศุกร์']" variant="outlined"
+              v-model="courseStore.dayInLab" :rules="[(v: any) => !!v || 'โปรดเลือกวันที่เรียนแลป']"></v-select>
+          </v-card-text>
         </v-col>
         <v-col>
+          <v-card-title>
+            <h5>&nbsp;</h5>
+          </v-card-title>
           <v-card-text>
-          <p>เวลาเริ่มเรียนแลป</p>
-          <v-text-field variant="outlined" v-model="courseStore.timeInLab" :rules="[
-            (v: any) => !!v || 'โปรดกรอกเวลาเริ่มเรียนแลปให้ถูกต้อง',
-            (v: string) => /^[0-9]+$/.test(v) || 'โปรดกรอกตัวเลขเท่านั้น',
-          ]"></v-text-field>
-        </v-card-text>
+            <p>เวลาเริ่มเรียนแลป</p>
+            <v-text-field prepend-icon="mdi-clock-time-four" variant="outlined" v-model="courseStore.timeInLab" :rules="[
+              (v: any) => !!v || 'โปรดกรอกเวลาเริ่มเรียนเลคเชอร์ให้ถูกต้อง',
+              (v: string) => /^([01]\d|2[0-3]):([0-5]\d)$/.test(v) || 'โปรดกรอกเวลาในรูปแบบ HH:MM',
+            ]"></v-text-field>
+          </v-card-text>
         </v-col>
         <v-col>
+          <v-card-title>
+            <h5>&nbsp;</h5>
+          </v-card-title>
           <v-card-text>
-          <p>เวลาเลิกเรียนแลป</p>
-          <v-text-field variant="outlined" v-model="courseStore.timeOutLab" :rules="[
-            (v: any) => !!v || 'โปรดกรอกเวลาเลิกเรียนแลปให้ถูกต้อง',
-            (v: string) => /^[0-9]+$/.test(v) || 'โปรดกรอกตัวเลขเท่านั้น',
-          ]"></v-text-field>
-        </v-card-text>
+            <p>เวลาเลิกเรียนแลป</p>
+            <v-text-field prepend-icon="mdi-clock-time-four" variant="outlined" v-model="courseStore.timeOutLab" :rules="[
+              (v: any) => !!v || 'โปรดกรอกเวลาเริ่มเรียนเลคเชอร์ให้ถูกต้อง',
+              (v: string) => /^([01]\d|2[0-3]):([0-5]\d)$/.test(v) || 'โปรดกรอกเวลาในรูปแบบ HH:MM',
+            ]"></v-text-field>
+          </v-card-text>
         </v-col>
       </v-row>
     </v-card>

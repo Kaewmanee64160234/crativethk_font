@@ -87,7 +87,7 @@ function click() {
 
 
       <v-app-bar-title style="margin: 0;">
-        <span v-if="userStore.currentUser?.teacherId">
+        <span v-if="userStore.currentUser?.role === 'อาจารย์'">
           อาจารย์: {{
         userStore.currentUser?.firstName + " " + userStore.currentUser?.lastName
       }}
