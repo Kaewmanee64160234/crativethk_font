@@ -24,10 +24,10 @@ async function loadModels() {
 
 async function save() {
     // check if teacherId is empty and not 8 digits
-    if (!userStore.editUser.teacherId || !/^[0-9]{8}$/.test(userStore.editUser.teacherId)) {
-        showSnackbar('โปรดกรอกรหัสอาจารย์ 8 หลัก');
-        return;
-    } else if (!userStore.editUser.firstName || !userStore.editUser.lastName ||
+    // if (!userStore.editUser.teacherId || !/^[0-9]{8}$/.test(userStore.editUser.teacherId)) {
+    //     showSnackbar('โปรดกรอกรหัสอาจารย์ 8 หลัก');
+    //     return;
+    if (!userStore.editUser.firstName || !userStore.editUser.lastName ||
         !/^[A-Za-zก-๙]+$/.test(userStore.editUser.firstName) ||
         !/^[A-Za-zก-๙]+$/.test(userStore.editUser.lastName)) {
         showSnackbar('โปรดกรอกชื่อและนามสกุลที่ไม่มีตัวเลข');
@@ -134,11 +134,11 @@ if (!userStore.editUser.role) {
                     <!-- Text Fields Column -->
                     <v-col cols="12" md="8">
                         <v-row align="center">
-                            <v-col cols="12">
+                            <!-- <v-col cols="12">
                                 <v-text-field label="รหัสอาจารย์" dense solo required
                                     v-model="userStore.editUser.teacherId"
                                     :rules="[(v:any) => !!v || 'โปรดกรอกรหัสอาจารย์', (v:any) => /^[0-9]{8}$/.test(v) || 'โปรดกรอกข้อมูลเฉพาะตัวเลข 8 หลัก']"></v-text-field>
-                            </v-col>
+                            </v-col> -->
                             <v-col cols="12">
                                 <v-text-field label="ชื่อ" dense solo required v-model="userStore.editUser.firstName"
                                     :rules="[(v:any) => !!v || 'โปรดกรอกขื่อ']"></v-text-field>

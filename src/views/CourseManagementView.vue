@@ -194,6 +194,7 @@ const finishCreation = async () => {
   }
   courseStore.showCreateDialog = false;
   currentStep.value = 1; // Close the dialog after completion
+  messageStore.showInfo("สร้างรายวิชาเรียบร้อยแล้ว ");
   courseStore.getCourseByTeachId(userStore.currentUser!.userId!);
 };
 
@@ -209,6 +210,17 @@ const updateCourse = () => {
   }
   messageStore.showInfo("Successfully updated course.");
 }
+
+const delCourse = (idCourse: string,nameCourse: string) => {
+  messageStore.showConfirm_(`ยืนยันการลบรายวิชา ${nameCourse} ใช่หรือไม่`, () => confirmDelCourse(idCourse), () => { courseStore.showCreateDialog = false; });
+}
+
+const confirmDelCourse = async (id: string) => {
+  await courseStore.deleteCourse(id);
+  await courseStore.getCourseByTeachId(userStore.currentUser?.userId!);
+  messageStore.showInfo("ลบรายวิชาเรียบร้อยแล้ว");
+}
+
 </script>
 <template>
   <v-container>
@@ -234,14 +246,11 @@ const updateCourse = () => {
                   <v-list-item-title style="color: #1E66C2;"><v-icon>mdi-square-edit-outline</v-icon>
                     แก้ไขข้อมูล</v-list-item-title>
                 </v-list-item>
-                <v-list-item @click="showDeleteDialog(item)">
+                <v-list-item @click="delCourse(item.coursesId,item.nameCourses)">
                   <v-list-item-title style="color: #CF0000;"><v-icon>mdi-delete</v-icon> ลบห้องเรียน</v-list-item-title>
                 </v-list-item>
               </v-list>
             </v-menu>
-            <v-dialog v-model="courseStore.showDeleteDialog" persistent>
-              <DeleteCourseDialog />
-            </v-dialog>
           </v-img>
           <v-avatar size="100" class="avatar">
             <v-img src="https://cdn.vuetifyjs.com/images/john.png"></v-img>
@@ -250,15 +259,15 @@ const updateCourse = () => {
             <div class="text-body" style="font-weight: bold;">อาจารย์ {{ item.user?.firstName }}</div>
             <div class="text-body"> รหัสห้อง {{ item.codeCourses }}</div>
             <div class="text-body">
-              เวลาเริ่มเรียน Lecture {{ item.timeInLec?.toString() + "-" +
-                item.timeOutLec?.toString() }}
+              เวลาเริ่มเรียน Lecture {{ item.timeInLec +" น."+ " - " +
+                item.timeOutLec +" น." }}
             </div>
             <div class="text-body" v-if="item.typeCourses === 'เลคเชอร์และแลป'">
-              เวลาเริ่มเรียน Lab {{ item.timeInLab?.toString() + "-" +
-                item.timeOutLab?.toString() }}
+              เวลาเริ่มเรียน Lab {{ item.timeInLab +" น."+ " - " +
+                item.timeOutLab  +" น."}}
             </div>
             <div v-else>
-              <div class="text-body">เวลาเริ่มเรียน Lab ไม่มี</div>
+              <div class="text-body">เวลาเริ่มเรียน Lab -</div>
             </div>
           </v-card-text>
         </v-card>

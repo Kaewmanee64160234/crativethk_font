@@ -21,7 +21,6 @@ function saveUser(user: User & { files: File[] }) {
   formData.append('lastName', user.lastName);
   formData.append('email', user.email!);
   formData.append('studentId', user.studentId!);
-  formData.append('teacherId', user.teacherId!);
   // formData.append('adminId', user.adminId!);
   formData.append('role', user.role!);
   formData.append('status', user.status!);
@@ -79,7 +78,7 @@ function updateUser(user: User & { files: File[] }, userId: number) {
   formData.append("lastName", user.lastName);
   formData.append("email", user.email!);
   formData.append("studentId", user.studentId!);
-  formData.append("teacherId", user.teacherId!);
+  // formData.append("teacherId", user.teacherId!);
   // formData.append("admindId", user.adminId!);
   formData.append("role", user.role!);
   formData.append("status", user.status!);

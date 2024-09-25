@@ -46,12 +46,13 @@ export const useMessageStore = defineStore("message", () => {
 
   function showConfirm_(text: string, onConfirm: () => void, onCancel?: () => void) {
     Swal.fire({
-      title: 'Are you sure?',
       text: text,
-      icon: 'warning',
+      html: `<span class="mdi mdi-bell-alert-outline" style="font-size: 100px; color: #CF0000;"></span><p><b>${text}</b></p>`,
       showCancelButton: true,
-      confirmButtonText: 'ยืนยัน',
       cancelButtonText: 'ยกเลิก',
+      confirmButtonText: 'ยืนยัน',
+      confirmButtonColor: '#3051AC',
+      cancelButtonColor: '#CF0000',
     }).then((result) => {
       if (result.isConfirmed) {
         onConfirm();

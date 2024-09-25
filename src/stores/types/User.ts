@@ -8,7 +8,6 @@ export interface User {
   role?: string;
   status?: string;
   picture?: string;
-  teacherId?: string;
   studentId?: string;
   adminId?: string;
   registerStatus?: string;
@@ -48,7 +47,6 @@ export function mapToUser(data: any): User {
     role: data.role,
     status: data.status,
     studentId: data.studentId,
-    teacherId: data.teacherId,
     adminId: data.adminId,
     year: data.year,
     major: data.major,

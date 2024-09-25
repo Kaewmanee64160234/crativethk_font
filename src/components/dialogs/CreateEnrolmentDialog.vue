@@ -8,7 +8,6 @@ import { useUserStore } from "@/stores/user.store";
 import { useMessageStore } from "@/stores/message";
 const courseStore = useCourseStore();
 const enrollmentStore = useEnrollmentStore();
-const courseId = ref("");
 const userStore = useUserStore();
 const codeCourse = ref("");
 const messageStore = useMessageStore();
@@ -21,39 +20,55 @@ onMounted(async () => {
 });
 const saveEnrollment = () => {
   if (codeCourse.value.length < 10) {
-    messageStore.showError("Please enter your password.");
-    courseStore.showCreateDialog = false
+    messageStore.showError("กรุณากรอกรหัสวิชาให้ครบ 10 ตัวอักษร");
+    courseStore.showCreateDialog = false;
     return;
   }
+
+  let courseFound = false;
+
   for (let i = 0; i < courseStore.courses.length; i++) {
-    if (codeCourse.value == courseStore.courses[i].codeCourses) {
-      //วน check ว่ามี courseId ที่ตรงกับที่กรอกมาหรือไม่
-      console.log("enrollment", courseStore.courses[i]);
+    console.log("enrollment", courseStore.courses[i]);
+    if (codeCourse.value === courseStore.courses[i].codeCourses) {
+      // for (let j = 0; j < enrollmentStore.enrollments.length; j++) {
+      //   if (codeCourse.value === userStore.currentUser.) {
+      //     messageStore.showError("คุณได้เข้าร่วมวิชานี้แล้ว");
+      //     courseStore.showCreateDialog = false;
+      //     return;
+      //   }
+      // }
+      courseFound = true;
+
       const newEnrollment = {
-        userId: userStore.currentUser?.userId ?? 0, 
+        userId: userStore.currentUser?.userId ?? 0,
         courseId: courseStore.courses[i].coursesId,
         createdDate: undefined,
         updatedDate: undefined,
         deletedDate: undefined,
       };
+
       try {
-        // ส่งคำขอสร้าง enrollment
         enrollmentStore.createEnrollment(newEnrollment);
         console.log("enrollment", newEnrollment);
-        courseStore.showCreateDialog2= true;
+        courseStore.showCreateDialog2 = true;
         codeCourse.value = "";
+        return;
       } catch (error) {
         console.error("Error creating enrollment:", error);
+        messageStore.showError("เกิดข้อผิดพลาดในการสร้าง enrollment");
       }
-    } else {
-      console.log("no courseID"); // ไม่มี courseId ที่ตรงกับที่กรอกมา
-      codeCourse.value = "";
-      messageStore.showError("The password is incorrect. Please try again.");
-      courseStore.showCreateDialog = false
-      return;
     }
   }
+
+  if (!courseFound) {
+    console.log("no courseID"); 
+    codeCourse.value = ""; 
+    messageStore.showError("รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง");
+    courseStore.showCreateDialog = false;
+  }
 };
+
+
 </script>
 
 <template>
@@ -61,21 +76,19 @@ const saveEnrollment = () => {
     <v-row justify="center">
       <v-col cols="12" md="8" lg="6">
         <v-card>
-          <v-card-title>
-            <h2>เข้าร่วมชั้นเรียน</h2>
+          <v-card-title style="text-align: center;">
+            <h2>เข้าร่วมรายวิชา</h2>
           </v-card-title>
           <v-card-text>
             <v-card class="mb-4">
               <v-card-title>
-                <h3>รหัสห้องเรียน</h3>
+                <h4>รหัสวิชาที่เข้าร่วม</h4>
               </v-card-title>
               <v-card-text>
-                <div class="title">
-                  สอบถามรหัสห้องเรียนจากอาจารย์ผู้สอน หลังจากนั้นให้กรอกลงในช่องด้านล่าง
-                </div>
+                <h3 class="colorText">*รหัสห้องเรียนต้องมีตัวอักษรอย่างน้อย 8 ตัวอักษร</h3>
                 <v-text-field
                   clearable
-                  label="รหัสห้องเรียน"
+                  label="รหัสวิชา"
                   variant="outlined"
                   v-model="codeCourse"
                   :rules="[
@@ -87,9 +100,10 @@ const saveEnrollment = () => {
               </v-card-text>
             </v-card>
           </v-card-text>
-          <v-card-actions class="d-flex justify-end">
-            <v-btn @click="courseStore.showCreateDialog = false">ยกเลิก</v-btn>
-            <v-btn @click="saveEnrollment" class="colorText">ต่อไป</v-btn>
+          <v-card-actions class="d-flex justify-end" >
+            <v-btn style="font-weight: bold;" color="error" @click="courseStore.showCreateDialog = false">ยกเลิก</v-btn>
+            <v-spacer></v-spacer>
+            <v-btn style="font-weight: bold;" @click="saveEnrollment" color="primary">ต่อไป</v-btn>
           </v-card-actions>
           <v-dialog v-model="courseStore.showCreateDialog2" persistent>
             <CreateEnrolmentDialog2 />
@@ -104,12 +118,12 @@ const saveEnrollment = () => {
 .mb-4 {
   margin-bottom: 1rem;
 }
-.colorText {
-  color: #2a6ec5;
-}
 .title {
   word-wrap: break-word;
   white-space: normal;
   margin-bottom: 2%;
+}
+.colorText {
+  color: red;
 }
 </style>

@@ -10,7 +10,7 @@ const deleteCourse = async (idCourse: string) => {
   await courseStore.deleteCourse(idCourse);
   courseStore.showDeleteDialog = false;
   messageStore.showInfo("Course has been deleted successfully.");
-  await courseStore.getCourseByTeachId(userStore.currentUser?.teacherId ?? "");
+  await courseStore.getCourseByTeachId(userStore.currentUser?.userId!);
 };
 </script>
 

@@ -575,7 +575,7 @@ const cancelExportFile = () => {
             <v-col col="12" sm="11">
               <v-card-title>Assignment Attendance Details</v-card-title>
             </v-col>
-            <v-col col="12" sm="1">
+            <v-col col="12" sm="1" v-if="userStore.currentUser?.role === 'อาจารย์'">
               <v-btn color="success" @click="exportFile">Export</v-btn>
             </v-col>
           </v-row>
