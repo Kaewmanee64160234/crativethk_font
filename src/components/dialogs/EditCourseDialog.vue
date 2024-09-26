@@ -1,7 +1,18 @@
 <script lang="ts" setup>
 import { useCourseStore } from "@/stores/course.store";
+import { watch } from "vue";
 const courseStore = useCourseStore();
+watch(() => courseStore.currentCourse!.nameCourses, (newVal) => {
+  if (newVal.length >= 1 && newVal.length <= 100) {
+    courseStore.courseNameError = "";
+  }
+});
 
+watch(() => courseStore.currentCourse!.coursesId, (newVal) => {
+  if (newVal.length >= 8) {
+    courseStore.courseIdError = "";
+  }
+});
 </script>
 
 <template>
@@ -17,6 +28,7 @@ const courseStore = useCourseStore();
           </v-card-title>
           <v-card-text>
             <v-text-field clearable label="ชื่อวิชา" variant="outlined" v-model="courseStore.currentCourse!.nameCourses"
+            :error-messages="courseStore.courseNameError"
               :rules="[
                 (v: any) => !!v || 'โปรดกรอกชื่อรายวิชา',
                 (v: any) => v.length >= 1 || 'ชื่อรายวิชาต้องมีอย่างน้อย 1 ตัวอักษร',
@@ -40,7 +52,9 @@ const courseStore = useCourseStore();
             <h4>รหัสวิชา</h4>
           </v-card-title>
           <v-card-text>
-            <v-text-field variant="outlined" label="รหัสวิชา" v-model="courseStore.currentCourse!.coursesId" :rules="[
+            <v-text-field variant="outlined" label="รหัสวิชา" v-model="courseStore.currentCourse!.coursesId" 
+            :error-messages="courseStore.courseIdError"
+            :rules="[
               (v: string) =>
                 /^[A-Za-z0-9]{8,}$/.test(v) ||
                 'โปรดกรอกรหัสวิชาอย่างน้อย 8 ตัวอักษร',

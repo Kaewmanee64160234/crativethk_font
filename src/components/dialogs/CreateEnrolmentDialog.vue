@@ -2,41 +2,49 @@
 import { useCourseStore } from "@/stores/course.store";
 import CreateEnrolmentDialog2 from "./CreateEnrolmentDialog2.vue";
 import { useEnrollmentStore } from "@/stores/enrollment.store";
-import { onMounted, ref } from "vue";
-import course from "@/services/course";
+import { onMounted, ref, watch } from "vue";
 import { useUserStore } from "@/stores/user.store";
 import { useMessageStore } from "@/stores/message";
+
 const courseStore = useCourseStore();
 const enrollmentStore = useEnrollmentStore();
 const userStore = useUserStore();
 const codeCourse = ref("");
+const codeCourseError = ref("");
 const messageStore = useMessageStore();
 
+watch(codeCourse, (newVal) => {
+  if (newVal.length >= 10) {
+    codeCourseError.value = "";
+  }
+});
 
 onMounted(async () => {
   courseStore.getCourses();
   await userStore.getUsersById(userStore.currentUser?.userId!);
-
+  await enrollmentStore.getCourseByStudentId(userStore.currentUser!.studentId!);
 });
+
 const saveEnrollment = () => {
+  codeCourseError.value = ""; // Reset error message
+
+  // Validate course code length
   if (codeCourse.value.length < 10) {
-    messageStore.showError("กรุณากรอกรหัสวิชาให้ครบ 10 ตัวอักษร");
-    courseStore.showCreateDialog = false;
+    codeCourseError.value = "โปรดกรอกรหัสห้องเรียน 10 ตัวอักษร";
     return;
   }
 
   let courseFound = false;
 
   for (let i = 0; i < courseStore.courses.length; i++) {
-    console.log("enrollment", courseStore.courses[i]);
     if (codeCourse.value === courseStore.courses[i].codeCourses) {
-      // for (let j = 0; j < enrollmentStore.enrollments.length; j++) {
-      //   if (codeCourse.value === userStore.currentUser.) {
-      //     messageStore.showError("คุณได้เข้าร่วมวิชานี้แล้ว");
-      //     courseStore.showCreateDialog = false;
-      //     return;
-      //   }
-      // }
+      for (let j = 0; j < enrollmentStore.enrollments.length; j++) {
+        if (codeCourse.value === enrollmentStore.enrollments[j].course?.codeCourses) {
+          messageStore.showError("คุณได้เข้าร่วมวิชานี้แล้ว");
+          courseStore.showCreateDialog = false;
+          return;
+        }
+      }
       courseFound = true;
 
       const newEnrollment = {
@@ -49,9 +57,8 @@ const saveEnrollment = () => {
 
       try {
         enrollmentStore.createEnrollment(newEnrollment);
-        console.log("enrollment", newEnrollment);
-        courseStore.showCreateDialog2 = true;
         codeCourse.value = "";
+        courseStore.showCreateDialog2 = true;
         return;
       } catch (error) {
         console.error("Error creating enrollment:", error);
@@ -61,14 +68,9 @@ const saveEnrollment = () => {
   }
 
   if (!courseFound) {
-    console.log("no courseID"); 
-    codeCourse.value = ""; 
-    messageStore.showError("รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง");
-    courseStore.showCreateDialog = false;
+    codeCourseError.value = "รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง";
   }
 };
-
-
 </script>
 
 <template>
@@ -91,7 +93,8 @@ const saveEnrollment = () => {
                   label="รหัสวิชา"
                   variant="outlined"
                   v-model="codeCourse"
-                  :rules="[
+                  :error-messages="codeCourseError"
+                  :rules="[ 
                     (v: string) =>
                     /^(?=.*[A-Za-z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{10,}$/.test(v) ||
                       'โปรดกรอกรหัสห้องเรียน 10 ตัวอักษร',
@@ -100,7 +103,7 @@ const saveEnrollment = () => {
               </v-card-text>
             </v-card>
           </v-card-text>
-          <v-card-actions class="d-flex justify-end" >
+          <v-card-actions class="d-flex justify-end">
             <v-btn style="font-weight: bold;" color="error" @click="courseStore.showCreateDialog = false">ยกเลิก</v-btn>
             <v-spacer></v-spacer>
             <v-btn style="font-weight: bold;" @click="saveEnrollment" color="primary">ต่อไป</v-btn>

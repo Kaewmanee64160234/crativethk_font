@@ -1,7 +1,37 @@
 <script lang="ts" setup>
 import { useCourseStore } from "@/stores/course.store";
-const courseStore = useCourseStore();
+import { watch } from "vue";
 
+const courseStore = useCourseStore();
+watch(() => courseStore.currentCourse!.fullScore, (newVal) => {
+  if (newVal >= 1 && newVal <= 100) {
+    courseStore.scoreError = "";
+  }
+});
+
+watch(() => courseStore.currentCourse!.timeInLec, (newVal) => {
+  if (newVal !== '00:00') {
+    courseStore.timeInLecError = "";
+  }
+});
+
+watch(() => courseStore.currentCourse!.timeOutLec, (newVal) => {
+  if (newVal !== '00:00') {
+    courseStore.timeOutLecError = "";
+  }
+});
+
+watch(() => courseStore.currentCourse!.timeInLab, (newVal) => {
+  if (newVal !== '00:00') {
+    courseStore.timeInLabError = "";
+  }
+});
+
+watch(() => courseStore.currentCourse!.timeOutLab, (newVal) => {
+  if (newVal !== '00:00') {
+    courseStore.timeOutLabError = "";
+  }
+});
 </script>
 
 <template>
@@ -37,7 +67,9 @@ const courseStore = useCourseStore();
           </v-card-title>
           <v-card-text>
             <p>คะแนนเต็ม</p>
-            <v-text-field variant="outlined" v-model="courseStore.currentCourse!.fullScore" :rules="[
+            <v-text-field variant="outlined" v-model="courseStore.currentCourse!.fullScore" 
+            :error-messages="courseStore.scoreError"
+            :rules="[
               (v: any) => !!v || 'โปรดกรอกคะแนนเต็มให้ถูกต้อง',
               (v: string) => /^[0-9]+$/.test(v) || 'โปรดกรอกตัวเลขเท่านั้น',
               (v: number) => v >= 1 && v <= 100 || 'โปรดกรอกคะแนนตั้งแต่ 1 ถึง 100'
@@ -54,7 +86,8 @@ const courseStore = useCourseStore();
             <p>วันที่เรียนเลคเชอร์</p>
             <v-select prepend-icon="mdi-calendar-month"
               :items="['วันจันทร์', 'วันอังคาร', 'วันพุธ', 'วันพฤหัสบดี', 'วันศุกร์']" variant="outlined"
-              v-model="courseStore.currentCourse!.dayInLec" :rules="[(v: any) => !!v || 'โปรดเลือกวันที่เรียนเลคเชอร์']"></v-select>
+              v-model="courseStore.currentCourse!.dayInLec" 
+              :rules="[(v: any) => !!v || 'โปรดเลือกวันที่เรียนเลคเชอร์']"></v-select>
           </v-card-text>
         </v-col>
         <v-col>
@@ -63,7 +96,9 @@ const courseStore = useCourseStore();
           </v-card-title>
           <v-card-text>
             <p>เวลาเริ่มเรียนเลคเชอร์</p>
-            <v-text-field prepend-icon="mdi-clock-time-four" variant="outlined" v-model="courseStore.currentCourse!.timeInLec" :rules="[
+            <v-text-field prepend-icon="mdi-clock-time-four" variant="outlined" 
+            :error-messages="courseStore.timeInLecError"
+            v-model="courseStore.currentCourse!.timeInLec" :rules="[
               (v: any) => !!v || 'โปรดกรอกเวลาเริ่มเรียนเลคเชอร์ให้ถูกต้อง',
               (v: string) => /^([01]\d|2[0-3]):([0-5]\d)$/.test(v) || 'โปรดกรอกเวลาในรูปแบบ HH:MM',
             ]"></v-text-field>
@@ -75,7 +110,9 @@ const courseStore = useCourseStore();
           </v-card-title>
           <v-card-text>
             <p>เวลาเลิกเรียนเลคเชอร์</p>
-            <v-text-field prepend-icon="mdi-clock-time-four" variant="outlined" v-model="courseStore.currentCourse!.timeOutLec" :rules="[
+            <v-text-field prepend-icon="mdi-clock-time-four" variant="outlined" 
+            :error-messages="courseStore.timeOutLecError"
+            v-model="courseStore.currentCourse!.timeOutLec" :rules="[
               (v: any) => !!v || 'โปรดกรอกเวลาเริ่มเรียนเลคเชอร์ให้ถูกต้อง',
               (v: string) => /^([01]\d|2[0-3]):([0-5]\d)$/.test(v) || 'โปรดกรอกเวลาในรูปแบบ HH:MM',
             ]"></v-text-field>
@@ -100,7 +137,9 @@ const courseStore = useCourseStore();
           </v-card-title>
           <v-card-text>
             <p>เวลาเริ่มเรียนแลป</p>
-            <v-text-field prepend-icon="mdi-clock-time-four" variant="outlined" v-model="courseStore.currentCourse!.timeInLab" :rules="[
+            <v-text-field prepend-icon="mdi-clock-time-four" variant="outlined" 
+            :error-messages="courseStore.timeInLabError"
+            v-model="courseStore.currentCourse!.timeInLab" :rules="[
               (v: any) => !!v || 'โปรดกรอกเวลาเริ่มเรียนเลคเชอร์ให้ถูกต้อง',
               (v: string) => /^([01]\d|2[0-3]):([0-5]\d)$/.test(v) || 'โปรดกรอกเวลาในรูปแบบ HH:MM',
             ]"></v-text-field>
@@ -112,7 +151,9 @@ const courseStore = useCourseStore();
           </v-card-title>
           <v-card-text>
             <p>เวลาเลิกเรียนแลป</p>
-            <v-text-field prepend-icon="mdi-clock-time-four" variant="outlined" v-model="courseStore.currentCourse!.timeOutLab" :rules="[
+            <v-text-field prepend-icon="mdi-clock-time-four" variant="outlined" 
+            :error-messages="courseStore.timeOutLabError"
+            v-model="courseStore.currentCourse!.timeOutLab" :rules="[
               (v: any) => !!v || 'โปรดกรอกเวลาเริ่มเรียนเลคเชอร์ให้ถูกต้อง',
               (v: string) => /^([01]\d|2[0-3]):([0-5]\d)$/.test(v) || 'โปรดกรอกเวลาในรูปแบบ HH:MM',
             ]"></v-text-field>

@@ -2,8 +2,6 @@ import enrollmentService from "@/services/enrollment";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import type Enrollment from "./types/Enrollment";
-import { useMessageStore } from "./message";
-
 
 export const useEnrollmentStore = defineStore("enrollmentStore", () => {
   const enrollments = ref<Enrollment[]>([]);
@@ -14,7 +12,7 @@ export const useEnrollmentStore = defineStore("enrollmentStore", () => {
     try {
       const res = await enrollmentService.getCourseByStudentId(userId);
       enrollments.value = res.data;
-      // console.log(enrollments.value);
+      // console.log("course enrolment",enrollments.value);
     }   catch (error) {
       console.log(error);
     }
@@ -24,7 +22,7 @@ export const useEnrollmentStore = defineStore("enrollmentStore", () => {
     try {
       const res = await enrollmentService.getStudentByCourseId(courseId);
       enrollments.value = res.data;
-      console.log("std",enrollments.value);
+      // console.log("std store",enrollments.value);
     } catch (error) {
       console.log(error);
     }

@@ -30,7 +30,7 @@ const identifications = ref<Identification[]>([]);
 const canvasRefs = reactive<CanvasRefs>({});
 const croppedImagesDataUrls = ref<string[]>([]);
 const userDescriptors = new Map<string, Float32Array[]>();
-  const url = import.meta.env.BASE_URL;
+const url = import.meta.env.VITE_API_URL;
 
 const imageUrls = ref<string[]>([]);
 const imageFiles = ref<File[]>([]);

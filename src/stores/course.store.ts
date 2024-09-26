@@ -2,9 +2,7 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import courseService from "@/services/course";
-import { mapToUser } from "./types/User";
 import type Course from "./types/Course";
-import type Room from "./types/Room";
 
 export const useCourseStore = defineStore("courseStore", () => {
   const courses = ref<Course[]>([]);
@@ -15,7 +13,6 @@ export const useCourseStore = defineStore("courseStore", () => {
   const typeCourse = ref("เลคเชอร์");
   const session = ref("1");
   const credit = ref(1);
-  const stdAmount = ref(0);
   const fullScore = ref(0);
   const dayInLab = ref("วันจันทร์");
   const dayInLec = ref("วันจันทร์");
@@ -23,13 +20,17 @@ export const useCourseStore = defineStore("courseStore", () => {
   const timeOutLab = ref("00:00");
   const timeInLec = ref("00:00");
   const timeOutLec = ref("00:00");
+  const courseNameError = ref("");
+  const scoreError = ref("");
+  const courseIdError = ref("");
+  const timeInLabError = ref("");
+  const timeOutLabError = ref("");
+  const timeInLecError = ref("");
+  const timeOutLecError = ref("");
   const showCreateDialog = ref(false);
   const showCreateDialog2 = ref(false);
   const showEditDialog = ref(false);
-  const showDeleteDialog = ref(false);
   const currentCourse = ref<Course>();
-  const editCourse = ref<Course>();
-  const rooms = ref<Room[]>([]);
   //get
   const getCourses = async () => {
     try {
@@ -90,16 +91,6 @@ export const useCourseStore = defineStore("courseStore", () => {
     }
   };
 
-  //getAllRoom
-  const getAllRooms = async () => {
-    try {
-      const res = await courseService.getAllRooms();
-      rooms.value = res.data;
-    } catch (e) {
-      console.log(e);
-    }
-  };
-
   const getFileUser = async (file: File) => {
     try {
       const formData = new FormData();
@@ -118,7 +109,6 @@ export const useCourseStore = defineStore("courseStore", () => {
     dayInLec,
     session,
     credit,
-    stdAmount,
     fullScore,
     typeCourse,
     courseId,
@@ -133,17 +123,20 @@ export const useCourseStore = defineStore("courseStore", () => {
     getCourses,
     showCreateDialog,
     showEditDialog,
-    showDeleteDialog,
-    editCourse,
     deleteCourse,
     getCourseByTeachId,
     course,
     updateCourse,
     getCourseById,
-    getAllRooms,
-    rooms,
     getFileUser,
     files,
-    showCreateDialog2
+    showCreateDialog2,
+    courseNameError,
+    courseIdError,
+    timeInLabError,
+    timeInLecError,
+    timeOutLabError,
+    timeOutLecError,
+    scoreError
   };
 });

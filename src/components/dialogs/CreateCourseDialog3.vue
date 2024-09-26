@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { useCourseStore } from "@/stores/course.store";
-import { useMessageStore } from "@/stores/message";
 import { useUserStore } from "@/stores/user.store";
 import { onMounted, ref } from "vue";
 const courseStore = useCourseStore();

@@ -10,6 +10,7 @@ const messageStore = useMessageStore();
 
 const saveEnrollment = async () => {
   courseStore.showCreateDialog = false;
+  courseStore.showCreateDialog2 = false;
   await enrollmentStore.getCourseByStudentId(userStore.currentUser!.studentId!);
   messageStore.showInfo("เข้าร่วมชั้นเรียนเรียบร้อยแล้ว");
 };
@@ -19,9 +20,9 @@ const cancel = async () => {
     await enrollmentStore.deleteEnrollment(
       enrollmentStore.currentEnrollment!.enrollmentId!
     );
-    courseStore.showDeleteDialog = false;
     await enrollmentStore.getCourseByStudentId(userStore.currentUser!.studentId!);
     courseStore.showCreateDialog = false;
+    courseStore.showCreateDialog2 = false;
   }
 };
 </script>

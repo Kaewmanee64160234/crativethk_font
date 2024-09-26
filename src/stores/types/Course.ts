@@ -7,7 +7,6 @@ export default interface Course {
     typeCourses: string;
     credit: number;
     session: string;
-    stdAmount: number;
     dayInLab?: string;
     dayInLec: string;
     timeInLab?: string;

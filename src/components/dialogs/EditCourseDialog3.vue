@@ -6,8 +6,7 @@ const courseStore = useCourseStore();
 const enrollmentStore = useEnrollmentStore();
 
 onMounted(async () => {
-  await enrollmentStore.getStudentByCourseId(courseStore.currentCourse!.coursesId);
-});
+  await enrollmentStore.getStudentByCourseId(courseStore.currentCourse!.coursesId);});
 </script>
 
 <template>
