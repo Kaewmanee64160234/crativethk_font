@@ -47,7 +47,7 @@ const cancelRegister = async () => {
     console.log("register", userStore.regisUser.registerStatus);
     try {
       await userStore.updateRegisterStatus(userStore.regisUser.userId!, userStore.regisUser);
-      messageStore.showInfo("Confirm rejection register");
+      messageStore.showInfo("ปฎิเสธการลงทะเบียนเรียบร้อยแล้ว");
 
       if (userStore.currentUser?.role === 'อาจารย์') {
         router.push(`/courseManagement`);
@@ -118,7 +118,7 @@ const confirmRegister = async () => {
     console.log("register", userStore.regisUser.registerStatus);
     try {
       await userStore.updateRegisterStatus(userStore.regisUser.userId!, userStore.regisUser);
-      messageStore.showInfo("Successfully confirmed register");
+      messageStore.showInfo("ยืนยันการลงทะเบียนเรียบร้อยแล้ว");
 
       if (userStore.currentUser?.role === 'อาจารย์') {
         router.push(`/courseManagement`);
@@ -133,6 +133,12 @@ const confirmRegister = async () => {
     messageStore.showError("Registration user not found");
   }
 };
+const confirm_Regis = () => {
+  messageStore.showConfirm_("คุณต้องการยืนยันการอัปโหลดใช่หรือไม่",() => confirmRegister() , () => null);
+}
+const cancel_Regis = () => {
+  messageStore.showConfirm_("คุณต้องการปฏิเสธการอัปโหลดรูปภาพใช่หรือไม่",() => cancelRegister() , () => null);
+}
 </script>
 <template>
   <v-container style="padding-top: 120px;">
@@ -141,7 +147,7 @@ const confirmRegister = async () => {
         <Loader></Loader>
       </div>
       <v-row>
-        <v-col style="text-align: center;">
+        <v-col style="text-align: center;color: #04AA0C">
           <h1>ยืนยันการลงทะเบียนของนิสิต</h1>
         </v-col>
       </v-row>
@@ -157,18 +163,23 @@ const confirmRegister = async () => {
             class="rounded-lg d-flex align-center justify-center" />
         </v-col>
       </v-row>
+      <v-row>
+        <v-col class="d-flex justify-center">
+          <h3 style="color: #004BBC;font-weight: bold;">รูปภาพที่อัปโหลด</h3>
+        </v-col>
+      </v-row>
       <v-row class="d-flex justify-center">
         <v-col v-for="(image, index) in images" :key="'existing-' + index" cols="2" md="2" lg="2"
           class="image-container">
           <v-img :src="image" aspect-ratio="1" class="rounded-lg d-flex align-center justify-center"></v-img>
         </v-col>
       </v-row>
-      <v-card-actions>
-        <v-btn color="error" @click="cancelRegister">ปฎิเสธ</v-btn>
-        <v-spacer></v-spacer>
-        <v-btn color="success" @click="confirmRegister">ยืนยัน</v-btn>
-      </v-card-actions>
     </v-card>
+    <v-card-actions>
+      <v-btn style="width: 100px;" color="error" rounded="xl" variant="elevated" @click="cancel_Regis">ปฎิเสธ</v-btn>
+      <v-spacer></v-spacer>
+      <v-btn style="width: 100px;" color="primary" rounded="xl" variant="elevated" @click="confirm_Regis">ยืนยัน</v-btn>
+    </v-card-actions>
   </v-container>
 </template>
 

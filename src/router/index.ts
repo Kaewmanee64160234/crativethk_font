@@ -59,21 +59,6 @@ const router = createRouter({
       },
     },
     {
-      //registerHistory
-      path: "/registerHistory",
-      name: "registerHistory",
-      components: {
-        default: () => import("../views/Register/RegisterHistoryView.vue"),
-        header: () => import("../components/headers/MainHeader.vue"),
-        menu: () => import("../components/headers/SubHeader.vue"),
-      },
-      meta: {
-        layout: "FullLayout",
-        // requiresAuth: true,
-        // beforeEnter:[ ezAutorized]
-      },
-    },
-    {
       path: "/about",
       name: "about",
       // route level code-splitting

@@ -40,12 +40,16 @@ onMounted(async () => {
         if (images.value.length > 0 && user.value?.registerStatus == 'notConfirmed' || user.value?.registerStatus == 'reConfirmed') {
             userStore.createQrByStdId(user.value.studentId!);
         }
-        console.log("image",images.value)
+        console.log("image", images.value)
     }
     await userStore.getUsersById(userStore.currentUser?.userId!);
     // await userStore.getCurrentUser();
-    
+
 });
+const showConditionImage = () => {
+    const pdfUrl = '/pdf/condition.pdf'; 
+    window.open(pdfUrl, '_blank');
+};
 </script>
 
 <template>
@@ -63,34 +67,49 @@ onMounted(async () => {
                             </v-col>
                             <v-col v-if="userStore.currentUser">
                                 <v-row>
-                                    <v-col cols="12" v-if="isStudent">
-                                        <strong>รหัสนิสิต: </strong>{{ userStore.currentUser?.studentId }}
-                                    </v-col>
                                     <v-col cols="12">
-                                        <strong>ชื่อ-นามสกุล: </strong>{{ userStore.currentUser?.firstName }} {{
+                                        <strong style="color: #093271;">ชื่อ-นามสกุล </strong>{{
+                                            userStore.currentUser?.firstName }} {{
                                             userStore.currentUser?.lastName }}
                                     </v-col>
                                     <v-col cols="12" v-if="isStudent">
-                                        <strong>ชั้นปี: </strong>{{ userStore.currentUser?.year }}
+                                        <strong style="color: #093271;">รหัสนิสิต </strong>{{
+                                            userStore.currentUser?.studentId }}
                                     </v-col>
                                     <v-col cols="12" v-if="isStudent">
-                                        <strong>สาขา: </strong>{{ userStore.currentUser?.major }}
+                                        <strong style="color: #093271;">ชั้นปี </strong>{{ userStore.currentUser?.year
+                                        }}
                                     </v-col>
-                                    <v-col cols="12" v-if="isTeacher || isAdmin">
-                                        <strong>ตำแหน่ง: </strong>{{ userStore.currentUser?.role }}
-                                    </v-col>
-                                    <v-col cols="12" v-if="isTeacher|| isAdmin">
-                                        <strong>สถานะภาพ: </strong>{{ userStore.currentUser?.status }}
+                                    <v-col cols="12" v-if="isStudent">
+                                        <strong style="color: #093271;">สาขา </strong>{{ userStore.currentUser?.major }}
                                     </v-col>
                                     <v-col cols="12">
-                                        <v-btn color="blue" @click="userStore.showImageDialog = true"
-                                            v-if="isStudent">แสดงรูปภาพทั้งหมด</v-btn>
+                                        <strong style="color: #093271;">ตำแหน่ง </strong>{{ userStore.currentUser?.role
+                                        }}
+                                    </v-col>
+                                    <v-col cols="12">
+                                        <strong style="color: #093271;">สถานภาพ </strong>
+                                        <span style="color: #00A341;">{{ userStore.currentUser?.status }}</span>
                                     </v-col>
                                 </v-row>
                             </v-col>
                             <v-col>
                                 <v-img :src="userStore.QR"
                                     style="width: 200px; height: 200px; object-fit: cover;"></v-img>
+                            </v-col>
+                            <v-col>
+                                <v-row>
+                                    <v-col >
+                                        <v-btn color="blue" @click="userStore.showImageDialog = true" v-if="isStudent">
+                                            อัปโหลดรูปภาพ
+                                        </v-btn>
+                                    </v-col>
+                                    <v-col class="d-flex mt-16">
+                                        <v-btn variant="text" color="#004BBC" style="text-decoration: underline" @click="showConditionImage">
+                                            คลิกเพื่อดูเงื่อนไขการถ่ายรูป
+                                        </v-btn>
+                                    </v-col>
+                                </v-row>
                             </v-col>
                         </v-row>
                     </v-card-text>
@@ -115,18 +134,21 @@ onMounted(async () => {
                                             <th class="text-center"></th>
                                         </tr>
                                     </thead>
-                                    <tbody v-if="isStudent">
-                                        <tr v-for="(item, index) of enrollmentStore.enrollments" :key="index">
-                                            <td>{{ item.course?.nameCourses }}</td>
+                                    <tbody v-if="isStudent && enrollmentStore.enrollments.length > 0">           
+                                        <tr v-for="(item, index) of enrollmentStore.enrollments" :key="index"
+                                            style="font-weight: bold;">
+                                            <td>{{ item.course?.nameCourses + " " + "กลุ่มที่" + " " +
+                                                item.course?.session }}</td>
                                             <td class="text-center">
-                                                <v-btn size="small" color="primary"
+                                                <v-btn size="small" variant="text" color="#004BBC"
+                                                    style="text-decoration:underline"
                                                     @click="showChekingHistory(item.course!)" class="ma-2">
-                                                    ดูประวัติการเช็คชื่อ
+                                                    ดูรายละเอียด
                                                 </v-btn>
                                             </td>
                                         </tr>
                                     </tbody>
-                                    <tbody v-if="isTeacher">
+                                    <tbody v-if="isTeacher && courseStore.courses.length > 0">
                                         <tr v-for="(item, index) of courseStore.courses" :key="index">
                                             <td>{{ item.nameCourses }}</td>
                                             <td class="text-center">
@@ -134,6 +156,20 @@ onMounted(async () => {
                                                     class="ma-2">
                                                     ดูรายวิชา
                                                 </v-btn>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                    <tbody v-if="isStudent && enrollmentStore.enrollments.length < 1">
+                                        <tr>
+                                            <td style="text-align: center;color: #CF0000; padding-top: 3%; font-weight: bold;" colspan="100%">
+                                                ไม่มีรายวิชา
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                    <tbody v-if="isTeacher && courseStore.courses.length < 1">
+                                        <tr>
+                                            <td style="text-align: center;color: #CF0000; padding-top: 3%; font-weight: bold;" colspan="100%">
+                                                ไม่มีรายวิชา
                                             </td>
                                         </tr>
                                     </tbody>

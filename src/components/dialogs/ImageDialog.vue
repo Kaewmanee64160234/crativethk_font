@@ -54,7 +54,7 @@ async function loadModels() {
 
   try {
     await Promise.all([
-    faceapi.nets.ssdMobilenetv1.loadFromUri("/models"),
+      faceapi.nets.ssdMobilenetv1.loadFromUri("/models"),
       faceapi.nets.faceRecognitionNet.loadFromUri("/models"),
       faceapi.nets.faceLandmark68Net.loadFromUri("/models"),
     ]);
@@ -294,114 +294,113 @@ async function saveUserUpdate() {
   }
 }
 async function save() {
-  if(userStore.currentUser?.registerStatus != 'notConfirmed')
-{
-  if (imageUrls.value && imageUrls.value.length > 0) {
-    await Promise.all(imageUrls.value.map((url, index) => loadImageAndProcess(url, index)));
-    // Convert user's face description from base64 string to Float32Array
-    const userFaceDescriptionBase64 = userStore.currentUser?.faceDescriptions![0]; // Assuming first descriptor
-    const userFaceDescriptor = base64ToFloat32Array(userFaceDescriptionBase64!);
+  if (userStore.currentUser?.registerStatus != 'notConfirmed') {
+    if (imageUrls.value && imageUrls.value.length > 0) {
+      await Promise.all(imageUrls.value.map((url, index) => loadImageAndProcess(url, index)));
+      // Convert user's face description from base64 string to Float32Array
+      const userFaceDescriptionBase64 = userStore.currentUser?.faceDescriptions![0]; // Assuming first descriptor
+      const userFaceDescriptor = base64ToFloat32Array(userFaceDescriptionBase64!);
 
-    // Assuming croppedImagesDataUrls.value contains face descriptors in base64
-    const croppedImageDescriptorBase64 = faceDescriptionFields.value[0]; // First cropped face descriptor
-    const croppedFaceDescriptor = base64ToFloat32Array(croppedImageDescriptorBase64);
+      // Assuming croppedImagesDataUrls.value contains face descriptors in base64
+      const croppedImageDescriptorBase64 = faceDescriptionFields.value[0]; // First cropped face descriptor
+      const croppedFaceDescriptor = base64ToFloat32Array(croppedImageDescriptorBase64);
 
-    console.log("User face descriptor (Float32Array):", userFaceDescriptor);
-    console.log("Cropped face descriptor (Float32Array):", croppedFaceDescriptor);
+      console.log("User face descriptor (Float32Array):", userFaceDescriptor);
+      console.log("Cropped face descriptor (Float32Array):", croppedFaceDescriptor);
 
-    // Compare image
-    const distance = calculateEuclideanDistance(userFaceDescriptor, croppedFaceDescriptor);
-    console.log("Distance:", distance);
+      // Compare image
+      const distance = calculateEuclideanDistance(userFaceDescriptor, croppedFaceDescriptor);
+      console.log("Distance:", distance);
 
-    // Check similarity threshold (e.g., 0.6) for face matching
-    if (distance < 0.4) {
-      await saveUserUpdate();
-      messageStore.showConfirm('อัปโหลดรูปภาพสำเร็จ')
-      if(userStore.currentUser!.registerStatus !== 'confirmed') {
-        userStore.currentUser!.registerStatus = 'notConfirmed';
-        await userStore.updateRegisterStatus(userStore.currentUser!.userId!, userStore.currentUser!);
-      }
-      // Swal.fire(
-      //   'อัปโหลดรูปภาพสำเร็จ',
-      //   'ระบบกำลังประมวลผลข้อมูล',
-      //   'success'
-      // )
-      window.location.reload();
-      // await userStore.getUsersById(userStore.currentUser?.userId!);
-    } else {
-      await close();
-      // Add sweet alert to confirm send to teacher
-      await Swal.fire({
-        title: 'รูปภาพไม่ตรงกับข้อมูล',
-        text: 'คุณต้องการส่งรูปภาพไปยังครูหรือไม่',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'ส่ง',
-        cancelButtonText: 'ยกเลิก',
-      }).then(async (result) => {
-        if (result.isConfirmed) {
-          const formData = new FormData();
+      // Check similarity threshold (e.g., 0.6) for face matching
+      if (distance < 0.4) {
+        await saveUserUpdate();
+        messageStore.showConfirm('อัปโหลดรูปภาพสำเร็จ')
+        if (userStore.currentUser!.registerStatus !== 'confirmed') {
+          userStore.currentUser!.registerStatus = 'notConfirmed';
+          await userStore.updateRegisterStatus(userStore.currentUser!.userId!, userStore.currentUser!);
+        }
+        // Swal.fire(
+        //   'อัปโหลดรูปภาพสำเร็จ',
+        //   'ระบบกำลังประมวลผลข้อมูล',
+        //   'success'
+        // )
+        window.location.reload();
+        // await userStore.getUsersById(userStore.currentUser?.userId!);
+      } else {
+        await close();
+        // Add sweet alert to confirm send to teacher
+        await Swal.fire({
+          title: 'รูปภาพไม่ตรงกับข้อมูล',
+          text: 'คุณต้องการส่งรูปภาพไปยังครูหรือไม่',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'ส่ง',
+          cancelButtonText: 'ยกเลิก',
+        }).then(async (result) => {
+          if (result.isConfirmed) {
+            const formData = new FormData();
 
-          console.log("croppedImagesDataUrls", croppedImagesDataUrls.value);
+            console.log("croppedImagesDataUrls", croppedImagesDataUrls.value);
 
-          // Process and append cropped images to formData as files
-          for (let i = 0; i < croppedImagesDataUrls.value.length; i++) {
-            const croppedImageDataUrl = croppedImagesDataUrls.value[i];
+            // Process and append cropped images to formData as files
+            for (let i = 0; i < croppedImagesDataUrls.value.length; i++) {
+              const croppedImageDataUrl = croppedImagesDataUrls.value[i];
 
-            // Resize the image and convert to base64
-            const resizedImageBase64 = await resizeAndConvertToBase64(croppedImageDataUrl, 800, 600);
+              // Resize the image and convert to base64
+              const resizedImageBase64 = await resizeAndConvertToBase64(croppedImageDataUrl, 800, 600);
 
-            // Convert the resized base64 image to a Blob and then to a File
-            const blob = base64ToBlob(resizedImageBase64, "image/jpeg");
-            const imageFile = new File([blob], `croppedImage_${i + 1}_${Date.now()}.jpg`, {
-              type: "image/jpeg",
+              // Convert the resized base64 image to a Blob and then to a File
+              const blob = base64ToBlob(resizedImageBase64, "image/jpeg");
+              const imageFile = new File([blob], `croppedImage_${i + 1}_${Date.now()}.jpg`, {
+                type: "image/jpeg",
+              });
+
+              // Append the image file to the formData
+              formData.append("files", imageFile, imageFile.name);
+              console.log("Appended file:", imageFile.name);
+            }
+
+            // Add face descriptors to formData
+            faceDescriptionFields.value.forEach((faceDescription, index) => {
+              formData.append(`faceDescriptor${index + 1}`, faceDescription);
             });
 
-            // Append the image file to the formData
-            formData.append("files", imageFile, imageFile.name);
-            console.log("Appended file:", imageFile.name);
+            // Add userId to formData
+            formData.append("userId", String(userStore.currentUser!.userId));
+
+            // Log the form data entries for debugging
+            for (const pair of formData.entries()) {
+              console.log(`${pair[0]}: ${pair[1]}`);
+            }
+
+            await notiStore.createNotiforupdate(formData);
+            // close dialog
+            Swal.fire(
+              'อัปโหลดรูปภาพสำเร็จ',
+              'ระบบกำลังประมวลผลข้อมูล',
+              'success'
+            )
+          } else {
+            // open dialog
+            showDialog.value = true;
           }
-
-          // Add face descriptors to formData
-          faceDescriptionFields.value.forEach((faceDescription, index) => {
-            formData.append(`faceDescriptor${index + 1}`, faceDescription);
-          });
-
-          // Add userId to formData
-          formData.append("userId", String(userStore.currentUser!.userId));
-
-          // Log the form data entries for debugging
-          for (const pair of formData.entries()) {
-            console.log(`${pair[0]}: ${pair[1]}`);
-          }
-
-          await notiStore.createNotiforupdate(formData);
-          // close dialog
-          Swal.fire(
-            'อัปโหลดรูปภาพสำเร็จ',
-            'ระบบกำลังประมวลผลข้อมูล',
-            'success'
-          )
-        } else {
-          // open dialog
-          showDialog.value = true;
-        }
-      });
+        });
 
 
+      }
+
+
+      await close();
+
+    } else {
+      messageStore.showError("No images available to send.");
     }
-
-
+  } else {
+    await saveUserUpdate();
     await close();
 
-  } else {
-    messageStore.showError("No images available to send.");
   }
-}else{
-  await saveUserUpdate();
-  await close();
-
-}
 
 }
 
@@ -507,10 +506,10 @@ const deleteImage = (index: number) => {
 const checkConfirmImage = () => {
   const created = new Date(userStore.currentUser?.createdDate!);
   const updated = new Date(userStore.currentUser?.updatedDate!);
-  
+
   // This will compare full date and time
   const isSameDateTime = created.getTime() !== updated.getTime(); // Compares timestamp
-  
+
   console.log("isSameDateTime", isSameDateTime)
   if (isSameDateTime && userStore.currentUser?.registerStatus === "notConfirmed") {
     console.log("ya1");
@@ -533,23 +532,20 @@ console.log("user2", userStore.currentUser)
           <Loader></Loader>
         </div>
         <v-card-title class="headline">
-          รูปภาพทั้งหมด
-          <v-btn icon @click="close">
-            <v-icon color="red">mdi-close</v-icon>
-          </v-btn>
+          อัปโหลดรูปภาพ
         </v-card-title>
         <v-card-text>
           <v-row v-if="!canUpload" class="mt-2">
             <v-col cols="12" class="text-center">
-              <v-alert type="info" class="mt-3" >
-                <v-icon left>mdi-information-outline</v-icon>
-                กรุณาอัปโหลดรูปภาพให้ครบ 5 รูป
+              <v-alert class="mt-3" color="#D72626">
+                <v-icon left size="30">mdi-information-outline</v-icon>
+                กรุณาอัปโหลดรูปภาพให้ครบ 5 รูป โดยรูปภาพห้ามซ้ำกัน
               </v-alert>
             </v-col>
           </v-row>
 
           <!-- Existing Images -->
-        <!-- {{ images }} -->
+          <!-- {{ images }} -->
           <v-row>
             <v-col v-for="(image, index) in images" :key="'existing-' + index" cols="2" md="2" lg="2"
               class="image-container">
@@ -570,26 +566,31 @@ console.log("user2", userStore.currentUser)
               </v-img>
             </v-col>
           </v-row>
-
           <!-- File Input -->
           <v-row>
             <v-col cols="12" class="mt-4">
-              <v-file-input :key="fileInputKey" label="อัปโหลดรูปภาพ" multiple prepend-icon="mdi-camera" filled
+              <div style="margin-bottom: 1%;font-weight: bold;">อัปโหลดรูปภาพ</div>
+              <v-file-input :key="fileInputKey" multiple prepend-icon="mdi-camera" filled
                 @change="handleFileChange" accept="image/*" variant="outlined" :disabled="checkConfirmImage()"
                 :rules="uploadRules"></v-file-input>
             </v-col>
           </v-row>
 
-          <!-- Upload Button -->
-          <v-row justify="end" class="mt-4">
-            <v-col cols="auto">
-              <v-btn :disabled="!canUpload" color="primary" @click="save"
-                v-tooltip="'กรุณาอัปโหลดรูปภาพ 5 รูปก่อนอัปเดต'">
-                อัปโหลด
-              </v-btn>
-            </v-col>
+          <v-row v-if="!hasUploadedImages" style="justify-content: center;font-weight: bold;">
+            <div style="color: red;">ไม่มีรูปภาพ</div>
           </v-row>
 
+          <!-- Upload Button -->
+          <v-row>
+            <v-btn color="error" @click="close" variant="text">
+              ยกเลิก
+            </v-btn>
+            <v-spacer></v-spacer>
+            <v-btn :disabled="!canUpload" color="primary" @click="save"
+              v-tooltip="'กรุณาอัปโหลดรูปภาพให้ครบ 5 รูป โดยรูปภาพห้ามซ้ำกัน'" variant="text">
+              ยืนยัน
+            </v-btn>
+          </v-row>
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -599,8 +600,9 @@ console.log("user2", userStore.currentUser)
 <style scoped>
 .headline {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
+  font-weight: bolder;
 }
 
 .image-container {
