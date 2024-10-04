@@ -9,6 +9,8 @@ import { useMessageStore } from "./message";
 export const useUserStore = defineStore("userStore", () => {
   const users = ref<User[]>([]);
   const searchQuery = ref<string>("");
+  const searchDropdown = ref<string>("");
+  const searchDropdown2 = ref<string>("");
   const file_ = ref([] as {id:string, name:string,major:string,year:string}[]);
   const showDialog = ref(false);
   const showImageDialog = ref(false);
@@ -55,10 +57,50 @@ export const useUserStore = defineStore("userStore", () => {
     }
   });
 
+
+  // watch for searchDropdown
+  watch(searchDropdown, (value) => {
+    console.log(searchDropdown.value)
+    if (value === "") {
+      getUsers();
+    } else {
+      searchYear();
+    }
+  });
+
+  // watch for searchDropdown2
+  watch(searchDropdown2, (value) => {
+    console.log(searchDropdown2.value)
+    if (value === "") {
+      getUsers();
+    } else {
+      searchMajor();
+    }
+  });
+
   // searchUsers
   const searchUser = async () => {
     try {
       const response = await userService.searchUsers(searchQuery.value);
+      users.value = response.data;
+    } catch (error) {
+      console.error('Error searching users:', error);
+    }
+  };
+  //search years
+  const searchYear = async () => {
+    try {
+      const response = await userService.searchYears(searchDropdown.value);
+      users.value = response.data;
+    } catch (error) {
+      console.error('Error searching users:', error);
+    }
+  };
+
+  // search majors
+  const searchMajor = async () => {
+    try {
+      const response = await userService.searchMajors(searchDropdown2.value);
       users.value = response.data;
     } catch (error) {
       console.error('Error searching users:', error);
@@ -76,7 +118,6 @@ export const useUserStore = defineStore("userStore", () => {
       console.error("Failed to fetch users:", e);
       messageStore.showError("Oops!, cannot get data users.");
     }
-
   };
   // function resetUser
   const resetUser = () => {
@@ -221,7 +262,7 @@ const getUsersByStdId = async (id: string) => {
       console.log(e);
   }
 }
-// getUserFromLocalStorage
+
 
 
   const getFileUser = async (file: File) => {
@@ -238,6 +279,16 @@ const getUsersByStdId = async (id: string) => {
     } 
   }
 
+// get teacher
+const getTeachers = async () => {
+  try {
+    const res = await userService.getTeachers();
+    users.value = res.data;
+  } catch (error) {
+    console.error('Error fetching teachers:', error);
+  }
+};
+
   async function createQrByStdId(stdId: string) {
     try {
       const res = await userService.getStdQR(stdId);
@@ -249,9 +300,9 @@ const getUsersByStdId = async (id: string) => {
       console.error("Error while fetching QR code:", error);
     }
   }
-
-
   return {
+    searchMajor,
+    getTeachers,
     createQrByStdId,
     getCurrentUser,
     currentUser,
@@ -274,7 +325,8 @@ const getUsersByStdId = async (id: string) => {
     resetUser,
     searchQuery,
     getUserByCourseId,
-    
+    searchDropdown,
+    searchDropdown2,
     getFileUser,
     showImageDialog,
     closeImageDialog,
@@ -284,6 +336,6 @@ const getUsersByStdId = async (id: string) => {
     QR,
     regisUser,
     notiUser,
-    updateRegisterStatus
+    updateRegisterStatus,
   };
 });

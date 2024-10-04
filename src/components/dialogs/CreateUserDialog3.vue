@@ -25,12 +25,15 @@ function showSnackbar(message: string, color: string = 'error') {
 }
 
 async function save() {
-    if (!userStore.editUser.firstName || !userStore.editUser.lastName ||
-        !/^[A-Za-zก-๙]+$/.test(userStore.editUser.firstName) ||
-        !/^[A-Za-zก-๙]+$/.test(userStore.editUser.lastName)) {
-        showSnackbar('โปรดกรอกชื่อและนามสกุลที่ไม่มีตัวเลข');
-        return;
-    }
+  if (!userStore.editUser.firstName || !userStore.editUser.lastName ||
+    !/^[ก-๙\s]+$/.test(userStore.editUser.firstName) ||
+    !/^[ก-๙\s]+$/.test(userStore.editUser.lastName) ||
+    userStore.editUser.firstName.length > 100 ||
+    userStore.editUser.lastName.length > 100) {
+
+    showSnackbar('โปรดกรอกชื่อและนามสกุลเป็นภาษาไทย และต้องไม่เกิน 100 ตัวอักษร');
+    return;
+  }
     // check if role is not "แอดมิน"
     else if (userStore.editUser.role !== 'แอดมิน') {
         showSnackbar('โปรดเลือกตำแหน่งที่ถูกต้อง');
@@ -45,11 +48,6 @@ async function save() {
     // check if email empty and email format
     else if (!userStore.editUser.email || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(userStore.editUser.email)) {
         showSnackbar('โปรดกรอกอีเมลให้ถูกต้อง');
-        return;
-    }
-    // check if files are present
-    else if (!userStore.editUser.files || userStore.editUser.files.length === 0) {
-        showSnackbar('โปรดอัปโหลดรูปภาพ 1 รูป');
         return;
     }
     await userStore.saveUser();
@@ -105,97 +103,121 @@ if (!userStore.editUser.role) {
   userStore.editUser.role = 'แอดมิน';
 }
 
+if (!userStore.editUser.status) {
+  userStore.editUser.status = 'ดำรงตำแหน่ง';
+}
+
 </script>
 <template>
     <v-container>
-        <v-row justify="center">
-            <v-card class="mx-auto" style="width: 70vw; padding: 30px;">
-                <v-card-title class="pb-0">เพิ่มผู้ใช้</v-card-title>
-                <v-row>
-                    <!-- Image Column -->
-                    <v-col cols="12" md="4" class="d-flex justify-center align-center">
-                        <v-avatar size="192">
-                            <img :src="userStore.currentUser?.images?.[0]" @error="onImageError" alt="User Profile">
-                        </v-avatar>
-                    </v-col>
-                    <!-- Text Fields Column -->
-                    <v-col cols="12" md="8">
-                        <v-row align="center">
-                            <v-col cols="12">
-                                <v-text-field label="ชื่อ" dense solo required v-model="userStore.editUser.firstName"
-                                    :rules="[(v:any) => !!v || 'โปรดกรอกขื่อ']"></v-text-field>
-                            </v-col>
-                            <v-col cols="12">
-                                <v-text-field label="นามสกุล" dense solo required v-model="userStore.editUser.lastName"
-                                    :rules="[(v:any) => !!v || 'โปรดกรอกนามสกุล']"></v-text-field>
-                            </v-col>
-                            <v-col cols="12">
-                                <v-text-field label="อีเมล" dense solo required v-model="userStore.editUser.email"
-                                    :rules="[(v:any) => !!v || 'โปรดกรอกอีเมล']"></v-text-field>
-                            </v-col>
-                            <v-col cols="12">
-                                <v-text-field label="ตำแหน่ง" dense solo required v-model="userStore.editUser.role" 
-                                    :rules="[(v:any) => !!v || 'โปรดกรอกตำแหน่ง']"></v-text-field>
-                            </v-col>
-                            <v-col cols="12">
-                                <v-combobox label="สถานะภาพ" :items="['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง']" dense solo required
-                                    v-model="userStore.editUser.status" :rules="[
-                                        (v:any) => !!v || 'โปรดเลือกสถานะภาพ',
-                                        (v:any) => ['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง'].includes(v) || 'โปรดเลือกสถานะภาพจากรายการที่ให้ไว้'
-                                    ]"></v-combobox>
-                            </v-col>
-                            <!-- {{ userStore.editUser.files }} -->
-                            <v-col cols="12" md="6">
-                                <!-- File Input -->
-                                <v-file-input label="อัพโหลดรูปภาพ" prepend-icon="mdi-camera" filled multiple
-                                    v-model="userStore.editUser.files" accept="image/*" outlined></v-file-input>
-                            </v-col>
-
-                        </v-row>
-                    </v-col>
-                </v-row>
-                <v-card-actions class="justify-end">
-                    <v-btn color="blue" text="บันทึก" @click="save"></v-btn>
-                    <v-btn text="ยกเลิก" @click="cancel"></v-btn>
-                </v-card-actions>
-            </v-card>
-        </v-row>
-        <!-- Snackbar for showing errors -->
-        <v-snackbar v-model="snackbarVisible" :color="snackbarColor" top right :timeout="3000">
-            {{ snackbarMessage }}
-            <template v-slot:actions>
-                <v-btn color="white"   @click="snackbarVisible = false">
-                    Close
-                </v-btn>
-            </template>
-        </v-snackbar>
+      <v-row justify="center">
+        <!-- Adjusted card width to fit better -->
+        <v-card class="mx-auto elevation-3" style="width: 40vw; padding: 30px; border-radius: 15px;">
+          <v-card-title class="pb-0" style="font-size: 24px; font-weight: 600;">เพิ่มผู้ใช้แอดมิน</v-card-title>
+          <v-divider class="my-4"></v-divider>
+  
+          <v-row>
+            <!-- Form Column -->
+            <v-col cols="12">
+              <v-row>
+                <!-- First Name -->
+                <v-col cols="12">
+                  <v-text-field label="ชื่อ" dense solo outlined rounded required v-model="userStore.editUser.firstName"
+                    :rules="[
+                      (v) => !!v || 'โปรดกรอกชื่อ',
+                      (v) => /^[ก-๙\s]+$/.test(v) || 'ชื่อต้องไม่เป็นตัวเลขและต้องเป็นภาษาไทยเท่านั้น',
+                      (v) => v.length <= 100 || 'ชื่อต้องไม่เกิน 100 ตัวอักษร'
+                    ]">
+                  </v-text-field>
+                </v-col>
+                <!-- Last Name -->
+                <v-col cols="12">
+                  <v-text-field label="นามสกุล" dense solo outlined rounded required v-model="userStore.editUser.lastName"
+                    :rules="[
+                      (v) => !!v || 'โปรดกรอกนามสกุล',
+                      (v) => /^[ก-๙\s]+$/.test(v) || 'นามสกุลต้องไม่เป็นตัวเลขและต้องเป็นภาษาไทยเท่านั้น',
+                      (v) => v.length <= 100 || 'นามสกุลต้องไม่เกิน 100 ตัวอักษร'
+                    ]">
+                  </v-text-field>
+                </v-col>
+                <!-- Email -->
+                <v-col cols="12">
+                  <v-text-field label="อีเมล" dense solo outlined rounded required v-model="userStore.editUser.email"
+                    :rules="[(v) => !!v || 'โปรดกรอกอีเมล', (v) => /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(v) || 'กรอกอีเมลให้ถูกต้อง']">
+                  </v-text-field>
+                </v-col>
+                <!-- Role -->
+                <!-- <v-col cols="12">
+                    <v-text-field 
+                      label="ตำแหน่ง" 
+                      dense 
+                      solo 
+                      outlined 
+                      rounded 
+                      required 
+                      v-model="userStore.editUser.role"
+                      :rules="[(v:any) => !!v || 'โปรดกรอกตำแหน่ง']">
+                    </v-text-field>
+                  </v-col> -->
+                <!-- Status Combobox -->
+                <v-col cols="12">
+                  <v-combobox label="สถานะภาพ" :items="['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง']" dense solo outlined
+                    rounded required v-model="userStore.editUser.status" disabled :rules="[
+                      (v: any) => !!v || 'โปรดเลือกสถานะภาพ',
+                      (v: any) => ['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง'].includes(v) || 'โปรดเลือกสถานะภาพจากรายการที่ให้ไว้'
+                    ]">
+                  </v-combobox>
+                </v-col>
+              </v-row>
+            </v-col>
+          </v-row>
+  
+          <!-- Card Actions (Buttons) -->
+          <v-card-actions class="justify-end mt-4">
+            <v-btn color="primary" text="บันทึก" rounded depressed class="mr-4" @click="save">
+              บันทึก
+            </v-btn>
+            <v-btn text="ยกเลิก" rounded outlined color="grey" @click="cancel">
+              ยกเลิก
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-row>
+  
+      <!-- Snackbar for showing errors -->
+      <v-snackbar v-model="snackbarVisible" :color="snackbarColor" top right :timeout="3000">
+        {{ snackbarMessage }}
+        <template v-slot:actions>
+          <v-btn color="white" @click="snackbarVisible = false">Close</v-btn>
+        </template>
+      </v-snackbar>
     </v-container>
-
-</template>
-<style>
-.actions {
-    justify-content: flex-end;
+  </template>
+<style scoped>
+/* Styling for fields and layout */
+.v-card {
+  background-color: #fff;
+  border-radius: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.cards {
-    width: 27vw;
-    margin: 2%;
+.v-text-field,
+.v-combobox {
+  background-color: #f4f6f8;
+  border-radius: 8px;
 }
 
-.textarea {
-    margin-left: 5%;
-    border-color: #E0E0E0;
+.v-btn {
+  font-weight: bold;
+  font-size: 14px;
 }
 
-.colorText {
-    color: #2A6EC5;
+.v-card-actions {
+  padding: 0 16px;
 }
 
-.font-bold {
-    font-weight: bold;
-}
-
-.fields {
-    margin-left: 2%;
+.v-snackbar {
+  font-size: 14px;
+  font-weight: bold;
 }
 </style>

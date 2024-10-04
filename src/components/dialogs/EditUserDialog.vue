@@ -34,13 +34,13 @@ async function save() {
     !/^[0-9]{8}$/.test(userStore.editUser.studentId)
   ) {
     return;
-  } else if (
-    !userStore.editUser.firstName ||
-    !userStore.editUser.lastName ||
-    !/^[A-Za-zก-๙]+$/.test(userStore.editUser.firstName) ||
-    !/^[A-Za-zก-๙]+$/.test(userStore.editUser.lastName)
-  ) {
-    showSnackbar("โปรดกรอกชื่อและนามสกุลที่ไม่มีตัวเลข");
+  } else if (!userStore.editUser.firstName || !userStore.editUser.lastName ||
+    !/^[ก-๙\s]+$/.test(userStore.editUser.firstName) ||
+    !/^[ก-๙\s]+$/.test(userStore.editUser.lastName) ||
+    userStore.editUser.firstName.length > 100 ||
+    userStore.editUser.lastName.length > 100) {
+
+    showSnackbar('โปรดกรอกชื่อและนามสกุลเป็นภาษาไทย และต้องไม่เกิน 100 ตัวอักษร');
     return;
   }
   //check if year is empty and not 2 numbers
@@ -56,7 +56,7 @@ async function save() {
     !userStore.editUser.major ||
     ![
       "วิทยาการคอมพิวเตอร์",
-      "เมคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจดทัล",
+      "เทคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจดทัล",
       "วิศวกรรมซอฟต์แวร์",
       "ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ",
     ].includes(userStore.editUser.major)
@@ -65,10 +65,10 @@ async function save() {
     return;
   }
   //check if role is not นิสิต
-  else if (userStore.editUser.role != "นิสิต") {
-    showSnackbar("โปรดเลือกตำแหน่งที่ถูกต้อง");
-    return;
-  }
+  // else if (userStore.editUser.role != "นิสิต") {
+  //   showSnackbar("โปรดเลือกตำแหน่งที่ถูกต้อง");
+  //   return;
+  // }
   //check if status is not กำลังศึกษา, พ้นสภาพนิสิต, สำเร็จการศึกษา
   else if (
     !["กำลังศึกษา", "พ้นสภาพนิสิต", "สำเร็จการศึกษา"].includes(
@@ -144,164 +144,115 @@ function float32ArrayToBase64(float32Array: any) {
 <template>
   <v-container>
     <v-row justify="center">
-      <v-card class="mx-auto" style="width: 70vw; padding: 30px">
-        <v-card-title class="pb-0">แก้ไขผู้ใช้</v-card-title>
+      <!-- Adjusted card width to fit better -->
+      <v-card class="mx-auto elevation-3" style="width: 40vw; padding: 30px; border-radius: 15px;">
+        <v-card-title class="pb-0" style="font-size: 24px; font-weight: 600;">แก้ไขผู้ใช้นิสิต</v-card-title>
+        <v-divider class="my-4"></v-divider>
+
         <v-row>
-          <!-- Image Column -->
-          <v-col cols="12" md="4" class="d-flex justify-center align-center">
-            <v-img
-              v-if="
-                userStore.editUser &&
-                userStore.editUser.images &&
-                userStore.editUser.images.length > 0
-              "
-              :src="`${url}/users/${userStore.editUser.userId}/image`"
-              alt="User Profile"
-              class="mb-2"
-              max-width="100%"
-              max-height="auto"
-            />
-          </v-col>
-          <!-- Text Fields Column -->
-          <v-col cols="12" md="8">
-            <v-row align="center">
+          <!-- Form Column -->
+          <v-col cols="12">
+            <v-row>
+              <!-- Student ID -->
               <v-col cols="12">
-                <v-text-field
-                  label="รหัสนิสิต"
-                  dense
-                  solo
-                  required
+                <v-text-field label="รหัสนิสิต" dense solo outlined rounded required
                   v-model="userStore.editUser.studentId"
-                  :rules="[(v:any) => !!v || 'โปรดกรอกรหัสนิสิต', (v:any) => /^[0-9]{8}$/.test(v) || 'โปรดกรอกข้อมูลเฉพาะตัวเลข 8 หลัก']"
-                ></v-text-field>
+                  :rules="[(v: any) => !!v || 'โปรดกรอกรหัสนิสิต', (v: any) => /^[0-9]{8}$/.test(v) || 'โปรดกรอกข้อมูลเฉพาะตัวเลข 8 หลัก']">
+                </v-text-field>
               </v-col>
+              <!-- First Name -->
               <v-col cols="12">
-                <v-text-field
-                  label="ชื่อ"
-                  dense
-                  solo
-                  required
-                  v-model="userStore.editUser.firstName"
-                ></v-text-field>
+                <v-text-field label="ชื่อ" dense solo outlined rounded required v-model="userStore.editUser.firstName"
+                  :rules="[ 
+                    (v) => !!v || 'โปรดกรอกชื่อ',
+                    (v) => /^[ก-๙\s]+$/.test(v) || 'ชื่อต้องไม่เป็นตัวเลขและต้องเป็นภาษาไทยเท่านั้น',
+                    (v) => v.length <= 100 || 'ชื่อต้องไม่เกิน 100 ตัวอักษร'
+                  ]">
+                </v-text-field>
               </v-col>
+              <!-- Last Name -->
               <v-col cols="12">
-                <v-text-field
-                  label="นามสกุล"
-                  dense
-                  solo
-                  required
-                  v-model="userStore.editUser.lastName"
-                ></v-text-field>
-              </v-col>
-              <v-col cols="12">
-                <v-text-field
-                  label="ชั้นปี"
-                  dense
-                  solo
-                  required
-                  v-model="userStore.editUser.year"
-                  :rules="[(v:any) => !!v || 'โปรดใส่ชั้นปีเช่น 63, 64, 65', (v:any) => /^[0-9]{2}$/.test(v) || 'โปรดกรอกข้อมูลเฉพาะตัวเลข 2 หลัก']"
-                ></v-text-field>
-              </v-col>
-              <v-col cols="12">
-                <v-combobox
-                  label="สาขา"
-                  :items="[
-                    'วิทยาการคอมพิวเตอร์',
-                    'เมคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจดทัล',
-                    'วิศวกรรมซอฟต์แวร์',
-                    'ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ',
-                  ]"
-                  dense
-                  solo
-                  required
-                  v-model="userStore.editUser.major"
+                <v-text-field label="นามสกุล" dense solo outlined rounded required v-model="userStore.editUser.lastName"
                   :rules="[
-                                (v:any) => !!v || 'โปรดเลือกสาขา',
-                                (v:any) =>['วิทยาการคอมพิวเตอร์', 'เมคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจดทัล', 'วิศวกรรมซอฟต์แวร์', 'ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ'].includes(v) || 'โปรดเลือกสาขาจากรายการที่ให้ไว้'
-                            ]"
-                ></v-combobox>
+                    (v) => !!v || 'โปรดกรอกนามสกุล',
+                    (v) => /^[ก-๙\s]+$/.test(v) || 'นามสกุลต้องไม่เป็นตัวเลขและต้องเป็นภาษาไทยเท่านั้น',
+                    (v) => v.length <= 100 || 'นามสกุลต้องไม่เกิน 100 ตัวอักษร'
+                  ]">
+                </v-text-field>
               </v-col>
+              <!-- Year -->
               <v-col cols="12">
-                <v-text-field
-                  label="ตำแหน่ง"
-                  dense
-                  solo
-                  required
-                  v-model="userStore.editUser.role"
-                ></v-text-field>
+                <v-text-field label="ชั้นปี" dense solo outlined rounded required v-model="userStore.editUser.year"
+                  :rules="[(v:any) => !!v || 'โปรดใส่ชั้นปีเช่น 63, 64, 65', (v:any) => /^[0-9]{2}$/.test(v) || 'โปรดกรอกข้อมูลเฉพาะตัวเลข 2 หลัก']">
+                </v-text-field>
               </v-col>
+              <!-- Major -->
               <v-col cols="12">
-                <v-combobox
-                  label="สถานะภาพ"
-                  :items="['กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา']"
-                  dense
-                  solo
-                  required
-                  v-model="userStore.editUser.status"
-                ></v-combobox>
+                <v-combobox label="สาขา" :items="['วิทยาการคอมพิวเตอร์', 'เทคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจดทัล', 'วิศวกรรมซอฟต์แวร์', 'ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ']"
+                  dense solo outlined rounded required v-model="userStore.editUser.major" 
+                  :rules="[ 
+                    (v:any) => !!v || 'โปรดเลือกสาขา',
+                    (v:any) => ['วิทยาการคอมพิวเตอร์', 'เทคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจดทัล', 'วิศวกรรมซอฟต์แวร์', 'ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ'].includes(v) || 'โปรดเลือกสาขาจากรายการที่ให้ไว้'
+                  ]">
+                </v-combobox>
               </v-col>
-              <!-- <v-col cols="12">
-                                <v-btn color="blue" @click="userStore.showImageDialog = true">แสดงรูปภาพทั้งหมด</v-btn>
-                            </v-col> -->
-              <!-- <v-col cols="12" md="6">  -->
-              <!-- File Input -->
-              <!-- <v-file-input label="อัพโหลดรูปภาพ" prepend-icon="mdi-camera" filled multiple
-                                    v-model="userStore.editUser.files" accept="image/*" outlined></v-file-input>
-                            </v-col> -->
+              <!-- Status -->
+              <v-col cols="12">
+                <v-combobox label="สถานะภาพ" :items="['กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา']" dense solo outlined rounded required v-model="userStore.editUser.status">
+                </v-combobox>
+              </v-col>
             </v-row>
           </v-col>
         </v-row>
-        <v-card-actions class="justify-end">
-          <v-btn color="blue" text="บันทึก" @click="save"></v-btn>
-          <v-btn text="ยกเลิก" @click="cancel"></v-btn>
+
+        <!-- Card Actions (Buttons) -->
+        <v-card-actions class="justify-end mt-4">
+          <v-btn color="primary" text="บันทึก" rounded depressed class="mr-4" @click="save">
+            บันทึก
+          </v-btn>
+          <v-btn text="ยกเลิก" rounded outlined color="grey" @click="cancel">
+            ยกเลิก
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-row>
+
     <!-- Snackbar for showing errors -->
-    <v-snackbar
-      v-model="snackbarVisible"
-      :color="snackbarColor"
-      top
-      right
-      :timeout="3000"
-    >
+    <v-snackbar v-model="snackbarVisible" :color="snackbarColor" top right :timeout="3000">
       {{ snackbarMessage }}
       <template v-slot:actions>
-        <v-btn color="white"  @click="snackbarVisible = false">
-          Close
-        </v-btn>
+        <v-btn color="white" @click="snackbarVisible = false">Close</v-btn>
       </template>
     </v-snackbar>
   </v-container>
-  <v-dialog v-model="userStore.showImageDialog" persistent>
-    <ImageEditDialog></ImageEditDialog>
-  </v-dialog>
 </template>
-<style>
-.actions {
-  justify-content: flex-end;
+
+<style scoped>
+/* Styling for fields and layout */
+.v-card {
+  background-color: #fff;
+  border-radius: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.cards {
-  width: 27vw;
-  margin: 2%;
+.v-text-field,
+.v-combobox {
+  background-color: #f4f6f8;
+  border-radius: 8px;
 }
 
-.textarea {
-  margin-left: 5%;
-  border-color: #e0e0e0;
+.v-btn {
+  font-weight: bold;
+  font-size: 14px;
 }
 
-.colorText {
-  color: #2a6ec5;
+.v-card-actions {
+  padding: 0 16px;
 }
 
-.font-bold {
+.v-snackbar {
+  font-size: 14px;
   font-weight: bold;
 }
-
-.fields {
-  margin-left: 2%;
-}
 </style>
+

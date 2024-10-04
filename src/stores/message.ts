@@ -43,6 +43,11 @@ export const useMessageStore = defineStore("message", () => {
     message.value = text;
     isShow.value = true;
   }
-  return { isShow, message, showError, showInfo, CalshowError,showConfirm };
+  // hideMessage
+  function hideMessage() {
+    isShow.value = false;
+  }
+
+  return { isShow, message, showError, showInfo, CalshowError,showConfirm, hideMessage };
 });
 

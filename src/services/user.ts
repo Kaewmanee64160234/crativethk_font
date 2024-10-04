@@ -132,6 +132,19 @@ function searchUsers(search: string) {
   });
 }
 
+// search years
+function searchYears(year: string) {
+  return http.get("/users/search/year", {
+    params: { year },
+  });
+}
+//search majors
+function searchMajors(major: string) {
+  return http.get("/users/search/major", {
+    params: { major },
+  });
+}
+
 //get user imageProfile by id
 function getUserImage(id: number) {
   return http.get(`/users/profileImage/${id}`);
@@ -163,7 +176,14 @@ function getStdQR(stdId: string) {
   return http.get(`/users/${stdId}/qr`);
 }
 
+function getTeachers() {
+  return http.get("/users/teachers"); // Assuming your API base URL is correctly set up
+}
+
 export default {
+  getTeachers,
+  searchMajors,
+  searchYears,
   getUserById,
   getUser,
   getUserImage,

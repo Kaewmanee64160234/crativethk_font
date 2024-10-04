@@ -93,9 +93,13 @@ const cancelNotice = async () => {
       } else {
         throw new Error('Notification ID is undefined.');
       }
-      messageStore.showInfo('Notification rejected successfully.');
-      // Optionally, navigate to another route
-      router.push('/courseManagement');
+      messageStore.showInfo('การแจ้งเตือนถูกปฏิเสธสำเร็จแล้ว');
+      // Use setTimeout to wait for 3 seconds before navigating and refreshing
+      setTimeout(() => {
+        router.push('/courseManagement').then(() => {
+          window.location.reload();
+        });
+      }, 2000); // 2 second delay
     } else {
       console.error('No notification to reject.');
     }
@@ -110,23 +114,23 @@ const confirmNotice = async () => {
   try {
     if (notiforupdateStore.currentNotiforupdate) {
       const notiforupdateId = notiforupdateStore.currentNotiforupdate.notiforupdateId;
-      
+
       if (notiforupdateId) {
         // Call the store method to update the notification status
         await notiforupdateStore.updateNotiforupdateConfirm(
           String(notiforupdateId),
           notiforupdateStore.currentNotiforupdate
         );
-        
+
         // Update local state to reflect the status change
         notiforupdateStore.currentNotiforupdate.statusconfirmation = 'confirmed';
 
         console.log(notiforupdateStore.currentNotiforupdate);
-        
+
       } else {
         throw new Error('Notification ID is undefined.');
       }
-      messageStore.showInfo('Notification confirmed successfully.');
+      messageStore.showInfo('ยืนยันการแจ้งเตือนสำเร็จแล้ว');
       // Optionally, navigate to another route
       router.push('/courseManagement');
     } else {
