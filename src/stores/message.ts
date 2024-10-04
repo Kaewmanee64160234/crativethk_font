@@ -20,10 +20,11 @@ export const useMessageStore = defineStore("message", () => {
   function showError(text: string) {
 
     Swal.fire({
-      iconHtml: '<span class="mdi mdi-bell-ring-outline mdi-48px"></span>',
+      // iconHtml: '<span class="mdi mdi-bell-ring-outline mdi-48px"></span>',
+      icon: "error",
       background: "white",
-      iconColor: "black",
-      color: "red",
+      iconColor: "red",
+      color: "black",
       confirmButtonText: "Close",
       text: text,
     });
@@ -43,11 +44,29 @@ export const useMessageStore = defineStore("message", () => {
     message.value = text;
     isShow.value = true;
   }
+
   // hideMessage
   function hideMessage() {
     isShow.value = false;
   }
-
-  return { isShow, message, showError, showInfo, CalshowError,showConfirm, hideMessage };
+  
+  function showConfirm_(text: string, onConfirm: () => void, onCancel?: () => void) {
+    Swal.fire({
+      text: text,
+      html: `<span class="mdi mdi-bell-ring-outline" style="font-size: 100px; color: #CF0000;"></span><p><b>${text}</b></p>`,
+      showCancelButton: true,
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonText: 'ยืนยัน',
+      confirmButtonColor: '#3051AC',
+      cancelButtonColor: '#CF0000',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        onConfirm();
+      } else if (result.isDismissed && onCancel) {
+        onCancel();
+      }
+    });
+  }
+  return { isShow, message, showError, showInfo, CalshowError,showConfirm , showConfirm_, hideMessage};
 });
 

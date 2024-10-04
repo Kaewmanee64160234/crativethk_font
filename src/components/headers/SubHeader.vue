@@ -17,7 +17,7 @@ const userStore = useUserStore();
           </div>
 
           <v-list-item link to="/userProfile" prepend-icon="mdi-account-circle" title="ประวัติผู้ใช้งาน" value="my-profile"></v-list-item>
-          <div>
+          <div v-if="userStore.currentUser?.role === 'แอดมิน'">
             <v-list-item link to="/register" prepend-icon="mdi-folder-arrow-up" title="อัปโหลดข้อมูลนิสิต" value="upload-std"></v-list-item>
           </div>
         </v-list>

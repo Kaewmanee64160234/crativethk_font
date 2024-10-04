@@ -23,18 +23,24 @@ async function loadModels() {
 }
 
 async function save() {
-  // check if teacherId is empty and not 8 digits
-  if (!userStore.editUser.teacherId || !/^[0-9]{8}$/.test(userStore.editUser.teacherId)) {
-    showSnackbar('โปรดกรอกรหัสอาจารย์ 8 หลัก');
-    return;
-  } else if (!userStore.editUser.firstName || !userStore.editUser.lastName ||
+    // check if teacherId is empty and not 8 digits
+    // if (!userStore.editUser.teacherId || !/^[0-9]{8}$/.test(userStore.editUser.teacherId)) {
+    //     showSnackbar('โปรดกรอกรหัสอาจารย์ 8 หลัก');
+    //     return;
+    if (!userStore.editUser.firstName || !userStore.editUser.lastName ||
     !/^[ก-๙\s]+$/.test(userStore.editUser.firstName) ||
     !/^[ก-๙\s]+$/.test(userStore.editUser.lastName) ||
     userStore.editUser.firstName.length > 100 ||
-    userStore.editUser.lastName.length > 100) {
-
+    userStore.editUser.lastName.length > 100) {      
     showSnackbar('โปรดกรอกชื่อและนามสกุลเป็นภาษาไทย และต้องไม่เกิน 100 ตัวอักษร');
     return;
+    }
+    // check if role is not "อาจารย์"
+    else if (userStore.editUser.role !== 'อาจารย์') {
+        showSnackbar('โปรดเลือกตำแหน่งที่ถูกต้อง');
+        return;
+    }
+
   }
   // check if role is not "อาจารย์"
   // else if (userStore.editUser.role !== 'อาจารย์') {
@@ -134,18 +140,10 @@ if (!userStore.editUser.status) {
       <v-card class="mx-auto elevation-3" style="width: 40vw; padding: 30px; border-radius: 15px;">
         <v-card-title class="pb-0" style="font-size: 24px; font-weight: 600;">เพิ่มผู้ใช้อาจารย์</v-card-title>
         <v-divider class="my-4"></v-divider>
-
         <v-row>
           <!-- Form Column -->
           <v-col cols="12">
             <v-row>
-              <!-- Teacher ID -->
-              <v-col cols="12">
-                <v-text-field label="รหัสอาจารย์" dense solo outlined rounded required
-                  v-model="userStore.editUser.teacherId"
-                  :rules="[(v: any) => !!v || 'โปรดกรอกรหัสอาจารย์', (v: any) => /^[0-9]{8}$/.test(v) || 'โปรดกรอกข้อมูลเฉพาะตัวเลข 8 หลัก']">
-                </v-text-field>
-              </v-col>
               <!-- First Name -->
               <v-col cols="12">
                 <v-text-field label="ชื่อ" dense solo outlined rounded required v-model="userStore.editUser.firstName"

@@ -1,24 +1,22 @@
 <script lang="ts" setup>
 import { useCourseStore } from "@/stores/course.store";
-import { onMounted, ref } from "vue";
+import { onMounted} from "vue";
 import { useEnrollmentStore } from "@/stores/enrollment.store";
-import { useMessageStore } from "@/stores/message";
 const courseStore = useCourseStore();
 const enrollmentStore = useEnrollmentStore();
-const messageStore = useMessageStore();
 
 onMounted(async () => {
-  await enrollmentStore.getStudentByCourseId(courseStore.currentCourse!.coursesId);
-});
+  await enrollmentStore.getStudentByCourseId(courseStore.currentCourse!.coursesId);});
 </script>
 
 <template>
-    <v-card-title class="title">
-      <h2>แก้ไขรายชื่อนิสิต</h2>
-    </v-card-title>
+  <v-card-title>
+    <h3>แก้ไขรายชื่อนิสิต</h3>
+  </v-card-title>
+  <v-card-text>
     <v-card variant="outlined" class="textarea" style="width: 90%; overflow-y: scroll">
       <v-card-title>
-        <div>เลือกนิสิตที่จะลบออกจากวิชานี้</div>
+        <div>เลือกนิสิตที่ต้องการให้อยู่ในรายวิชา</div>
       </v-card-title>
       <div v-if="enrollmentStore.enrollments.length > 0">
         <v-row v-for="(item, index) of enrollmentStore.enrollments" :key="index" align="center">
@@ -44,6 +42,7 @@ onMounted(async () => {
         </v-row>
       </div>
     </v-card>
+  </v-card-text>
 </template>
 
 <style scoped>

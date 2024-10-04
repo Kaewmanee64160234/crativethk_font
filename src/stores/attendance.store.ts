@@ -17,7 +17,6 @@ export const useAttendanceStore = defineStore("attendanceStore", () => {
     lastName: "",
     email: "",
     studentId: "",
-    teacherId: "",
     role: "",
     status: "",
     major: "",

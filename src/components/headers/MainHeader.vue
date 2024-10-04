@@ -81,7 +81,13 @@ function click(noticId: number) {
 
       <v-app-bar-title style="margin: 0;">
         <span v-if="userStore.currentUser?.role === 'อาจารย์'">
+<<<<<<< HEAD
           อาจารย์: {{ userStore.currentUser?.firstName + " " + userStore.currentUser?.lastName }}
+=======
+          อาจารย์: {{
+        userStore.currentUser?.firstName + " " + userStore.currentUser?.lastName
+      }}
+>>>>>>> aff805ce4063ae3e6f9ee4e80e1aa26fb4022b32
         </span>
         <span v-if="userStore.currentUser?.studentId">
           นิสิต: {{ userStore.currentUser?.firstName + " " + userStore.currentUser?.lastName }}

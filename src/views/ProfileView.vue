@@ -28,8 +28,8 @@ const showChekingHistory = (course: Course) => {
 
 onMounted(async () => {
     await userStore.getCurrentUser();
-    if (isTeacher.value && userStore.currentUser!.teacherId) {
-        await courseStore.getCourseByTeachId(userStore.currentUser!.teacherId!);
+    if (isTeacher.value && userStore.currentUser!.role === 'อาจารย์') {
+        await courseStore.getCourseByTeachId(userStore.currentUser!.userId!);
     }
     if (isStudent.value && userStore.currentUser!.studentId) {
         // await userStore.createQrByStdId(userStore.currentUser!.studentId);

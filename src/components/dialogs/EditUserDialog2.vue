@@ -29,6 +29,7 @@ async function save() {
     showSnackbar('โปรดกรอกชื่อและนามสกุลเป็นภาษาไทย และต้องไม่เกิน 100 ตัวอักษร');
     return;
   }
+
     // check if role is not "อาจารย์"
     else if (userStore.editUser.role !== 'อาจารย์') {
         showSnackbar('โปรดเลือกตำแหน่งที่ถูกต้อง');
