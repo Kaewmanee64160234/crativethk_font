@@ -1,12 +1,27 @@
 <script lang="ts" setup>
 import { useCourseStore } from "@/stores/course.store";
-import { onMounted} from "vue";
+import { onMounted, ref } from "vue";
 import { useEnrollmentStore } from "@/stores/enrollment.store";
 const courseStore = useCourseStore();
 const enrollmentStore = useEnrollmentStore();
 
+const selectedCheckboxes = ref<{ [key: number]: boolean }>({});
+
 onMounted(async () => {
-  await enrollmentStore.getStudentByCourseId(courseStore.currentCourse!.coursesId);});
+  await enrollmentStore.getStudentByCourseId(courseStore.currentCourse!.coursesId);
+  enrollmentStore.enrollments.forEach(item => {
+    selectedCheckboxes.value[item.enrollmentId!] = true;
+  });
+});
+
+function handleCheckboxChange(enrollmentId: number, checked: boolean) {
+  if (!checked) {
+    enrollmentStore.selectedEnrollment.push(enrollmentId);
+  } else {
+    enrollmentStore.selectedEnrollment = enrollmentStore.selectedEnrollment.filter(id => id !== enrollmentId); // ลบ id เมื่อไม่ถูกเลือก
+  }
+  console.log("สถานะการเลือก", enrollmentStore.selectedEnrollment);
+}
 </script>
 
 <template>
@@ -16,7 +31,7 @@ onMounted(async () => {
   <v-card-text>
     <v-card variant="outlined" class="textarea" style="width: 90%; overflow-y: scroll">
       <v-card-title>
-        <div>เลือกนิสิตที่ต้องการให้อยู่ในรายวิชา</div>
+        <p>เลือกนิสิตที่ต้องการให้อยู่ในรายวิชา</p>
       </v-card-title>
       <div v-if="enrollmentStore.enrollments.length > 0">
         <v-row v-for="(item, index) of enrollmentStore.enrollments" :key="index" align="center">
@@ -30,7 +45,11 @@ onMounted(async () => {
             <p>{{ item.user?.email }}</p>
           </v-col>
           <v-col cols="auto">
-            <v-checkbox color="primary" v-model="enrollmentStore.selectedEnrollment" :value="item.enrollmentId"></v-checkbox>
+            <v-checkbox
+              color="primary"
+              v-model="selectedCheckboxes[item.enrollmentId!]"
+              @change="handleCheckboxChange(item.enrollmentId!, selectedCheckboxes[item.enrollmentId!])"
+            ></v-checkbox>
           </v-col>
         </v-row>
       </div>

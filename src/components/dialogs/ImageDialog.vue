@@ -537,7 +537,7 @@ console.log("user2", userStore.currentUser)
         <v-card-text>
           <v-row v-if="!canUpload" class="mt-2">
             <v-col cols="12" class="text-center">
-              <v-alert class="mt-3" color="#D72626">
+              <v-alert class="mt-3" color="#D72626" >
                 <v-icon left size="30">mdi-information-outline</v-icon>
                 กรุณาอัปโหลดรูปภาพให้ครบ 5 รูป โดยรูปภาพห้ามซ้ำกัน
               </v-alert>

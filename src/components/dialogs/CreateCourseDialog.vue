@@ -23,7 +23,7 @@ watch(() => courseStore.courseId, (newVal) => {
   <v-card-text>
     <v-card class="mb-4">
       <v-row>
-        <v-col>
+        <v-col cols="12" md="6">
           <v-card-title>
             <h4>ชื่อวิชา</h4>
           </v-card-title>
@@ -31,27 +31,26 @@ watch(() => courseStore.courseId, (newVal) => {
             <v-text-field clearable variant="outlined" label="ชื่อวิชา" v-model="courseStore.nameCourse" 
             :error-messages="courseStore.courseNameError"
             :rules="[
-              (v: any) => !!v || 'โปรดกรอกชื่อรายวิชา',
-              (v: any) => v.length >= 1 || 'ชื่อรายวิชาต้องมีอย่างน้อย 1 ตัวอักษร',
-              (v: any) => v.length <= 100 || 'ชื่อรายวิชาต้องมีไม่เกิน 100 ตัวอักษร'
+              (v: any) => !!v || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*',
+              (v: any) => v.length >= 1 || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*',
+              (v: any) => v.length <= 100 || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*'
             ]"></v-text-field>
           </v-card-text>
         </v-col>
-        <v-col>
+        <v-col cols="12" md="6">
           <v-card-title>
             <h4>ประเภทวิชา</h4>
           </v-card-title>
           <v-card-text>
-            <v-select :items="['เลคเชอร์', 'เลคเชอร์และแลป']" variant="outlined" label="ประเภทวิชา" v-model="courseStore.typeCourse"
-              :rules="[(v: any) => !!v || 'โปรดเลือกประเภทรายวิชา']"></v-select>
+            <v-select :items="['Lecture', 'Lecture & Lab']" variant="outlined" label="ประเภทวิชา" v-model="courseStore.typeCourse"
+              ></v-select>
           </v-card-text>
         </v-col>
       </v-row>
       <v-row>
-      <v-col>
+      <v-col cols="12" md="6">
         <v-card-title>
           <h4>รหัสวิชา</h4>
-          <h6 class="colorText">*รหัสห้องเรียนต้องมีตัวอักษรอย่างน้อย 8 ตัวอักษร</h6>
         </v-card-title>
         <v-card-text>
           <v-text-field clearable variant="outlined" label="รหัสวิชา" v-model="courseStore.courseId" 
@@ -59,11 +58,12 @@ watch(() => courseStore.courseId, (newVal) => {
           :rules="[
             (v: string) =>
               /^[A-Za-z0-9]{8,}$/.test(v) ||
-              'โปรดกรอกรหัสห้องเรียนอย่างน้อย 8 ตัวอักษร',
+              'กรุณากรอกรหัสห้องเรียนอย่างน้อย 8 ตัวอักษร',
           ]"
           ></v-text-field>
         </v-card-text>
       </v-col>
+      <v-col cols="12" md="6"></v-col>
     </v-row>
     </v-card>
   </v-card-text>
@@ -82,5 +82,10 @@ watch(() => courseStore.courseId, (newVal) => {
 .cut {
   word-wrap: break-word;
   white-space: normal;
+}
+@media (max-width: 600px) {
+  .mb-4 {
+    margin-bottom: 0.5rem;
+  }
 }
 </style>

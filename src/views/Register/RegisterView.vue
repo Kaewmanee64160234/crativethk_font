@@ -117,10 +117,13 @@ const saveUser = async () => {
                             </v-card>
                             <div v-if="userStore.file_.length > 0">
                                 <v-row v-for="(item, index) in paginatedFiles" :key="index">
-                                    <v-col style="padding-left: 5%;margin-bottom: 2%;">      
-                                            <h3>{{ item.id + " " + item.name + " " + "สาขา" + " " + item.major}}</h3>
-                                            <v-divider></v-divider>
+                                    <v-col style="padding-left: 5%; margin-bottom: 2%;">      
+                                        <h3>
+                                            {{ item.id }} &nbsp;&nbsp;&nbsp;&nbsp; {{ item.name }} &nbsp;&nbsp;&nbsp;&nbsp; สาขา &nbsp;&nbsp; {{ item.major }}
+                                        </h3>
+                                        <v-divider></v-divider>
                                     </v-col>
+                                    
                                 </v-row>
                             </div>
                             <div v-else>

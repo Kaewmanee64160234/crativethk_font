@@ -104,7 +104,7 @@ const showConditionImage = () => {
                                             อัปโหลดรูปภาพ
                                         </v-btn>
                                     </v-col>
-                                    <v-col class="d-flex mt-16">
+                                    <v-col class="d-flex mt-16" v-if="isStudent">
                                         <v-btn variant="text" color="#004BBC" style="text-decoration: underline" @click="showConditionImage">
                                             คลิกเพื่อดูเงื่อนไขการถ่ายรูป
                                         </v-btn>

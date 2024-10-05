@@ -84,10 +84,9 @@ const saveEnrollment = () => {
           <v-card-text>
             <v-card class="mb-4">
               <v-card-title>
-                <h4>รหัสวิชาที่เข้าร่วม</h4>
+                <h4>รหัสเข้ารายวิชา</h4>
               </v-card-title>
               <v-card-text>
-                <h3 class="colorText">*รหัสห้องเรียนต้องมีตัวอักษรอย่างน้อย 8 ตัวอักษร</h3>
                 <v-text-field
                   clearable
                   label="รหัสวิชา"
@@ -97,7 +96,7 @@ const saveEnrollment = () => {
                   :rules="[ 
                     (v: string) =>
                     /^(?=.*[A-Za-z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{10,}$/.test(v) ||
-                      'โปรดกรอกรหัสห้องเรียน 10 ตัวอักษร',
+                      '*กรุณากรอกตัวอักษรหรือตัวเลขจำนวน 4 ตัว*',
                   ]"
                 ></v-text-field>
               </v-card-text>

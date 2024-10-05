@@ -53,7 +53,7 @@ const advanceStep = () => {
   let hasError = false;
   if (currentStep.value === 1) {
     if (!courseStore.nameCourse || courseStore.nameCourse.length < 1 || courseStore.nameCourse.length > 100) {
-      courseStore.courseNameError = "ชื่อรายวิชาต้องมีความยาวระหว่าง 1 ถึง 100 ตัวอักษร";
+      courseStore.courseNameError = "*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*";
       hasError = true;
     }
     if (!courseStore.courseId || courseStore.courseId.length < 8) {
@@ -63,27 +63,27 @@ const advanceStep = () => {
   }
   if (currentStep.value === 2) {
     if (courseStore.fullScore < 1 || courseStore.fullScore > 100) {
-      courseStore.scoreError = "คะแนนรวมต้องอยู่ระหว่าง 1 ถึง 100";
+      courseStore.scoreError = "*กรุณากรอกตัวเลข 1-100*";
       hasError = true;
     }
 
     if (courseStore.timeInLec === "00:00") {
-      courseStore.timeInLecError = "เวลาเข้าเรียน Lecture ไม่ถูกต้อง";
+      courseStore.timeInLecError = "*กรุณากรอกเวลาเป็น HH:MM*";
       hasError = true;
     }
 
     if (courseStore.timeOutLec === "00:00") {
-      courseStore.timeOutLecError = "เวลาเลิกเรียน Lecture ไม่ถูกต้อง";
+      courseStore.timeOutLecError = "*กรุณากรอกเวลาเป็น HH:MM*";
       hasError = true;
     }
-    if (courseStore.typeCourse === 'เลคเชอร์และแลป') {
+    if (courseStore.typeCourse === 'Lecture & Lab') {
       if (courseStore.timeInLab === "00:00") {
-        courseStore.timeInLabError = "เวลาเข้าเรียน Lab ไม่ถูกต้อง";
+        courseStore.timeInLabError = "*กรุณากรอกเวลาเป็น HH:MM*";
         hasError = true;
       }
 
       if (courseStore.timeOutLab === "00:00") {
-        courseStore.timeOutLabError = "เวลาเลิกเรียน Lab ไม่ถูกต้อง";
+        courseStore.timeOutLabError = "*กรุณากรอกเวลาเป็น HH:MM*";
         hasError = true;
       }
     }
@@ -100,36 +100,36 @@ const advanceStep_Edit = () => {
   if (currentStep.value === 1) {
     if (courseStore.currentCourse) {
       if (courseStore.currentCourse.nameCourses.length < 1 || courseStore.currentCourse.nameCourses.length > 100) {
-        courseStore.courseNameError = "ชื่อรายวิชาต้องมีความยาวระหว่าง 1 ถึง 100 ตัวอักษร";
+        courseStore.courseNameError = "*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*";
         hasError = true;
       }
-      if (courseStore.currentCourse!.coursesId.length < 8) {
-        courseStore.courseIdError = "รหัสห้องเรียนต้องมีอย่างน้อย 8 ตัวอักษร";
-        hasError = true;
-      }
+      // if (courseStore.currentCourse!.coursesId.length < 8) {
+      //   courseStore.courseIdError = "รหัสห้องเรียนต้องมีอย่างน้อย 8 ตัวอักษร";
+      //   hasError = true;
+      // }
     }
   }
 
   if (currentStep.value === 2) {
     if (courseStore.currentCourse!.fullScore < 1 || courseStore.currentCourse!.fullScore > 100) {
-      courseStore.courseNameError = "ชื่อรายวิชาต้องมีความยาวระหว่าง 1 ถึง 100 ตัวอักษร";
+      courseStore.scoreError = "*กรุณากรอกตัวเลข 1-100*";
       hasError = true;
     }
     if (courseStore.currentCourse!.timeInLec === "00:00") {
-      courseStore.timeInLecError = "เวลาเข้าเรียน Lecture ไม่ถูกต้อง";
+      courseStore.timeInLecError = "*กรุณากรอกเวลาเป็น HH:MM*";
       hasError = true;
     }
     if (courseStore.currentCourse!.timeOutLec === "00:00") {
-      courseStore.timeOutLecError = "เวลาเลิกเรียน Lecture ไม่ถูกต้อง";
+      courseStore.timeOutLecError = "*กรุณากรอกเวลาเป็น HH:MM*";
       hasError = true;
     }
-    if (courseStore.currentCourse!.typeCourses === 'เลคเชอร์และแลป') {
+    if (courseStore.currentCourse!.typeCourses === 'Lecture & Lab') {
       if (courseStore.currentCourse!.timeInLab === "00:00") {
-        courseStore.timeInLabError = "เวลาเข้าเรียน Lab ไม่ถูกต้อง";
+        courseStore.timeInLabError = "*กรุณากรอกเวลาเป็น HH:MM*";
         hasError = true;
       }
       if (courseStore.currentCourse!.timeOutLab === "00:00") {
-        courseStore.timeOutLabError = "เวลาเลิกเรียน Lab ไม่ถูกต้อง";
+        courseStore.timeOutLabError = "*กรุณากรอกเวลาเป็น HH:MM*";
         hasError = true;
       }
     }
@@ -143,12 +143,13 @@ const retreatStep = () => {
   if (currentStep.value > 1) {
     currentStep.value--;
   }
+  clearCourseError();
+
 };
 const clearCourse = () => {
   courseStore.nameCourse = "";
   courseStore.courseId = "";
-  courseStore.typeCourse = "เลคเชอร์";
-  courseStore.credit = 0;
+  courseStore.typeCourse = "Lecture";
   courseStore.session = "1";
   courseStore.dayInLab = "วันจันทร์";
   courseStore.dayInLec = "วันจันทร์";
@@ -158,19 +159,28 @@ const clearCourse = () => {
   courseStore.timeOutLec = "00:00";
 }
 
-const closeDialog = () => {
+const clearCourseError = () => {
+  courseStore.courseNameError = "";
+  courseStore.scoreError = "";
+  courseStore.timeInLabError = "";
+  courseStore.timeInLecError = "";
+  courseStore.timeOutLabError = "";
+  courseStore.timeOutLecError = "";
+  courseStore.fileError = "";
+}
+
+const closeDialog = async () => {
   courseStore.showCreateDialog = false;
   courseStore.showEditDialog = false;
   currentStep.value = 1;
+  await courseStore.getCourseByTeachId(userStore.currentUser!.userId!);
   clearCourse();
 };
 
 const finishCreation = async () => {
-  console.log("file", courseStore.files.length)
   if (courseStore.files.length <= 0) {
     {
-      messageStore.showError("กรุณาเลือกไฟล์เพื่อใส่รายชื่อนิสิต");
-      closeDialog();
+      courseStore.fileError = "*กรุณาอัปโหลดไฟล์ .xlsx*";
       return;
     }
   }
@@ -222,21 +232,22 @@ const finishCreation = async () => {
   courseStore.getCourseByTeachId(userStore.currentUser!.userId!);
 };
 
-const updateCourse = () => {
-  courseStore.updateCourse(courseStore.currentCourse!.coursesId, courseStore.currentCourse!);
-  currentStep.value = 1;
-  courseStore.showEditDialog = false;
+const updateCourse = async () => {
   if (enrollmentStore.selectedEnrollment.length > 0) {
     for (const id of enrollmentStore.selectedEnrollment) {
-      enrollmentStore.deleteEnrollment(id);
+      await enrollmentStore.deleteEnrollment(id);
     }
     enrollmentStore.selectedEnrollment = [];
   }
-  messageStore.showInfo("อัปเดตรายวิชาเรียบร้อยแล้ว");
+    await courseStore.updateCourse(courseStore.currentCourse!.coursesId, courseStore.currentCourse!);
+    currentStep.value = 1;
+    courseStore.showEditDialog = false;
+    messageStore.showInfo("อัปเดตรายวิชาเรียบร้อยแล้ว");
 }
 
-const delCourse = (idCourse: string, nameCourse: string) => {
-  messageStore.showConfirm_(`ยืนยันการลบรายวิชา ${nameCourse} ใช่หรือไม่`, () => confirmDelCourse(idCourse), () => { courseStore.showCreateDialog = false; });
+
+const delCourse = (idCourse: string, nameCourse: string, session: string) => {
+  messageStore.showConfirm_(`ยืนยันการลบรายวิชา ${nameCourse} กลุ่มที่ ${session} ใช่หรือไม่`, () => confirmDelCourse(idCourse), () => { courseStore.showCreateDialog = false; });
 }
 
 const confirmDelCourse = async (id: string) => {
@@ -270,7 +281,8 @@ const confirmDelCourse = async (id: string) => {
                   <v-list-item-title style="color: #1E66C2;"><v-icon>mdi-square-edit-outline</v-icon>
                     แก้ไขข้อมูล</v-list-item-title>
                 </v-list-item>
-                <v-list-item @click="delCourse(item.coursesId, item.nameCourses)">
+                <v-divider></v-divider>
+                <v-list-item @click="delCourse(item.coursesId, item.nameCourses, item.session)">
                   <v-list-item-title style="color: #CF0000;"><v-icon>mdi-delete</v-icon> ลบห้องเรียน</v-list-item-title>
                 </v-list-item>
               </v-list>
@@ -281,17 +293,17 @@ const confirmDelCourse = async (id: string) => {
           </v-avatar>
           <v-card-text>
             <div class="text-body" style="font-weight: bold;">อาจารย์ {{ item.user?.firstName }}</div>
-            <div class="text-body"> รหัสห้อง {{ item.codeCourses }}</div>
+            <div class="text-body"> รหัสเข้ารายวิชา {{ item.codeCourses }}</div>
             <div class="text-body">
-              เวลาเริ่มเรียน Lecture {{ item.timeInLec + " น." + " - " +
+              เวลาเรียน Lecture {{ item.dayInLec +" "+ item.timeInLec + " น." + " - " +
                 item.timeOutLec + " น." }}
             </div>
-            <div class="text-body" v-if="item.typeCourses === 'เลคเชอร์และแลป'">
-              เวลาเริ่มเรียน Lab {{ item.timeInLab + " น." + " - " +
+            <div class="text-body" v-if="item.typeCourses === 'Lecture & Lab'">
+              เวลาเรียน Lab {{ item.dayInLab +" "+ item.timeInLab + " น." + " - " +
                 item.timeOutLab + " น." }}
             </div>
             <div v-else>
-              <div class="text-body">เวลาเริ่มเรียน Lab -</div>
+              <div class="text-body">เวลาเรียน Lab -</div>
             </div>
           </v-card-text>
         </v-card>
@@ -313,7 +325,7 @@ const confirmDelCourse = async (id: string) => {
       <template v-slot:item.1>
         <CreateCourseDialog />
         <v-card-actions>
-          <v-btn color="error" @click="closeDialog">ปิด</v-btn>
+          <v-btn color="error" @click="closeDialog">ยกเลิก</v-btn>
           <v-spacer></v-spacer>
           <v-btn color="primary" @click="advanceStep">ถัดไป</v-btn>
         </v-card-actions>
@@ -321,7 +333,7 @@ const confirmDelCourse = async (id: string) => {
       <template v-slot:item.2>
         <CreateCourseDialog2 />
         <v-card-actions>
-          <v-btn color="error" @click="closeDialog">ปิด</v-btn>
+          <v-btn color="error" @click="closeDialog">ยกเลิก</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="retreatStep">ย้อนกลับ</v-btn>
           <v-btn color="primary" @click="advanceStep">ถัดไป</v-btn>
@@ -330,7 +342,7 @@ const confirmDelCourse = async (id: string) => {
       <template v-slot:item.3>
         <CreateCourseDialog3 />
         <v-card-actions>
-          <v-btn color="error" @click="closeDialog">ปิด</v-btn>
+          <v-btn color="error" @click="closeDialog">ยกเลิก</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="retreatStep">ย้อนกลับ</v-btn>
           <v-btn color="primary" @click="finishCreation">เสร็จสิ้น</v-btn>
@@ -345,7 +357,7 @@ const confirmDelCourse = async (id: string) => {
       <template v-slot:item.1>
         <EditCourseDialog />
         <v-card-actions>
-          <v-btn color="error" @click="closeDialog">ปิด</v-btn>
+          <v-btn color="error" @click="closeDialog">ยกเลิก</v-btn>
           <v-spacer></v-spacer>
           <v-btn color="primary" @click="advanceStep_Edit">ถัดไป</v-btn>
         </v-card-actions>
@@ -353,7 +365,7 @@ const confirmDelCourse = async (id: string) => {
       <template v-slot:item.2>
         <EditCourseDialog2 />
         <v-card-actions>
-          <v-btn color="error" @click="closeDialog">ปิด</v-btn>
+          <v-btn color="error" @click="closeDialog">ยกเลิก</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="retreatStep">ย้อนกลับ</v-btn>
           <v-btn color="primary" @click="advanceStep_Edit">ถัดไป</v-btn>
@@ -362,7 +374,7 @@ const confirmDelCourse = async (id: string) => {
       <template v-slot:item.3>
         <EditCourseDialog3 />
         <v-card-actions>
-          <v-btn color="error" @click="closeDialog">ปิด</v-btn>
+          <v-btn color="error" @click="closeDialog">ยกเลิก</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="retreatStep">ย้อนกลับ</v-btn>
           <v-btn color="primary" @click="updateCourse">เสร็จสิ้น</v-btn>
@@ -407,5 +419,10 @@ const confirmDelCourse = async (id: string) => {
   margin-right: 20px;
   /* ปรับค่าตามที่คุณต้องการ */
   margin-bottom: 20px;
+}
+@media (max-width: 600px) {
+  .avatar {
+    top: 25%;
+  }
 }
 </style>

@@ -79,7 +79,7 @@ const confirmDelEnrolment = async (id: number) => {
               เวลาเริ่มเรียน Lecture {{ item.course?.timeInLec + " น." + " - " +
                 item.course?.timeOutLec + " น." }}
             </div>
-            <div class="text-body" v-if="item.course?.typeCourses === 'เลคเชอร์และแลป'">
+            <div class="text-body" v-if="item.course?.typeCourses === 'Lecture & Lab'">
               เวลาเริ่มเรียน Lab {{ item.course.timeInLab + " น." + " - " +
                 item.course.timeOutLab + " น." }}
             </div>
@@ -140,5 +140,10 @@ const confirmDelEnrolment = async (id: number) => {
   margin-right: 20px;
   /* ปรับค่าตามที่คุณต้องการ */
   margin-bottom: 20px;
+}
+@media (max-width: 600px) {
+  .avatar {
+    top: 25%;
+  }
 }
 </style>

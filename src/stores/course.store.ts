@@ -10,7 +10,7 @@ export const useCourseStore = defineStore("courseStore", () => {
   const files = ref([] as {id:string, name:string}[]);
   const nameCourse = ref("");
   const courseId = ref("");
-  const typeCourse = ref("เลคเชอร์");
+  const typeCourse = ref("Lecture");
   const session = ref("1");
   const credit = ref(1);
   const fullScore = ref(0);
@@ -21,6 +21,7 @@ export const useCourseStore = defineStore("courseStore", () => {
   const timeInLec = ref("00:00");
   const timeOutLec = ref("00:00");
   const courseNameError = ref("");
+  const fileError = ref("");
   const scoreError = ref("");
   const courseIdError = ref("");
   const timeInLabError = ref("");
@@ -137,6 +138,7 @@ export const useCourseStore = defineStore("courseStore", () => {
     timeInLecError,
     timeOutLabError,
     timeOutLecError,
-    scoreError
+    scoreError,
+    fileError
   };
 });

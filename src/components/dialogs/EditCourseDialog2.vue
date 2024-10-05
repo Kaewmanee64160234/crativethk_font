@@ -35,133 +35,103 @@ watch(() => courseStore.currentCourse!.timeOutLab, (newVal) => {
 </script>
 
 <template>
-  <v-card-title>
-    <h3>แก้ไขรายละเอียดวิชา</h3>
-  </v-card-title>
-  <v-card-text>
-    <v-card class="mb-4">
-      <v-row>
-        <v-col>
-          <v-card-title>
-            <h5>รายละเอียดวิชา</h5>
-          </v-card-title>
-          <v-card-text>
-            <p>กลุ่มเรียนที่</p>
-            <v-select :items="['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']" variant="outlined"
-              v-model="courseStore.currentCourse!.session" :rules="[(v: any) => !!v || 'โปรดเลือกกลุ่มที่เรียน']"></v-select>
-          </v-card-text>
-        </v-col>
-        <v-col>
-          <v-card-title>
-            <h5>&nbsp;</h5>
-          </v-card-title>
-          <v-card-text>
-            <p>จำนวนหน่วยกิต</p>
-            <v-select :items="['1', '2', '3']" variant="outlined" v-model="courseStore.currentCourse!.credit"
-              :rules="[(v: any) => !!v || 'โปรดเลือกจำนวนหน่วยกิต']"></v-select>
-          </v-card-text>
-        </v-col>
-        <v-col>
-          <v-card-title>
-            <h5>&nbsp;</h5>
-          </v-card-title>
-          <v-card-text>
-            <p>คะแนนเต็ม</p>
-            <v-text-field variant="outlined" v-model="courseStore.currentCourse!.fullScore" 
-            :error-messages="courseStore.scoreError"
-            :rules="[
-              (v: any) => !!v || 'โปรดกรอกคะแนนเต็มให้ถูกต้อง',
-              (v: string) => /^[0-9]+$/.test(v) || 'โปรดกรอกตัวเลขเท่านั้น',
-              (v: number) => v >= 1 && v <= 100 || 'โปรดกรอกคะแนนตั้งแต่ 1 ถึง 100'
-            ]"></v-text-field>
-          </v-card-text>
-        </v-col>
-      </v-row>
-      <v-row>
-        <v-col>
-          <v-card-title>
-            <h5>วันเวลาเรียนเลคเชอร์</h5>
-          </v-card-title>
-          <v-card-text>
-            <p>วันที่เรียนเลคเชอร์</p>
-            <v-select prepend-icon="mdi-calendar-month"
-              :items="['วันจันทร์', 'วันอังคาร', 'วันพุธ', 'วันพฤหัสบดี', 'วันศุกร์']" variant="outlined"
-              v-model="courseStore.currentCourse!.dayInLec" 
-              :rules="[(v: any) => !!v || 'โปรดเลือกวันที่เรียนเลคเชอร์']"></v-select>
-          </v-card-text>
-        </v-col>
-        <v-col>
-          <v-card-title>
-            <h5>&nbsp;</h5>
-          </v-card-title>
-          <v-card-text>
-            <p>เวลาเริ่มเรียนเลคเชอร์</p>
-            <v-text-field prepend-icon="mdi-clock-time-four" variant="outlined" 
-            :error-messages="courseStore.timeInLecError"
-            v-model="courseStore.currentCourse!.timeInLec" :rules="[
-              (v: any) => !!v || 'โปรดกรอกเวลาเริ่มเรียนเลคเชอร์ให้ถูกต้อง',
-              (v: string) => /^([01]\d|2[0-3]):([0-5]\d)$/.test(v) || 'โปรดกรอกเวลาในรูปแบบ HH:MM',
-            ]"></v-text-field>
-          </v-card-text>
-        </v-col>
-        <v-col>
-          <v-card-title>
-            <h5>&nbsp;</h5>
-          </v-card-title>
-          <v-card-text>
-            <p>เวลาเลิกเรียนเลคเชอร์</p>
-            <v-text-field prepend-icon="mdi-clock-time-four" variant="outlined" 
-            :error-messages="courseStore.timeOutLecError"
-            v-model="courseStore.currentCourse!.timeOutLec" :rules="[
-              (v: any) => !!v || 'โปรดกรอกเวลาเริ่มเรียนเลคเชอร์ให้ถูกต้อง',
-              (v: string) => /^([01]\d|2[0-3]):([0-5]\d)$/.test(v) || 'โปรดกรอกเวลาในรูปแบบ HH:MM',
-            ]"></v-text-field>
-          </v-card-text>
-        </v-col>
-      </v-row>
-      <v-row v-if="courseStore.currentCourse!.typeCourses === 'เลคเชอร์และแลป'">
-        <v-col>
-          <v-card-title>
-            <h5>วันเวลาเรียนแลป</h5>
-          </v-card-title>
-          <v-card-text>
-            <p>วันที่เรียนแลป</p>
-            <v-select prepend-icon="mdi-calendar-month"
-              :items="['วันจันทร์', 'วันอังคาร', 'วันพุธ', 'วันพฤหัสบดี', 'วันศุกร์']" variant="outlined"
-              v-model="courseStore.currentCourse!.dayInLab" :rules="[(v: any) => !!v || 'โปรดเลือกวันที่เรียนแลป']"></v-select>
-          </v-card-text>
-        </v-col>
-        <v-col>
-          <v-card-title>
-            <h5>&nbsp;</h5>
-          </v-card-title>
-          <v-card-text>
-            <p>เวลาเริ่มเรียนแลป</p>
-            <v-text-field prepend-icon="mdi-clock-time-four" variant="outlined" 
-            :error-messages="courseStore.timeInLabError"
-            v-model="courseStore.currentCourse!.timeInLab" :rules="[
-              (v: any) => !!v || 'โปรดกรอกเวลาเริ่มเรียนเลคเชอร์ให้ถูกต้อง',
-              (v: string) => /^([01]\d|2[0-3]):([0-5]\d)$/.test(v) || 'โปรดกรอกเวลาในรูปแบบ HH:MM',
-            ]"></v-text-field>
-          </v-card-text>
-        </v-col>
-        <v-col>
-          <v-card-title>
-            <h5>&nbsp;</h5>
-          </v-card-title>
-          <v-card-text>
-            <p>เวลาเลิกเรียนแลป</p>
-            <v-text-field prepend-icon="mdi-clock-time-four" variant="outlined" 
-            :error-messages="courseStore.timeOutLabError"
-            v-model="courseStore.currentCourse!.timeOutLab" :rules="[
-              (v: any) => !!v || 'โปรดกรอกเวลาเริ่มเรียนเลคเชอร์ให้ถูกต้อง',
-              (v: string) => /^([01]\d|2[0-3]):([0-5]\d)$/.test(v) || 'โปรดกรอกเวลาในรูปแบบ HH:MM',
-            ]"></v-text-field>
-          </v-card-text>
-        </v-col>
-      </v-row>
+  <v-container>
+    <v-card>
+      <v-card-title>
+        <h3>แก้ไขรายละเอียดวิชา</h3>
+      </v-card-title>
+      <v-card-text>
+        <v-row>
+          <v-col cols="12" sm="6">
+            <v-card class="mb-4">
+              <v-card-title>
+                <h5>กลุ่มเรียนที่</h5>
+              </v-card-title>
+              <v-card-text>
+                <v-select :items="['1', '2', '3', '4', '5']" label="Session" variant="outlined"
+                  v-model="courseStore.currentCourse!.session" :rules="[(v: any) => !!v || 'โปรดเลือกกลุ่มที่เรียน']"></v-select>
+              </v-card-text>
+            </v-card>
+            <v-card class="mb-4">
+              <v-card-title>
+                <h5>คะแนนเต็ม</h5>
+              </v-card-title>
+              <v-card-text>
+                <v-text-field variant="outlined" v-model="courseStore.currentCourse!.fullScore"
+                  :error-messages="courseStore.scoreError"
+                  :rules="[
+                    (v: any) => !!v || '*กรุณากรอกตัวเลข 1-100*',
+                    (v: string) => /^[0-9]+$/.test(v) || '*กรุณากรอกตัวเลข*',
+                    (v: number) => v >= 1 && v <= 100 || '*กรุณากรอกตัวเลข 1-100*'
+                  ]"
+                ></v-text-field>
+              </v-card-text>
+            </v-card>
+          </v-col>
+          <v-col cols="12" sm="6">
+            <v-card class="mb-4">
+              <v-card-title>
+                <h5>วันเวลาเรียน Lecture</h5>
+              </v-card-title>
+              <v-card-text>
+                <p>วันที่เรียน</p>
+                <v-select prepend-icon="mdi-calendar-month"
+                  :items="['วันจันทร์', 'วันอังคาร', 'วันพุธ', 'วันพฤหัสบดี', 'วันศุกร์', 'วันเสาร์', 'วันอาทิตย์']"
+                  variant="outlined" v-model="courseStore.currentCourse!.dayInLec"
+                  :rules="[(v: any) => !!v || 'โปรดเลือกวันที่เรียน Lecture']"></v-select>
+                <p>เวลาเริ่ม - เวลาเลิก</p>
+                <v-row>
+                  <v-col cols="6">
+                    <v-text-field prepend-icon="mdi-clock-time-four" variant="outlined"
+                      v-model="courseStore.currentCourse!.timeInLec"
+                      :error-messages="courseStore.timeInLecError"
+                      :rules="[(v: any) => !!v || '*กรุณากรอกเวลาเป็น HH:MM*']"></v-text-field>
+                  </v-col>
+                  <v-col cols="6">
+                    <v-text-field prepend-icon="mdi-clock-time-four" variant="outlined"
+                      v-model="courseStore.currentCourse!.timeOutLec"
+                      :error-messages="courseStore.timeOutLecError"
+                      :rules="[(v: any) => !!v || '*กรุณากรอกเวลาเป็น HH:MM*']"></v-text-field>
+                  </v-col>
+                </v-row>
+              </v-card-text>
+            </v-card>
+          </v-col>
+        </v-row>
+        <v-row v-if="courseStore.currentCourse!.typeCourses === 'Lecture & Lab'">
+          <v-col cols="12">
+            <v-card class="mb-4">
+              <v-card-title>
+                <h5>วันเวลาเรียน Lab</h5>
+              </v-card-title>
+              <v-card-text>
+                <p>วันที่เรียน</p>
+                <v-select prepend-icon="mdi-calendar-month"
+                  :items="['วันจันทร์', 'วันอังคาร', 'วันพุธ', 'วันพฤหัสบดี', 'วันศุกร์', 'วันเสาร์', 'วันอาทิตย์']"
+                  variant="outlined" v-model="courseStore.currentCourse!.dayInLab"
+                  :rules="[(v: any) => !!v || 'โปรดเลือกวันที่เรียน Lab']"></v-select>
+                <p>เวลาเริ่ม - เวลาเลิก</p>
+                <v-row>
+                  <v-col cols="6">
+                    <v-text-field prepend-icon="mdi-clock-time-four" variant="outlined"
+                      v-model="courseStore.currentCourse!.timeInLab"
+                      :error-messages="courseStore.timeInLabError"
+                      :rules="[(v: any) => !!v || '*กรุณากรอกเวลาเป็น HH:MM*']"></v-text-field>
+                  </v-col>
+                  <v-col cols="6">
+                    <v-text-field prepend-icon="mdi-clock-time-four" variant="outlined"
+                      v-model="courseStore.currentCourse!.timeOutLab"
+                      :error-messages="courseStore.timeOutLabError"
+                      :rules="[(v: any) => !!v || '*กรุณากรอกเวลาเป็น HH:MM*']"></v-text-field>
+                  </v-col>
+                </v-row>
+              </v-card-text>
+            </v-card>
+          </v-col>
+        </v-row>
+      </v-card-text>
     </v-card>
-  </v-card-text>
+  </v-container>
 </template>
 
 <style>
@@ -180,5 +150,10 @@ watch(() => courseStore.currentCourse!.timeOutLab, (newVal) => {
 
 .font-bold {
   font-weight: bold;
+}
+@media (max-width: 600px) {
+  .mb-4 {
+    margin-bottom: 8px;
+  }
 }
 </style>

@@ -45,18 +45,12 @@ const cancel = async () => {
                   <b>กลุ่มเรียน:</b> {{ enrollmentStore.currentEnrollment?.course?.session }}
                 </div>
                 <div>
-                  <b>รหัสวิชา:</b> {{ enrollmentStore.currentEnrollment?.course?.coursesId }}
-                </div>
-                <div>
-                  <b>จำนวนหน่วยกิต:</b>  {{ enrollmentStore.currentEnrollment?.course?.credit }}
-                </div>
-                <div>
                   <b>อาจารย์ผู้สอน:</b>
                   {{ enrollmentStore.currentEnrollment?.course?.user?.firstName + " " +
                     enrollmentStore.currentEnrollment?.course?.user?.lastName }}
                 </div>
                 <div>
-                  <b>เรียน Lecture:</b>
+                  <b>เวลาเรียน Lecture:</b>
                   {{
                     enrollmentStore.currentEnrollment?.course?.dayInLec + " " +
                     enrollmentStore.currentEnrollment?.course?.timeInLec + " น." + " - "
@@ -65,9 +59,9 @@ const cancel = async () => {
                 </div>
                 <div v-if="
                   enrollmentStore.currentEnrollment?.course?.typeCourses ===
-                  'เลคเชอร์และแลป'
+                  'Lecture & Lab'
                 ">
-                 <b>เรียน Lab:</b>
+                 <b>เวลาเรียน Lab:</b>
                   {{
                     enrollmentStore.currentEnrollment?.course?.dayInLab + " " +
                     enrollmentStore.currentEnrollment?.course?.timeInLab + " น." + " - "
@@ -75,7 +69,7 @@ const cancel = async () => {
                   }}
                 </div>
                 <div>
-                  <b>คะแนนเต็ม:</b> {{ enrollmentStore.currentEnrollment?.course?.fullScore }}
+                  <b>คะแนนเต็ม:</b> {{ enrollmentStore.currentEnrollment?.course?.fullScore + " " + "คะแนน"}}
                 </div>
               </v-card-text>
             </v-card>
