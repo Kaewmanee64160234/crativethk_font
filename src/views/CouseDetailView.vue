@@ -14,6 +14,7 @@ import * as XLSX from "xlsx";
 import { useLoaderStore } from "@/stores/loader.store";
 import { useMessageStore } from "@/stores/message";
 import assignment from "@/services/assignment";
+import Swal from "sweetalert2";
 
 const route = useRoute();
 const messageStore = useMessageStore();
@@ -158,10 +159,21 @@ const createPost = async () => {
   console.time("Validation check");
   if (nameAssignment.value === "") {
     console.timeEnd("Validation check");
+    Swal.fire({
+      icon: "error",
+      title: "กรุณากรอกชื่อเรื่องการเช็คชื่อ",
+    });
     return;
-  } else {
-    // alert('The assignment has been created successfully.');
   }
+  if ([...capturedImages.value, ...imageUrls.value].length > 20) {
+    console.timeEnd("Validation check");
+    Swal.fire({
+      icon: "error",
+      title: "ไม่สามารถอัปโหลดรูปภาพได้เกิน 20 รูป",
+    });
+    return;
+  }
+
   console.timeEnd("Validation check");
 
   console.time("Room selection");
@@ -180,7 +192,6 @@ const createPost = async () => {
     deletedDate: undefined,
     assignmentManual: assignmentManual.value,
   };
-
 
   await assignmentStore.createAssignment(
     {
@@ -410,18 +421,48 @@ const cancelExportFile = () => {
   console.log("export failed");
 };
 
-// showSnackbar 
+// showSnackbar
 const showSnackbar = ref(false);
 const checkImageCountAndPost = () => {
   if ([...capturedImages.value, ...imageUrls.value].length > 20) {
-    showSnackbar.value = true;
+    // dialogclosw
+    showDialog.value = false;
+    Swal.fire({
+      icon: "error",
+      title: "ไม่สามารถอัปโหลดรูปภาพได้เกิน 20 รูป",
+    }).then(() => {
+      showDialog.value = true;
+    });
+
+    return;
+  }
+  if (nameAssignment.value === "") {
+    showDialog.value = false;
+
+    Swal.fire({
+      icon: "error",
+      title: "กรุณากรอกชื่อเรื่องการเช็คชื่อ",
+    }).then(() => {
+      showDialog.value = true;
+    });
+
+    return;
+  }
+  if ([...capturedImages.value, ...imageUrls.value].length === 0) {
+    showDialog.value = false;
+
+    Swal.fire({
+      icon: "error",
+      title: "กรุณาเพิ่มรูปภาพ",
+    }).then(() => {
+      showDialog.value = true;
+    });
+
+    return;
   } else {
     createPost();
   }
 };
-
-
-
 </script>
 
 <template>
@@ -458,123 +499,136 @@ const checkImageCountAndPost = () => {
           <v-icon>mdi-plus</v-icon>สร้างการเช็คชื่อ
         </v-btn>
         <v-dialog v-model="showDialog" persistent max-width="600px">
-    <v-card>
-      <v-card-title class="text-h5 text-center">
-        สร้างการเช็คชื่อ
-      </v-card-title>
+          <v-card>
+            <v-card-title class="text-h5 text-center">
+              สร้างการเช็คชื่อ
+            </v-card-title>
 
-      <v-card-text>
-        <v-container>
-          <!-- Assignment Name Input -->
-          <v-row>
-            <v-col cols="12" sm="12">
-              <v-text-field
-                name="nameAssignment"
-                label="ชื่อเรื่องการเช็คชื่อ"
-                v-model="nameAssignment"
-                variant="outlined"
+            <v-card-text>
+              <v-container>
+                <!-- Assignment Name Input -->
+                <v-row>
+                  <v-col cols="12" sm="12">
+                    <v-text-field
+                      name="nameAssignment"
+                      label="ชื่อเรื่องการเช็คชื่อ"
+                      v-model="nameAssignment"
+                      variant="outlined"
+                      outlined
+                      prepend-inner-icon="mdi-assignment"
+                      required
+                      :rules="[(v: any) => !!v || 'กรุณากรอกชื่อ']"
+                    ></v-text-field>
+                  </v-col>
+                </v-row>
+
+                <!-- File Upload and Camera Controls -->
+                <v-row>
+                  <v-col cols="12" sm="12">
+                    <v-file-input
+                      label="อัปโหลดรูปภาพ (จำนวนไฟล์สูงสุด 20 รูป)"
+                      prepend-icon="mdi-camera"
+                      filled
+                      @change="handleFileChange"
+                      accept="image/*"
+                      variant="outlined"
+                      multiple
+                    ></v-file-input>
+                  </v-col>
+                </v-row>
+
+                <v-row>
+                  <v-col cols="12" sm="12">
+                    <v-btn color="primary" @click="startCamera" block>
+                      <v-icon left>mdi-camera</v-icon>
+                      เปิดกล้องเพื่อถ่ายรูป
+                    </v-btn>
+                  </v-col>
+                </v-row>
+
+                <!-- Camera View -->
+                <v-row v-if="showCamera">
+                  <v-col cols="12" sm="12">
+                    <video
+                      ref="videoRef"
+                      autoplay
+                      style="width: 100%; border-radius: 8px"
+                    ></video>
+                    <canvas ref="canvasRef" style="display: none"></canvas>
+                  </v-col>
+                  <v-col cols="12" sm="6">
+                    <v-btn @click="captureImage" block color="primary">
+                      <v-icon left>mdi-camera</v-icon>
+                      ถ่ายรูปภาพ
+                    </v-btn>
+                  </v-col>
+                  <v-col cols="12" sm="6">
+                    <v-btn @click="stopCamera" block color="error">
+                      <v-icon left>mdi-close</v-icon>
+                      ปิดกล้องถ่ายรูป
+                    </v-btn>
+                  </v-col>
+                </v-row>
+
+                <!-- Uploaded and Captured Images Preview -->
+                <v-row class="scrollable-image-section">
+                  <v-col
+                    cols="12"
+                    sm="6"
+                    md="4"
+                    v-for="(image, index) in [...capturedImages, ...imageUrls]"
+                    :key="index"
+                    class="image-container"
+                  >
+                    <v-card outlined class="ma-2">
+                      <v-img :src="image" aspect-ratio="1" class="ma-2"></v-img>
+                      <v-btn
+                        icon
+                        @click="removeImage(index)"
+                        class="delete-icon"
+                        variant="text"
+                      >
+                        <v-icon color="red">mdi-close</v-icon>
+                      </v-btn>
+                    </v-card>
+                  </v-col>
+                </v-row>
+              </v-container>
+            </v-card-text>
+
+            <!-- Dialog Actions (Fixed at the Bottom) -->
+            <v-card-actions class="fixed-action-buttons">
+              <v-btn color="error" @click="showDialog = false" outlined>
+                ยกเลิก
+              </v-btn>
+              <v-spacer></v-spacer>
+
+              <!-- Disable the post button if more than 20 images or if the name is empty -->
+              <v-btn
+                :disabled="
+                  [...capturedImages, ...imageUrls].length > 20 ||
+                  nameAssignment === ''
+                "
+                color="primary"
+                @click="checkImageCountAndPost"
                 outlined
-                prepend-inner-icon="mdi-assignment"
-                required
-                :rules="[(v: any) => !!v || 'กรุณากรอกชื่อ']"
-              ></v-text-field>
-            </v-col>
-          </v-row>
-
-          <!-- File Upload and Camera Controls -->
-          <v-row>
-            <v-col cols="12" sm="12">
-              <v-file-input
-                label="อัปโหลดรูปภาพ (จำนวนไฟล์สูงสุด 20 รูป)"
-                prepend-icon="mdi-camera"
-                filled
-                @change="handleFileChange"
-                accept="image/*"
-                variant="outlined"
-                multiple
-              ></v-file-input>
-            </v-col>
-          </v-row>
-
-          <v-row>
-            <v-col cols="12" sm="12">
-              <v-btn color="primary" @click="startCamera" block>
-                <v-icon left>mdi-camera</v-icon>
-                เปิดกล้องเพื่อถ่ายรูป
+              >
+                โพสต์
               </v-btn>
-            </v-col>
-          </v-row>
+            </v-card-actions>
+          </v-card>
 
-          <!-- Camera View -->
-          <v-row v-if="showCamera">
-            <v-col cols="12" sm="12">
-              <video ref="videoRef" autoplay style="width: 100%; border-radius: 8px"></video>
-              <canvas ref="canvasRef" style="display: none"></canvas>
-            </v-col>
-            <v-col cols="12" sm="6">
-              <v-btn @click="captureImage" block color="primary" >
-                <v-icon left>mdi-camera</v-icon>
-                ถ่ายรูปภาพ
-              </v-btn>
-            </v-col>
-            <v-col cols="12" sm="6">
-              <v-btn @click="stopCamera" block color="error">
-                <v-icon left>mdi-close</v-icon>
-                ปิดกล้องถ่ายรูป
-              </v-btn>
-            </v-col>
-          </v-row>
-
-          <!-- Uploaded and Captured Images Preview -->
-          <v-row class="scrollable-image-section">
-            <v-col
-              cols="12"
-              sm="6"
-              md="4"
-              v-for="(image, index) in [...capturedImages, ...imageUrls]"
-              :key="index"
-              class="image-container"
-            >
-              <v-card outlined class="ma-2">
-                <v-img :src="image" aspect-ratio="1" class="ma-2"></v-img>
-                <v-btn
-                  icon
-                  @click="removeImage(index)"
-                  class="delete-icon"
-                  variant="text"
-                >
-                  <v-icon color="red">mdi-close</v-icon>
-                </v-btn>
-              </v-card>
-            </v-col>
-          </v-row>
-        </v-container>
-      </v-card-text>
-
-      <!-- Dialog Actions (Fixed at the Bottom) -->
-      <v-card-actions class="fixed-action-buttons">
-        <v-btn color="error" @click="showDialog = false" outlined>
-          ยกเลิก
-        </v-btn>
-        <v-spacer></v-spacer>
-
-        <!-- Disable the post button if more than 20 images -->
-        <v-btn
-          :disabled="[...capturedImages, ...imageUrls].length > 20"
-          color="primary"
-          @click="checkImageCountAndPost"
-          outlined
-        >
-          โพสต์
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-
-    <!-- Snackbar for image limit error -->
-    <v-snackbar v-model="showSnackbar" color="error" top right timeout="3000">
-      ไม่สามารถอัปโหลดรูปภาพได้เกิน 20 รูป
-    </v-snackbar>
-  </v-dialog>
+          <!-- Snackbar for image limit or empty name error -->
+          <v-snackbar
+            v-model="showSnackbar"
+            color="error"
+            top
+            right
+            timeout="3000"
+          >
+            {{ snackbarMessage }}
+          </v-snackbar>
+        </v-dialog>
 
         <v-row class="pt-5" v-if="posts.length > 0">
           <v-col

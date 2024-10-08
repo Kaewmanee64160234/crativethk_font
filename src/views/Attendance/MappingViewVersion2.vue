@@ -51,19 +51,21 @@ const assignmentStore = useAssignmentStore();
 const attendanceStore = useAttendanceStore();
 const isLoading = ref(true); // Add a loading state
 const url = import.meta.env.VITE_API_URL as string;
-const filterOptions = ['Show All', 'Show Less Than 50%'];
-const filterOption = ref('Show Less Than 50%');
+const filterOptions = ["Show All", "Show Less Than 50%"];
+const filterOption = ref("Show Less Than 50%");
 const sortedAttendances = computed(() => {
   return attendanceStore.attendances
     ?.slice()
-    .filter((attendance) => attendance.attendanceImage !== 'noimage.jpg')
+    .filter((attendance) => attendance.attendanceImage !== "noimage.jpg")
     .sort((a, b) => a.attendanceScore! - b.attendanceScore!);
 });
 
 // Filtering attendances based on the selected dropdown option
 const filteredAttendances = computed(() => {
-  if (filterOption.value === 'Show Less Than 50%') {
-    return sortedAttendances.value!.filter(attendee => attendee.attendanceScore! < 50);
+  if (filterOption.value === "Show Less Than 50%") {
+    return sortedAttendances.value!.filter(
+      (attendee) => attendee.attendanceScore! < 50
+    );
   } else {
     return sortedAttendances.value;
   }
@@ -78,8 +80,12 @@ onMounted(async () => {
       faceapi.nets.ssdMobilenetv1.loadFromUri("/models"),
     ]);
     // get user by course id
-    await userStore.getUserByCourseId(courseStore.currentCourse?.coursesId + '');
-    await assignmentStore.getAssignmentById(route.params.assignmentId.toString());
+    await userStore.getUserByCourseId(
+      courseStore.currentCourse?.coursesId + ""
+    );
+    await assignmentStore.getAssignmentById(
+      route.params.assignmentId.toString()
+    );
 
     console.time("Face Description Processing Time");
     userStore.users.forEach((user) => {
@@ -92,7 +98,12 @@ onMounted(async () => {
             const float32Array = base64ToFloat32Array(description);
             descriptors.push(float32Array);
           } catch (error) {
-            console.error(`Error decoding face description ${idx + 1} for user: ${user.email}`, error);
+            console.error(
+              `Error decoding face description ${idx + 1} for user: ${
+                user.email
+              }`,
+              error
+            );
           }
         }
       });
@@ -102,21 +113,23 @@ onMounted(async () => {
       }
     });
     console.timeEnd("Face Description Processing Time");
-    const urls: string[] = JSON.parse(localStorage.getItem('images') || '[]');
+    const urls: string[] = JSON.parse(localStorage.getItem("images") || "[]");
     console.log(urls);
 
     imageUrls.value = urls;
-    localStorage.removeItem('images');
-
+    localStorage.removeItem("images");
 
     console.time("Image Processing Time");
-    await Promise.all(imageUrls.value.map((url, index) => loadImageAndProcess(url, index)));
+    await Promise.all(
+      imageUrls.value.map((url, index) => loadImageAndProcess(url, index))
+    );
     console.timeEnd("Image Processing Time");
 
-
     // Call createAttendance after all images have been processed
-    if (assignmentStore.currentAssignment!.statusAssignment == 'completed') {
-      console.log("Assignment is already completed. Skipping attendance confirmation.");
+    if (assignmentStore.currentAssignment!.statusAssignment == "completed") {
+      console.log(
+        "Assignment is already completed. Skipping attendance confirmation."
+      );
       console.time("Update Attendance Time");
       await updateAttdent();
       console.timeEnd("Update Attendance Time");
@@ -125,7 +138,6 @@ onMounted(async () => {
       await createAttendance();
       console.timeEnd("Create Attendance Time");
     }
-
   } catch (error) {
     console.error("Error in onMounted:", error);
     alert("Failed to load data. Please check the console for more details.");
@@ -144,7 +156,10 @@ async function processImage(image: HTMLImageElement, index: number) {
   const ctx = canvas.getContext("2d");
 
   try {
-    const detections = await faceapi.detectAllFaces(image).withFaceLandmarks().withFaceDescriptors();
+    const detections = await faceapi
+      .detectAllFaces(image)
+      .withFaceLandmarks()
+      .withFaceDescriptors();
 
     detections.forEach((detection) => {
       const bestMatch = findBestUserMatch(detection.descriptor);
@@ -208,17 +223,15 @@ function loadImageAndProcess(dataUrl: string, index: number): Promise<void> {
   });
 }
 
-function findBestUserMatch(
-  descriptor: Float32Array
-) {
+function findBestUserMatch(descriptor: Float32Array) {
   const threshold = 0.6; // Set the threshold for best match
-  let bestMatch: { user?: User, score: number } = {  score: threshold };
+  let bestMatch: { user?: User; score: number } = { score: threshold };
   // Initialize best match with threshold score
 
   // Iterate over each user's descriptors
   userDescriptors.forEach((descriptors, studentId) => {
     // Iterate over each descriptor for the current user
-    console.log("Student ID:", studentId, 'Descriptors:', descriptors.length);
+    console.log("Student ID:", studentId, "Descriptors:", descriptors.length);
 
     descriptors.forEach((userDescriptor) => {
       // Ensure descriptor lengths match to avoid calculation errors
@@ -234,14 +247,23 @@ function findBestUserMatch(
       const distance = faceapi.euclideanDistance(descriptor, userDescriptor);
 
       // Debug logging to trace values
-      console.log("Distance:", distance, "Threshold:", threshold, "Match Score:", bestMatch.score, "Student ID:", studentId);
+      console.log(
+        "Distance:",
+        distance,
+        "Threshold:",
+        threshold,
+        "Match Score:",
+        bestMatch.score,
+        "Student ID:",
+        studentId
+      );
 
       // Update best match if the current distance is lower than the current best score
       if (distance < bestMatch.score) {
         console.log("Best match updated:", studentId, distance);
 
         bestMatch = {
-          user: userStore.users.find((u) => u.studentId === studentId) , // Find the matching user by student ID
+          user: userStore.users.find((u) => u.studentId === studentId), // Find the matching user by student ID
           score: distance, // Update the score with the new best distance
         };
       }
@@ -250,7 +272,6 @@ function findBestUserMatch(
 
   return bestMatch; // Return the best match found
 }
-
 
 function resizeAndConvertToBase64(
   imgUrl: string,
@@ -337,25 +358,29 @@ const createAttendance = async () => {
       let identifiedUser =
         identifications.value[i].name !== "Unknown"
           ? userStore.users.find(
-            (user) => user.firstName === identifications.value[i].name
-          )
+              (user) => user.firstName === identifications.value[i].name
+            )
           : ({
-            studentId: i + "",
-            firstName: "Unknown",
-            lastName: "Unknown",
-            faceDescriptions: [],
-          } as User);
+              studentId: i + "",
+              firstName: "Unknown",
+              lastName: "Unknown",
+              faceDescriptions: [],
+            } as User);
 
       await attendanceStore.createAttendance(
         {
           attendanceId: 0,
           attendanceDate: new Date(),
           attendanceStatus: "present",
-          attendanceConfirmStatus: identifiedUser ? "confirmed" : "notConfirmed",
+          attendanceConfirmStatus: identifiedUser
+            ? "confirmed"
+            : "notConfirmed",
           assignment: assignmentStore.currentAssignment,
           user: identifiedUser,
           attendanceImage: "",
-          attendanceScore: parseInt((identifications.value[i].score * 100).toFixed(2)),
+          attendanceScore: parseInt(
+            (identifications.value[i].score * 100).toFixed(2)
+          ),
         },
         imageFile
       );
@@ -368,15 +393,21 @@ const createAttendance = async () => {
       );
       console.error(
         "Detailed Error:",
-        error instanceof Event ? "DOM Event error, check network or permissions." : error
+        error instanceof Event
+          ? "DOM Event error, check network or permissions."
+          : error
       );
     }
   }
 
   // Filter users from identifications and create unknown users
-  await userStore.getUserByCourseId(assignmentStore.currentAssignment?.course.coursesId + '')
+  await userStore.getUserByCourseId(
+    assignmentStore.currentAssignment?.course.coursesId + ""
+  );
   const usersCreateUnknown = userStore.users.filter((user) => {
-    return !identifications.value.some((identification) => identification.studentId === user.studentId);
+    return !identifications.value.some(
+      (identification) => identification.studentId === user.studentId
+    );
   });
   console.log("Create unknown users", usersCreateUnknown);
 
@@ -392,7 +423,7 @@ const createAttendance = async () => {
           assignment: assignmentStore.currentAssignment,
           user: usersCreateUnknown[i],
           attendanceImage: "",
-          attendanceScore: 0
+          attendanceScore: 0,
         },
         new File([], "")
       );
@@ -405,13 +436,20 @@ const createAttendance = async () => {
       );
       console.error(
         "Detailed Error:",
-        error instanceof Event ? "DOM Event error, check network or permissions." : error
+        error instanceof Event
+          ? "DOM Event error, check network or permissions."
+          : error
       );
     }
   }
-  assignmentStore.currentAssignment!.statusAssignment = 'completed';
-  await assignmentStore.updateAssignment(assignmentStore.currentAssignment!.assignmentId + '', assignmentStore.currentAssignment!);
-  await attendanceStore.getAttendanceByAssignmentId(route.params.assignmentId.toString());
+  assignmentStore.currentAssignment!.statusAssignment = "completed";
+  await assignmentStore.updateAssignment(
+    assignmentStore.currentAssignment!.assignmentId + "",
+    assignmentStore.currentAssignment!
+  );
+  await attendanceStore.getAttendanceByAssignmentId(
+    route.params.assignmentId.toString()
+  );
 
   console.log("Attendance confirmed successfully");
 };
@@ -420,7 +458,6 @@ const updateAttdent = async () => {
   await assignmentStore.getAssignmentById(route.params.assignmentId.toString());
   try {
     for (let i = 0; i < identifications.value.length; i++) {
-
       if (!croppedImagesDataUrls.value[i]) {
         console.error("Image URL is missing for index:", i);
         continue;
@@ -439,32 +476,36 @@ const updateAttdent = async () => {
       let identifiedUser =
         identifications.value[i].name !== "Unknown"
           ? userStore.users.find(
-            (user) => user.firstName === identifications.value[i].name
-          )
+              (user) => user.firstName === identifications.value[i].name
+            )
           : ({
-            studentId: i + "",
-            firstName: "Unknown",
-            lastName: "Unknown",
-            faceDescriptions: [],
-          } as User);
+              studentId: i + "",
+              firstName: "Unknown",
+              lastName: "Unknown",
+              faceDescriptions: [],
+            } as User);
 
       // find user from attdent from name identifiv=cation
-      await attendanceStore.getAttendanceByAssignmentId(route.params.assignmentId.toString());
-      const userAttdent = attendanceStore.attendances!.find((user) => user.user?.firstName === identifications.value[i].name);
+      await attendanceStore.getAttendanceByAssignmentId(
+        route.params.assignmentId.toString()
+      );
+      const userAttdent = attendanceStore.attendances!.find(
+        (user) => user.user?.firstName === identifications.value[i].name
+      );
       // console.log("User Attdent:", userAttdent);
       if (userAttdent) {
         userAttdent.attendanceStatus = "present";
-        userAttdent.attendanceConfirmStatus = identifiedUser ? "confirmed" : "notConfirmed";
-        userAttdent.attendanceScore = parseInt((identifications.value[i].score * 100).toFixed(2));
+        userAttdent.attendanceConfirmStatus = identifiedUser
+          ? "confirmed"
+          : "notConfirmed";
+        userAttdent.attendanceScore = parseInt(
+          (identifications.value[i].score * 100).toFixed(2)
+        );
         userAttdent.assignment = assignmentStore.currentAssignment!;
         console.log("User Attdent:", userAttdent);
 
         await attendanceStore.confirmAttendance(userAttdent, imageFile);
       }
-
-
-
-
     }
   } catch (e) {
     console.error(
@@ -478,19 +519,23 @@ const updateAttdent = async () => {
       e instanceof Event ? "DOM Event error, check network or permissions." : e
     );
   } finally {
-    await attendanceStore.getAttendanceByAssignmentId(route.params.assignmentId.toString());
-
+    await attendanceStore.getAttendanceByAssignmentId(
+      route.params.assignmentId.toString()
+    );
   }
-}
+};
 const confirmAttendance = async (attendance: Attendance) => {
   if (confirm("Do you want to confirm this attendance?")) {
     try {
       attendance.attendanceStatus = "present";
       attendance.attendanceConfirmStatus = "confirmed";
-      await attendanceStore.confirmAttendanceByTeacher(attendance.attendanceId + "");
+      await attendanceStore.confirmAttendanceByTeacher(
+        attendance.attendanceId + ""
+      );
       alert("Attendance has been confirmed.");
-      await attendanceStore.getAttendanceByAssignmentId(route.params.assignmentId.toString());
-
+      await attendanceStore.getAttendanceByAssignmentId(
+        route.params.assignmentId.toString()
+      );
     } catch (error) {
       console.error("Error recording attendance:", error);
       alert("Failed to confirm attendance.");
@@ -498,16 +543,15 @@ const confirmAttendance = async (attendance: Attendance) => {
   }
 };
 
-
 //reject student
 const reCheckAttendance = async (attendance: Attendance) => {
   try {
-
     console.log("Attendance:Ging", attendance);
 
     await attendanceStore.removeAttendance(attendance.attendanceId + "");
-    await attendanceStore.getAttendanceByAssignmentId(route.params.assignmentId.toString());
-
+    await attendanceStore.getAttendanceByAssignmentId(
+      route.params.assignmentId.toString()
+    );
   } catch (error) {
     console.error("Error recording attendance:", error);
     alert("Failed to recheck attendance.");
@@ -519,29 +563,43 @@ const goHome = () => {
 };
 
 const nextPage = () => {
-  router.push(`/reCheckMappingTeacher/course/${courseStore.currentCourse?.coursesId}/assignment/${route.params.assignmentId}`);
+  router.push(
+    `/reCheckMappingTeacher/course/${courseStore.currentCourse?.coursesId}/assignment/${route.params.assignmentId}`
+  );
 };
-
 </script>
-
-
 <template>
   <v-container class="mt-10">
-
-    
-
+    <v-card
+          class="mx-auto"
+          color="primary"
+          max-width="1200"
+          outlined
+          style="padding: 20px"
+        >
+          <v-card-title>
+            <h1 class="text-h5">
+              {{ courseStore.currentCourse?.nameCourses }} > {{ assignmentStore.currentAssignment?.nameAssignment }}
+            </h1>
+          </v-card-title>
+        </v-card>
     <!-- Loading Spinner -->
     <v-row v-if="isLoading">
       <Loader></Loader>
     </v-row>
 
     <!-- Layout Row for Image Display and Identifications -->
-    <v-row v-else style="padding: 20px;">
+    <v-row v-else style="padding: 20px">
       <v-col cols="12" class="d-flex justify-space-between align-center mb-4">
         <h1 class="display-1">ตรวจสอบการเช็คชื่อ</h1>
         <div class="d-flex align-center">
           <!-- Navigation Buttons -->
-          <v-btn color="primary" variant="outlined" class="mr-3" @click="goHome">
+          <v-btn
+            color="primary"
+            variant="outlined"
+            class="mr-3"
+            @click="goHome"
+          >
             Go Home
           </v-btn>
           <v-btn color="primary" variant="outlined" @click="nextPage">
@@ -566,41 +624,95 @@ const nextPage = () => {
 
       <!-- Filter Dropdown -->
       <v-col cols="auto">
-        <v-select v-model="filterOption" :items="filterOptions" label="Filter Attendances" variant="solo" dense></v-select>
+        <v-select
+          v-model="filterOption"
+          :items="filterOptions"
+          label="Filter Attendances"
+          variant="solo"
+          dense
+        ></v-select>
       </v-col>
 
       <v-col cols="12" class="pt-5">
         <v-container>
           <v-row>
-            <v-col v-for="(attendee, index) in filteredAttendances" :key="index" cols="12" sm="6" md="4" lg="3">
-              <v-card class="mb-3" :style="{
-                padding: '20px',
-                backgroundColor: attendee.attendanceScore! >= 50 ? 'rgb(237, 237, 237)' : 'rgb(255, 230, 230)',
-                boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)',
-                borderRadius: '10px'
-              }">
+            <v-col
+              v-for="(attendee, index) in filteredAttendances"
+              :key="index"
+              cols="12"
+              sm="6"
+              md="4"
+              lg="3"
+            >
+              <v-card
+                class="mb-3 hover-card"
+                :style="{
+                  padding: '20px',
+                  backgroundColor: attendee.attendanceScore! >= 50 ? '#F0FDF4' : '#FEF2F2',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                  borderRadius: '10px'
+                }"
+              >
                 <v-row justify="center">
                   <v-card-title class="bold-text mt-2 text-center">
-                    <v-icon small class="mr-2">mdi-circle-small</v-icon>
-                    <router-link :to="`/user/${attendee.user?.studentId}`">
-                      {{ attendee.user ? attendee.user?.studentId + " " + attendee.user?.firstName : 'ไม่พบในฐานข้อมูล' }}
-                    </router-link>
+                    {{
+                      attendee.user
+                        ? attendee.user?.studentId +
+                          " " +
+                          attendee.user?.firstName +
+                          " " +
+                          attendee.user.lastName
+                        : "ไม่พบในฐานข้อมูล"
+                    }}
                   </v-card-title>
-                  <v-card-subtitle :class="attendee.attendanceScore! >= 50 ? 'correct-text' : 'incorrect-text'">
-                    {{ attendee.attendanceScore! >= 50 ? 'ความถูกต้อง' : 'ไม่ถูกต้อง' }} {{ attendee.attendanceScore }}%
-                  </v-card-subtitle>
                 </v-row>
                 <v-row>
                   <v-col cols="6">
-                    <v-img :src="`${url}/attendances/image/${attendee.attendanceImage}`" height="200px" class="rounded-lg"></v-img>
+                    <v-img
+                      :src="`${url}/attendances/image/${attendee.attendanceImage}`"
+                      height="180px"
+                      class="rounded-lg"
+                      style="border-radius: 10px"
+                    ></v-img>
                   </v-col>
                   <v-col cols="6">
-                    <v-img v-if="attendee.user?.userId" :src="`${url}/users/${attendee.user?.userId}/image`" height="200px" class="rounded-lg"></v-img>
-                    <v-img v-else src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png" height="200px" class="rounded-lg"></v-img>
+                    <v-img
+                      v-if="attendee.user?.userId"
+                      :src="`${url}/users/${attendee.user?.userId}/image`"
+                      height="180px"
+                      class="rounded-lg"
+                      style="border-radius: 10px"
+                    ></v-img>
+                    <v-img
+                      v-else
+                      src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"
+                      height="180px"
+                      class="rounded-lg"
+                      style="border-radius: 10px"
+                    ></v-img>
                   </v-col>
                 </v-row>
-                <v-card-actions>
-                  <v-btn color="error" variant="flat" @click="reCheckAttendance(attendee)" class="font-weight-bold" block>
+                <v-row justify="center">
+                  <v-card-subtitle
+                    :class="attendee.attendanceScore! >= 50 ? 'correct-text' : 'incorrect-text'"
+                  >
+                    {{
+                      attendee.attendanceScore! >= 50
+                        ? "ความถูกต้อง"
+                        : "ไม่ถูกต้อง"
+                    }}
+                    {{ attendee.attendanceScore }}%
+                  </v-card-subtitle>
+                </v-row>
+                <v-card-actions class="d-flex justify-center">
+                  <v-btn
+                    color="error"
+                    variant="flat"
+                    @click="reCheckAttendance(attendee)"
+                    class="font-weight-bold"
+                    block
+                    style="border-radius: 8px"
+                  >
                     ปฏิเสธ
                   </v-btn>
                 </v-card-actions>
@@ -613,31 +725,22 @@ const nextPage = () => {
   </v-container>
 </template>
 
-
 <style scoped>
 .bold-text {
   font-weight: bold;
 }
 
 .correct-text {
-  color: green;
+  color: #10B981; /* Tailwind's Green */
 }
 
 .incorrect-text {
-  color: red;
-}
-
-.fill-height {
-  min-height: 80vh;
+  color: #DC2626; /* Tailwind's Red */
 }
 
 .display-1 {
   font-size: 24px;
   font-weight: bold;
-}
-
-.status-student {
-  text-align: center;
 }
 
 .status-section {
@@ -653,16 +756,15 @@ const nextPage = () => {
 .status-label {
   font-size: 14px;
   color: #777;
-  line-height: 1;
 }
 
 .v-card {
-  border-radius: 10px;
   transition: transform 0.3s;
 }
 
-.v-card:hover {
+.hover-card:hover {
   transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
 .v-btn {
@@ -670,6 +772,6 @@ const nextPage = () => {
 }
 
 .v-btn:hover {
-  background-color: #eee;
+  background-color: #f5f5f5;
 }
 </style>
