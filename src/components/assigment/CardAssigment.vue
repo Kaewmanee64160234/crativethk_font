@@ -218,7 +218,7 @@ function close() {
 
 <template>
     <div>
-        <v-card>
+        <v-card @click="gotoMappinfForStudent()">
             <v-card-text>
                 <h4>{{ props.post!.course!.user!.firstName + ' ' + props.post!.course!.user!.lastName }} โพสเนื้อหาใหม่
                     : {{ props.post.nameAssignment }}</h4>
@@ -226,9 +226,9 @@ function close() {
             <v-card-actions>
                 <v-card-text> {{ formatThaiDate(new Date(props.post!.createdDate!)) }}</v-card-text>
                 <v-spacer></v-spacer>
-                <v-btn @click="gotoMappinfForStudent()">
+                <!-- <v-btn >
                     <v-icon size="30">mdi-card-account-mail</v-icon>
-                </v-btn>
+                </v-btn> -->
 
                 <!-- Dropdown Menu for Teacher Actions -->
                 <v-menu v-if="userStore.currentUser?.role == 'อาจารย์'" bottom right>

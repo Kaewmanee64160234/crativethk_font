@@ -527,15 +527,12 @@ const nextPage = () => {
 
 <template>
   <v-container class="mt-10">
+
+    
+
     <!-- Loading Spinner -->
     <v-row v-if="isLoading">
-      <Loader>
-      </Loader>
-      <!-- <v-col class="d-flex flex-column justify-center align-center text-center">
-        <span class="loader"></span>
-        <div class="mt-4">Processing images...</div>
-        <div class="mt-2">Detected: {{ identifications.length }} / {{ userStore.users.length }} students</div>
-      </v-col> -->
+      <Loader></Loader>
     </v-row>
 
     <!-- Layout Row for Image Display and Identifications -->
@@ -552,8 +549,6 @@ const nextPage = () => {
           </v-btn>
         </div>
 
-
-
         <div class="status-student d-flex align-center">
           <v-row class="align-center text-center" justify="center">
             <v-col cols="auto" class="status-section">
@@ -568,11 +563,12 @@ const nextPage = () => {
           </v-row>
         </div>
       </v-col>
+
       <!-- Filter Dropdown -->
       <v-col cols="auto">
-        <v-select v-model="filterOption" :items="filterOptions" label="Filter Attendances" variant="solo"
-          dense></v-select>
+        <v-select v-model="filterOption" :items="filterOptions" label="Filter Attendances" variant="solo" dense></v-select>
       </v-col>
+
       <v-col cols="12" class="pt-5">
         <v-container>
           <v-row>
@@ -586,7 +582,9 @@ const nextPage = () => {
                 <v-row justify="center">
                   <v-card-title class="bold-text mt-2 text-center">
                     <v-icon small class="mr-2">mdi-circle-small</v-icon>
-                    {{ attendee.user ? attendee.user?.studentId + " " + attendee.user?.firstName : 'ไม่พบในฐานข้อมูล' }}
+                    <router-link :to="`/user/${attendee.user?.studentId}`">
+                      {{ attendee.user ? attendee.user?.studentId + " " + attendee.user?.firstName : 'ไม่พบในฐานข้อมูล' }}
+                    </router-link>
                   </v-card-title>
                   <v-card-subtitle :class="attendee.attendanceScore! >= 50 ? 'correct-text' : 'incorrect-text'">
                     {{ attendee.attendanceScore! >= 50 ? 'ความถูกต้อง' : 'ไม่ถูกต้อง' }} {{ attendee.attendanceScore }}%
@@ -594,23 +592,15 @@ const nextPage = () => {
                 </v-row>
                 <v-row>
                   <v-col cols="6">
-
-                    <v-img :src="`${url}/attendances/image/${attendee.attendanceImage}`" height="200px"
-                      class="rounded-lg"></v-img>
+                    <v-img :src="`${url}/attendances/image/${attendee.attendanceImage}`" height="200px" class="rounded-lg"></v-img>
                   </v-col>
                   <v-col cols="6">
-                    <v-img v-if="attendee.user?.userId" :src="`${url}/users/${attendee.user?.userId}/image`"
-                      height="200px" class="rounded-lg">
-                    </v-img>
-                    <v-img v-else
-                      src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"
-                      height="200px" class="rounded-lg">
-                    </v-img>
+                    <v-img v-if="attendee.user?.userId" :src="`${url}/users/${attendee.user?.userId}/image`" height="200px" class="rounded-lg"></v-img>
+                    <v-img v-else src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png" height="200px" class="rounded-lg"></v-img>
                   </v-col>
                 </v-row>
                 <v-card-actions>
-                  <v-btn color="error" variant="flat" @click="reCheckAttendance(attendee)" class="font-weight-bold"
-                    block>
+                  <v-btn color="error" variant="flat" @click="reCheckAttendance(attendee)" class="font-weight-bold" block>
                     ปฏิเสธ
                   </v-btn>
                 </v-card-actions>
@@ -622,7 +612,6 @@ const nextPage = () => {
     </v-row>
   </v-container>
 </template>
-
 
 
 <style scoped>
@@ -649,7 +638,6 @@ const nextPage = () => {
 
 .status-student {
   text-align: center;
-  /* Center-align the text inside the status */
 }
 
 .status-section {
@@ -658,27 +646,23 @@ const nextPage = () => {
 
 .status-number {
   font-size: 28px;
-  /* Larger font size for numbers */
   font-weight: bold;
   color: #333;
 }
 
 .status-label {
   font-size: 14px;
-  /* Smaller font size for description */
   color: #777;
   line-height: 1;
 }
 
 .v-card {
   border-radius: 10px;
-  /* Add rounded corners to cards */
   transition: transform 0.3s;
 }
 
 .v-card:hover {
   transform: translateY(-5px);
-  /* Add hover effect to lift card */
 }
 
 .v-btn {

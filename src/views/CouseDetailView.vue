@@ -19,13 +19,13 @@ const route = useRoute();
 const messageStore = useMessageStore();
 const id = ref(route.params.idCourse);
 const tabs = [
-  { id: 1, title: "Posts" },
-  { id: 2, title: "Members" },
-  { id: 3, title: "Record" },
+  { id: 1, title: "โพสต์" },
+  { id: 2, title: "รายชื่อผู้เรียน/ผู้สอน" },
+  { id: 3, title: "คะแนน" },
 ];
 
 const router = useRouter();
-const tab = ref("Posts");
+const tab = ref("โพสต์");
 const posts = ref<Assignment[]>([]);
 const imageUrls = ref<string[]>([]);
 const imageFiles = ref<File[]>([]);
@@ -58,7 +58,6 @@ onMounted(async () => {
   await attendanceStore.getAttendanceByCourseId(id.value.toString());
   await userStore.getUserByCourseId(id.value.toString());
   await courseStore.getCourseById(id.value.toString());
-  await courseStore.getAllRooms();
   posts.value = assignmentStore.assignments;
   // loader.value = false;
 
@@ -158,7 +157,6 @@ const createPost = async () => {
   console.timeEnd('Validation check');
 
   console.time('Room selection');
-  const room = courseStore.rooms.find((r) => r.roomNumber === roomSelect.value);
   console.timeEnd('Room selection');
 
   console.time('Assignment creation');
@@ -169,7 +167,6 @@ const createPost = async () => {
     assignmentId: 0,
     attdances: [],
     status: "no data",
-    room: room,
     createdDate: new Date(),
     updatedDate: undefined,
     deletedDate: undefined,
@@ -390,7 +387,7 @@ const cancelExportFile = () => {
     <v-container>
 
       <!-- Tab content for posts -->
-      <v-tab-item v-if="tab === 'Posts'" value="Posts">
+      <v-tab-item v-if="tab === 'โพสต์'" value="โพสต์">
         <v-card class="mx-auto" color="primary" max-width="1200" outlined style="padding: 20px">
           <v-card-title>
             <h1 class="text-h5">{{ courseStore.currentCourse?.nameCourses }}</h1>
@@ -487,17 +484,17 @@ const cancelExportFile = () => {
           </v-col>
         </v-row>
         <v-row class="pt-5" v-else>
-          <v-col cols="12" sm="12" md="12">
-            <v-card outlined>
-              <v-card-text>
-                <h2>No posts available</h2>
-              </v-card-text>
-            </v-card>
+          <v-col cols="12" sm="12" md="12" class="d-flex justify-center align-center" style="min-height: 200px;">
+            <div outlined class="d-flex justify-center align-center" style="min-height: 200px;">
+              <p class="text-center" style="color: #999; font-size: 18px; font-weight: 500;">
+                ไม่มีข้อมูลโพสต์
+              </p>
+            </div>
           </v-col>
         </v-row>
       </v-tab-item>
       <!-- tab member -->
-      <v-tab-item v-else-if="tab === 'Members'" value="Members">
+      <v-tab-item v-else-if="tab === 'รายชื่อผู้เรียน/ผู้สอน'" value="รายชื่อผู้เรียน/ผู้สอน">
         <v-card class="mx-auto" color="primary" max-width="1200" outlined style="padding: 20px">
           <v-card-title>
             <h1 class="text-h5">{{ courseStore.currentCourse?.nameCourses }}</h1>
@@ -540,7 +537,7 @@ const cancelExportFile = () => {
               </v-col>
 
               <v-col cols="6" style="text-align: end">
-                <p>{{ userStore.users.length }} Members</p>
+                <p>{{ userStore.users.length }} รายชื่อผู้เรียน/ผู้สอน</p>
               </v-col>
             </v-row>
             <v-row v-for="(member, index) in userStore.users" :key="index">
