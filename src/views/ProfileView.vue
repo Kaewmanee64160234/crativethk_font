@@ -80,7 +80,7 @@ const showConditionImage = () => {
                                         <strong style="color: #093271;">ชั้นปี </strong>{{ userStore.currentUser?.year
                                         }}
                                     </v-col>
-                                    <v-col cols="12" v-if="isStudent">
+                                    <v-col cols="12" v-if="isStudent || isTeacher">
                                         <strong style="color: #093271;">สาขา </strong>{{ userStore.currentUser?.major }}
                                     </v-col>
                                     <v-col cols="12">
@@ -150,11 +150,12 @@ const showConditionImage = () => {
                                     </tbody>
                                     <tbody v-if="isTeacher && courseStore.courses.length > 0">
                                         <tr v-for="(item, index) of courseStore.courses" :key="index">
-                                            <td>{{ item.nameCourses }}</td>
+                                            <td>{{ item.nameCourses + " " + "กลุ่มที่" + " " +
+                                                item.session  }}</td>
                                             <td class="text-center">
-                                                <v-btn size="small" color="primary" @click="showChekingHistory(item)"
-                                                    class="ma-2">
-                                                    ดูรายวิชา
+                                                <v-btn size="small" variant="text" color="#004BBC"
+                                                    style="text-decoration:underline" @click="showChekingHistory(item)" class="ma-2">
+                                                    ดูรายละเอียด
                                                 </v-btn>
                                             </td>
                                         </tr>
