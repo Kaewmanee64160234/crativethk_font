@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { useAttendanceStore } from '../../stores/attendance.store';
+import { ref, computed } from "vue";
+import { useAttendanceStore } from "../../stores/attendance.store";
 
 const attendanceStore = useAttendanceStore();
-const selectedStatus = ref(attendanceStore.editAttendance.attendanceStatus || '');
+const selectedStatus = ref(attendanceStore.editAttendance?.attendanceStatus || "");
 // closeDialog
 const closeDialog = () => {
   attendanceStore.showDialog = false;
@@ -19,36 +19,50 @@ const updateAttendanceStatus = () => {
   attendanceStore.updateAttendanceTeacher(attendanceStore.editAttendance);
   closeDialog();
 };
-
 </script>
 
 <template>
   <!-- Dialog for updating attendance status -->
   <v-dialog v-model="attendanceStore.showDialog" persistent max-width="400px">
     <v-card>
-      <v-card-title>
-        <span class="headline">Update Attendance Status</span>
+      <v-card-title style="text-align: center; font-weight: bold">
+        <span class="headline">แก้ไขสถานะการเช็คชื่อ</span>
       </v-card-title>
+      <v-divider></v-divider>
       <v-card-text>
         <!-- Display user's name and current attendance status -->
         <div>
-          <p><strong>User:</strong> {{attendanceStore.userAttendance.studentId+' '+ attendanceStore.userAttendance.firstName +" "+attendanceStore.userAttendance.lastName }}</p>
-          <p><strong>Current Status:</strong> {{ attendanceStore.editAttendance?.attendanceStatus }}</p>
+          <p>
+            <strong>ชื่อผู้ใช้:</strong>
+            {{
+              attendanceStore.userAttendance.firstName +
+              " " +
+              attendanceStore.userAttendance.lastName
+            }}
+          </p>
+          <p>
+            <strong>สถานะเข้าเรียนปัจจุบัน:</strong>
+            <v-span style="color: red">{{
+              " " + attendanceStore.editAttendance?.attendanceStatus
+            }}</v-span>
+          </p>
         </div>
+        <p style="margin-bottom: 2%">
+          <strong>แก้ไขสถานะเข้าเรียน:</strong>
+        </p>
         <v-select
+          variant="solo"
           v-model="selectedStatus"
-          :items="['present', 'late', 'absent']"
-          label="Select Status"
+          :items="['มาเรียน', 'ไม่มาเรียน', 'มาสาย']"
         ></v-select>
       </v-card-text>
       <v-card-actions>
+        <v-btn color="error" @click="closeDialog">ยกเลิก</v-btn>
         <v-spacer></v-spacer>
-        <v-btn color="error" @click="closeDialog">Cancel</v-btn>
-        <v-btn color="primary" @click="updateAttendanceStatus">Save</v-btn>
+        <v-btn color="primary" @click="updateAttendanceStatus">ยืนยัน</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

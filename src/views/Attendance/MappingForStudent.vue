@@ -26,15 +26,20 @@ onMounted(async () => {
   await assignmentStore.getAssignmentById(route.params.assignmentId.toString());
   console.log(JSON.stringify(assignmentStore.currentAssignment));
   await attendanceStore.getAttendanceByAssignmentId(route.params.assignmentId.toString());
-  await userStore.getUserByCourseId(queryCourseId + '');
+  await userStore.getUserByCourseId(queryCourseId + "");
   attdent.value = [];
-  attdent.value.push(...attendanceStore.attendances!.filter((attend: Attendance) => (attend.user?.studentId === userStore.currentUser?.studentId) && (attend.attendanceImage !== 'noimage.jpg')));
+  attdent.value.push(
+    ...attendanceStore.attendances!.filter(
+      (attend: Attendance) =>
+        attend.user?.studentId === userStore.currentUser?.studentId &&
+        attend.attendanceImage !== "noimage.jpg"
+    )
+  );
 });
-
 
 const reCheckAttendance = async (attendance: Attendance) => {
   try {
-    console.log('Attendance:Ging', attendance);
+    console.log("Attendance:Ging", attendance);
 
     attendance.assignment = assignmentStore.currentAssignment;
     const date = new Date();
@@ -42,15 +47,12 @@ const reCheckAttendance = async (attendance: Attendance) => {
     const assignmentDate = new Date(assignmentStore.currentAssignment!.createdDate!);
     const assignmentTime = assignmentDate.getTime();
     const diff = currentDate - assignmentTime;
-    attendance.attendanceStatus = diff > 900000 ? "late" : "present";
+    attendance.attendanceStatus = diff > 900000 ? "มาสาย" : "มาเรียน";
     attendance.attendanceConfirmStatus = "recheck";
     attendance.user = userStore.currentUser;
     attendance.attendanceScore = 0;
 
-
-
     await attendanceStore.confirmAttendance(attendance);
-
 
     router.push("/courseDetail/" + queryCourseId);
   } catch (error) {
@@ -63,32 +65,47 @@ const goBackToCourseDetail = () => {
 };
 
 const confirmTagging = () => {
-  router.push("/taggingFace/course/" + queryCourseId + "/assignment/" + route.params.assignmentId);
+  router.push(
+    "/taggingFace/course/" + queryCourseId + "/assignment/" + route.params.assignmentId
+  );
 };
 </script>
 <template>
   <v-container class="fill-height" style="margin-top: 5%">
     <!-- Title Row with Back Button -->
     <v-row class="align-center">
-
-
       <!-- Title -->
       <v-col cols="12">
         <h1 class="title mt-5">ตรวจสอบการเข้าเรียน</h1>
       </v-col>
     </v-row>
-    <v-row style="width: 100%;" >
+    <v-row style="width: 100%">
       <!-- Back Button -->
-        <v-btn variant="outlined" color="blue" @click="goBackToCourseDetail" class="back-btn">
-          Go home
-        </v-btn>
-    
+      <v-btn
+        variant="outlined"
+        color="blue"
+        @click="goBackToCourseDetail"
+        class="back-btn"
+      >
+        Go home
+      </v-btn>
     </v-row>
 
     <!-- Conditional rendering for attendance data -->
-    <v-row v-if="userStore.currentUser?.role === 'อาจารย์'" class="row-spacing" style="width: 100%;">
-      <v-col v-for="student in attendanceStore.attendances" :key="student.attendanceId" cols="12" sm="6" md="4" lg="3"
-        xl="3">
+    <v-row
+      v-if="userStore.currentUser?.role === 'อาจารย์'"
+      class="row-spacing"
+      style="width: 100%"
+    >
+      <v-col
+        v-for="student in attendanceStore.attendances"
+        :key="student.attendanceId"
+        cols="12"
+        sm="6"
+        md="4"
+        lg="3"
+        xl="3"
+      >
         <v-card class="pa-3 student-card" outlined>
           <!-- Student Information -->
           <v-row justify="center" align="center" class="row-spacing">
@@ -106,9 +123,15 @@ const confirmTagging = () => {
           </v-row>
           <v-row justify="center" class="mt-2">
             <!-- Student Image -->
-            <v-img :src="`${url}/attendances/image/${student.attendanceImage}`" height="200px" width="auto"
+            <v-img
+              :src="`${url}/attendances/image/${student.attendanceImage}`"
+              height="200px"
+              width="auto"
               class="rounded-lg student-image"
-              :alt="`Student Image for ${student.user ? student.user.firstName : 'Unknown'}`"></v-img>
+              :alt="`Student Image for ${
+                student.user ? student.user.firstName : 'Unknown'
+              }`"
+            ></v-img>
           </v-row>
 
           <!-- Re-check Button -->
@@ -124,9 +147,17 @@ const confirmTagging = () => {
     </v-row>
 
     <!-- No attendance detected -->
-    <v-row v-else class="row-spacing" style="width: 100%;">
-      <v-col v-if="attdent.length > 0" v-for="student in attdent" :key="student.attendanceId" cols="12" sm="6" md="4"
-        lg="3" xl="3">
+    <v-row v-else class="row-spacing" style="width: 100%">
+      <v-col
+        v-if="attdent.length > 0"
+        v-for="student in attdent"
+        :key="student.attendanceId"
+        cols="12"
+        sm="6"
+        md="4"
+        lg="3"
+        xl="3"
+      >
         <v-card class="pa-3 student-card" outlined>
           <!-- Student Information -->
           <v-row justify="center" class="align-center row-spacing">
@@ -144,9 +175,15 @@ const confirmTagging = () => {
           </v-row>
           <v-row justify="center" class="mt-2">
             <!-- Student Image -->
-            <v-img :src="`${url}/attendances/image/${student.attendanceImage}`" height="200px" width="auto"
+            <v-img
+              :src="`${url}/attendances/image/${student.attendanceImage}`"
+              height="200px"
+              width="auto"
               class="rounded-lg student-image"
-              :alt="`Student Image for ${student.user ? student.user.firstName : 'Unknown'}`"></v-img>
+              :alt="`Student Image for ${
+                student.user ? student.user.firstName : 'Unknown'
+              }`"
+            ></v-img>
           </v-row>
 
           <!-- Re-check Button -->

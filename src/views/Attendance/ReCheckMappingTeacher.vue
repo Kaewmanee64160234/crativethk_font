@@ -15,10 +15,10 @@ const userStore = useUserStore();
 const route = useRoute();
 
 const url = import.meta.env.VITE_API_URL;
-const queryCourseId = ref('');
+const queryCourseId = ref("");
 onMounted(async () => {
   const id = route.params.assignmentId;
-  queryCourseId.value = route.params.courseId + '';
+  queryCourseId.value = route.params.courseId + "";
   await attendanceStore.getAttendanceByStatusInAssignment(id + ""); // Assuming this function exists and fetches the attendances
   //get assignment by id
   await assignmentStore.getAssignmentById(id + "");
@@ -30,7 +30,6 @@ onMounted(async () => {
   );
 });
 
-
 const goBackToCourseDetail = () => {
   router.push("/courseDetail/" + queryCourseId.value);
 };
@@ -39,7 +38,7 @@ const goBackToCourseDetail = () => {
 const confirmAttendance = async (attendance: Attendance) => {
   if (confirm("Do you want to confirm this attendance?")) {
     try {
-      attendance.attendanceStatus = "present";
+      attendance.attendanceStatus = "มาเรียน";
       attendance.attendanceConfirmStatus = "confirmed";
       await attendanceStore.confirmAttendanceByTeacher(attendance.attendanceId + "");
       alert("Attendance has been confirmed.");
@@ -52,7 +51,7 @@ const confirmAttendance = async (attendance: Attendance) => {
 //reject student
 const reCheckAttendance = async (attendance: Attendance) => {
   try {
-    attendance.attendanceStatus = "present";
+    attendance.attendanceStatus = "มาเรียน";
     attendance.attendanceConfirmStatus = "recheck";
     await attendanceStore.rejectAttendanceByTeacher(attendance.attendanceId + "");
     alert("Attendance has been recheck.");
@@ -75,14 +74,17 @@ const reCheckAttendance = async (attendance: Attendance) => {
         </v-col>
       </v-row>
 
-
       <v-row>
         <!-- Left column for student list (2/5 of the screen) -->
         <v-col cols="12" md="5" class="student-list-col">
           <v-card class="student-list-card">
             <v-card-title class="student-list-title">รายชื่อนิสิต</v-card-title>
             <v-card-text>
-              <v-row v-for="(member, index) in userStore.users" :key="index" class="align-center student-row">
+              <v-row
+                v-for="(member, index) in userStore.users"
+                :key="index"
+                class="align-center student-row"
+              >
                 <v-col cols="2">
                   <v-avatar size="56">
                     <v-img :src="`${url}/users/${member.userId}/image`"></v-img>
@@ -90,7 +92,9 @@ const reCheckAttendance = async (attendance: Attendance) => {
                 </v-col>
                 <v-col cols="8" class="student-info">
                   <div class="student-name">
-                    {{ member.studentId + " " + member.firstName + " " + member.lastName }}
+                    {{
+                      member.studentId + " " + member.firstName + " " + member.lastName
+                    }}
                   </div>
                 </v-col>
                 <v-col cols="2" class="status-col">
@@ -115,7 +119,12 @@ const reCheckAttendance = async (attendance: Attendance) => {
             </v-card-title>
             <v-card-text>
               <v-row>
-                <v-col cols="12" md="6" v-for="attendee in attendanceStore.attendances" :key="attendee.attendanceId">
+                <v-col
+                  cols="12"
+                  md="6"
+                  v-for="attendee in attendanceStore.attendances"
+                  :key="attendee.attendanceId"
+                >
                   <v-card class="attendee-card" outlined>
                     <v-card-title class="attendee-name">
                       <v-icon small>mdi-circle-small</v-icon>
@@ -123,23 +132,39 @@ const reCheckAttendance = async (attendance: Attendance) => {
                     </v-card-title>
                     <v-row class="attendee-images">
                       <v-col cols="6">
-                        <v-img :src="`${url}/attendances/image/${attendee.attendanceImage}`" height="200px"
-                          class="attendee-img"></v-img>
+                        <v-img
+                          :src="`${url}/attendances/image/${attendee.attendanceImage}`"
+                          height="200px"
+                          class="attendee-img"
+                        ></v-img>
                       </v-col>
                       <v-col cols="6">
-                        <v-img :src="`${url}/users/${attendee.user?.userId}/image`" height="200px"
-                          class="attendee-img"></v-img>
+                        <v-img
+                          :src="`${url}/users/${attendee.user?.userId}/image`"
+                          height="200px"
+                          class="attendee-img"
+                        ></v-img>
                       </v-col>
                     </v-row>
                     <v-card-text class="attendee-status">
                       <div>Attendance Status: {{ attendee.attendanceStatus }}</div>
                     </v-card-text>
                     <v-card-actions>
-                      <v-btn variant="flat" color="warning" class="recheck-btn"
-                        @click="reCheckAttendance(attendee)">Recheck</v-btn>
+                      <v-btn
+                        variant="flat"
+                        color="warning"
+                        class="recheck-btn"
+                        @click="reCheckAttendance(attendee)"
+                        >Recheck</v-btn
+                      >
                       <v-spacer></v-spacer>
-                      <v-btn variant="flat" color="success" class="confirm-btn"
-                        @click="confirmAttendance(attendee)">Confirm</v-btn>
+                      <v-btn
+                        variant="flat"
+                        color="success"
+                        class="confirm-btn"
+                        @click="confirmAttendance(attendee)"
+                        >Confirm</v-btn
+                      >
                     </v-card-actions>
                   </v-card>
                 </v-col>
@@ -151,7 +176,6 @@ const reCheckAttendance = async (attendance: Attendance) => {
     </div>
   </v-container>
 </template>
-
 
 <style scoped>
 .primary-card {
@@ -262,7 +286,6 @@ const reCheckAttendance = async (attendance: Attendance) => {
   font-weight: bold;
 }
 </style>
-
 
 <style scoped>
 .bold-text {
