@@ -204,9 +204,7 @@ const finishCreation = async () => {
     deletedDate: undefined,
   };
   try {
-    // ส่งคำขอสร้าง course
     await courseStore.createCourse(newCourse);
-    console.log("course", newCourse);
     clearCourse();
     for (let i = 0; i < courseStore.files.length; i++) {
       for (let j = 0; j < userStore.users.length; j++) {
