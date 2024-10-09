@@ -51,8 +51,8 @@ const assignmentStore = useAssignmentStore();
 const attendanceStore = useAttendanceStore();
 const isLoading = ref(true); // Add a loading state
 const url = import.meta.env.VITE_API_URL as string;
-const filterOptions = ["Show All", "Show Less Than 50%"];
-const filterOption = ref("Show Less Than 50%");
+const filterOptions = ["แสดงรายชื่อทั้งหมด", "ความถูกต้องน้อยกว่า 50%"];
+const filterOption = ref("ความถูกต้องน้อยกว่า 50%");
 const sortedAttendances = computed(() => {
   return attendanceStore.attendances
     ?.slice()
@@ -62,7 +62,7 @@ const sortedAttendances = computed(() => {
 
 // Filtering attendances based on the selected dropdown option
 const filteredAttendances = computed(() => {
-  if (filterOption.value === "Show Less Than 50%") {
+  if (filterOption.value === "ความถูกต้องน้อยกว่า 50%") {
     return sortedAttendances.value!.filter((attendee) => attendee.attendanceScore! < 50);
   } else {
     return sortedAttendances.value;

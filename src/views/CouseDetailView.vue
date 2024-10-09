@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
-import { useRoute } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import { useAssignmentStore } from "@/stores/assignment.store";
 import CardAssigment from "@/components/assigment/CardAssigment.vue";
 import { useCourseStore } from "@/stores/course.store";
@@ -15,30 +15,48 @@ import { useLoaderStore } from "@/stores/loader.store";
 import { useMessageStore } from "@/stores/message";
 import Swal from "sweetalert2";
 
+// Access the router and route objects
+const router = useRouter();
 const route = useRoute();
 const messageStore = useMessageStore();
+
+// Extract the course ID from the route parameters
 const id = ref(route.params.idCourse);
+
+// Define tabs for navigation
 const tabs = [
   { id: 1, title: "โพสต์" },
   { id: 2, title: "รายชื่อผู้เรียน/ผู้สอน" },
   { id: 3, title: "คะแนน" },
 ];
 
-const tab = ref("โพสต์");
-const posts = ref<Assignment[]>([]);
+// Other variables and logic...
 const assignmentStore = useAssignmentStore();
 const courseStore = useCourseStore();
-const showDialog = ref(false);
 const userStore = useUserStore();
-const url = import.meta.env.VITE_API_URL;
 const attendanceStore = useAttendanceStore();
+const loaderStore = useLoaderStore();
+const showDialog = ref(false);
+const posts = ref<Assignment[]>([]);
 const totalPage = ref(assignmentStore.lastPage);
+
+const tab = ref("โพสต์");
+const url = import.meta.env.VITE_API_URL;
+const nameAssignment = ref("");
+const imageUrls = ref<string[]>([]);
+const capturedImages = ref<string[]>([]);
+const imageFiles = ref<File[]>([]);
+const showCamera = ref(false);
+const videoRef = ref<HTMLVideoElement | null>(null);
+const canvasRef = ref<HTMLCanvasElement | null>(null);
+const assignmentManual = ref(false);
+
 
 const isTeacher = computed(() => userStore.currentUser?.role === "อาจารย์");
 const filteredAssignments = computed(() => {
   // Only include assignments that have corresponding attendance data.
   return assignmentStore.assignments.filter((assignment) =>
-    attendanceStore.attendances.some(
+    attendanceStore.attendances!.some(
       (att) => att.assignment?.assignmentId === assignment.assignmentId
     )
   );
@@ -657,16 +675,7 @@ const showSnackbar = ref(false);
             </v-card-actions>
           </v-card>
 
-          <!-- Snackbar for image limit or empty name error -->
-          <v-snackbar
-            v-model="showSnackbar"
-            color="error"
-            top
-            right
-            timeout="3000"
-          >
-            {{ snackbarMessage }}
-          </v-snackbar>
+        
         </v-dialog>
 
         <v-row class="pt-5" v-if="posts.length > 0">
