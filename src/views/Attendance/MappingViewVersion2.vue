@@ -568,71 +568,57 @@ const nextPage = () => {
   );
 };
 </script>
+
 <template>
   <v-container class="mt-10">
-    <v-card
-          class="mx-auto"
-          color="primary"
-          max-width="1200"
-          outlined
-          style="padding: 20px"
-        >
-          <v-card-title>
-            <h1 class="text-h5">
-              {{ courseStore.currentCourse?.nameCourses }} > {{ assignmentStore.currentAssignment?.nameAssignment }}
-            </h1>
-          </v-card-title>
-        </v-card>
-    <!-- Loading Spinner -->
+    <!-- Page Content for Attendance Checking -->
+    <v-card class="mx-auto" color="primary" max-width="1200" outlined style="padding: 20px">
+      <v-card-title>
+        <h1 class="text-h5">
+         <router-link style="color: aliceblue;"  :to="`/courseDetail/${courseStore.currentCourse?.coursesId}`" > {{ courseStore.currentCourse?.nameCourses }}</router-link> > {{ assignmentStore.currentAssignment?.nameAssignment }}
+        </h1>
+      </v-card-title>
+    </v-card>
+
     <v-row v-if="isLoading">
       <Loader></Loader>
     </v-row>
 
-    <!-- Layout Row for Image Display and Identifications -->
     <v-row v-else style="padding: 20px">
       <v-col cols="12" class="d-flex justify-space-between align-center mb-4">
-        <h1 class="display-1">ตรวจสอบการเช็คชื่อ</h1>
-        <div class="d-flex align-center">
+        <h1 class="display-1 "  >ตรวจสอบการเช็คชื่อ</h1>
+        <div class="d-flex align-end">
           <!-- Navigation Buttons -->
-          <v-btn
-            color="primary"
-            variant="outlined"
-            class="mr-3"
-            @click="goHome"
-          >
-            Go Home
-          </v-btn>
-          <v-btn color="primary" variant="outlined" @click="nextPage">
-            Next Page
-          </v-btn>
-        </div>
-
-        <div class="status-student d-flex align-center">
-          <v-row class="align-center text-center" justify="center">
-            <v-col cols="auto" class="status-section">
-              <div class="status-number">{{ identifications.length }}</div>
-              <div class="status-label">ตรวจจับได้</div>
-            </v-col>
-            <v-divider vertical></v-divider>
-            <v-col cols="auto" class="status-section">
-              <div class="status-number">{{ userStore.users.length }}</div>
-              <div class="status-label">จำนวนนิสิตทั้งหมด</div>
-            </v-col>
-          </v-row>
+          <v-btn color="primary"  style="color: rgba(9, 50, 113, 1); width: 150px;"  @click="nextPage">ถัดไป</v-btn>
         </div>
       </v-col>
 
-      <!-- Filter Dropdown -->
-      <v-col cols="auto">
-        <v-select
-          v-model="filterOption"
-          :items="filterOptions"
-          label="Filter Attendances"
-          variant="solo"
-          dense
-        ></v-select>
-      </v-col>
+      <!-- Filter Dropdown and Status in the Same Row -->
+      <v-row class="d-flex justify-space-between align-center">
+        <!-- Dropdown on the left side -->
+        <v-col cols="auto">
+          <v-select v-model="filterOption" :items="filterOptions" label="แสดงรายชื่อทั้งหมด" variant="solo" dense></v-select>
+        </v-col>
 
+        <!-- Status on the right side -->
+        <v-col cols="auto">
+          <div class="status-student d-flex align-end">
+            <v-row class="align-center text-center" justify="center">
+              <v-col cols="auto" class="status-section">
+                <div class="status-number">{{ identifications.length }}</div>
+                <div class="status-label correct-text">ตรวจจับได้</div>
+              </v-col>
+              <v-divider vertical></v-divider>
+              <v-col cols="auto" class="status-section">
+                <div class="status-number">{{ userStore.users.length }}</div>
+                <div class="status-label" style="color: rgba(0, 75, 188, 1);" >จำนวนนิสิตทั้งหมด</div>
+              </v-col>
+            </v-row>
+          </div>
+        </v-col>
+      </v-row>
+
+      <!-- Attendance Cards -->
       <v-col cols="12" class="pt-5">
         <v-container>
           <v-row>
@@ -648,21 +634,17 @@ const nextPage = () => {
                 class="mb-3 hover-card"
                 :style="{
                   padding: '20px',
-                  backgroundColor: attendee.attendanceScore! >= 50 ? '#F0FDF4' : '#FEF2F2',
+                  backgroundColor: attendee.attendanceScore! >= 50 ? '#F1F1F1' : '#FEF2F2',
                   boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
                   borderRadius: '10px'
                 }"
               >
                 <v-row justify="center">
-                  <v-card-title class="bold-text mt-2 text-center">
+                  <v-card-title class="bold-text mt-2 text-center ellipsis">
                     {{
                       attendee.user
-                        ? attendee.user?.studentId +
-                          " " +
-                          attendee.user?.firstName +
-                          " " +
-                          attendee.user.lastName
-                        : "ไม่พบในฐานข้อมูล"
+                        ? attendee.user?.studentId + ' ' + attendee.user?.firstName 
+                        : 'ไม่พบในฐานข้อมูล'
                     }}
                   </v-card-title>
                 </v-row>
@@ -670,7 +652,7 @@ const nextPage = () => {
                   <v-col cols="6">
                     <v-img
                       :src="`${url}/attendances/image/${attendee.attendanceImage}`"
-                      height="180px"
+                      height="200px"
                       class="rounded-lg"
                       style="border-radius: 10px"
                     ></v-img>
@@ -679,14 +661,14 @@ const nextPage = () => {
                     <v-img
                       v-if="attendee.user?.userId"
                       :src="`${url}/users/${attendee.user?.userId}/image`"
-                      height="180px"
+                      height="200px"
                       class="rounded-lg"
                       style="border-radius: 10px"
                     ></v-img>
                     <v-img
                       v-else
                       src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"
-                      height="180px"
+                      height="200px"
                       class="rounded-lg"
                       style="border-radius: 10px"
                     ></v-img>
@@ -694,13 +676,11 @@ const nextPage = () => {
                 </v-row>
                 <v-row justify="center">
                   <v-card-subtitle
-                    :class="attendee.attendanceScore! >= 50 ? 'correct-text' : 'incorrect-text'"
+                    :class="attendee.attendanceScore! >= 50 ? 'correct-text mb-3' : 'incorrect-text mb-3'"
+                    style="font-weight: bolder;"
                   >
-                    {{
-                      attendee.attendanceScore! >= 50
-                        ? "ความถูกต้อง"
-                        : "ไม่ถูกต้อง"
-                    }}
+                   ความถูกต้อง
+
                     {{ attendee.attendanceScore }}%
                   </v-card-subtitle>
                 </v-row>
@@ -728,6 +708,7 @@ const nextPage = () => {
 <style scoped>
 .bold-text {
   font-weight: bold;
+  font-size: 15pt;
 }
 
 .correct-text {
@@ -755,7 +736,8 @@ const nextPage = () => {
 
 .status-label {
   font-size: 14px;
-  color: #777;
+  font-weight: bold;
+  /* color: #777; */
 }
 
 .v-card {
@@ -774,4 +756,13 @@ const nextPage = () => {
 .v-btn:hover {
   background-color: #f5f5f5;
 }
+
+/* Ellipsis for overflowing text */
+.ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 </style>
+
+

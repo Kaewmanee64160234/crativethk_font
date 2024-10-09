@@ -28,6 +28,8 @@ onMounted(async () => {
   await courseStore.getCourseById(
     assignmentStore.currentAssignment!.course!.coursesId.toString()
   );
+  await attendanceStore.getAttendanceByAssignmentId(route.params.assignmentId.toString());
+     
 });
 
 
@@ -65,81 +67,85 @@ const reCheckAttendance = async (attendance: Attendance) => {
 
 <template>
   <v-container fluid class="my-5">
-    <div style="margin-top: 5%; margin-left: 5%">
-      <v-row>
-        <v-col cols="12">
-          <v-btn @click="goBackToCourseDetail" color="primary" class="mr-4">
-            <v-icon>mdi-arrow-left</v-icon>
-            กลับ
-          </v-btn>
-        </v-col>
-      </v-row>
+    <v-card class="mx-auto mt-9" color="primary" max-width="1200" outlined style="padding: 20px">
+      <v-card-title>
+        <h1 class="text-h5">
+          <router-link :to="`/courseDetail/${courseStore.currentCourse?.coursesId}`" style="color: aliceblue;">
+            {{ courseStore.currentCourse?.nameCourses }}
+          </router-link>
+          > 
+          <router-link :to="`/mapping2/assignment/${assignmentStore.currentAssignment?.assignmentId}/course/${route.params.courseId}`" style="color: aliceblue;">
+            {{ assignmentStore.currentAssignment?.nameAssignment }}
+          </router-link>
+          > สรุปการเช็คชื่อ
+        </h1>
+      </v-card-title>
+    </v-card>
 
-
-      <v-row>
-        <!-- Left column for student list (2/5 of the screen) -->
-        <v-col cols="12" md="5" class="student-list-col">
-          <v-card class="student-list-card">
-            <v-card-title class="student-list-title">รายชื่อนิสิต</v-card-title>
+    <div class="mt-5">
+      <v-row class="ml-10">
+        <!-- Left column for the student list -->
+        <v-col cols="12" md="5">
+          <v-card outlined>
+            <v-card-title>รายชื่อนิสิต</v-card-title>
             <v-card-text>
-              <v-row v-for="(member, index) in userStore.users" :key="index" class="align-center student-row">
+              <v-row v-for="(member, index) in userStore.users" :key="index" class="align-center">
                 <v-col cols="2">
                   <v-avatar size="56">
                     <v-img :src="`${url}/users/${member.userId}/image`"></v-img>
                   </v-avatar>
                 </v-col>
-                <v-col cols="8" class="student-info">
-                  <div class="student-name">
-                    {{ member.studentId + " " + member.firstName + " " + member.lastName }}
+                <v-col cols="8">
+                  <div>
+                    {{ member.studentId }} {{ member.firstName }} {{ member.lastName }}
                   </div>
                 </v-col>
-                <v-col cols="2" class="status-col">
-                  <div class="student-status">
-                    {{ member.status }}
-                  </div>
+                <v-col cols="2" class="text-center" style="font-weight: bolder;" >
+                  {{ 
+  attendanceStore.attendances?.find((attendance) => attendance.user?.userId === member.userId)?.attendanceStatus === 'present' 
+    ? 'มาเรียน' 
+    : attendanceStore.attendances?.find((attendance) => attendance.user?.userId === member.userId)?.attendanceStatus === 'late' 
+      ? 'มาสาย' 
+      : 'ไม่มาเรียน' 
+}}
+
                 </v-col>
               </v-row>
             </v-card-text>
           </v-card>
         </v-col>
 
-        <v-col cols="12" md="7" class="attendance-col">
-          <v-card class="attendance-card">
-            <v-card-title class="attendance-title">
-              <span>เช็คชื่อ</span>
-              <!-- <div class="attendance-status-header">
-                <span>มา {{ countPresent.length }} </span>
-                <v-divider vertical></v-divider>
-                <span>รอดำเนินการ {{countRecheck.length  }}</span>
-              </div> -->
-            </v-card-title>
+        <!-- Right column for attendance details -->
+        <v-col cols="12" md="7">
+          <v-card outlined>
+            <v-card-title>เช็คชื่อ</v-card-title>
             <v-card-text>
               <v-row>
                 <v-col cols="12" md="6" v-for="attendee in attendanceStore.attendances" :key="attendee.attendanceId">
-                  <v-card class="attendee-card" outlined>
-                    <v-card-title class="attendee-name">
-                      <v-icon small>mdi-circle-small</v-icon>
-                      {{ attendee.user?.studentId + " " + attendee.user?.firstName }}
+                  <v-card class="mb-4 attendee-card" outlined>
+                    <v-card-title class="text-center">
+                      {{ attendee.user?.studentId }} {{ attendee.user?.firstName }} {{ attendee.user?.lastName }}
                     </v-card-title>
-                    <v-row class="attendee-images">
+                    <v-row>
                       <v-col cols="6">
-                        <v-img :src="`${url}/attendances/image/${attendee.attendanceImage}`" height="200px"
-                          class="attendee-img"></v-img>
+                        <v-img :src="`${url}/attendances/image/${attendee.attendanceImage}`" height="150px" class="rounded-img"></v-img>
                       </v-col>
                       <v-col cols="6">
-                        <v-img :src="`${url}/users/${attendee.user?.userId}/image`" height="200px"
-                          class="attendee-img"></v-img>
+                        <v-img :src="`${url}/users/${attendee.user?.userId}/image`" height="150px" class="rounded-img"></v-img>
                       </v-col>
                     </v-row>
-                    <v-card-text class="attendee-status">
-                      <div>Attendance Status: {{ attendee.attendanceStatus }}</div>
+                    <v-card-text class="text-center">
+                      <div>สถานะการเช็คชื่อ:  {{
+    attendee.attendanceStatus === 'present' 
+      ? 'มาเรียน' 
+      : attendee.attendanceStatus === 'late' 
+        ? 'มาสาย' 
+        : 'ไม่มาเรียน'
+  }}</div>
                     </v-card-text>
-                    <v-card-actions>
-                      <v-btn variant="flat" color="warning" class="recheck-btn"
-                        @click="reCheckAttendance(attendee)">Recheck</v-btn>
-                      <v-spacer></v-spacer>
-                      <v-btn variant="flat" color="success" class="confirm-btn"
-                        @click="confirmAttendance(attendee)">Confirm</v-btn>
+                    <v-card-actions class="justify-center">
+                      <v-btn class="mx-2" variant="flat"  color="error" @click="rejectAttendance(attendee)">ปฏิเสธ</v-btn>
+                      <v-btn class="mx-2" variant="flat"  color="success" @click="confirmAttendance(attendee)">ยืนยัน</v-btn>
                     </v-card-actions>
                   </v-card>
                 </v-col>
@@ -154,125 +160,60 @@ const reCheckAttendance = async (attendance: Attendance) => {
 
 
 <style scoped>
-.primary-card {
-  background-color: #f5f5f5;
-  padding: 20px;
-}
-
-.primary-card-title {
-  color: #fff;
-  text-align: center;
-}
-
-.student-list-col {
-  padding-right: 16px;
-}
-
-.student-list-card {
-  padding: 16px;
-  background-color: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.student-list-title {
-  font-size: 1.5rem;
+.v-card-title {
+  font-size: 1.25rem;
   font-weight: bold;
-  margin-bottom: 12px;
-  text-align: center;
 }
 
-.student-row {
+.v-avatar {
+  border-radius: 50%;
+}
+
+.v-card {
+  background: #ffffff;
+  border-radius: 8px;
+}
+
+.v-card-text {
+  padding: 16px;
+}
+
+.v-card-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.v-btn {
+  text-transform: none;
+  font-weight: bold;
+  min-width: 100px;
+}
+
+.mb-4 {
+  margin-bottom: 16px;
+}
+
+.align-center {
   align-items: center;
   padding: 8px 0;
-  border-bottom: 1px solid #e0e0e0;
 }
 
-.student-info {
-  display: flex;
-  align-items: center;
-  font-size: 1rem;
-}
-
-.student-status {
+.text-center {
   text-align: center;
-  font-weight: bold;
 }
 
-.attendance-col {
-  padding-left: 16px;
-}
-
-.attendance-card {
-  padding: 16px;
-  background-color: #ffffff;
+.rounded-img {
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.attendance-title {
-  display: flex;
-  justify-content: space-between;
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-bottom: 12px;
-}
-
-.attendance-status-header {
-  display: flex;
-  align-items: center;
+  object-fit: cover;
 }
 
 .attendee-card {
-  background-color: rgb(237, 237, 237);
+  background-color: #f5f5f5;
   padding: 16px;
-  border-radius: 8px;
-  margin-bottom: 16px;
   transition: box-shadow 0.3s;
 }
 
 .attendee-card:hover {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.attendee-name {
-  font-size: 1.25rem;
-  font-weight: bold;
-  text-align: center;
-}
-
-.attendee-images {
-  margin-top: 12px;
-}
-
-.attendee-img {
-  border-radius: 8px;
-  object-fit: cover;
-}
-
-.attendee-status {
-  margin-top: 8px;
-  font-size: 1rem;
-  text-align: center;
-}
-
-.recheck-btn,
-.confirm-btn {
-  text-transform: none;
-  font-weight: bold;
-}
-</style>
-
-
-<style scoped>
-.bold-text {
-  font-weight: bold;
-}
-
-.vertical-divider {
-  border-left: 1px solid #e0e0e0;
-  /* สีของเส้นแบ่ง */
-  height: auto;
-  /* ให้สูงตามความสูงของ col */
 }
 </style>
