@@ -207,19 +207,19 @@ function float32ArrayToBase64(float32Array: any) {
 
               <!-- Major -->
               <v-col cols="6">
-                <v-combobox label="สาขา" :items="['วิทยาการคอมพิวเตอร์', 'เทคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจดทัล', 'วิศวกรรมซอฟต์แวร์', 'ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ']"
+                <v-select label="สาขา" :items="['วิทยาการคอมพิวเตอร์', 'เทคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจดทัล', 'วิศวกรรมซอฟต์แวร์', 'ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ']"
                   dense solo outlined rounded required v-model="userStore.editUser.major" 
                   :rules="[ 
                     (v) => !!v || 'โปรดเลือกสาขา',
                     (v) => ['วิทยาการคอมพิวเตอร์', 'เทคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจดทัล', 'วิศวกรรมซอฟต์แวร์', 'ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ'].includes(v) || 'โปรดเลือกสาขาจากรายการที่ให้ไว้'
                   ]">
-                </v-combobox>
+                </v-select>
               </v-col>
 
               <!-- Status -->
               <v-col cols="12">
-                <v-combobox label="สถานะภาพ" :items="['กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา']" dense solo outlined rounded required v-model="userStore.editUser.status">
-                </v-combobox>
+                <v-select label="สถานะภาพ" :items="['กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา']" dense solo outlined rounded required v-model="userStore.editUser.status">
+                </v-select>
               </v-col>
             </v-row>
           </v-col>

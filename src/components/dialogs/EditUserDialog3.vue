@@ -91,13 +91,13 @@ if (!userStore.editUser.role) {
               </v-col>
               <!-- Status -->
               <v-col cols="6">
-                <v-combobox label="สถานะภาพ" :items="['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง']" dense solo outlined
+                <v-select label="สถานะภาพ" :items="['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง']" dense solo outlined
                   rounded required v-model="userStore.editUser.status" 
                   :rules="[
                     (v) => !!v || 'โปรดเลือกสถานะภาพ',
                     (v) => ['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง'].includes(v) || 'โปรดเลือกสถานะภาพจากรายการที่ให้ไว้'
                   ]">
-                </v-combobox>
+                </v-select>
               </v-col>
             </v-row>
           </v-col>
