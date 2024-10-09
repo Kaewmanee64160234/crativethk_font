@@ -51,6 +51,11 @@ async function save() {
     showSnackbar("โปรดกรอกชั้นปีให้ถูกต้อง");
     return;
   }
+  // check if email is empty and follows the email format
+  else if (!userStore.editUser.email || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(userStore.editUser.email)) {
+    showSnackbar('โปรดกรอกอีเมลให้ถูกต้อง');
+    return;
+  }
   //check if major is empty and not วิทยาการคอมพิวเตอร์, เมคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจดทัล, วิศวกรรมซอฟต์แวร์, ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ
   else if (
     !userStore.editUser.major ||
@@ -76,6 +81,12 @@ async function save() {
     )
   ) {
     showSnackbar("โปรดเลือกสถานะภาพที่ถูกต้อง");
+    return;
+  }
+  //checkStudentIdDuplicate
+  const studentIdDuplicate = await userStore.checkStudentIdDuplicate(userStore.editUser.studentId);
+  if (studentIdDuplicate) {
+    showSnackbar('รหัสนิสิตนี้ถูกใช้งานแล้ว');
     return;
   }
   await userStore.saveUser();
@@ -144,24 +155,16 @@ function float32ArrayToBase64(float32Array: any) {
 <template>
   <v-container>
     <v-row justify="center">
-      <!-- Adjusted card width to fit better -->
-      <v-card class="mx-auto elevation-3" style="width: 40vw; padding: 30px; border-radius: 15px;">
-        <v-card-title class="pb-0" style="font-size: 24px; font-weight: 600;">แก้ไขผู้ใช้นิสิต</v-card-title>
+      <v-card class="mx-auto elevation-3" style="width: 50vw; padding: 30px; border-radius: 15px;">
+        <v-card-title class="pb-0" style="font-size: 24px; font-weight: 600;">แก้ไขข้อมูลนิสิต</v-card-title>
         <v-divider class="my-4"></v-divider>
 
         <v-row>
           <!-- Form Column -->
           <v-col cols="12">
             <v-row>
-              <!-- Student ID -->
-              <v-col cols="12">
-                <v-text-field label="รหัสนิสิต" dense solo outlined rounded required
-                  v-model="userStore.editUser.studentId"
-                  :rules="[(v: any) => !!v || 'โปรดกรอกรหัสนิสิต', (v: any) => /^[0-9]{8}$/.test(v) || 'โปรดกรอกข้อมูลเฉพาะตัวเลข 8 หลัก']">
-                </v-text-field>
-              </v-col>
               <!-- First Name -->
-              <v-col cols="12">
+              <v-col cols="6">
                 <v-text-field label="ชื่อ" dense solo outlined rounded required v-model="userStore.editUser.firstName"
                   :rules="[ 
                     (v) => !!v || 'โปรดกรอกชื่อ',
@@ -171,31 +174,48 @@ function float32ArrayToBase64(float32Array: any) {
                 </v-text-field>
               </v-col>
               <!-- Last Name -->
-              <v-col cols="12">
+              <v-col cols="6">
                 <v-text-field label="นามสกุล" dense solo outlined rounded required v-model="userStore.editUser.lastName"
-                  :rules="[
+                  :rules="[ 
                     (v) => !!v || 'โปรดกรอกนามสกุล',
                     (v) => /^[ก-๙\s]+$/.test(v) || 'นามสกุลต้องไม่เป็นตัวเลขและต้องเป็นภาษาไทยเท่านั้น',
                     (v) => v.length <= 100 || 'นามสกุลต้องไม่เกิน 100 ตัวอักษร'
                   ]">
                 </v-text-field>
               </v-col>
-              <!-- Year -->
+
+              <!-- Email (disabled) -->
               <v-col cols="12">
-                <v-text-field label="ชั้นปี" dense solo outlined rounded required v-model="userStore.editUser.year"
-                  :rules="[(v:any) => !!v || 'โปรดใส่ชั้นปีเช่น 63, 64, 65', (v:any) => /^[0-9]{2}$/.test(v) || 'โปรดกรอกข้อมูลเฉพาะตัวเลข 2 หลัก']">
+                <v-text-field label="อีเมล" dense solo outlined rounded required v-model="userStore.editUser.email"
+                  disabled
+                  :rules="[ 
+                    (v) => !!v || 'โปรดกรอกอีเมล', 
+                    (v) => /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(v) || 'กรอกอีเมลให้ถูกต้อง'
+                  ]">
                 </v-text-field>
               </v-col>
+
+              <!-- Year -->
+              <v-col cols="6">
+                <v-text-field label="ชั้นปี" dense solo outlined rounded required v-model="userStore.editUser.year"
+                  :rules="[ 
+                    (v) => !!v || 'โปรดใส่ชั้นปีเช่น 63, 64, 65',
+                    (v) => /^[0-9]{2}$/.test(v) || 'โปรดกรอกข้อมูลเฉพาะตัวเลข 2 หลัก'
+                  ]">
+                </v-text-field>
+              </v-col>
+
               <!-- Major -->
-              <v-col cols="12">
+              <v-col cols="6">
                 <v-combobox label="สาขา" :items="['วิทยาการคอมพิวเตอร์', 'เทคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจดทัล', 'วิศวกรรมซอฟต์แวร์', 'ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ']"
                   dense solo outlined rounded required v-model="userStore.editUser.major" 
                   :rules="[ 
-                    (v:any) => !!v || 'โปรดเลือกสาขา',
-                    (v:any) => ['วิทยาการคอมพิวเตอร์', 'เทคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจดทัล', 'วิศวกรรมซอฟต์แวร์', 'ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ'].includes(v) || 'โปรดเลือกสาขาจากรายการที่ให้ไว้'
+                    (v) => !!v || 'โปรดเลือกสาขา',
+                    (v) => ['วิทยาการคอมพิวเตอร์', 'เทคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจดทัล', 'วิศวกรรมซอฟต์แวร์', 'ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ'].includes(v) || 'โปรดเลือกสาขาจากรายการที่ให้ไว้'
                   ]">
                 </v-combobox>
               </v-col>
+
               <!-- Status -->
               <v-col cols="12">
                 <v-combobox label="สถานะภาพ" :items="['กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา']" dense solo outlined rounded required v-model="userStore.editUser.status">
@@ -206,12 +226,12 @@ function float32ArrayToBase64(float32Array: any) {
         </v-row>
 
         <!-- Card Actions (Buttons) -->
-        <v-card-actions class="justify-end mt-4">
-          <v-btn color="primary" text="บันทึก" rounded depressed class="mr-4" @click="save">
-            บันทึก
-          </v-btn>
-          <v-btn text="ยกเลิก" rounded outlined color="grey" @click="cancel">
+        <v-card-actions class="justify-space-between mt-4">
+          <v-btn text color="red" rounded outlined class="ml-4" style="padding: 12px 24px; font-size: 16px;" @click="cancel">
             ยกเลิก
+          </v-btn>
+          <v-btn color="blue" text="ยืนยัน" rounded class="mr-4" style="padding: 12px 24px; font-size: 16px;" @click="save">
+            ยืนยัน
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -228,6 +248,31 @@ function float32ArrayToBase64(float32Array: any) {
 </template>
 
 <style scoped>
+.v-card {
+  background-color: #fff;
+  border-radius: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.v-text-field,
+.v-combobox {
+  background-color: #f4f6f8;
+  border-radius: 8px;
+}
+
+.v-btn {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.v-card-actions {
+  padding: 0 16px;
+}
+
+.v-snackbar {
+  font-size: 14px;
+  font-weight: bold;
+}
 /* Styling for fields and layout */
 .v-card {
   background-color: #fff;

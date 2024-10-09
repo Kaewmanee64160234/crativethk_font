@@ -144,6 +144,13 @@ function searchMajors(major: string) {
   });
 }
 
+//search statuses
+function searchStatus(status: string) {
+  return http.get("/users/search/status", {
+    params: { status },
+  });
+}
+
 //get user imageProfile by id
 function getUserImage(id: number) {
   return http.get(`/users/profileImage/${id}`);
@@ -179,7 +186,49 @@ function getTeachers() {
   return http.get("/users/teachers"); // Assuming your API base URL is correctly set up
 }
 
+  //check email duplicate
+  function checkEmailDuplicate(email: string) {
+    return http.get(`/users/email/${email}`, {
+      params: { email },
+    });
+  }
+
+  //check studentId duplicate
+  function checkStudentIdDuplicate(studentId: string) {
+    return http.get(`/users/studentId/${studentId}`, {
+      params: { studentId },
+    });
+  }
+
+   //getUserpagination
+    function getUserPagination(page: number, limit: number) {
+      return http.get(`/users/pagination`, {
+        params: { page, limit },
+      });
+    } 
+
+   //getStudent by role == นิสิต
+    function getStudent() {
+      return http.get("/users/students");
+    }
+  //get teacher by role == อาจารย์
+    function getTeacher() {
+      return http.get("/users/teachers");
+    }
+  
+  //get admin by role == แอดมิน
+    function getAdmin() {
+      return http.get("/users/admins");
+    }
+
 export default {
+  searchStatus,
+  getAdmin,
+  getTeacher,
+  getStudent,
+  getUserPagination,
+  checkStudentIdDuplicate,
+  checkEmailDuplicate,
   getTeachers,
   searchMajors,
   searchYears,

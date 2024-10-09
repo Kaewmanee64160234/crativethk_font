@@ -374,6 +374,9 @@ async function save() {
           }
 
           await userStore.getUsersById(userStore.currentUser?.userId!);
+        } else if (selectedTeacherName.value == '') {
+          showDialog.value = true;
+          showSnackbar('โปรดใส่ชื่ออาจารย์ที่ต้องการส่งรูปภาพ');
         } else {
           console.log("Face descriptors do not match.");
           await close();
@@ -434,6 +437,22 @@ async function save() {
                 await notiStore.createNotiforupdate(formData);
                 console.log('Notification created successfully.');
 
+                // Send an email to the selected teacher
+                if (selectedTeacher.value) {
+                  const teacher = teachers.value.find((t) => t.userId === selectedTeacher.value);
+                  if (teacher) {
+                    notiStore.sendEmailToTeacher(teacher.firstName, teacher.lastName, userStore?.currentUser!)
+                      .then(() => {
+                        showSnackbar('อีเมลถูกส่งไปยังอาจารย์แล้ว', 'success');
+                      })
+                      .catch((error) => {
+                        console.error('Failed to send email:', error);
+                        showSnackbar('การส่งอีเมลล้มเหลว', 'error');
+                      });
+                  }
+                } else {
+                  showSnackbar('กรุณาเลือกอาจารย์ที่ต้องการส่งรูปภาพ', 'error');
+                }
                 Swal.fire('อัปโหลดรูปภาพสำเร็จ', 'ระบบกำลังประมวลผลข้อมูล', 'success');
               } catch (error) {
                 console.error("Failed to create notification:", error);
@@ -607,15 +626,18 @@ const confirmTeacherSelection = () => {
   if (selectedTeacher.value) {
     showTeacherDialog.value = false;
   } else {
-    Swal.fire({
-      title: 'เลือกอาจารย์',
-      text: 'กรุณาเลือกอาจารย์ที่ต้องการส่งรูปภาพ',
-      icon: 'warning',
-      confirmButtonText: 'ตกลง',
-    });
+    showSnackbar('กรุณาเลือกอาจารย์ที่ต้องการส่งรูปภาพ');
   }
 };
-
+// Snackbar state
+const snackbarVisible = ref(false);
+const snackbarMessage = ref('');
+const snackbarColor = ref('error');
+function showSnackbar(message: string, color: string = 'error') {
+  snackbarMessage.value = message;
+  snackbarColor.value = color;
+  snackbarVisible.value = true;
+}
 // clear selectedTeacherName
 const clearSelectedTeacher = () => {
   selectedTeacher.value = null;
@@ -679,8 +701,8 @@ const clearSelectedTeacher = () => {
                 :rules="uploadRules"></v-file-input>
             </v-col>
           </v-row>
-           <!-- Button to Select Teacher -->
-           <v-row>
+          <!-- Button to Select Teacher -->
+          <v-row>
             <v-col cols="12" class="mt-4">
               <v-text style="padding-right: 1%;">เลือกครูที่จะส่งรูปภาพ: </v-text>
               <v-btn color="primary" @click="showTeacherDialog = true">เลือกอาจารย์</v-btn>
@@ -691,17 +713,13 @@ const clearSelectedTeacher = () => {
               <v-text style="padding-right: 2%;">อาจารย์ที่เลือก: {{ selectedTeacherName }}</v-text>
             </v-col>
           </v-row>
-         <!-- Teacher Selection Dialog -->
-         <v-dialog v-model="showTeacherDialog" max-width="500px">
+          <!-- Teacher Selection Dialog -->
+          <v-dialog v-model="showTeacherDialog" max-width="500px">
             <v-card>
               <v-card-title>เลือกอาจารย์</v-card-title>
               <v-card-text>
                 <v-list>
-                  <v-list-item
-                    v-for="teacher in teachers"
-                    :key="teacher.userId"
-                    @click="selectTeacher(teacher)"
-                  >
+                  <v-list-item v-for="teacher in teachers" :key="teacher.userId" @click="selectTeacher(teacher)">
                     <v-list-item-content>
                       <v-list-item-title>{{ teacher.firstName }} {{ teacher.lastName }}</v-list-item-title>
                     </v-list-item-content>
@@ -723,11 +741,17 @@ const clearSelectedTeacher = () => {
               </v-btn>
             </v-col>
           </v-row>
-
         </v-card-text>
       </v-card>
     </v-dialog>
   </v-container>
+  <!-- Snackbar for showing errors -->
+  <v-snackbar v-model="snackbarVisible" :color="snackbarColor" top right :timeout="3000">
+    {{ snackbarMessage }}
+    <template v-slot:actions>
+      <v-btn color="white" @click="snackbarVisible = false">Close</v-btn>
+    </template>
+  </v-snackbar>
 </template>
 
 <style scoped>

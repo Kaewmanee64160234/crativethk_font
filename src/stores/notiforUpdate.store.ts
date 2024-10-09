@@ -83,9 +83,17 @@ export const useNotiforupdate = defineStore("notiforupdateStore", () => {
       console.log(error);
     }
   }
-
+  const sendEmailToTeacher = async (teacherFirstName: string, teacherLastName: string, userSender: User) => {
+    try {
+      await notiforupdateService.sendEmailToTeacher(teacherFirstName, teacherLastName, userSender);
+      console.log('Email sent successfully');
+    } catch (error) {
+      console.error('Failed to send email:', error);
+    }
+  }
 
   return {
+    sendEmailToTeacher,
     notiforupdates, // Make sure this is returned so the list can be used in components
     currentNotiforupdate,
     fetchAllNotifications,

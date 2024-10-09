@@ -23,57 +23,63 @@ async function loadModels() {
 }
 
 async function save() {
-    // check if teacherId is empty and not 8 digits
-    // if (!userStore.editUser.teacherId || !/^[0-9]{8}$/.test(userStore.editUser.teacherId)) {
-    //     showSnackbar('โปรดกรอกรหัสอาจารย์ 8 หลัก');
-    //     return;
-    if (!userStore.editUser.firstName || !userStore.editUser.lastName ||
+  // check if teacherId is empty and not 8 digits
+  // if (!userStore.editUser.teacherId || !/^[0-9]{8}$/.test(userStore.editUser.teacherId)) {
+  //     showSnackbar('โปรดกรอกรหัสอาจารย์ 8 หลัก');
+  //     return;
+  if (!userStore.editUser.firstName || !userStore.editUser.lastName ||
     !/^[ก-๙\s]+$/.test(userStore.editUser.firstName) ||
     !/^[ก-๙\s]+$/.test(userStore.editUser.lastName) ||
     userStore.editUser.firstName.length > 100 ||
-    userStore.editUser.lastName.length > 100) {      
+    userStore.editUser.lastName.length > 100) {
     showSnackbar('โปรดกรอกชื่อและนามสกุลเป็นภาษาไทย และต้องไม่เกิน 100 ตัวอักษร');
     return;
-    }
-    // check if role is not "อาจารย์"
-    else if (userStore.editUser.role !== 'อาจารย์') {
-        showSnackbar('โปรดเลือกตำแหน่งที่ถูกต้อง');
-        return;
-    }
-
+  }
+  else if (
+    !userStore.editUser.major ||
+    ![
+      "วิทยาการคอมพิวเตอร์",
+      "เทคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจดทัล",
+      "วิศวกรรมซอฟต์แวร์",
+      "ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ",
+    ].includes(userStore.editUser.major)
+  ) {
+    showSnackbar("โปรดเลือกสาขาให้ถูกต้อง");
+    return;
   }
   // check if role is not "อาจารย์"
-  // else if (userStore.editUser.role !== 'อาจารย์') {
-  //     showSnackbar('โปรดเลือกตำแหน่งที่ถูกต้อง');
-  //     return;
-  // }
-
-  // check if status is not valid
+  else if (userStore.editUser.role !== 'อาจารย์') {
+    showSnackbar('โปรดเลือกตำแหน่งที่ถูกต้อง');
+    return;
+  }
   else if (!['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง'].includes(userStore.editUser.status ?? '')) {
     showSnackbar('โปรดเลือกสถานะภาพที่ถูกต้อง');
     return;
   }
   // check if email is empty and follows the email format
   else if (!userStore.editUser.email || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(userStore.editUser.email)) {
-      showSnackbar('โปรดกรอกอีเมลให้ถูกต้อง');
-      return;
+    showSnackbar('โปรดกรอกอีเมลให้ถูกต้อง');
+    return;
   }
-  // check if files are present
-  // else if (!userStore.editUser.files || userStore.editUser.files.length === 0) {
-  //     showSnackbar('โปรดอัปโหลดรูปภาพ 1 รูป');
-  //     return;
-  // }
-
-  // Proceed to save the user if all validations pass
+  //checkEmailDuplicate
+  const emailDuplicate = await userStore.checkEmailDuplicate(userStore.editUser.email);
+  if (emailDuplicate) {
+    showSnackbar('อีเมลนี้ถูกใช้งานแล้ว');
+    return;
+  }
   await userStore.saveUser();
   await userStore.resetUser();
   await userStore.closeDialog();
 }
 
-async function cancel() {
-  userStore.resetUser();
-  userStore.closeDialog();
-}
+// check if role is not "อาจารย์"
+// else if (userStore.editUser.role !== 'อาจารย์') {
+//     showSnackbar('โปรดเลือกตำแหน่งที่ถูกต้อง');
+//     return;
+// }
+
+// check if status is not valid
+
 
 const onImageError = (event: any) => {
   event.target.src = 'path_to_default_image'; // Provide the path to a default image
@@ -122,6 +128,11 @@ function showSnackbar(message: string, color: string = 'error') {
   snackbarVisible.value = true;
 }
 
+async function cancel() {
+  userStore.resetUser();
+  userStore.closeDialog();
+}
+
 // Set the default value for role
 if (!userStore.editUser.role) {
   userStore.editUser.role = 'อาจารย์';
@@ -131,81 +142,84 @@ if (!userStore.editUser.role) {
 if (!userStore.editUser.status) {
   userStore.editUser.status = 'ดำรงตำแหน่ง';
 }
+// set the default value for major
+if (!userStore.editUser.major) {
+  userStore.editUser.major = 'วิทยาการคอมพิวเตอร์';
+}
 </script>
 
 <template>
   <v-container>
     <v-row justify="center">
       <!-- Adjusted card width to fit better -->
-      <v-card class="mx-auto elevation-3" style="width: 40vw; padding: 30px; border-radius: 15px;">
+      <v-card class="mx-auto elevation-3" style="width: 60vw; padding: 30px; border-radius: 15px;">
         <v-card-title class="pb-0" style="font-size: 24px; font-weight: 600;">เพิ่มผู้ใช้อาจารย์</v-card-title>
         <v-divider class="my-4"></v-divider>
         <v-row>
           <!-- Form Column -->
           <v-col cols="12">
             <v-row>
-              <!-- First Name -->
-              <v-col cols="12">
+              <!-- First Name and Last Name in one row -->
+              <v-col cols="6">
                 <v-text-field label="ชื่อ" dense solo outlined rounded required v-model="userStore.editUser.firstName"
-                  :rules="[
-                    (v) => !!v || 'โปรดกรอกชื่อ',
-                    (v) => /^[ก-๙\s]+$/.test(v) || 'ชื่อต้องไม่เป็นตัวเลขและต้องเป็นภาษาไทยเท่านั้น',
-                    (v) => v.length <= 100 || 'ชื่อต้องไม่เกิน 100 ตัวอักษร'
-                  ]">
+                  :rules="[(v) => !!v || 'โปรดกรอกชื่อ',
+                  (v) => /^[ก-๙\s]+$/.test(v) || 'ชื่อต้องไม่เป็นตัวเลขและต้องเป็นภาษาไทยเท่านั้น',
+                  (v) => v.length <= 100 || 'ชื่อต้องไม่เกิน 100 ตัวอักษร']">
                 </v-text-field>
               </v-col>
-              <!-- Last Name -->
-              <v-col cols="12">
+              <v-col cols="6">
                 <v-text-field label="นามสกุล" dense solo outlined rounded required v-model="userStore.editUser.lastName"
-                  :rules="[
-                    (v) => !!v || 'โปรดกรอกนามสกุล',
-                    (v) => /^[ก-๙\s]+$/.test(v) || 'นามสกุลต้องไม่เป็นตัวเลขและต้องเป็นภาษาไทยเท่านั้น',
-                    (v) => v.length <= 100 || 'นามสกุลต้องไม่เกิน 100 ตัวอักษร'
-                  ]">
+                  :rules="[(v) => !!v || 'โปรดกรอกนามสกุล',
+                  (v) => /^[ก-๙\s]+$/.test(v) || 'นามสกุลต้องไม่เป็นตัวเลขและต้องเป็นภาษาไทยเท่านั้น',
+                  (v) => v.length <= 100 || 'นามสกุลต้องไม่เกิน 100 ตัวอักษร']">
                 </v-text-field>
               </v-col>
+
               <!-- Email -->
               <v-col cols="12">
                 <v-text-field label="อีเมล" dense solo outlined rounded required v-model="userStore.editUser.email"
-                  :rules="[(v) => !!v || 'โปรดกรอกอีเมล', (v) => /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(v) || 'กรอกอีเมลให้ถูกต้อง']">
+                  :rules="[(v) => !!v || 'โปรดกรอกอีเมล',
+                  (v) => /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(v) || 'กรอกอีเมลให้ถูกต้อง']">
                 </v-text-field>
               </v-col>
-              <!-- Role -->
-              <!-- <v-col cols="12">
-                  <v-text-field 
-                    label="ตำแหน่ง" 
-                    dense 
-                    solo 
-                    outlined 
-                    rounded 
-                    required 
-                    v-model="userStore.editUser.role"
-                    :rules="[(v:any) => !!v || 'โปรดกรอกตำแหน่ง']">
-                  </v-text-field>
-                </v-col> -->
-                
-              <!-- Status Combobox -->
-              <v-col cols="12">
-                <v-combobox label="สถานะภาพ" :items="['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง']" dense solo outlined
-                  rounded required v-model="userStore.editUser.status" disabled :rules="[
-                    (v: any) => !!v || 'โปรดเลือกสถานะภาพ',
-                    (v: any) => ['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง'].includes(v) || 'โปรดเลือกสถานะภาพจากรายการที่ให้ไว้'
+
+              <!-- Major Selection and Status in one row -->
+              <v-col cols="6">
+                <v-select label="สาขา"
+                  :items="['วิทยาการคอมพิวเตอร์', 'เมคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจดทัล', 'วิศวกรรมซอฟต์แวร์', 'ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ']"
+                  dense solo outlined rounded required v-model="userStore.editUser.major" :rules="[
+                    (v: any) => !!v || 'โปรดเลือกสาขา',
+                    (v: any) => ['วิทยาการคอมพิวเตอร์', 'เทคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจดทัล', 'วิศวกรรมซอฟต์แวร์', 'ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ'].includes(v) || 'โปรดเลือกสาขาจากรายการที่ให้ไว้'
                   ]">
-                </v-combobox>
+                </v-select>
+              </v-col>
+
+              <v-col cols="6">
+                <v-select label="สถานะภาพ" :items="['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง']" dense solo outlined rounded
+                  required v-model="userStore.editUser.status"
+                  :rules="[
+                    (v) => !!v || 'โปรดเลือกสถานะภาพ',
+                    (v) => ['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง'].includes(v) || 'โปรดเลือกสถานะภาพจากรายการที่ให้ไว้']">
+                </v-select>
               </v-col>
             </v-row>
           </v-col>
         </v-row>
 
         <!-- Card Actions (Buttons) -->
-        <v-card-actions class="justify-end mt-4">
-          <v-btn color="primary" text="บันทึก" rounded depressed class="mr-4" @click="save">
-            บันทึก
-          </v-btn>
-          <v-btn text="ยกเลิก" rounded outlined color="grey" @click="cancel">
+        <v-card-actions class="justify-space-between mt-4">
+          <v-btn color="red" text="ยกเลิก" rounded outlined class="ml-2" @click="cancel"
+            style="padding: 12px 24px; font-size: 16px; width: 120px;">
             ยกเลิก
           </v-btn>
+          <v-spacer></v-spacer>
+          <v-btn color="blue" text="ยืนยัน" rounded class="mr-2" @click="save"
+            style="padding: 12px 24px; font-size: 16px; width: 120px;">
+            ยืนยัน
+          </v-btn>
         </v-card-actions>
+
+
       </v-card>
     </v-row>
 
@@ -228,7 +242,8 @@ if (!userStore.editUser.status) {
 }
 
 .v-text-field,
-.v-combobox {
+.v-combobox,
+.v-select {
   background-color: #f4f6f8;
   border-radius: 8px;
 }

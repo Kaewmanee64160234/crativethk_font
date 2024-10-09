@@ -1,5 +1,6 @@
 import type Notiforupdate from "@/stores/types/NotiforUpdate";
 import http from "./axios";
+import type { User } from "@/stores/types/User";
 
 function getNotiforupdateById(id:string) {
   return http.get(`/notiforupdates/${id}`);
@@ -54,4 +55,14 @@ function getNotificationByUserReceive(userReceive:string) {
   return http.get(`/notiforupdates/userReceive/${userReceive}`);
 }
 
-export default { updateNotiforupdateReject, getNotificationByUserReceive,getAllNotiforupdates,createNotificationUpdate,getNotiforupdateById,updateNotiforupdateConfirm, deleteNotiforupdate, getNotiforupdateByUserId };
+// notiforupdate.service.ts (Frontend service layer)
+function sendEmailToTeacher(teacherFirstName: string, teacherLastName: string, userSender: User) {
+  return http.post('/notiforupdates/sendEmailToTeacher', {
+    teacherFirstName,
+    teacherLastName,
+    userSender,
+  });
+}
+
+
+export default { sendEmailToTeacher,updateNotiforupdateReject, getNotificationByUserReceive,getAllNotiforupdates,createNotificationUpdate,getNotiforupdateById,updateNotiforupdateConfirm, deleteNotiforupdate, getNotiforupdateByUserId };
