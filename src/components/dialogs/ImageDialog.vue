@@ -657,7 +657,7 @@ const clearSelectedTeacher = () => {
         <v-card-text>
           <v-row v-if="!canUpload" class="mt-2">
             <v-col cols="12" class="text-center">
-              <v-alert class="mt-3" color="#D72626" >
+              <v-alert class="mt-3" color="#D72626">
                 <v-icon left size="30">mdi-information-outline</v-icon>
                 กรุณาอัปโหลดรูปภาพให้ครบ 5 รูป โดยรูปภาพห้ามซ้ำกัน
               </v-alert>
@@ -690,62 +690,81 @@ const clearSelectedTeacher = () => {
           <v-row>
             <v-col cols="12" class="mt-4">
               <div style="margin-bottom: 1%;font-weight: bold;">อัปโหลดรูปภาพ</div>
-              <v-file-input :key="fileInputKey" multiple prepend-icon="mdi-camera" filled
-                @change="handleFileChange" accept="image/*" variant="outlined" :disabled="checkConfirmImage()"
-                :rules="uploadRules"></v-file-input>
+              <v-file-input :key="fileInputKey" multiple prepend-icon="mdi-camera" filled @change="handleFileChange"
+                accept="image/*" variant="outlined" :disabled="checkConfirmImage()" :rules="uploadRules"></v-file-input>
             </v-col>
           </v-row>
           <!-- Button to Select Teacher -->
-          <v-row>
-            <v-col cols="12" class="mt-4">
-              <v-text style="padding-right: 1%;">เลือกครูที่จะส่งรูปภาพ: </v-text>
-              <v-btn color="primary" @click="showTeacherDialog = true">เลือกอาจารย์</v-btn>
+          <v-row class="my-4">
+            <v-col cols="12">
+              <v-row align="center">
+                <v-col cols="auto">
+                  <v-text class="font-weight-bold" style="font-size: 16px; color: #424242;">
+                    เลือกครูที่จะส่งรูปภาพ:
+                  </v-text>
+                </v-col>
+                <v-col cols="auto">
+                  <v-btn color="primary" elevation="2" rounded class="px-4" @click="showTeacherDialog = true">
+                    เลือกอาจารย์
+                  </v-btn>
+                </v-col>
+              </v-row>
             </v-col>
-          </v-row>
-          <v-row>
-            <v-col cols="12" class="mt-4">
-              <v-text style="padding-right: 2%;">อาจารย์ที่เลือก: {{ selectedTeacherName }}</v-text>
+            <v-col cols="12" class="mt-2">
+              <v-row align="center">
+                <v-col cols="auto">
+                  <v-text class="font-weight-bold" style="font-size: 16px; color: #424242;">
+                    อาจารย์ที่เลือก:
+                  </v-text>
+                </v-col>
+                <v-col>
+                  <v-text style="font-size: 16px; color: #1976d2;">
+                    {{ selectedTeacherName || 'ยังไม่ได้เลือกอาจารย์' }}
+                  </v-text>
+                </v-col>
+              </v-row>
             </v-col>
           </v-row>
           <!-- Teacher Selection Dialog -->
           <v-dialog v-model="showTeacherDialog" max-width="500px">
             <v-card>
-              <v-card-title>เลือกอาจารย์</v-card-title>
+              <v-card-title class="font-weight-bold" style="font-size: 20px;">
+                เลือกอาจารย์
+              </v-card-title>
+              <v-divider></v-divider>
               <v-card-text>
                 <v-list>
-                  <v-list-item v-for="teacher in teachers" :key="teacher.userId" @click="selectTeacher(teacher)">
+                  <v-list-item v-for="teacher in teachers" :key="teacher.userId" @click="selectTeacher(teacher)"
+                    class="teacher-list-item" style="cursor: pointer;">
                     <v-list-item-content>
-                      <v-list-item-title>{{ teacher.firstName }} {{ teacher.lastName }}</v-list-item-title>
+                      <v-list-item-title class="text-body-1" style="font-weight: 500;">
+                        {{ teacher.firstName }} {{ teacher.lastName }}
+                      </v-list-item-title>
                     </v-list-item-content>
                   </v-list-item>
                 </v-list>
               </v-card-text>
-              <v-card-actions>
-                <v-btn color="primary" @click="confirmTeacherSelection">ยืนยัน</v-btn>
-                <v-btn text @click="clearSelectedTeacher">ยกเลิก</v-btn>
+              <v-divider></v-divider>
+              <v-card-actions class="justify-space-between">
+                <v-btn text color="red" class="font-weight-bold" @click="clearSelectedTeacher">
+                  ยกเลิก
+                </v-btn>
+                <v-btn color="primary" class="font-weight-bold" @click="confirmTeacherSelection">
+                  ยืนยัน
+                </v-btn>
               </v-card-actions>
             </v-card>
           </v-dialog>
           <!-- Upload Button -->
-          <v-row justify="end" class="mt-4">
-            <v-col cols="auto">
-              <v-btn :disabled="!canUpload" color="primary" @click="save"
-                v-tooltip="'กรุณาอัปโหลดรูปภาพ 5 รูปก่อนอัปเดต'">
-                อัปโหลด
-              </v-btn>
-            </v-col>
-          </v-row>
           <v-row v-if="!hasUploadedImages" style="justify-content: center;font-weight: bold;">
             <div style="color: red;">ไม่มีรูปภาพ</div>
           </v-row>
-
-          <!-- Upload Button -->
           <v-row>
-            <v-btn color="error" @click="close" variant="text">
+            <v-btn color="error" style="font-size: 20px;" @click="close" variant="text">
               ยกเลิก
             </v-btn>
             <v-spacer></v-spacer>
-            <v-btn :disabled="!canUpload" color="primary" @click="save"
+            <v-btn :disabled="!canUpload" style="font-size: 20px;"  color="primary" @click="save"
               v-tooltip="'กรุณาอัปโหลดรูปภาพให้ครบ 5 รูป โดยรูปภาพห้ามซ้ำกัน'" variant="text">
               ยืนยัน
             </v-btn>
@@ -788,6 +807,14 @@ const clearSelectedTeacher = () => {
   /* Prevent content overflow */
 }
 
+.teacher-list-item:hover {
+  background-color: #f4f4f4;
+}
+
+.v-card-actions {
+  padding: 16px;
+}
+
 .loader-overlay {
   position: absolute;
   top: 0;
@@ -806,5 +833,9 @@ const clearSelectedTeacher = () => {
   position: absolute;
   top: 0px;
   right: 27px;
+}
+
+.v-btn {
+  min-width: 130px;
 }
 </style>

@@ -84,11 +84,11 @@ async function save() {
     return;
   }
   //checkStudentIdDuplicate
-  const studentIdDuplicate = await userStore.checkStudentIdDuplicate(userStore.editUser.studentId);
-  if (studentIdDuplicate) {
-    showSnackbar('รหัสนิสิตนี้ถูกใช้งานแล้ว');
-    return;
-  }
+  // const studentIdDuplicate = await userStore.checkStudentIdDuplicate(userStore.editUser.studentId);
+  // if (studentIdDuplicate) {
+  //   showSnackbar('รหัสนิสิตนี้ถูกใช้งานแล้ว');
+  //   return;
+  // }
   await userStore.saveUser();
   userStore.resetUser();
   // window.location.reload();

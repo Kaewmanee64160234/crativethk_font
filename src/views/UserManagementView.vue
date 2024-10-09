@@ -38,7 +38,17 @@ const updateYearOptions = () => {
   uniqueYears.sort();
   yearOptions.value = ['', ...uniqueYears];
 };
-
+watch(() => tab.value, () => {
+  if (tab.value === 0) {
+    userStore.searchDropdown2 = 'วิทยาการคอมพิวเตอร์';
+    userStore.searchDropdown3 = 'กำลังศึกษา';
+  } else if (tab.value === 1) {
+    userStore.searchDropdown4 = 'ดำรงตำแหน่ง';
+  } else if (tab.value === 2) {
+    userStore.searchDropdown4 = 'ดำรงตำแหน่ง';
+  }
+  // Add any other logic you want to execute when the tab changes.
+});
 
 // Watch for changes in the user array and recalculate year options whenever users are modified
 watch(() => userStore.users, () => {
