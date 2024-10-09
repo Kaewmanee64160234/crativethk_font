@@ -1,5 +1,6 @@
 import type Notiforupdate from "@/stores/types/NotiforUpdate";
 import http from "./axios";
+import type { User } from "@/stores/types/User";
 
 function getNotiforupdateById(id:string) {
   return http.get(`/notiforupdates/${id}`);
@@ -7,20 +8,32 @@ function getNotiforupdateById(id:string) {
 
 async function createNotificationUpdate(formData: FormData) {
   try {
-      // Send the formData with images and face descriptors to the backend
-      await http.post(`/notiforupdates`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-    } catch (error) {
-    console.log(error);
+    // Log formData contents for debugging
+    for (const pair of formData.entries()) {
+      console.log(`${pair[0]}:`, pair[1]);
     }
+
+    // Send the formData with images and face descriptors to the backend
+    await http.post(`/notiforupdates`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  } catch (error) {
+    console.log(error);
+  }
 }
 
 
-function updateNotiforupdate(id:string,data:Notiforupdate) {
-  return http.patch(`/notiforupdates/${id}`, data);
+
+function updateNotiforupdateConfirm(id:string,data:Notiforupdate) {
+  console.log(`updateNotiforupdate ${id}`);
+  return http.patch(`/notiforupdates/${id}/confirm`, data);
+}
+
+function updateNotiforupdateReject(id:string,data:Notiforupdate) {
+  console.log(`updateNotiforupdate ${id}`);
+  return http.patch(`/notiforupdates/${id}/reject`, data);
 }
 
 function deleteNotiforupdate(id:string) {
@@ -42,4 +55,14 @@ function getNotificationByUserReceive(userReceive:string) {
   return http.get(`/notiforupdates/userReceive/${userReceive}`);
 }
 
-export default { getNotificationByUserReceive,getAllNotiforupdates,createNotificationUpdate,getNotiforupdateById,updateNotiforupdate, deleteNotiforupdate, getNotiforupdateByUserId };
+// notiforupdate.service.ts (Frontend service layer)
+function sendEmailToTeacher(teacherFirstName: string, teacherLastName: string, userSender: User) {
+  return http.post('/notiforupdates/sendEmailToTeacher', {
+    teacherFirstName,
+    teacherLastName,
+    userSender,
+  });
+}
+
+
+export default { sendEmailToTeacher,updateNotiforupdateReject, getNotificationByUserReceive,getAllNotiforupdates,createNotificationUpdate,getNotiforupdateById,updateNotiforupdateConfirm, deleteNotiforupdate, getNotiforupdateByUserId };

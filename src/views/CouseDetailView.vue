@@ -86,11 +86,7 @@ const handleFileChange = (event: Event) => {
         const result = e.target?.result as string;
         if (result) {
           try {
-            const resizedImage = await resizeAndConvertImageToBase64(
-              result,
-              800,
-              600
-            );
+            const resizedImage = await resizeAndConvertImageToBase64(result, 800, 600);
             imageUrls.value.push(resizedImage);
             imageFiles.value.push(file);
           } catch (error) {
@@ -134,8 +130,7 @@ const resizeAndConvertImageToBase64 = (
       const resizedImage = canvas.toDataURL("image/jpeg", quality);
       resolve(resizedImage);
     };
-    img.onerror = () =>
-      reject(new Error(`Failed to load image at ${imageUrl}`));
+    img.onerror = () => reject(new Error(`Failed to load image at ${imageUrl}`));
     img.src = imageUrl;
   });
 };
@@ -275,27 +270,23 @@ const getAttendanceStatus = (
 ): string => {
   const attendanceIndex = attendances?.findIndex(
     (att: Attendance) =>
-      att.user?.userId === userId &&
-      att.assignment?.assignmentId === assignmentId
+      att.user?.userId === userId && att.assignment?.assignmentId === assignmentId
   );
   return attendances[attendanceIndex!]
     ? attendances[attendanceIndex!].attendanceStatus
-    : "absent";
+    : "ไม่มาเรียน";
 };
 
-const calculateTotalScore = (
-  userId: number,
-  assignments: Assignment[]
-): number => {
+const calculateTotalScore = (userId: number, assignments: Assignment[]): number => {
   return assignments.reduce((total, assignment) => {
     const status = getAttendanceStatus(
       attendanceStore.attendances || [],
       userId,
       assignment.assignmentId!
     );
-    if (status === "present") {
+    if (status === "มาเรียน") {
       return total + 1;
-    } else if (status === "late") {
+    } else if (status === "มาสาย") {
       return total + 0.5;
     }
     return total;
@@ -393,9 +384,9 @@ const confirmExportFile = () => {
       );
       let translatedStatus = "";
 
-      if (status === "present") {
+      if (status === "มาเรียน") {
         translatedStatus = "มา";
-      } else if (status === "late") {
+      } else if (status === "มาสาย") {
         translatedStatus = "สาย";
       } else {
         translatedStatus = "ขาด";
@@ -472,6 +463,7 @@ const checkImageCountAndPost = () => {
         {{ item.title }}
       </v-tab>
     </v-tabs>
+    <v-divider></v-divider>
 
     <v-container>
       <!-- Tab content for posts -->
@@ -500,40 +492,56 @@ const checkImageCountAndPost = () => {
         </v-btn>
         <v-dialog v-model="showDialog" persistent max-width="600px">
           <v-card>
-            <v-card-title class="text-h5 text-center">
-              สร้างการเช็คชื่อ
+            <v-card-title style="text-align: center">
+              <h4>สร้างการเช็คชื่อ</h4>
             </v-card-title>
-
+            <v-divider></v-divider>
             <v-card-text>
               <v-container>
                 <!-- Assignment Name Input -->
                 <v-row>
                   <v-col cols="12" sm="12">
-                    <v-text-field
-                      name="nameAssignment"
-                      label="ชื่อเรื่องการเช็คชื่อ"
-                      v-model="nameAssignment"
-                      variant="outlined"
-                      outlined
-                      prepend-inner-icon="mdi-assignment"
-                      required
-                      :rules="[(v: any) => !!v || 'กรุณากรอกชื่อ']"
-                    ></v-text-field>
+                    <v-card-title>
+                      <h5>ชื่อเรื่องการเช็คชื่อ</h5>
+                    </v-card-title>
+                    <v-card-text>
+                      <v-text-field
+                        name="nameAssignment"
+                        label="ชื่อเรื่องการเช็คชื่อ"
+                        v-model="nameAssignment"
+                        variant="outlined"
+                        outlined
+                        prepend-inner-icon="mdi-assignment"
+                        required
+                        :rules="[
+                          (v: any) => !!v || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*',
+                          (v: any) => (v && v.length >= 1 && v.length <= 50) || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*'
+                        ]"
+                      ></v-text-field>
+                    </v-card-text>
                   </v-col>
                 </v-row>
 
                 <!-- File Upload and Camera Controls -->
                 <v-row>
                   <v-col cols="12" sm="12">
-                    <v-file-input
-                      label="อัปโหลดรูปภาพ (จำนวนไฟล์สูงสุด 20 รูป)"
-                      prepend-icon="mdi-camera"
-                      filled
-                      @change="handleFileChange"
-                      accept="image/*"
-                      variant="outlined"
-                      multiple
-                    ></v-file-input>
+                    <v-card-title style="white-space: nowrap">
+                      <h5>
+                        อัปโหลดรูปภาพ
+                        <span style="color: red">(ห้ามอัปโหลดรูปภาพเกิน 20 รูป)</span>
+                      </h5>
+                    </v-card-title>
+                    <v-card-text>
+                      <v-file-input
+                        label="อัปโหลดรูปภาพ (จำนวนไฟล์สูงสุด 20 รูป)"
+                        prepend-icon="mdi-image-multiple"
+                        filled
+                        @change="handleFileChange"
+                        accept="image/*"
+                        variant="outlined"
+                        multiple
+                      ></v-file-input>
+                    </v-card-text>
                   </v-col>
                 </v-row>
 
@@ -558,13 +566,13 @@ const checkImageCountAndPost = () => {
                   </v-col>
                   <v-col cols="12" sm="6">
                     <v-btn @click="captureImage" block color="primary">
-                      <v-icon left>mdi-camera</v-icon>
+                      <!-- <v-icon left>mdi-camera</v-icon> -->
                       ถ่ายรูปภาพ
                     </v-btn>
                   </v-col>
                   <v-col cols="12" sm="6">
                     <v-btn @click="stopCamera" block color="error">
-                      <v-icon left>mdi-close</v-icon>
+                      <!-- <v-icon left>mdi-close</v-icon> -->
                       ปิดกล้องถ่ายรูป
                     </v-btn>
                   </v-col>
@@ -598,16 +606,13 @@ const checkImageCountAndPost = () => {
 
             <!-- Dialog Actions (Fixed at the Bottom) -->
             <v-card-actions class="fixed-action-buttons">
-              <v-btn color="error" @click="showDialog = false" outlined>
-                ยกเลิก
-              </v-btn>
+              <v-btn color="error" @click="showDialog = false" outlined> ยกเลิก </v-btn>
               <v-spacer></v-spacer>
 
               <!-- Disable the post button if more than 20 images or if the name is empty -->
               <v-btn
                 :disabled="
-                  [...capturedImages, ...imageUrls].length > 20 ||
-                  nameAssignment === ''
+                  [...capturedImages, ...imageUrls].length > 20 || nameAssignment === ''
                 "
                 color="primary"
                 @click="checkImageCountAndPost"
@@ -619,25 +624,13 @@ const checkImageCountAndPost = () => {
           </v-card>
 
           <!-- Snackbar for image limit or empty name error -->
-          <v-snackbar
-            v-model="showSnackbar"
-            color="error"
-            top
-            right
-            timeout="3000"
-          >
+          <v-snackbar v-model="showSnackbar" color="error" top right timeout="3000">
             {{ snackbarMessage }}
           </v-snackbar>
         </v-dialog>
 
         <v-row class="pt-5" v-if="posts.length > 0">
-          <v-col
-            cols="12"
-            sm="12"
-            md="12"
-            v-for="post in posts"
-            :key="post.assignmentId"
-          >
+          <v-col cols="12" sm="12" md="12" v-for="post in posts" :key="post.assignmentId">
             <CardAssigment :post="post"></CardAssigment>
           </v-col>
         </v-row>
@@ -687,7 +680,7 @@ const checkImageCountAndPost = () => {
           <div style="margin-bottom: 30px">
             <v-row>
               <v-col>
-                <h3>Teacher</h3>
+                <h3>ผู้สอน</h3>
               </v-col>
             </v-row>
             <v-row>
@@ -717,11 +710,11 @@ const checkImageCountAndPost = () => {
           <div>
             <v-row>
               <v-col cols="6">
-                <h3>Students</h3>
+                <h3>ผู้เรียน</h3>
               </v-col>
 
               <v-col cols="6" style="text-align: end">
-                <p>{{ userStore.users.length }} รายชื่อผู้เรียน/ผู้สอน</p>
+                <p>{{ userStore.users.length }} คน</p>
               </v-col>
             </v-row>
             <v-row v-for="(member, index) in userStore.users" :key="index">
@@ -733,13 +726,7 @@ const checkImageCountAndPost = () => {
               </v-col>
               <v-col cols="10" style="display: flex; align-items: center">
                 <div>
-                  {{
-                    member.studentId +
-                    " " +
-                    member.firstName +
-                    " " +
-                    member.lastName
-                  }}
+                  {{ member.studentId + " " + member.firstName + " " + member.lastName }}
                 </div>
               </v-col>
               <v-divider></v-divider>
@@ -765,32 +752,26 @@ const checkImageCountAndPost = () => {
             </h1>
           </v-card-title>
         </v-card>
-        <v-card
-          class="mx-auto"
-          outlined
-          style="padding: 20px; margin-top: 10px"
-        >
+        <v-card class="mx-auto" outlined style="padding: 20px; margin-top: 10px">
           <v-row>
-            <v-col col="12" sm="11">
-              <v-card-title>Assignment Attendance Details</v-card-title>
+            <v-col col="12" sm="10" style="color: #3051ac">
+              <v-card-title>คะแนนการเช็คชื่อ</v-card-title>
             </v-col>
-            <v-col
-              col="12"
-              sm="1"
-              v-if="userStore.currentUser?.role === 'อาจารย์'"
-            >
-              <v-btn color="success" @click="exportFile">Export</v-btn>
+            <v-col col="12" sm="2" v-if="userStore.currentUser?.role === 'อาจารย์'">
+              <v-btn color="#093271" @click="exportFile" style="width: 200px"
+                >Export คะแนน</v-btn
+              >
             </v-col>
           </v-row>
           <v-table>
             <thead>
               <tr>
-                <th class="text-left vertical-divider">Student ID</th>
-                <th class="text-left vertical-divider">Student Name</th>
-                <th class="text-left vertical-divider">Full Score</th>
-                <th class="text-left vertical-divider">Score</th>
+                <th class="text-center vertical-divider">รหัสนิสิต</th>
+                <th class="text-center vertical-divider">ชื่อ-สกุล</th>
+                <th class="text-center vertical-divider">คะแนนเต็ม</th>
+                <th class="text-center vertical-divider">คะแนนที่ได้</th>
                 <th
-                  class="vertical-divider"
+                  class="text-center vertical-divider"
                   v-for="assignment in assignmentStore.assignments"
                   :key="assignment.assignmentId"
                 >
@@ -800,14 +781,14 @@ const checkImageCountAndPost = () => {
             </thead>
             <tbody>
               <tr v-for="user in filteredUsers" :key="user.userId">
-                <td class="vertical-divider">{{ user.studentId }}</td>
+                <td class="text-center vertical-divider">{{ user.studentId }}</td>
                 <td class="vertical-divider">
                   {{ user.firstName + " " + user.lastName }}
                 </td>
-                <td class="vertical-divider">
+                <td class="text-center vertical-divider">
                   {{ assignmentStore.assignments.length }}
                 </td>
-                <td class="vertical-divider">
+                <td class="text-center vertical-divider">
                   {{
                     calculateTotalScore(
                       user.userId!,
@@ -818,10 +799,10 @@ const checkImageCountAndPost = () => {
                 <td
                   v-for="assignment in assignmentStore.assignments"
                   :key="assignment.assignmentId"
-                  class="vertical-divider"
+                  class="text-center vertical-divider"
                 >
                   <template
-                    v-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'present'"
+                    v-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'มาเรียน'"
                   >
                     <v-btn
                       density="compact"
@@ -835,7 +816,7 @@ const checkImageCountAndPost = () => {
                     <v-icon color="green" v-else>mdi-check-circle</v-icon>
                   </template>
                   <template
-                    v-else-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'late'"
+                    v-else-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'มาสาย'"
                   >
                     <v-btn
                       density="compact"

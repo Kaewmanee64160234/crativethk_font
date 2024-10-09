@@ -34,9 +34,11 @@ const loadModels = async () => {
 
 const fetchImages = async () => {
   const assignmentId = route.params.assignmentId;
-  await assignmentStore.getAssignmentById(assignmentId + '');
+  await assignmentStore.getAssignmentById(assignmentId + "");
   const images = assignmentStore.currentAssignment?.assignmentImages || [];
-  imageUrls.value = images.map(image => `${import.meta.env.VITE_API_URL}/assignments/image/filename/${image}`);
+  imageUrls.value = images.map(
+    (image) => `${import.meta.env.VITE_API_URL}/assignments/image/filename/${image}`
+  );
 };
 
 const processImage = async (image: any, index: number) => {
@@ -48,19 +50,19 @@ const processImage = async (image: any, index: number) => {
   faceapi.matchDimensions(canvas, displaySize);
   const resizedDetections = faceapi.resizeResults(detections, displaySize);
 
-  const context = canvas.getContext('2d');
+  const context = canvas.getContext("2d");
   if (context) {
     context.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas first
-    context.strokeStyle = 'red';
+    context.strokeStyle = "red";
     context.lineWidth = 2;
 
-    resizedDetections.forEach(detection => {
+    resizedDetections.forEach((detection) => {
       const { x, y, width, height } = detection.box;
 
-      const boxElement = document.createElement('div');
-      boxElement.style.position = 'absolute';
-      boxElement.style.border = '2px solid red';
-      boxElement.style.cursor = 'pointer';
+      const boxElement = document.createElement("div");
+      boxElement.style.position = "absolute";
+      boxElement.style.border = "2px solid red";
+      boxElement.style.cursor = "pointer";
       boxElement.dataset.index = index.toString();
       boxElement.dataset.x = x.toString();
       boxElement.dataset.y = y.toString();
@@ -78,20 +80,20 @@ const processImage = async (image: any, index: number) => {
 
       updateBoxStyle();
 
-      boxElement.addEventListener('click', () => handleBoxClick(image, detection.box));
+      boxElement.addEventListener("click", () => handleBoxClick(image, detection.box));
       canvas.parentElement?.appendChild(boxElement);
 
       // Update the box position and size on window resize
-      window.addEventListener('resize', updateBoxStyle);
+      window.addEventListener("resize", updateBoxStyle);
     });
   }
 };
 
 const handleBoxClick = (img: HTMLImageElement, box: faceapi.Box) => {
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = box.width;
   canvas.height = box.height;
-  const context = canvas.getContext('2d');
+  const context = canvas.getContext("2d");
   if (context) {
     context.drawImage(
       img,
@@ -110,7 +112,7 @@ const handleBoxClick = (img: HTMLImageElement, box: faceapi.Box) => {
 };
 
 const dataURLToFile = (dataurl: string, filename: string) => {
-  const arr = dataurl.split(',');
+  const arr = dataurl.split(",");
   const mime = arr[0].match(/:(.*?);/)![1];
   const bstr = atob(arr[1]);
   let n = bstr.length;
@@ -133,8 +135,8 @@ onMounted(async () => {
     img.onload = () => {
       canvasRefs[index].width = img.naturalWidth;
       canvasRefs[index].height = img.naturalHeight;
-      canvasRefs[index].style.width = img.width + 'px';
-      canvasRefs[index].style.height = img.height + 'px';
+      canvasRefs[index].style.width = img.width + "px";
+      canvasRefs[index].style.height = img.height + "px";
       processImage(img, index);
     };
     img.src = url;
@@ -149,17 +151,17 @@ const reCheckAttendance = async (attendance: Attendance) => {
     const assignmentDate = new Date(assignmentStore.currentAssignment!.createdDate!);
     const assignmentTime = assignmentDate.getTime();
     const diff = currentDate - assignmentTime;
-    attendance.attendanceStatus = diff > 900000 ? "late" : "present";
+    attendance.attendanceStatus = diff > 900000 ? "มาสาย" : "มาเรียน";
     attendance.attendanceConfirmStatus = "recheck";
     attendance.user = userStore.currentUser;
     attendance.attendanceScore = 100;
     attendance.attendanceId = attendanceStore.currentAttendance?.attendanceId;
-    console.log('Attendance:', attendance);
-    
+    console.log("Attendance:", attendance);
+
     if (croppedImage.value) {
-      const imageFile = dataURLToFile(croppedImage.value, 'rechecked-image.jpg');
-      console.log('Image File:', imageFile);
-    
+      const imageFile = dataURLToFile(croppedImage.value, "rechecked-image.jpg");
+      console.log("Image File:", imageFile);
+
       await attendanceStore.confirmAttendance(attendance, imageFile);
     }
 
@@ -171,7 +173,10 @@ const reCheckAttendance = async (attendance: Attendance) => {
 };
 
 const confirmRecheck = async () => {
-  await attendanceStore.getAttendanceByAssignmentAndStudent(route.params.assignmentId.toString(), userStore.currentUser!.studentId!);
+  await attendanceStore.getAttendanceByAssignmentAndStudent(
+    route.params.assignmentId.toString(),
+    userStore.currentUser!.studentId!
+  );
   await reCheckAttendance(attendanceStore.editAttendance);
   showDialog.value = false;
 };
@@ -188,10 +193,10 @@ const onFileChange = async (event: Event) => {
       const img = new Image();
       img.src = e.target!.result as string;
       img.onload = async () => {
-        const canvas = document.createElement('canvas');
+        const canvas = document.createElement("canvas");
         canvas.width = img.width;
         canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext("2d");
         ctx?.drawImage(img, 0, 0);
 
         const detections = await faceapi.detectAllFaces(img);
@@ -200,7 +205,7 @@ const onFileChange = async (event: Event) => {
           croppedImage.value = cropFaceFromImage(ctx, box);
           showDialog.value = true;
         } else {
-          alert('No face detected. Please try again.');
+          alert("No face detected. Please try again.");
         }
       };
     };
@@ -212,15 +217,14 @@ const onFileChange = async (event: Event) => {
 const cropFaceFromImage = (ctx: CanvasRenderingContext2D | null, box: faceapi.Box) => {
   if (ctx) {
     const imageData = ctx.getImageData(box.x, box.y, box.width, box.height);
-    const canvas = document.createElement('canvas');
+    const canvas = document.createElement("canvas");
     canvas.width = box.width;
     canvas.height = box.height;
-    canvas.getContext('2d')?.putImageData(imageData, 0, 0);
-    return canvas.toDataURL('image/jpeg');
+    canvas.getContext("2d")?.putImageData(imageData, 0, 0);
+    return canvas.toDataURL("image/jpeg");
   }
   return null;
 };
-
 
 const startCamera = async () => {
   showCamera.value = true;
@@ -232,11 +236,11 @@ const startCamera = async () => {
 
 const captureImage = () => {
   if (videoRef.value && canvasRef.value) {
-    const ctx = canvasRef.value.getContext('2d');
+    const ctx = canvasRef.value.getContext("2d");
     canvasRef.value.width = videoRef.value.videoWidth;
     canvasRef.value.height = videoRef.value.videoHeight;
     ctx?.drawImage(videoRef.value, 0, 0, canvasRef.value.width, canvasRef.value.height);
-    const imgData = canvasRef.value.toDataURL('image/jpeg');
+    const imgData = canvasRef.value.toDataURL("image/jpeg");
 
     // Process the captured image for face detection
     const img = new Image();
@@ -248,7 +252,7 @@ const captureImage = () => {
         croppedImage.value = cropFaceFromImage(ctx, box);
         showDialog.value = true;
       } else {
-        alert('No face detected. Please try again.');
+        alert("No face detected. Please try again.");
       }
     };
   }
@@ -258,7 +262,7 @@ const stopCamera = () => {
   if (videoRef.value && videoRef.value.srcObject) {
     const stream = videoRef.value.srcObject as MediaStream;
     const tracks = stream.getTracks();
-    tracks.forEach(track => track.stop());
+    tracks.forEach((track) => track.stop());
     videoRef.value.srcObject = null;
     showCamera.value = false;
   }
@@ -270,7 +274,10 @@ const stopCamera = () => {
     <v-row>
       <v-col class="mt-3" cols="12">
         <h1 class="text-center">Confirm Tagging Face</h1>
-        <p class="text-center description">Please click on your face if it is you. If the image is not you, click the "Not My Image" button.</p>
+        <p class="text-center description">
+          Please click on your face if it is you. If the image is not you, click the "Not
+          My Image" button.
+        </p>
       </v-col>
     </v-row>
 
@@ -283,7 +290,9 @@ const stopCamera = () => {
     <v-row>
       <v-col cols="12" md="6" v-for="(imageUrl, index) in imageUrls" :key="index">
         <div class="position-relative mb-3">
-          <img :src="imageUrl" class="w-100 rounded-lg"
+          <img
+            :src="imageUrl"
+            class="w-100 rounded-lg"
             @load="(event:any) => { 
               const img = event.target; 
               canvasRefs[index].width = img!.naturalWidth!; 
@@ -291,9 +300,13 @@ const stopCamera = () => {
               canvasRefs[index].style.width = img!.width! + 'px'; 
               canvasRefs[index].style.height = img!.height! + 'px'; 
               processImage(img!, index); 
-            }" 
-            style="object-fit: contain;" />
-          <canvas :ref="(el:any) => canvasRefs[index] = el" class="position-absolute top-0 left-0 w-100 h-100"></canvas>
+            }"
+            style="object-fit: contain"
+          />
+          <canvas
+            :ref="(el:any) => canvasRefs[index] = el"
+            class="position-absolute top-0 left-0 w-100 h-100"
+          ></canvas>
         </div>
       </v-col>
     </v-row>
@@ -309,8 +322,12 @@ const stopCamera = () => {
         </v-card-text>
         <v-row v-if="showCamera">
           <v-col cols="12" sm="12">
-            <video ref="videoRef" autoplay style="width: 100%; border-radius: 8px;"></video>
-            <canvas ref="canvasRef" style="display: none;"></canvas>
+            <video
+              ref="videoRef"
+              autoplay
+              style="width: 100%; border-radius: 8px"
+            ></video>
+            <canvas ref="canvasRef" style="display: none"></canvas>
           </v-col>
           <v-col cols="12" sm="6">
             <v-btn @click="captureImage" block>
@@ -348,8 +365,6 @@ const stopCamera = () => {
     </v-dialog>
   </v-container>
 </template>
-
-
 
 <style scoped>
 /* Main container to center content */

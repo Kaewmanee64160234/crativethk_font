@@ -63,9 +63,7 @@ const sortedAttendances = computed(() => {
 // Filtering attendances based on the selected dropdown option
 const filteredAttendances = computed(() => {
   if (filterOption.value === "Show Less Than 50%") {
-    return sortedAttendances.value!.filter(
-      (attendee) => attendee.attendanceScore! < 50
-    );
+    return sortedAttendances.value!.filter((attendee) => attendee.attendanceScore! < 50);
   } else {
     return sortedAttendances.value;
   }
@@ -80,12 +78,8 @@ onMounted(async () => {
       faceapi.nets.ssdMobilenetv1.loadFromUri("/models"),
     ]);
     // get user by course id
-    await userStore.getUserByCourseId(
-      courseStore.currentCourse?.coursesId + ""
-    );
-    await assignmentStore.getAssignmentById(
-      route.params.assignmentId.toString()
-    );
+    await userStore.getUserByCourseId(courseStore.currentCourse?.coursesId + "");
+    await assignmentStore.getAssignmentById(route.params.assignmentId.toString());
 
     console.time("Face Description Processing Time");
     userStore.users.forEach((user) => {
@@ -99,9 +93,7 @@ onMounted(async () => {
             descriptors.push(float32Array);
           } catch (error) {
             console.error(
-              `Error decoding face description ${idx + 1} for user: ${
-                user.email
-              }`,
+              `Error decoding face description ${idx + 1} for user: ${user.email}`,
               error
             );
           }
@@ -127,9 +119,7 @@ onMounted(async () => {
 
     // Call createAttendance after all images have been processed
     if (assignmentStore.currentAssignment!.statusAssignment == "completed") {
-      console.log(
-        "Assignment is already completed. Skipping attendance confirmation."
-      );
+      console.log("Assignment is already completed. Skipping attendance confirmation.");
       console.time("Update Attendance Time");
       await updateAttdent();
       console.timeEnd("Update Attendance Time");
@@ -371,16 +361,12 @@ const createAttendance = async () => {
         {
           attendanceId: 0,
           attendanceDate: new Date(),
-          attendanceStatus: "present",
-          attendanceConfirmStatus: identifiedUser
-            ? "confirmed"
-            : "notConfirmed",
+          attendanceStatus: "มาเรียน",
+          attendanceConfirmStatus: identifiedUser ? "confirmed" : "notConfirmed",
           assignment: assignmentStore.currentAssignment,
           user: identifiedUser,
           attendanceImage: "",
-          attendanceScore: parseInt(
-            (identifications.value[i].score * 100).toFixed(2)
-          ),
+          attendanceScore: parseInt((identifications.value[i].score * 100).toFixed(2)),
         },
         imageFile
       );
@@ -393,9 +379,7 @@ const createAttendance = async () => {
       );
       console.error(
         "Detailed Error:",
-        error instanceof Event
-          ? "DOM Event error, check network or permissions."
-          : error
+        error instanceof Event ? "DOM Event error, check network or permissions." : error
       );
     }
   }
@@ -436,9 +420,7 @@ const createAttendance = async () => {
       );
       console.error(
         "Detailed Error:",
-        error instanceof Event
-          ? "DOM Event error, check network or permissions."
-          : error
+        error instanceof Event ? "DOM Event error, check network or permissions." : error
       );
     }
   }
@@ -447,9 +429,7 @@ const createAttendance = async () => {
     assignmentStore.currentAssignment!.assignmentId + "",
     assignmentStore.currentAssignment!
   );
-  await attendanceStore.getAttendanceByAssignmentId(
-    route.params.assignmentId.toString()
-  );
+  await attendanceStore.getAttendanceByAssignmentId(route.params.assignmentId.toString());
 
   console.log("Attendance confirmed successfully");
 };
@@ -494,7 +474,7 @@ const updateAttdent = async () => {
       );
       // console.log("User Attdent:", userAttdent);
       if (userAttdent) {
-        userAttdent.attendanceStatus = "present";
+        userAttdent.attendanceStatus = "มาเรียน";
         userAttdent.attendanceConfirmStatus = identifiedUser
           ? "confirmed"
           : "notConfirmed";
@@ -527,11 +507,9 @@ const updateAttdent = async () => {
 const confirmAttendance = async (attendance: Attendance) => {
   if (confirm("Do you want to confirm this attendance?")) {
     try {
-      attendance.attendanceStatus = "present";
+      attendance.attendanceStatus = "มาเรียน";
       attendance.attendanceConfirmStatus = "confirmed";
-      await attendanceStore.confirmAttendanceByTeacher(
-        attendance.attendanceId + ""
-      );
+      await attendanceStore.confirmAttendanceByTeacher(attendance.attendanceId + "");
       alert("Attendance has been confirmed.");
       await attendanceStore.getAttendanceByAssignmentId(
         route.params.assignmentId.toString()
@@ -580,6 +558,7 @@ const nextPage = () => {
       </v-card-title>
     </v-card>
 
+
     <v-row v-if="isLoading">
       <Loader></Loader>
     </v-row>
@@ -590,6 +569,7 @@ const nextPage = () => {
         <div class="d-flex align-end">
           <!-- Navigation Buttons -->
           <v-btn color="primary"  style="color: rgba(9, 50, 113, 1); width: 150px;"  @click="nextPage">ถัดไป</v-btn>
+
         </div>
       </v-col>
 
@@ -712,11 +692,11 @@ const nextPage = () => {
 }
 
 .correct-text {
-  color: #10B981; /* Tailwind's Green */
+  color: #10b981; /* Tailwind's Green */
 }
 
 .incorrect-text {
-  color: #DC2626; /* Tailwind's Red */
+  color: #dc2626; /* Tailwind's Red */
 }
 
 .display-1 {

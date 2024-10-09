@@ -45,6 +45,11 @@ export const useMessageStore = defineStore("message", () => {
     isShow.value = true;
   }
 
+  // hideMessage
+  function hideMessage() {
+    isShow.value = false;
+  }
+  
   function showConfirm_(text: string, onConfirm: () => void, onCancel?: () => void) {
     Swal.fire({
       text: text,
@@ -62,6 +67,6 @@ export const useMessageStore = defineStore("message", () => {
       }
     });
   }
-  return { isShow, message, showError, showInfo, CalshowError,showConfirm , showConfirm_};
+  return { isShow, message, showError, showInfo, CalshowError,showConfirm , showConfirm_, hideMessage};
 });
 

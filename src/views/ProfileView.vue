@@ -43,8 +43,6 @@ onMounted(async () => {
         console.log("image", images.value)
     }
     await userStore.getUsersById(userStore.currentUser?.userId!);
-    // await userStore.getCurrentUser();
-
 });
 const showConditionImage = () => {
     const pdfUrl = '/pdf/condition.pdf'; 

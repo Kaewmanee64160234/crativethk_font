@@ -7,6 +7,7 @@ import { useMessageStore } from '@/stores/message';
 import type { User } from '@/stores/types/User';
 import Loader from "@/components/loader/Loader.vue";
 import { useNotiforupdate } from '@/stores/notiforUpdate.store';
+import axios from 'axios';
 
 interface CanvasRefs {
   [key: number]: HTMLCanvasElement;
@@ -24,6 +25,7 @@ const messageStore = useMessageStore();
 const isLoading = ref(false);
 const userStore = useUserStore();
 const showDialog = ref(true);
+const showTeacherDialog = ref(false); // Added this line
 const alertDialog = ref(false);
 const alertMessage = ref('');
 const identifications = ref<Identification[]>([]);
@@ -35,8 +37,16 @@ const url = import.meta.env.VITE_API_URL;
 const imageUrls = ref<string[]>([]);
 const imageFiles = ref<File[]>([]);
 const fileInputKey = ref(Date.now()); // Key to reset the file input field
-const faceDescriptionFields = ref<string[]>([]);
+const faceDescriptionFields = ref<Float32Array[]>([]);
 const notiStore = useNotiforupdate();
+const selectedTeacher = ref(null);
+interface Teacher {
+  userId: number;
+  firstName: string;
+  lastName: string;
+}
+
+const teachers = ref<Teacher[]>([]);
 
 // Fetching existing images from the user store
 const images = ref<string[]>(userStore.currentUser?.images?.map((image: string) => `${url}/users/image/filename/${image}`) ?? []);
@@ -46,8 +56,16 @@ async function close() {
 
 onMounted(async () => {
   await loadModels()
+  await userStore.getTeachers();
+  // console.log("Users fetched:", userStore.users);
   await userStore.getUsersById(userStore.currentUser?.userId!);
   images.value = userStore.currentUser?.images?.map((image: string) => `${url}/users/image/filename/${image}`) ?? [];
+  try {
+    const response = await axios.get(`${import.meta.env.VITE_API_URL}/users/teachers`);
+    teachers.value = response.data;  // Store the fetched teachers
+  } catch (error) {
+    console.error('Failed to fetch teachers:', error);
+  }
 });
 
 async function loadModels() {
@@ -58,25 +76,27 @@ async function loadModels() {
       faceapi.nets.faceRecognitionNet.loadFromUri("/models"),
       faceapi.nets.faceLandmark68Net.loadFromUri("/models"),
     ]);
-    userStore.users.forEach((user) => {
-      const descriptors: Float32Array[] = [];
-      const faceDescriptionFields = user.faceDescriptions || [];
+    // userStore.users.forEach((user) => {
+    //   const descriptors: Float32Array[] = [];
+    //   const faceDescriptionFields = user.faceDescriptions || [];
+    //   console.log("faceDescriptionFields", faceDescriptionFields);
 
-      faceDescriptionFields.forEach((description, idx) => {
-        if (description) {
-          try {
-            const float32Array = base64ToFloat32Array(description);
-            descriptors.push(float32Array);
-          } catch (error) {
-            console.error(`Error decoding face description ${idx + 1} for user: ${user.email}`, error);
-          }
-        }
-      });
 
-      if (descriptors.length > 0) {
-        userDescriptors.set(user.studentId!, descriptors);
-      }
-    });
+    //   faceDescriptionFields.forEach((description, idx) => {
+    //     if (description) {
+    //       try {
+    //         const float32Array = base64ToFloat32Array(description);
+    //         descriptors.push(float32Array);
+    //       } catch (error) {
+    //         console.error(`Error decoding face description ${idx + 1} for user: ${user.email}`, error);
+    //       }
+    //     }
+    //   });
+
+    //   if (descriptors.length > 0) {
+    //     userDescriptors.set(user.studentId!, descriptors);
+    //   }
+    // });
     console.timeEnd("Face Description Processing Time");
     const urls: string[] = JSON.parse(localStorage.getItem('images') || '[]');
 
@@ -93,6 +113,18 @@ async function loadModels() {
   }
 }
 
+// Compute selected teacher's name for confirmation step
+const selectedTeacherName = computed(() => {
+  if (selectedTeacher.value) {
+    const teacher = teachers.value.find((teacher) => teacher.userId === selectedTeacher.value);
+    return teacher ? `${teacher.firstName} ${teacher.lastName}` : '';
+  }
+  return '';
+});
+
+function selectTeacher(teacher: any) {
+  selectedTeacher.value = teacher.userId;
+}
 function base64ToFloat32Array(base64: string | undefined): Float32Array {
   if (!base64) {
     console.error("base64 string is undefined or not provided");
@@ -217,6 +249,9 @@ function base64ToBlob(base64: string, type: string): Blob {
 
 // Function to calculate Euclidean distance between two face descriptors
 function calculateEuclideanDistance(descriptor1: Float32Array, descriptor2: Float32Array): number {
+  console.log("descriptor1", descriptor1);
+  console.log("descriptor2", descriptor2);
+
   if (!descriptor1 || !descriptor2) {
     console.error("One of the descriptors is undefined.");
     return -1; // Returning -1 or another error value to indicate failure
@@ -242,7 +277,7 @@ async function saveUserUpdate() {
       base64ToFile(base64, `image-${index + 1}.jpg`)
     );
 
-    const faceDescriptionsArray: string[] = [];
+
 
     for (const image of imageFiles.value) {
       const img = new Image();
@@ -254,7 +289,7 @@ async function saveUserUpdate() {
             if (detection) {
               const descriptor = detection.descriptor;
               const base64Descriptor = float32ArrayToBase64(descriptor);
-              faceDescriptionsArray.push(base64Descriptor); // Store as Base64 string
+              faceDescriptionFields.value.push(detection.descriptor); // Store as Base64 string
             }
             resolve();
           } catch (error) {
@@ -268,6 +303,9 @@ async function saveUserUpdate() {
         };
       });
     }
+    // map base64Descriptor to base 64 in faceDescriptionsArray
+    const faceDescriptionsArray = faceDescriptionFields.value.map((descriptor) => float32ArrayToBase64(descriptor));
+
     userStore.editUser = {
       ...userStore.currentUser,
       firstName: userStore.currentUser!.firstName || '',
@@ -296,103 +334,138 @@ async function saveUserUpdate() {
 async function save() {
   if (userStore.currentUser?.registerStatus != 'notConfirmed') {
     if (imageUrls.value && imageUrls.value.length > 0) {
-      await Promise.all(imageUrls.value.map((url, index) => loadImageAndProcess(url, index)));
-      // Convert user's face description from base64 string to Float32Array
-      const userFaceDescriptionBase64 = userStore.currentUser?.faceDescriptions![0]; // Assuming first descriptor
-      const userFaceDescriptor = base64ToFloat32Array(userFaceDescriptionBase64!);
+      try {
+        await Promise.all(imageUrls.value.map((url, index) => loadImageAndProcess(url, index)));
 
-      // Assuming croppedImagesDataUrls.value contains face descriptors in base64
-      const croppedImageDescriptorBase64 = faceDescriptionFields.value[0]; // First cropped face descriptor
-      const croppedFaceDescriptor = base64ToFloat32Array(croppedImageDescriptorBase64);
+        // Convert the user's latest image to a face descriptor
+        const latestUserImage = images.value[0]; // Assuming the first image is the latest
+        const croppedFaceDescriptor = await extractFaceDescriptorFromImage(latestUserImage);
 
-      console.log("User face descriptor (Float32Array):", userFaceDescriptor);
-      console.log("Cropped face descriptor (Float32Array):", croppedFaceDescriptor);
-
-      // Compare image
-      const distance = calculateEuclideanDistance(userFaceDescriptor, croppedFaceDescriptor);
-      console.log("Distance:", distance);
-
-      // Check similarity threshold (e.g., 0.6) for face matching
-      if (distance < 0.4) {
-        await saveUserUpdate();
-        messageStore.showConfirm('อัปโหลดรูปภาพสำเร็จ')
-        if (userStore.currentUser!.registerStatus !== 'confirmed') {
-          userStore.currentUser!.registerStatus = 'notConfirmed';
-          await userStore.updateRegisterStatus(userStore.currentUser!.userId!, userStore.currentUser!);
+        if (!croppedFaceDescriptor) {
+          console.error("Failed to extract face descriptor from the latest user image.");
+          messageStore.showError("Failed to extract face descriptor.");
+          return;
         }
-        // Swal.fire(
-        //   'อัปโหลดรูปภาพสำเร็จ',
-        //   'ระบบกำลังประมวลผลข้อมูล',
-        //   'success'
-        // )
-        window.location.reload();
-        // await userStore.getUsersById(userStore.currentUser?.userId!);
-      } else {
-        await close();
-        // Add sweet alert to confirm send to teacher
-        await Swal.fire({
-          title: 'รูปภาพไม่ตรงกับข้อมูล',
-          text: 'คุณต้องการส่งรูปภาพไปยังครูหรือไม่',
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonText: 'ส่ง',
-          cancelButtonText: 'ยกเลิก',
-        }).then(async (result) => {
-          if (result.isConfirmed) {
-            const formData = new FormData();
+        // Convert user's saved face description from base64 string to Float32Array
+        const userFaceDescriptionBase64 = userStore.currentUser?.faceDescriptions?.[0];
+        const userFaceDescriptor = userFaceDescriptionBase64 ? base64ToFloat32Array(userFaceDescriptionBase64) : null;
+        if (!userFaceDescriptor || !croppedFaceDescriptor) {
+          console.error("Failed to obtain face descriptors.");
+          messageStore.showError("Failed to obtain face descriptors.");
+          return;
+        }
 
-            console.log("croppedImagesDataUrls", croppedImagesDataUrls.value);
+        console.log("User face descriptor (Float32Array):", userFaceDescriptor);
+        console.log("Cropped face descriptor (Float32Array):", croppedFaceDescriptor);
 
-            // Process and append cropped images to formData as files
-            for (let i = 0; i < croppedImagesDataUrls.value.length; i++) {
-              const croppedImageDataUrl = croppedImagesDataUrls.value[i];
+        // Compare descriptors
+        const distance = calculateEuclideanDistance(userFaceDescriptor, croppedFaceDescriptor);
+        console.log("Distance:", distance < 0.4);
 
-              // Resize the image and convert to base64
-              const resizedImageBase64 = await resizeAndConvertToBase64(croppedImageDataUrl, 800, 600);
+        if (distance > 0.4) {
+          await saveUserUpdate();
+          messageStore.showConfirm('อัปโหลดรูปภาพสำเร็จ');
 
-              // Convert the resized base64 image to a Blob and then to a File
-              const blob = base64ToBlob(resizedImageBase64, "image/jpeg");
-              const imageFile = new File([blob], `croppedImage_${i + 1}_${Date.now()}.jpg`, {
-                type: "image/jpeg",
-              });
-
-              // Append the image file to the formData
-              formData.append("files", imageFile, imageFile.name);
-              console.log("Appended file:", imageFile.name);
-            }
-
-            // Add face descriptors to formData
-            faceDescriptionFields.value.forEach((faceDescription, index) => {
-              formData.append(`faceDescriptor${index + 1}`, faceDescription);
-            });
-
-            // Add userId to formData
-            formData.append("userId", String(userStore.currentUser!.userId));
-
-            // Log the form data entries for debugging
-            for (const pair of formData.entries()) {
-              console.log(`${pair[0]}: ${pair[1]}`);
-            }
-
-            await notiStore.createNotiforupdate(formData);
-            // close dialog
-            Swal.fire(
-              'อัปโหลดรูปภาพสำเร็จ',
-              'ระบบกำลังประมวลผลข้อมูล',
-              'success'
-            )
-          } else {
-            // open dialog
-            showDialog.value = true;
+          if (userStore.currentUser!.registerStatus !== 'confirmed') {
+            userStore.currentUser!.registerStatus = 'notConfirmed';
+            await userStore.updateRegisterStatus(userStore.currentUser!.userId!, userStore.currentUser!);
           }
-        });
 
+          await userStore.getUsersById(userStore.currentUser?.userId!);
+        } else if (selectedTeacherName.value == '') {
+          showDialog.value = true;
+          showSnackbar('โปรดใส่ชื่ออาจารย์ที่ต้องการส่งรูปภาพ');
+        } else {
+          console.log("Face descriptors do not match.");
+          await close();
+          await Swal.fire({
+            title: 'รูปภาพไม่ตรงกับข้อมูล',
+            text: 'คุณต้องการส่งรูปภาพไปยังครูหรือไม่',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'ส่ง',
+            cancelButtonText: 'ยกเลิก',
+            allowOutsideClick: false,
+          }).then(async (result) => {
+            if (result.isConfirmed) {
+              try {
+                const formData = new FormData();
 
+                // Detect faces and get descriptors for each image file
+                for (let i = 0; i < imageFiles.value.length; i++) {
+                  const imageFile = imageFiles.value[i];
+                  const img = new Image();
+                  img.src = URL.createObjectURL(imageFile);
+
+                  await new Promise<void>((resolve, reject) => {
+                    img.onload = async () => {
+                      try {
+                        const detection = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
+                        if (detection) {
+                          const descriptor = detection.descriptor;
+                          const base64Descriptor = float32ArrayToBase64(descriptor);
+
+                          // Append face descriptor to formData
+                          formData.append(`faceDescriptor${i + 1}`, base64Descriptor);
+                          console.log("Appended face descriptor:", base64Descriptor);
+                        } else {
+                          console.warn(`No face detected in image ${i + 1}`);
+                        }
+
+                        // Append the image file to formData
+                        formData.append("files", imageFile, imageFile.name);
+                        console.log("Appended file:", imageFile.name);
+
+                        resolve();
+                      } catch (error) {
+                        console.error("Face detection failed:", error);
+                        reject(error);
+                      }
+                    };
+                    img.onerror = (error) => {
+                      console.error("Error loading image:", error);
+                      reject(error);
+                    };
+                  });
+                }
+
+                // Add userId to formData
+                formData.append("userId", userStore.currentUser?.userId!);
+                console.log('Sending formData to create notification...');
+                await notiStore.createNotiforupdate(formData);
+                console.log('Notification created successfully.');
+
+                // Send an email to the selected teacher
+                if (selectedTeacher.value) {
+                  const teacher = teachers.value.find((t) => t.userId === selectedTeacher.value);
+                  if (teacher) {
+                    notiStore.sendEmailToTeacher(teacher.firstName, teacher.lastName, userStore?.currentUser!)
+                      .then(() => {
+                        showSnackbar('อีเมลถูกส่งไปยังอาจารย์แล้ว', 'success');
+                      })
+                      .catch((error) => {
+                        console.error('Failed to send email:', error);
+                        showSnackbar('การส่งอีเมลล้มเหลว', 'error');
+                      });
+                  }
+                } else {
+                  showSnackbar('กรุณาเลือกอาจารย์ที่ต้องการส่งรูปภาพ', 'error');
+                }
+                Swal.fire('อัปโหลดรูปภาพสำเร็จ', 'ระบบกำลังประมวลผลข้อมูล', 'success');
+              } catch (error) {
+                console.error("Failed to create notification:", error);
+                messageStore.showError("Failed to create notification.");
+              }
+            } else {
+              showDialog.value = true;
+            }
+
+          });
+        }
+      } catch (error) {
+        console.error("Error in save function:", error);
+        messageStore.showError("An error occurred during the save process.");
       }
-
-
-      await close();
-
     } else {
       messageStore.showError("No images available to send.");
     }
@@ -401,7 +474,32 @@ async function save() {
     await close();
 
   }
+}
 
+// Helper function to extract face descriptor from an image URL
+async function extractFaceDescriptorFromImage(imageUrl: string): Promise<Float32Array | null> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "Anonymous";
+    img.onload = async () => {
+      try {
+        const detection = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
+        if (detection && detection.descriptor) {
+          resolve(detection.descriptor);
+        } else {
+          resolve(null);
+        }
+      } catch (error) {
+        console.error("Face detection failed for the image:", imageUrl, error);
+        resolve(null);
+      }
+    };
+    img.onerror = (error) => {
+      console.error("Error loading image for face descriptor extraction:", error);
+      resolve(null);
+    };
+    img.src = imageUrl;
+  });
 }
 
 const handleFileChange = (event: Event) => {
@@ -520,6 +618,28 @@ const checkConfirmImage = () => {
   }
 };
 console.log("user2", userStore.currentUser)
+// confirmTeacherSelection
+const confirmTeacherSelection = () => {
+  if (selectedTeacher.value) {
+    showTeacherDialog.value = false;
+  } else {
+    showSnackbar('กรุณาเลือกอาจารย์ที่ต้องการส่งรูปภาพ');
+  }
+};
+// Snackbar state
+const snackbarVisible = ref(false);
+const snackbarMessage = ref('');
+const snackbarColor = ref('error');
+function showSnackbar(message: string, color: string = 'error') {
+  snackbarMessage.value = message;
+  snackbarColor.value = color;
+  snackbarVisible.value = true;
+}
+// clear selectedTeacherName
+const clearSelectedTeacher = () => {
+  selectedTeacher.value = null;
+  showTeacherDialog.value = false;
+};
 
 </script>
 
@@ -537,7 +657,7 @@ console.log("user2", userStore.currentUser)
         <v-card-text>
           <v-row v-if="!canUpload" class="mt-2">
             <v-col cols="12" class="text-center">
-              <v-alert class="mt-3" color="#D72626" >
+              <v-alert class="mt-3" color="#D72626">
                 <v-icon left size="30">mdi-information-outline</v-icon>
                 กรุณาอัปโหลดรูปภาพให้ครบ 5 รูป โดยรูปภาพห้ามซ้ำกัน
               </v-alert>
@@ -570,23 +690,81 @@ console.log("user2", userStore.currentUser)
           <v-row>
             <v-col cols="12" class="mt-4">
               <div style="margin-bottom: 1%;font-weight: bold;">อัปโหลดรูปภาพ</div>
-              <v-file-input :key="fileInputKey" multiple prepend-icon="mdi-camera" filled
-                @change="handleFileChange" accept="image/*" variant="outlined" :disabled="checkConfirmImage()"
-                :rules="uploadRules"></v-file-input>
+              <v-file-input :key="fileInputKey" multiple prepend-icon="mdi-camera" filled @change="handleFileChange"
+                accept="image/*" variant="outlined" :disabled="checkConfirmImage()" :rules="uploadRules"></v-file-input>
             </v-col>
           </v-row>
-
+          <!-- Button to Select Teacher -->
+          <v-row class="my-4">
+            <v-col cols="12">
+              <v-row align="center">
+                <v-col cols="auto">
+                  <v-text class="font-weight-bold" style="font-size: 16px; color: #424242;">
+                    เลือกครูที่จะส่งรูปภาพ:
+                  </v-text>
+                </v-col>
+                <v-col cols="auto">
+                  <v-btn color="primary" elevation="2" rounded class="px-4" @click="showTeacherDialog = true">
+                    เลือกอาจารย์
+                  </v-btn>
+                </v-col>
+              </v-row>
+            </v-col>
+            <v-col cols="12" class="mt-2">
+              <v-row align="center">
+                <v-col cols="auto">
+                  <v-text class="font-weight-bold" style="font-size: 16px; color: #424242;">
+                    อาจารย์ที่เลือก:
+                  </v-text>
+                </v-col>
+                <v-col>
+                  <v-text style="font-size: 16px; color: #1976d2;">
+                    {{ selectedTeacherName || 'ยังไม่ได้เลือกอาจารย์' }}
+                  </v-text>
+                </v-col>
+              </v-row>
+            </v-col>
+          </v-row>
+          <!-- Teacher Selection Dialog -->
+          <v-dialog v-model="showTeacherDialog" max-width="500px">
+            <v-card>
+              <v-card-title class="font-weight-bold" style="font-size: 20px;">
+                เลือกอาจารย์
+              </v-card-title>
+              <v-divider></v-divider>
+              <v-card-text>
+                <v-list>
+                  <v-list-item v-for="teacher in teachers" :key="teacher.userId" @click="selectTeacher(teacher)"
+                    class="teacher-list-item" style="cursor: pointer;">
+                    <v-list-item-content>
+                      <v-list-item-title class="text-body-1" style="font-weight: 500;">
+                        {{ teacher.firstName }} {{ teacher.lastName }}
+                      </v-list-item-title>
+                    </v-list-item-content>
+                  </v-list-item>
+                </v-list>
+              </v-card-text>
+              <v-divider></v-divider>
+              <v-card-actions class="justify-space-between">
+                <v-btn text color="red" class="font-weight-bold" @click="clearSelectedTeacher">
+                  ยกเลิก
+                </v-btn>
+                <v-btn color="primary" class="font-weight-bold" @click="confirmTeacherSelection">
+                  ยืนยัน
+                </v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-dialog>
+          <!-- Upload Button -->
           <v-row v-if="!hasUploadedImages" style="justify-content: center;font-weight: bold;">
             <div style="color: red;">ไม่มีรูปภาพ</div>
           </v-row>
-
-          <!-- Upload Button -->
           <v-row>
-            <v-btn color="error" @click="close" variant="text">
+            <v-btn color="error" style="font-size: 20px;" @click="close" variant="text">
               ยกเลิก
             </v-btn>
             <v-spacer></v-spacer>
-            <v-btn :disabled="!canUpload" color="primary" @click="save"
+            <v-btn :disabled="!canUpload" style="font-size: 20px;"  color="primary" @click="save"
               v-tooltip="'กรุณาอัปโหลดรูปภาพให้ครบ 5 รูป โดยรูปภาพห้ามซ้ำกัน'" variant="text">
               ยืนยัน
             </v-btn>
@@ -595,6 +773,13 @@ console.log("user2", userStore.currentUser)
       </v-card>
     </v-dialog>
   </v-container>
+  <!-- Snackbar for showing errors -->
+  <v-snackbar v-model="snackbarVisible" :color="snackbarColor" top right :timeout="3000">
+    {{ snackbarMessage }}
+    <template v-slot:actions>
+      <v-btn color="white" @click="snackbarVisible = false">Close</v-btn>
+    </template>
+  </v-snackbar>
 </template>
 
 <style scoped>
@@ -622,6 +807,14 @@ console.log("user2", userStore.currentUser)
   /* Prevent content overflow */
 }
 
+.teacher-list-item:hover {
+  background-color: #f4f4f4;
+}
+
+.v-card-actions {
+  padding: 16px;
+}
+
 .loader-overlay {
   position: absolute;
   top: 0;
@@ -640,5 +833,9 @@ console.log("user2", userStore.currentUser)
   position: absolute;
   top: 0px;
   right: 27px;
+}
+
+.v-btn {
+  min-width: 130px;
 }
 </style>

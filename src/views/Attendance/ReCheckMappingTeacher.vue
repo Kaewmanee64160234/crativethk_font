@@ -15,10 +15,10 @@ const userStore = useUserStore();
 const route = useRoute();
 
 const url = import.meta.env.VITE_API_URL;
-const queryCourseId = ref('');
+const queryCourseId = ref("");
 onMounted(async () => {
   const id = route.params.assignmentId;
-  queryCourseId.value = route.params.courseId + '';
+  queryCourseId.value = route.params.courseId + "";
   await attendanceStore.getAttendanceByStatusInAssignment(id + ""); // Assuming this function exists and fetches the attendances
   //get assignment by id
   await assignmentStore.getAssignmentById(id + "");
@@ -28,10 +28,10 @@ onMounted(async () => {
   await courseStore.getCourseById(
     assignmentStore.currentAssignment!.course!.coursesId.toString()
   );
-  await attendanceStore.getAttendanceByAssignmentId(route.params.assignmentId.toString());
-     
+  await attendanceStore.getAttendanceByAssignmentId(
+    route.params.assignmentId.toString()
+  );
 });
-
 
 const goBackToCourseDetail = () => {
   router.push("/courseDetail/" + queryCourseId.value);
@@ -41,9 +41,11 @@ const goBackToCourseDetail = () => {
 const confirmAttendance = async (attendance: Attendance) => {
   if (confirm("Do you want to confirm this attendance?")) {
     try {
-      attendance.attendanceStatus = "present";
+      attendance.attendanceStatus = "มาเรียน";
       attendance.attendanceConfirmStatus = "confirmed";
-      await attendanceStore.confirmAttendanceByTeacher(attendance.attendanceId + "");
+      await attendanceStore.confirmAttendanceByTeacher(
+        attendance.attendanceId + ""
+      );
       alert("Attendance has been confirmed.");
     } catch (error) {
       console.error("Error recording attendance:", error);
@@ -54,9 +56,11 @@ const confirmAttendance = async (attendance: Attendance) => {
 //reject student
 const reCheckAttendance = async (attendance: Attendance) => {
   try {
-    attendance.attendanceStatus = "present";
+    attendance.attendanceStatus = "มาเรียน";
     attendance.attendanceConfirmStatus = "recheck";
-    await attendanceStore.rejectAttendanceByTeacher(attendance.attendanceId + "");
+    await attendanceStore.rejectAttendanceByTeacher(
+      attendance.attendanceId + ""
+    );
     alert("Attendance has been recheck.");
   } catch (error) {
     console.error("Error recording attendance:", error);
@@ -67,14 +71,26 @@ const reCheckAttendance = async (attendance: Attendance) => {
 
 <template>
   <v-container fluid class="my-5">
-    <v-card class="mx-auto mt-9" color="primary" max-width="1200" outlined style="padding: 20px">
+    <v-card
+      class="mx-auto mt-9"
+      color="primary"
+      max-width="1200"
+      outlined
+      style="padding: 20px"
+    >
       <v-card-title>
         <h1 class="text-h5">
-          <router-link :to="`/courseDetail/${courseStore.currentCourse?.coursesId}`" style="color: aliceblue;">
+          <router-link
+            :to="`/courseDetail/${courseStore.currentCourse?.coursesId}`"
+            style="color: aliceblue"
+          >
             {{ courseStore.currentCourse?.nameCourses }}
           </router-link>
-          > 
-          <router-link :to="`/mapping2/assignment/${assignmentStore.currentAssignment?.assignmentId}/course/${route.params.courseId}`" style="color: aliceblue;">
+          >
+          <router-link
+            :to="`/mapping2/assignment/${assignmentStore.currentAssignment?.assignmentId}/course/${route.params.courseId}`"
+            style="color: aliceblue"
+          >
             {{ assignmentStore.currentAssignment?.nameAssignment }}
           </router-link>
           > สรุปการเช็คชื่อ
@@ -89,7 +105,11 @@ const reCheckAttendance = async (attendance: Attendance) => {
           <v-card outlined>
             <v-card-title>รายชื่อนิสิต</v-card-title>
             <v-card-text>
-              <v-row v-for="(member, index) in userStore.users" :key="index" class="align-center">
+              <v-row
+                v-for="(member, index) in userStore.users"
+                :key="index"
+                class="align-center"
+              >
                 <v-col cols="2">
                   <v-avatar size="56">
                     <v-img :src="`${url}/users/${member.userId}/image`"></v-img>
@@ -97,18 +117,23 @@ const reCheckAttendance = async (attendance: Attendance) => {
                 </v-col>
                 <v-col cols="8">
                   <div>
-                    {{ member.studentId }} {{ member.firstName }} {{ member.lastName }}
+                    {{ member.studentId }} {{ member.firstName }}
+                    {{ member.lastName }}
                   </div>
                 </v-col>
-                <v-col cols="2" class="text-center" style="font-weight: bolder;" >
-                  {{ 
-  attendanceStore.attendances?.find((attendance) => attendance.user?.userId === member.userId)?.attendanceStatus === 'present' 
-    ? 'มาเรียน' 
-    : attendanceStore.attendances?.find((attendance) => attendance.user?.userId === member.userId)?.attendanceStatus === 'late' 
-      ? 'มาสาย' 
-      : 'ไม่มาเรียน' 
-}}
-
+                <v-col cols="2" class="text-center" style="font-weight: bolder">
+                  {{
+                    attendanceStore.attendances?.find(
+                      (attendance) => attendance.user?.userId === member.userId
+                    )?.attendanceStatus === "present"
+                      ? "มาเรียน"
+                      : attendanceStore.attendances?.find(
+                          (attendance) =>
+                            attendance.user?.userId === member.userId
+                        )?.attendanceStatus === "late"
+                      ? "มาสาย"
+                      : "ไม่มาเรียน"
+                  }}
                 </v-col>
               </v-row>
             </v-card-text>
@@ -121,31 +146,61 @@ const reCheckAttendance = async (attendance: Attendance) => {
             <v-card-title>เช็คชื่อ</v-card-title>
             <v-card-text>
               <v-row>
-                <v-col cols="12" md="6" v-for="attendee in attendanceStore.attendances" :key="attendee.attendanceId">
+                <v-col
+                  cols="12"
+                  md="6"
+                  v-for="attendee in attendanceStore.attendances"
+                  :key="attendee.attendanceId"
+                >
                   <v-card class="mb-4 attendee-card" outlined>
                     <v-card-title class="text-center">
-                      {{ attendee.user?.studentId }} {{ attendee.user?.firstName }} {{ attendee.user?.lastName }}
+                      {{ attendee.user?.studentId }}
+                      {{ attendee.user?.firstName }}
+                      {{ attendee.user?.lastName }}
                     </v-card-title>
                     <v-row>
                       <v-col cols="6">
-                        <v-img :src="`${url}/attendances/image/${attendee.attendanceImage}`" height="150px" class="rounded-img"></v-img>
+                        <v-img
+                          :src="`${url}/attendances/image/${attendee.attendanceImage}`"
+                          height="150px"
+                          class="rounded-img"
+                        ></v-img>
                       </v-col>
                       <v-col cols="6">
-                        <v-img :src="`${url}/users/${attendee.user?.userId}/image`" height="150px" class="rounded-img"></v-img>
+                        <v-img
+                          :src="`${url}/users/${attendee.user?.userId}/image`"
+                          height="150px"
+                          class="rounded-img"
+                        ></v-img>
                       </v-col>
                     </v-row>
                     <v-card-text class="text-center">
-                      <div>สถานะการเช็คชื่อ:  {{
-    attendee.attendanceStatus === 'present' 
-      ? 'มาเรียน' 
-      : attendee.attendanceStatus === 'late' 
-        ? 'มาสาย' 
-        : 'ไม่มาเรียน'
-  }}</div>
+                      <div>
+                        สถานะการเช็คชื่อ:
+                        {{
+                          attendee.attendanceStatus === "present"
+                            ? "มาเรียน"
+                            : attendee.attendanceStatus === "late"
+                            ? "มาสาย"
+                            : "ไม่มาเรียน"
+                        }}
+                      </div>
                     </v-card-text>
                     <v-card-actions class="justify-center">
-                      <v-btn class="mx-2" variant="flat"  color="error" @click="rejectAttendance(attendee)">ปฏิเสธ</v-btn>
-                      <v-btn class="mx-2" variant="flat"  color="success" @click="confirmAttendance(attendee)">ยืนยัน</v-btn>
+                      <v-btn
+                        class="mx-2"
+                        variant="flat"
+                        color="error"
+                        @click="rejectAttendance(attendee)"
+                        >ปฏิเสธ</v-btn
+                      >
+                      <v-btn
+                        class="mx-2"
+                        variant="flat"
+                        color="success"
+                        @click="confirmAttendance(attendee)"
+                        >ยืนยัน</v-btn
+                      >
                     </v-card-actions>
                   </v-card>
                 </v-col>
@@ -157,7 +212,6 @@ const reCheckAttendance = async (attendance: Attendance) => {
     </div>
   </v-container>
 </template>
-
 
 <style scoped>
 .v-card-title {
