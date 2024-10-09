@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { computed, onMounted, ref, watch } from "vue";
+import { useRoute } from "vue-router";
 import { useAssignmentStore } from "@/stores/assignment.store";
 import CardAssigment from "@/components/assigment/CardAssigment.vue";
 import { useCourseStore } from "@/stores/course.store";
@@ -13,7 +13,6 @@ import type { User } from "@/stores/types/User";
 import * as XLSX from "xlsx";
 import { useLoaderStore } from "@/stores/loader.store";
 import { useMessageStore } from "@/stores/message";
-import assignment from "@/services/assignment";
 import Swal from "sweetalert2";
 
 const route = useRoute();
@@ -25,30 +24,28 @@ const tabs = [
   { id: 3, title: "คะแนน" },
 ];
 
-const router = useRouter();
 const tab = ref("โพสต์");
 const posts = ref<Assignment[]>([]);
-const imageUrls = ref<string[]>([]);
-const imageFiles = ref<File[]>([]);
 const assignmentStore = useAssignmentStore();
 const courseStore = useCourseStore();
 const showDialog = ref(false);
-const nameAssignment = ref("");
 const userStore = useUserStore();
 const url = import.meta.env.VITE_API_URL;
 const attendanceStore = useAttendanceStore();
-const roomSelect = ref<string>();
-const loaderStore = useLoaderStore();
+const totalPage = ref(assignmentStore.lastPage);
 
 const isTeacher = computed(() => userStore.currentUser?.role === "อาจารย์");
-const showCamera = ref(false);
-const videoRef = ref<HTMLVideoElement | null>(null);
-const canvasRef = ref<HTMLCanvasElement | null>(null);
-const capturedImages = ref<string[]>([]);
-const assignmentManual = ref(false);
-const snackbarMessage = ref("");
-const snackbar = ref(false);
+const filteredAssignments = computed(() => {
+  // Only include assignments that have corresponding attendance data.
+  return assignmentStore.assignments.filter((assignment) =>
+    attendanceStore.attendances.some(
+      (att) => att.assignment?.assignmentId === assignment.assignmentId
+    )
+  );
+});
+
 const filteredUsers = computed(() => {
+  // Filter users based on whether the user is a teacher or a student.
   if (isTeacher.value) {
     return userStore.users;
   } else {
@@ -57,15 +54,71 @@ const filteredUsers = computed(() => {
     );
   }
 });
+
+// Fetch assignments when the component mounts
 onMounted(async () => {
-  // loader.value = true;
-  await assignmentStore.getAssignmentByCourseId(id.value.toString());
+  await assignmentStore.getAssignmentByCourseIdPaginate(id.value.toString(), 1);
+  posts.value = assignmentStore.assignments;
+  totalPage.value = assignmentStore.total;
+
   await attendanceStore.getAttendanceByCourseId(id.value.toString());
   await userStore.getUserByCourseId(id.value.toString());
   await courseStore.getCourseById(id.value.toString());
-  posts.value = assignmentStore.assignments;
-  // loader.value = false;
 });
+
+// Watch for changes to `currentPage` and fetch new assignments when it changes
+watch(
+  () => assignmentStore.currentPage,
+  async (newPage, oldPage) => {
+    if (newPage !== oldPage) {
+      await assignmentStore.getAssignmentByCourseIdPaginate(
+        id.value.toString(),
+        newPage
+      );
+      posts.value = assignmentStore.assignments;
+      totalPage.value = assignmentStore.total;
+    }
+  }
+);
+
+// Calculate total score based on attendance status.
+const calculateTotalScore = (
+  userId: number,
+  assignments: Assignment[]
+): number => {
+  return assignments.reduce((total, assignment) => {
+    const status = getAttendanceStatus(
+      attendanceStore.attendances || [],
+      userId,
+      assignment.assignmentId!
+    );
+    if (status === "มาเรียน") {
+      return total + 1;
+    } else if (status === "มาสาย") {
+      return total + 0.5;
+    }
+    return total;
+  }, 0);
+};
+
+// Get attendance status for a specific user and assignment.
+const getAttendanceStatus = (
+  attendances: Attendance[],
+  userId: number,
+  assignmentId: number
+): string => {
+  const attendanceIndex = attendances.findIndex(
+    (att: Attendance) =>
+      att.user?.userId === userId &&
+      att.assignment?.assignmentId === assignmentId
+  );
+  return attendances[attendanceIndex]
+    ? attendances[attendanceIndex].attendanceStatus
+    : "ไม่มาเรียน";
+};
+
+
+
 const removeImage = (index: number) => {
   if (index < capturedImages.value.length) {
     capturedImages.value.splice(index, 1);
@@ -86,7 +139,11 @@ const handleFileChange = (event: Event) => {
         const result = e.target?.result as string;
         if (result) {
           try {
-            const resizedImage = await resizeAndConvertImageToBase64(result, 800, 600);
+            const resizedImage = await resizeAndConvertImageToBase64(
+              result,
+              800,
+              600
+            );
             imageUrls.value.push(resizedImage);
             imageFiles.value.push(file);
           } catch (error) {
@@ -98,7 +155,92 @@ const handleFileChange = (event: Event) => {
     });
   }
 };
+const startCamera = async () => {
+  showCamera.value = true;
+  const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+  if (videoRef.value) {
+    videoRef.value.srcObject = stream;
+  }
+};
 
+const captureImage = () => {
+  if (videoRef.value && canvasRef.value) {
+    const ctx = canvasRef.value.getContext("2d");
+    if (!ctx) return;
+    canvasRef.value.width = videoRef.value.videoWidth;
+    canvasRef.value.height = videoRef.value.videoHeight;
+    ctx.drawImage(videoRef.value, 0, 0);
+    const imageUrl = canvasRef.value.toDataURL("image/jpeg");
+    resizeAndConvertImageToBase64(imageUrl, 800, 600)
+      .then((resizedImage) => {
+        capturedImages.value.push(resizedImage);
+        const file = dataURLtoFile(resizedImage, `image-${Date.now()}.jpg`);
+        imageFiles.value.push(file);
+      })
+      .catch((error) => console.error("Error resizing image:", error));
+  }
+};
+
+const stopCamera = () => {
+  if (videoRef.value && videoRef.value.srcObject) {
+    const stream = videoRef.value.srcObject as MediaStream;
+    stream.getTracks().forEach((track) => track.stop());
+    videoRef.value.srcObject = null;
+  }
+  showCamera.value = false;
+};
+
+const dataURLtoFile = (dataurl: string, filename: string) => {
+  const arr = dataurl.split(",");
+  const mime = arr[0].match(/:(.*?);/)?.[1];
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new File([u8arr], filename, { type: mime });
+};
+const checkImageCountAndPost = () => {
+  if ([...capturedImages.value, ...imageUrls.value].length > 20) {
+    // dialogclosw
+    showDialog.value = false;
+    Swal.fire({
+      icon: "error",
+      title: "ไม่สามารถอัปโหลดรูปภาพได้เกิน 20 รูป",
+    }).then(() => {
+      showDialog.value = true;
+    });
+
+    return;
+  }
+  if (nameAssignment.value === "") {
+    showDialog.value = false;
+
+    Swal.fire({
+      icon: "error",
+      title: "กรุณากรอกชื่อเรื่องการเช็คชื่อ",
+    }).then(() => {
+      showDialog.value = true;
+    });
+
+    return;
+  }
+  if ([...capturedImages.value, ...imageUrls.value].length === 0) {
+    showDialog.value = false;
+
+    Swal.fire({
+      icon: "error",
+      title: "กรุณาเพิ่มรูปภาพ",
+    }).then(() => {
+      showDialog.value = true;
+    });
+
+    return;
+  } else {
+    createPost();
+  }
+};
 // Function to resize an image and convert it to a base64 string
 const resizeAndConvertImageToBase64 = (
   imageUrl: string,
@@ -130,7 +272,8 @@ const resizeAndConvertImageToBase64 = (
       const resizedImage = canvas.toDataURL("image/jpeg", quality);
       resolve(resizedImage);
     };
-    img.onerror = () => reject(new Error(`Failed to load image at ${imageUrl}`));
+    img.onerror = () =>
+      reject(new Error(`Failed to load image at ${imageUrl}`));
     img.src = imageUrl;
   });
 };
@@ -263,82 +406,7 @@ const createPost = async () => {
   console.timeEnd("Total createPost execution time");
 };
 
-const getAttendanceStatus = (
-  attendances: Attendance[],
-  userId: number,
-  assignmentId: number
-): string => {
-  const attendanceIndex = attendances?.findIndex(
-    (att: Attendance) =>
-      att.user?.userId === userId && att.assignment?.assignmentId === assignmentId
-  );
-  return attendances[attendanceIndex!]
-    ? attendances[attendanceIndex!].attendanceStatus
-    : "ไม่มาเรียน";
-};
 
-const calculateTotalScore = (userId: number, assignments: Assignment[]): number => {
-  return assignments.reduce((total, assignment) => {
-    const status = getAttendanceStatus(
-      attendanceStore.attendances || [],
-      userId,
-      assignment.assignmentId!
-    );
-    if (status === "มาเรียน") {
-      return total + 1;
-    } else if (status === "มาสาย") {
-      return total + 0.5;
-    }
-    return total;
-  }, 0);
-};
-
-const startCamera = async () => {
-  showCamera.value = true;
-  const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-  if (videoRef.value) {
-    videoRef.value.srcObject = stream;
-  }
-};
-
-const captureImage = () => {
-  if (videoRef.value && canvasRef.value) {
-    const ctx = canvasRef.value.getContext("2d");
-    if (!ctx) return;
-    canvasRef.value.width = videoRef.value.videoWidth;
-    canvasRef.value.height = videoRef.value.videoHeight;
-    ctx.drawImage(videoRef.value, 0, 0);
-    const imageUrl = canvasRef.value.toDataURL("image/jpeg");
-    resizeAndConvertImageToBase64(imageUrl, 800, 600)
-      .then((resizedImage) => {
-        capturedImages.value.push(resizedImage);
-        const file = dataURLtoFile(resizedImage, `image-${Date.now()}.jpg`);
-        imageFiles.value.push(file);
-      })
-      .catch((error) => console.error("Error resizing image:", error));
-  }
-};
-
-const stopCamera = () => {
-  if (videoRef.value && videoRef.value.srcObject) {
-    const stream = videoRef.value.srcObject as MediaStream;
-    stream.getTracks().forEach((track) => track.stop());
-    videoRef.value.srcObject = null;
-  }
-  showCamera.value = false;
-};
-
-const dataURLtoFile = (dataurl: string, filename: string) => {
-  const arr = dataurl.split(",");
-  const mime = arr[0].match(/:(.*?);/)?.[1];
-  const bstr = atob(arr[1]);
-  let n = bstr.length;
-  const u8arr = new Uint8Array(n);
-  while (n--) {
-    u8arr[n] = bstr.charCodeAt(n);
-  }
-  return new File([u8arr], filename, { type: mime });
-};
 
 // open show dialog and set value editAttendance
 const openDialog = (assignment: Assignment, user: User) => {
@@ -414,46 +482,7 @@ const cancelExportFile = () => {
 
 // showSnackbar
 const showSnackbar = ref(false);
-const checkImageCountAndPost = () => {
-  if ([...capturedImages.value, ...imageUrls.value].length > 20) {
-    // dialogclosw
-    showDialog.value = false;
-    Swal.fire({
-      icon: "error",
-      title: "ไม่สามารถอัปโหลดรูปภาพได้เกิน 20 รูป",
-    }).then(() => {
-      showDialog.value = true;
-    });
 
-    return;
-  }
-  if (nameAssignment.value === "") {
-    showDialog.value = false;
-
-    Swal.fire({
-      icon: "error",
-      title: "กรุณากรอกชื่อเรื่องการเช็คชื่อ",
-    }).then(() => {
-      showDialog.value = true;
-    });
-
-    return;
-  }
-  if ([...capturedImages.value, ...imageUrls.value].length === 0) {
-    showDialog.value = false;
-
-    Swal.fire({
-      icon: "error",
-      title: "กรุณาเพิ่มรูปภาพ",
-    }).then(() => {
-      showDialog.value = true;
-    });
-
-    return;
-  } else {
-    createPost();
-  }
-};
 </script>
 
 <template>
@@ -528,7 +557,9 @@ const checkImageCountAndPost = () => {
                     <v-card-title style="white-space: nowrap">
                       <h5>
                         อัปโหลดรูปภาพ
-                        <span style="color: red">(ห้ามอัปโหลดรูปภาพเกิน 20 รูป)</span>
+                        <span style="color: red"
+                          >(ห้ามอัปโหลดรูปภาพเกิน 20 รูป)</span
+                        >
                       </h5>
                     </v-card-title>
                     <v-card-text>
@@ -606,13 +637,16 @@ const checkImageCountAndPost = () => {
 
             <!-- Dialog Actions (Fixed at the Bottom) -->
             <v-card-actions class="fixed-action-buttons">
-              <v-btn color="error" @click="showDialog = false" outlined> ยกเลิก </v-btn>
+              <v-btn color="error" @click="showDialog = false" outlined>
+                ยกเลิก
+              </v-btn>
               <v-spacer></v-spacer>
 
               <!-- Disable the post button if more than 20 images or if the name is empty -->
               <v-btn
                 :disabled="
-                  [...capturedImages, ...imageUrls].length > 20 || nameAssignment === ''
+                  [...capturedImages, ...imageUrls].length > 20 ||
+                  nameAssignment === ''
                 "
                 color="primary"
                 @click="checkImageCountAndPost"
@@ -624,13 +658,25 @@ const checkImageCountAndPost = () => {
           </v-card>
 
           <!-- Snackbar for image limit or empty name error -->
-          <v-snackbar v-model="showSnackbar" color="error" top right timeout="3000">
+          <v-snackbar
+            v-model="showSnackbar"
+            color="error"
+            top
+            right
+            timeout="3000"
+          >
             {{ snackbarMessage }}
           </v-snackbar>
         </v-dialog>
 
         <v-row class="pt-5" v-if="posts.length > 0">
-          <v-col cols="12" sm="12" md="12" v-for="post in posts" :key="post.assignmentId">
+          <v-col
+            cols="12"
+            sm="12"
+            md="12"
+            v-for="post in posts"
+            :key="post.assignmentId"
+          >
             <CardAssigment :post="post"></CardAssigment>
           </v-col>
         </v-row>
@@ -655,6 +701,17 @@ const checkImageCountAndPost = () => {
               </p>
             </div>
           </v-col>
+        </v-row>
+        <v-row>
+          <v-row>
+            <v-col style="width: 100%">
+              <v-pagination
+                v-model="assignmentStore.currentPage"
+                :length="Math.ceil(totalPage / 5)"
+                rounded="circle"
+              ></v-pagination>
+            </v-col>
+          </v-row>
         </v-row>
       </v-tab-item>
       <!-- tab member -->
@@ -726,7 +783,13 @@ const checkImageCountAndPost = () => {
               </v-col>
               <v-col cols="10" style="display: flex; align-items: center">
                 <div>
-                  {{ member.studentId + " " + member.firstName + " " + member.lastName }}
+                  {{
+                    member.studentId +
+                    " " +
+                    member.firstName +
+                    " " +
+                    member.lastName
+                  }}
                 </div>
               </v-col>
               <v-divider></v-divider>
@@ -752,12 +815,20 @@ const checkImageCountAndPost = () => {
             </h1>
           </v-card-title>
         </v-card>
-        <v-card class="mx-auto" outlined style="padding: 20px; margin-top: 10px">
+        <v-card
+          class="mx-auto"
+          outlined
+          style="padding: 20px; margin-top: 10px"
+        >
           <v-row>
             <v-col col="12" sm="10" style="color: #3051ac">
               <v-card-title>คะแนนการเช็คชื่อ</v-card-title>
             </v-col>
-            <v-col col="12" sm="2" v-if="userStore.currentUser?.role === 'อาจารย์'">
+            <v-col
+              col="12"
+              sm="2"
+              v-if="userStore.currentUser?.role === 'อาจารย์'"
+            >
               <v-btn color="#093271" @click="exportFile" style="width: 200px"
                 >Export คะแนน</v-btn
               >
@@ -781,12 +852,14 @@ const checkImageCountAndPost = () => {
             </thead>
             <tbody>
               <tr v-for="user in filteredUsers" :key="user.userId">
-                <td class="text-center vertical-divider">{{ user.studentId }}</td>
+                <td class="text-center vertical-divider">
+                  {{ user.studentId }}
+                </td>
                 <td class="vertical-divider">
                   {{ user.firstName + " " + user.lastName }}
                 </td>
                 <td class="text-center vertical-divider">
-                  {{ assignmentStore.assignments.length }}
+                  {{ courseStore.currentCourse?.fullScore }}
                 </td>
                 <td class="text-center vertical-divider">
                   {{
@@ -849,10 +922,7 @@ const checkImageCountAndPost = () => {
       </v-tab-item>
     </v-container>
     <!-- Snackbar for error messages -->
-    <v-snackbar v-model="snackbar" timeout="3000" bottom>
-      {{ snackbarMessage }}
-      <v-btn text @click="snackbar = false">ปิด</v-btn>
-    </v-snackbar>
+
   </div>
   <UpdateAttendantDialogView />
 </template>
