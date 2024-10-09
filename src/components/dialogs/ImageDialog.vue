@@ -346,11 +346,9 @@ async function save() {
           messageStore.showError("Failed to extract face descriptor.");
           return;
         }
-
         // Convert user's saved face description from base64 string to Float32Array
         const userFaceDescriptionBase64 = userStore.currentUser?.faceDescriptions?.[0];
         const userFaceDescriptor = userFaceDescriptionBase64 ? base64ToFloat32Array(userFaceDescriptionBase64) : null;
-
         if (!userFaceDescriptor || !croppedFaceDescriptor) {
           console.error("Failed to obtain face descriptors.");
           messageStore.showError("Failed to obtain face descriptors.");
@@ -476,7 +474,6 @@ async function save() {
     await close();
 
   }
-
 }
 
 // Helper function to extract face descriptor from an image URL
@@ -655,17 +652,14 @@ const clearSelectedTeacher = () => {
           <Loader></Loader>
         </div>
         <v-card-title class="headline">
-          รูปภาพทั้งหมด
-          <v-btn icon @click="close">
-            <v-icon color="red">mdi-close</v-icon>
-          </v-btn>
+          อัปโหลดรูปภาพ
         </v-card-title>
         <v-card-text>
           <v-row v-if="!canUpload" class="mt-2">
             <v-col cols="12" class="text-center">
-              <v-alert type="info" class="mt-3">
-                <v-icon left>mdi-information-outline</v-icon>
-                กรุณาอัปโหลดรูปภาพให้ครบ 5 รูป
+              <v-alert class="mt-3" color="#D72626" >
+                <v-icon left size="30">mdi-information-outline</v-icon>
+                กรุณาอัปโหลดรูปภาพให้ครบ 5 รูป โดยรูปภาพห้ามซ้ำกัน
               </v-alert>
             </v-col>
           </v-row>
@@ -692,11 +686,11 @@ const clearSelectedTeacher = () => {
               </v-img>
             </v-col>
           </v-row>
-
           <!-- File Input -->
           <v-row>
             <v-col cols="12" class="mt-4">
-              <v-file-input :key="fileInputKey" label="อัปโหลดรูปภาพ" multiple prepend-icon="mdi-camera" filled
+              <div style="margin-bottom: 1%;font-weight: bold;">อัปโหลดรูปภาพ</div>
+              <v-file-input :key="fileInputKey" multiple prepend-icon="mdi-camera" filled
                 @change="handleFileChange" accept="image/*" variant="outlined" :disabled="checkConfirmImage()"
                 :rules="uploadRules"></v-file-input>
             </v-col>
@@ -741,6 +735,21 @@ const clearSelectedTeacher = () => {
               </v-btn>
             </v-col>
           </v-row>
+          <v-row v-if="!hasUploadedImages" style="justify-content: center;font-weight: bold;">
+            <div style="color: red;">ไม่มีรูปภาพ</div>
+          </v-row>
+
+          <!-- Upload Button -->
+          <v-row>
+            <v-btn color="error" @click="close" variant="text">
+              ยกเลิก
+            </v-btn>
+            <v-spacer></v-spacer>
+            <v-btn :disabled="!canUpload" color="primary" @click="save"
+              v-tooltip="'กรุณาอัปโหลดรูปภาพให้ครบ 5 รูป โดยรูปภาพห้ามซ้ำกัน'" variant="text">
+              ยืนยัน
+            </v-btn>
+          </v-row>
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -757,8 +766,9 @@ const clearSelectedTeacher = () => {
 <style scoped>
 .headline {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
+  font-weight: bolder;
 }
 
 .image-container {

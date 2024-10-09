@@ -310,7 +310,7 @@ export const useUserStore = defineStore("userStore", () => {
       console.log("Upload successful", file_.value);
     } catch (error) {
       console.error("Upload failed", error);
-      messageStore.showError("รูปแบบไฟล์ที่อัปโหลดไม่ถูกต้อง กรุณาอัปโหลดไฟล์ที่มีรหัส ชื่อ-นามสกุล และสาขาของนิสิต")
+      messageStore.showError("รูปแบบไฟล์ที่อัปโหลดไม่ถูกต้อง กรุณาลองอัปโหลดใหม่อีกครั้ง")
       file_.value = [];
     }
   }

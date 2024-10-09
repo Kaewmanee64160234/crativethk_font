@@ -76,11 +76,11 @@ const confirmDelEnrolment = async (id: number) => {
           <v-card-text>
             <div class="text-body" style="font-weight: bold;">อาจารย์ {{ item.course?.user?.firstName }}</div>
             <div class="text-body">
-              เวลาเริ่มเรียน Lecture {{ item.course?.timeInLec + " น." + " - " +
+              เวลาเริ่มเรียน Lecture {{ item.course?.dayInLec +" "+ item.course?.timeInLec + " น." + " - " +
                 item.course?.timeOutLec + " น." }}
             </div>
-            <div class="text-body" v-if="item.course?.typeCourses === 'เลคเชอร์และแลป'">
-              เวลาเริ่มเรียน Lab {{ item.course.timeInLab + " น." + " - " +
+            <div class="text-body" v-if="item.course?.typeCourses === 'Lecture & Lab'">
+              เวลาเริ่มเรียน Lab {{ item.course?.dayInLec +" "+ item.course.timeInLab + " น." + " - " +
                 item.course.timeOutLab + " น." }}
             </div>
             <div v-else>
@@ -140,5 +140,10 @@ const confirmDelEnrolment = async (id: number) => {
   margin-right: 20px;
   /* ปรับค่าตามที่คุณต้องการ */
   margin-bottom: 20px;
+}
+@media (max-width: 600px) {
+  .avatar {
+    top: 25%;
+  }
 }
 </style>

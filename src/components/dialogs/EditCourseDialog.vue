@@ -7,12 +7,9 @@ watch(() => courseStore.currentCourse!.nameCourses, (newVal) => {
     courseStore.courseNameError = "";
   }
 });
-
-watch(() => courseStore.currentCourse!.coursesId, (newVal) => {
-  if (newVal.length >= 8) {
-    courseStore.courseIdError = "";
-  }
-});
+const copyCodeCourse = () => {
+  navigator.clipboard.writeText(courseStore.currentCourse!.codeCourses);
+};
 </script>
 
 <template>
@@ -22,7 +19,7 @@ watch(() => courseStore.currentCourse!.coursesId, (newVal) => {
   <v-card-text>
     <v-card class="mb-4">
       <v-row>
-        <v-col>
+        <v-col cols="12" md="6">
           <v-card-title>
             <h4>ชื่อวิชา</h4>
           </v-card-title>
@@ -30,35 +27,38 @@ watch(() => courseStore.currentCourse!.coursesId, (newVal) => {
             <v-text-field clearable label="ชื่อวิชา" variant="outlined" v-model="courseStore.currentCourse!.nameCourses"
             :error-messages="courseStore.courseNameError"
               :rules="[
-                (v: any) => !!v || 'โปรดกรอกชื่อรายวิชา',
-                (v: any) => v.length >= 1 || 'ชื่อรายวิชาต้องมีอย่างน้อย 1 ตัวอักษร',
-                (v: any) => v.length <= 100 || 'ชื่อรายวิชาต้องมีไม่เกิน 100 ตัวอักษร'
+                (v: any) => !!v || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*',
+                (v: any) => v.length >= 1 || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*',
+                (v: any) => v.length <= 100 || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*'
               ]"></v-text-field>
           </v-card-text>
         </v-col>
-        <v-col>
+        <v-col cols="12" md="6">
           <v-card-title>
             <h4>ประเภทวิชา</h4>
           </v-card-title>
           <v-card-text>
-            <v-select label="ประเภทวิชา" :items="['เลคเชอร์', 'เลคเชอร์และแลป']"
+            <v-select label="ประเภทวิชา" :items="['Lecture', 'Lecture & Lab']"
               v-model="courseStore.currentCourse!.typeCourses" variant="outlined"
-              :rules="[(v: any) => !!v || 'โปรดเลือกประเภทรายวิชา']"></v-select>
+             ></v-select>
           </v-card-text></v-col>
       </v-row>
       <v-row>
-        <v-col>
+        <v-col cols="12" md="6">
           <v-card-title>
-            <h4>รหัสวิชา</h4>
+            <h4>รหัสเข้ารายวิชา</h4>
           </v-card-title>
           <v-card-text>
-            <v-text-field variant="outlined" label="รหัสวิชา" v-model="courseStore.currentCourse!.coursesId" 
-            :error-messages="courseStore.courseIdError"
-            :rules="[
-              (v: string) =>
-                /^[A-Za-z0-9]{8,}$/.test(v) ||
-                'โปรดกรอกรหัสวิชาอย่างน้อย 8 ตัวอักษร',
-            ]"></v-text-field>
+            <v-text-field :disabled="true" variant="outlined" v-model="courseStore.currentCourse!.codeCourses">
+            </v-text-field>
+          </v-card-text>
+        </v-col>
+        <v-col cols="12" md="6">
+          <v-card-title>
+            <h2>&nbsp;</h2>
+          </v-card-title>
+          <v-card-text>
+          <v-icon size="30" @click="copyCodeCourse">mdi mdi-content-copy</v-icon>
           </v-card-text>
         </v-col>
       </v-row>
@@ -69,5 +69,10 @@ watch(() => courseStore.currentCourse!.coursesId, (newVal) => {
 <style scoped>
 .mb-4 {
   margin-bottom: 1rem;
+}
+@media (max-width: 600px) {
+  .mb-4 {
+    margin-bottom: 0.5rem;
+  }
 }
 </style>

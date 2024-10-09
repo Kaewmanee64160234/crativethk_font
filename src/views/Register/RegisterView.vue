@@ -99,45 +99,46 @@ const saveUser = async () => {
             <Loader></Loader>
         </div>
         <v-row>
-            <v-col cols="12" sm="1"></v-col>
-            <v-col cols="12" sm="10" style="text-align: center;">
-                <v-icon size="100" color="#819DA9" style="padding-bottom: 5%;">mdi mdi-folder</v-icon>
-                <div>อัปโหลดไฟล์</div>
+            <v-col col="6" style="text-align: center;">
+                <v-icon size="100" color="#819DA9" style="color: #004BBC;">mdi mdi-folder</v-icon>
+                <div style="margin-bottom: 2%;color: #093271;font-weight: bold;">อัปโหลดไฟล์</div>
                 <v-file-input
                     accept=".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                     label="เลือกไฟล์อัปโหลด" variant="outlined" prepend-icon="mdi-file-document-plus-outline"
                     v-model="selectedFile" @change="uploadFile()"></v-file-input>
-                <div style="color: red;">*อัปโหลดไฟล์ได้เฉพาะไฟล์ Excel*</div>
+                <!-- <div style="color: red;">*อัปโหลดไฟล์ได้เฉพาะไฟล์ Excel*</div> -->
             </v-col>
-            <v-col cols="12" sm="1"></v-col>
-        </v-row>
-        <v-row>
-            <div>รายชื่อนิสิตทั้งหมด</div>
-        </v-row>
-        <v-row>
-            <v-col>
-                <v-card>
-                    <div v-if="userStore.file_.length > 0">
-                        <v-row v-for="(item, index) in paginatedFiles" :key="index">
-                            <v-col style="padding-left: 5%;">
-                                <h3>รหัสนิสิต: {{ item.id }}</h3>
-                                <p>ชื่อ: {{ item.name }}</p>
-                                <p>สาขา: {{ item.major }}</p>
-                                <p>ชั้นปี: {{ item.year }}</p>
-                            </v-col>
-                        </v-row>
-                    </div>
-                    <div v-else>
-                        <v-col style="text-align: center;color: red;">ไม่มีรายชื่อนิสิต</v-col>
-                    </div>
-                    <v-pagination v-model="page" :length="pageCount" :total-visible="7"></v-pagination>
-                </v-card>
+            <v-col col="6">
+                <v-row>
+                    <v-col>
+                        <v-card>
+                            <v-card color="primary" style="margin-bottom: 5%;">
+                                <v-card-title>รายชื่อนิสิตทั้งหมด</v-card-title>
+                            </v-card>
+                            <div v-if="userStore.file_.length > 0">
+                                <v-row v-for="(item, index) in paginatedFiles" :key="index">
+                                    <v-col style="padding-left: 5%; margin-bottom: 2%;">      
+                                        <h3>
+                                            {{ item.id }} &nbsp;&nbsp;&nbsp;&nbsp; {{ item.name }} &nbsp;&nbsp;&nbsp;&nbsp; สาขา &nbsp;&nbsp; {{ item.major }}
+                                        </h3>
+                                        <v-divider></v-divider>
+                                    </v-col>
+                                    
+                                </v-row>
+                            </div>
+                            <div v-else>
+                                <v-col style="text-align: center;color: gray;">ไม่มีข้อมูล</v-col>
+                            </div>
+                            <v-pagination v-model="page" :length="pageCount" :total-visible="7"></v-pagination>
+                        </v-card>
+                    </v-col>
+                </v-row>
             </v-col>
         </v-row>
         <v-row class="justify-end">
             <v-card-actions>
-                <v-btn color="error" variant="elevated" @click="cancel">ยกเลิก</v-btn>
-                <v-btn color="primary" variant="elevated" @click="saveUser()">เสร็จสิ้น</v-btn>
+                <v-btn style="width: 100px;" color="error" rounded="xl" variant="elevated" @click="cancel">ยกเลิก</v-btn>
+                <v-btn style="width: 100px;" color="primary" rounded="xl" variant="elevated" @click="saveUser()">เสร็จสิ้น</v-btn>
             </v-card-actions>
         </v-row>
     </v-container>
@@ -149,6 +150,7 @@ const saveUser = async () => {
     align-items: center;
     justify-content: center;
 }
+
 
 .loader-overlay {
     position: absolute;

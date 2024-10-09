@@ -32,50 +32,65 @@ const cancel = async () => {
     <v-row justify="center">
       <v-col cols="12" md="8" lg="6">
         <v-card>
-          <v-card-title>
+          <v-card-title style="text-align: center">
             <h2>รายละเอียดวิชา</h2>
           </v-card-title>
           <v-card-text>
-            <v-card variant="outlined" class="mb-4">
+            <v-card variant="outlined" class="mb-4" style="border: 2px solid #d9d9d9">
               <v-card-title>
-                <h3><v-icon>mdi mdi-book-open-page-variant-outline</v-icon>  {{ enrollmentStore.currentEnrollment?.course?.nameCourses }} <v-icon>mdi mdi-book-open-page-variant-outline</v-icon></h3>
+                <h3>
+                  <v-icon>mdi mdi-book-open-page-variant-outline</v-icon>
+                  {{ enrollmentStore.currentEnrollment?.course?.nameCourses }}
+                  <v-icon>mdi mdi-book-open-page-variant-outline</v-icon>
+                </h3>
               </v-card-title>
               <v-card-text>
                 <div>
-                  <b>กลุ่มเรียน:</b> {{ enrollmentStore.currentEnrollment?.course?.session }}
-                </div>
-                <div>
-                  <b>รหัสวิชา:</b> {{ enrollmentStore.currentEnrollment?.course?.coursesId }}
-                </div>
-                <div>
-                  <b>จำนวนหน่วยกิต:</b>  {{ enrollmentStore.currentEnrollment?.course?.credit }}
+                  <b>กลุ่มเรียน:</b>
+                  {{ enrollmentStore.currentEnrollment?.course?.session }}
                 </div>
                 <div>
                   <b>อาจารย์ผู้สอน:</b>
-                  {{ enrollmentStore.currentEnrollment?.course?.user?.firstName + " " +
-                    enrollmentStore.currentEnrollment?.course?.user?.lastName }}
-                </div>
-                <div>
-                  <b>เรียน Lecture:</b>
                   {{
-                    enrollmentStore.currentEnrollment?.course?.dayInLec + " " +
-                    enrollmentStore.currentEnrollment?.course?.timeInLec + " น." + " - "
-                    + enrollmentStore.currentEnrollment?.course?.timeOutLec + " น."
-                  }}
-                </div>
-                <div v-if="
-                  enrollmentStore.currentEnrollment?.course?.typeCourses ===
-                  'เลคเชอร์และแลป'
-                ">
-                 <b>เรียน Lab:</b>
-                  {{
-                    enrollmentStore.currentEnrollment?.course?.dayInLab + " " +
-                    enrollmentStore.currentEnrollment?.course?.timeInLab + " น." + " - "
-                    + enrollmentStore.currentEnrollment?.course?.timeOutLab + " น."
+                    enrollmentStore.currentEnrollment?.course?.user?.firstName +
+                    " " +
+                    enrollmentStore.currentEnrollment?.course?.user?.lastName
                   }}
                 </div>
                 <div>
-                  <b>คะแนนเต็ม:</b> {{ enrollmentStore.currentEnrollment?.course?.fullScore }}
+                  <b>เวลาเรียน Lecture:</b>
+                  {{
+                    enrollmentStore.currentEnrollment?.course?.dayInLec +
+                    " " +
+                    enrollmentStore.currentEnrollment?.course?.timeInLec +
+                    " น." +
+                    " - " +
+                    enrollmentStore.currentEnrollment?.course?.timeOutLec +
+                    " น."
+                  }}
+                </div>
+                <div
+                  v-if="
+                    enrollmentStore.currentEnrollment?.course?.typeCourses ===
+                    'Lecture & Lab'
+                  "
+                >
+                  <b>เวลาเรียน Lab:</b>
+                  {{
+                    enrollmentStore.currentEnrollment?.course?.dayInLab +
+                    " " +
+                    enrollmentStore.currentEnrollment?.course?.timeInLab +
+                    " น." +
+                    " - " +
+                    enrollmentStore.currentEnrollment?.course?.timeOutLab +
+                    " น."
+                  }}
+                </div>
+                <div>
+                  <b>คะแนนเต็ม:</b>
+                  {{
+                    enrollmentStore.currentEnrollment?.course?.fullScore + " " + "คะแนน"
+                  }}
                 </div>
               </v-card-text>
             </v-card>

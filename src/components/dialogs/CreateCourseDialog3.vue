@@ -1,22 +1,77 @@
 <script lang="ts" setup>
 import { useCourseStore } from "@/stores/course.store";
 import { useUserStore } from "@/stores/user.store";
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
+import Loader from "@/components/loader/Loader.vue";
 const courseStore = useCourseStore();
 const userStore = useUserStore();
 const selectedFile = ref(null);
-const checkStd = ref(true);
+const checkStd = ref([] as any);
+const isLoading = ref(false);
+const file_ = ref([] as {id:string, name:string}[]);
+
+onMounted(async () => {
+  await userStore.getUsers;
+});
 
 const uploadFile = async () => {
   if (selectedFile.value) {
+    courseStore.fileError = "";
+    isLoading.value = true;
     await courseStore.getFileUser(selectedFile.value);
+
+    const notFoundUsers = [];
+    const foundUsers = [];
+
+    for (let i = 0; i < courseStore.files.length; i++) {
+      const fileId = String(courseStore.files[i].id).trim();
+      const userExists = userStore.users.some(user => String(user.studentId).trim() === fileId && user.registerStatus === 'confirmed');
+
+      if (userExists) {
+        foundUsers.push(courseStore.files[i]);
+      } else {
+        notFoundUsers.push(courseStore.files[i]);
+      }
+    }
+    file_.value = [...notFoundUsers, ...foundUsers];
+    courseStore.files = [...foundUsers];
+    checkStd.value = new Array(courseStore.files.length).fill(false);
+    for (let i = 0; i < file_.value.length; i++) {
+      checkStd.value[i] = userStore.users.some(user => String(user.studentId).trim() === String(file_.value[i].id).trim() 
+      && user.registerStatus === 'confirmed');
+      console.log("checkStd.value ", checkStd.value);
+    }
+    isLoading.value = false;
   }
 };
+
+
+
+
+
+watch(() => selectedFile, (newVal) => {
+  if (newVal.value) {
+    courseStore.fileError = "";
+  }
+});
 
 onMounted(async () => {
   await userStore.getUsers();
 
 });
+
+const delFile = () => {
+  if (file_.value.length <= 0) {
+    {
+      courseStore.fileError = "*กรุณาอัปโหลดไฟล์ .xlsx*";
+      return;
+    }
+  }
+  file_.value = [];
+  courseStore.files = [];
+  selectedFile.value = null;
+  courseStore.fileError = "";
+};
 
 </script>
 
@@ -26,6 +81,9 @@ onMounted(async () => {
   </v-card-title>
   <v-card-text>
     <v-card class="mb-4">
+      <div v-if="isLoading" class="loader-overlay">
+        <Loader></Loader>
+      </div>
       <v-row>
         <v-col col="12" sm="6">
           <v-card-title>
@@ -35,35 +93,48 @@ onMounted(async () => {
             <v-file-input
               accept=".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
               label="เลือกไฟล์อัปโหลด" variant="outlined" prepend-icon="mdi-file-document-plus-outline"
-              v-model="selectedFile" @change="uploadFile()"></v-file-input>
+              v-model="selectedFile" @change="uploadFile()" :error-messages="courseStore.fileError"></v-file-input>
+          </v-card-text>
+        </v-col>
+        <v-col>
+          <v-card-title>
+            <h5>&nbsp;</h5>
+          </v-card-title>
+          <v-card-text class="d-flex justify-end">
+            <v-btn style="width: 120px;" color="error" @click="delFile">ลบไฟล์ทั้งหมด</v-btn>
           </v-card-text>
         </v-col>
       </v-row>
       <v-card style="max-height: 300px; width: 95%; margin: 0 auto; overflow-y: auto;">
-          <v-row>
-            <v-col>
-              <div v-if="courseStore.files.length > 0">
-                <v-row align="center" v-for="(item, index) in courseStore.files" :key="index">
-                  <v-col cols="auto">
-                    <v-avatar size="50">
-                      <v-img></v-img>
-                    </v-avatar>
-                  </v-col>
-                  <v-col>
-                    <h3>{{ item.id }}</h3>
-                    <p>{{ item.name }}</p>
-                  </v-col>
-                  <v-col cols="auto">
-                    <v-checkbox color="primary" v-model="checkStd"></v-checkbox>
-                  </v-col>
-                </v-row>
-              </div>
-              <div v-else>
-                <v-col style="text-align: center;color: red;">ไม่มีรายชื่อนิสิต</v-col>
-              </div>
-            </v-col>
-          </v-row>
-        </v-card>
+        <v-row>
+          <v-col>
+            <div v-if="file_.length > 0">
+              <v-row align="center" v-for="(item, index) in file_" :key="index">
+                <v-col cols="auto">
+                  <v-avatar size="50">
+                    <v-img></v-img>
+                  </v-avatar>
+                </v-col>
+                <v-col :class="{
+                  'error-text': !userStore.users.some(user =>
+                    String(user.studentId).trim() === String(item.id).trim() && user.registerStatus === 'confirmed')
+                }">
+                  <h3>{{ item.name }}</h3>
+                  <p>{{ item.id + "@go.buu.ac.th" }}</p>
+                </v-col>
+                <v-col cols="auto">
+                  <v-checkbox :disabled="!userStore.users.some(user =>
+                    String(user.studentId).trim() === String(item.id).trim() && user.registerStatus === 'confirmed')"
+                    color="primary" v-model="checkStd[index]"></v-checkbox>
+                </v-col>
+              </v-row>
+            </div>
+            <div v-else>
+              <v-col style="text-align: center;color: #888888;">รายชื่อนิสิตทั้งหมด</v-col>
+            </div>
+          </v-col>
+        </v-row>
+      </v-card>
     </v-card>
   </v-card-text>
 </template>
@@ -76,5 +147,23 @@ onMounted(async () => {
 
 .mb-4 {
   margin-bottom: 1rem;
+}
+
+.loader-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+.error-text {
+  color: red;
 }
 </style>
