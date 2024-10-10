@@ -498,8 +498,14 @@ const cancelExportFile = () => {
   console.log("export failed");
 };
 
-// showSnackbar
-const showSnackbar = ref(false);
+// closeDialog and reset image and close camera
+const closeDialog = () => {
+  showDialog.value = false;
+  imageUrls.value = [];
+  capturedImages.value = [];
+  imageFiles.value = [];
+  stopCamera();
+};
 
 </script>
 
@@ -655,7 +661,7 @@ const showSnackbar = ref(false);
 
             <!-- Dialog Actions (Fixed at the Bottom) -->
             <v-card-actions class="fixed-action-buttons">
-              <v-btn color="error" @click="showDialog = false" outlined>
+              <v-btn color="error" @click="closeDialog()" outlined>
                 ยกเลิก
               </v-btn>
               <v-spacer></v-spacer>
