@@ -771,7 +771,10 @@ const clearSelectedTeacher = () => {
           <!-- Button to Select Teacher -->
           <v-row class="my-4">
             <v-col cols="12">
-              <v-row align="center">
+              <v-row
+                align="center"
+                v-if="userStore.currentUser?.registerStatus === 'confirmed'"
+              >
                 <v-col cols="auto">
                   <v-text
                     class="font-weight-bold"
@@ -793,7 +796,11 @@ const clearSelectedTeacher = () => {
                 </v-col>
               </v-row>
             </v-col>
-            <v-col cols="12" class="mt-2">
+            <v-col
+              cols="12"
+              class="mt-2"
+              v-if="userStore.currentUser?.registerStatus === 'confirmed'"
+            >
               <v-row align="center">
                 <v-col cols="auto">
                   <v-text

@@ -78,6 +78,7 @@ const saveEnrollment = () => {
 
 const cancel = async () => {
   await enrollmentStore.getCourseByStudentId(userStore.currentUser!.studentId!);
+  enrollmentStore.codeCourse = "";
   courseStore.showCreateDialog = false;
 };
 </script>
