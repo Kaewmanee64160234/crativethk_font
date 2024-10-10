@@ -98,6 +98,13 @@ const goToMapping2 = async () => {
   showDialog.value = true;
   await attdentStore.getAttendanceByAssignmentId(props.post!.assignmentId! + "");
 };
+// Mapping
+const mapping = () => {
+  assignmentStore.currentAssignment = props.post;
+  router.push(
+    `/mapping2/assignment/${props.post.assignmentId}/course/${courseStore.currentCourse?.coursesId}`
+  );
+};
 
 const handleFileChange = (event: Event) => {
   const input = event.target as HTMLInputElement;
@@ -258,6 +265,11 @@ function close() {
             <v-btn icon="mdi-dots-vertical" variant="text" v-bind="props"></v-btn>
           </template>
           <v-list>
+            <v-list-item @click="mapping">
+              <v-list-item-title>ตรวจสอบการเช็คชื่อ</v-list-item-title>
+            </v-list-item>
+            <v-divider></v-divider>
+
             <v-list-item @click="recheckMapping">
               <v-list-item-title>ยืนยันนิสิตที่ให้ตรวจสอบอีกครั้ง</v-list-item-title>
             </v-list-item>
@@ -270,6 +282,7 @@ function close() {
               <v-list-item-title>แก้ไขชื่อรายการเช็คชื่อ</v-list-item-title>
             </v-list-item>
             <v-divider></v-divider>
+
             <v-list-item @click="deleteAssignment">
               <v-list-item-title>ลบรายการเช็คชื่อ</v-list-item-title>
             </v-list-item>
