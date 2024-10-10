@@ -51,7 +51,6 @@ const videoRef = ref<HTMLVideoElement | null>(null);
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const assignmentManual = ref(false);
 
-
 const isTeacher = computed(() => userStore.currentUser?.role === "อาจารย์");
 const filteredAssignments = computed(() => {
   // Only include assignments that have corresponding attendance data.
@@ -110,9 +109,9 @@ const calculateTotalScore = (
       userId,
       assignment.assignmentId!
     );
-    if (status === "มาเรียน") {
+    if (status === "present") {
       return total + 1;
-    } else if (status === "มาสาย") {
+    } else if (status === "late") {
       return total + 0.5;
     }
     return total;
@@ -132,10 +131,8 @@ const getAttendanceStatus = (
   );
   return attendances[attendanceIndex]
     ? attendances[attendanceIndex].attendanceStatus
-    : "ไม่มาเรียน";
+    : "absent";
 };
-
-
 
 const removeImage = (index: number) => {
   if (index < capturedImages.value.length) {
@@ -219,7 +216,7 @@ const dataURLtoFile = (dataurl: string, filename: string) => {
   }
   return new File([u8arr], filename, { type: mime });
 };
-const checkImageCountAndPost = () => {
+const checkImageCountAndPost = async () => {
   if ([...capturedImages.value, ...imageUrls.value].length > 20) {
     // dialogclosw
     showDialog.value = false;
@@ -256,7 +253,9 @@ const checkImageCountAndPost = () => {
 
     return;
   } else {
-    createPost();
+   
+    await createPost();
+    await closeDialog();
   }
 };
 // Function to resize an image and convert it to a base64 string
@@ -424,8 +423,6 @@ const createPost = async () => {
   console.timeEnd("Total createPost execution time");
 };
 
-
-
 // open show dialog and set value editAttendance
 const openDialog = (assignment: Assignment, user: User) => {
   //filter attendance from assignments
@@ -500,13 +497,13 @@ const cancelExportFile = () => {
 
 // closeDialog and reset image and close camera
 const closeDialog = () => {
+  stopCamera();
+
   showDialog.value = false;
   imageUrls.value = [];
   capturedImages.value = [];
   imageFiles.value = [];
-  stopCamera();
 };
-
 </script>
 
 <template>
@@ -680,8 +677,6 @@ const closeDialog = () => {
               </v-btn>
             </v-card-actions>
           </v-card>
-
-        
         </v-dialog>
 
         <v-row class="pt-5" v-if="posts.length > 0">
@@ -890,7 +885,7 @@ const closeDialog = () => {
                   class="text-center vertical-divider"
                 >
                   <template
-                    v-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'มาเรียน'"
+                    v-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'present'"
                   >
                     <v-btn
                       density="compact"
@@ -904,7 +899,7 @@ const closeDialog = () => {
                     <v-icon color="green" v-else>mdi-check-circle</v-icon>
                   </template>
                   <template
-                    v-else-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'มาสาย'"
+                    v-else-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'late'"
                   >
                     <v-btn
                       density="compact"
@@ -936,8 +931,6 @@ const closeDialog = () => {
         </v-card>
       </v-tab-item>
     </v-container>
-    <!-- Snackbar for error messages -->
-
   </div>
   <UpdateAttendantDialogView />
 </template>

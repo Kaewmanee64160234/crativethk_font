@@ -11,6 +11,7 @@ import { useUserStore } from "./user.store";
 export const useAttendanceStore = defineStore("attendanceStore", () => {
   const attendances = ref<Attendance[]>();
   const showDialog = ref(false);
+  const attendancesList = ref<Attendance[]>();
   const userAttendance = ref<User>({
     userId: 0,
     firstName: "",
@@ -119,7 +120,7 @@ const userStore = useUserStore();
       );
       console.log(res.data);
 
-      attendances.value = res.data;
+      attendancesList.value = res.data;
     } catch (error) {
       console.error(
         "An error occurred during getAttendanceByStatusInAssignment:",
@@ -251,7 +252,8 @@ const userStore = useUserStore();
     userAttendance,
     updateAttendanceTeacher,
     getAttendanceByAssignmentAndStudent,
-    removeAttendance
+    removeAttendance,
+    attendancesList
 
   };
 });

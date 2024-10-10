@@ -361,7 +361,7 @@ const createAttendance = async () => {
         {
           attendanceId: 0,
           attendanceDate: new Date(),
-          attendanceStatus: "มาเรียน",
+          attendanceStatus: "present",
           attendanceConfirmStatus: identifiedUser ? "confirmed" : "notConfirmed",
           assignment: assignmentStore.currentAssignment,
           user: identifiedUser,

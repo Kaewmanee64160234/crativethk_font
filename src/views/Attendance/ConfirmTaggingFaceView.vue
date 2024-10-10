@@ -151,7 +151,10 @@ const reCheckAttendance = async (attendance: Attendance) => {
     const assignmentDate = new Date(assignmentStore.currentAssignment!.createdDate!);
     const assignmentTime = assignmentDate.getTime();
     const diff = currentDate - assignmentTime;
-    attendance.attendanceStatus = diff > 900000 ? "มาสาย" : "มาเรียน";
+    console.log("Diff:", diff);
+    
+    
+    attendance.attendanceStatus = diff > 900000 ? "late" : "present";
     attendance.attendanceConfirmStatus = "recheck";
     attendance.user = userStore.currentUser;
     attendance.attendanceScore = 100;
