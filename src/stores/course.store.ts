@@ -7,9 +7,9 @@ import type Course from "./types/Course";
 export const useCourseStore = defineStore("courseStore", () => {
   const courses = ref<Course[]>([]);
   const course = ref<Course>();
+  const courseId = ref("");
   const files = ref([] as {id:string, name:string}[]);
   const nameCourse = ref("");
-  const courseId = ref("");
   const typeCourse = ref("Lecture");
   const session = ref("1");
   const credit = ref(1);
@@ -112,7 +112,6 @@ export const useCourseStore = defineStore("courseStore", () => {
     credit,
     fullScore,
     typeCourse,
-    courseId,
     nameCourse,
     timeInLab,
     timeOutLab,
@@ -139,6 +138,7 @@ export const useCourseStore = defineStore("courseStore", () => {
     timeOutLabError,
     timeOutLecError,
     scoreError,
-    fileError
+    fileError,
+    courseId
   };
 });

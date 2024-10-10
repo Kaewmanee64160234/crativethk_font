@@ -9,15 +9,17 @@ import { useMessageStore } from "@/stores/message";
 const courseStore = useCourseStore();
 const enrollmentStore = useEnrollmentStore();
 const userStore = useUserStore();
-const codeCourse = ref("");
 const codeCourseError = ref("");
 const messageStore = useMessageStore();
 
-watch(codeCourse, (newVal) => {
-  if (newVal.length >= 10) {
-    codeCourseError.value = "";
+watch(
+  () => enrollmentStore.codeCourse,
+  (newVal) => {
+    if (newVal.length == 4) {
+      codeCourseError.value = "";
+    }
   }
-});
+);
 
 onMounted(async () => {
   courseStore.getCourses();
@@ -29,17 +31,19 @@ const saveEnrollment = () => {
   codeCourseError.value = ""; // Reset error message
 
   // Validate course code length
-  if (codeCourse.value.length < 10) {
-    codeCourseError.value = "โปรดกรอกรหัสห้องเรียน 10 ตัวอักษร";
+  if (enrollmentStore.codeCourse.length != 4) {
+    codeCourseError.value = "*กรุณากรอกตัวอักษรหรือตัวเลขจำนวน 4 ตัว*";
     return;
   }
 
   let courseFound = false;
 
   for (let i = 0; i < courseStore.courses.length; i++) {
-    if (codeCourse.value === courseStore.courses[i].codeCourses) {
+    if (enrollmentStore.codeCourse === courseStore.courses[i].coursesId) {
       for (let j = 0; j < enrollmentStore.enrollments.length; j++) {
-        if (codeCourse.value === enrollmentStore.enrollments[j].course?.codeCourses) {
+        if (
+          enrollmentStore.codeCourse === enrollmentStore.enrollments[j].course?.coursesId
+        ) {
           messageStore.showError("คุณได้เข้าร่วมวิชานี้แล้ว");
           courseStore.showCreateDialog = false;
           return;
@@ -57,7 +61,7 @@ const saveEnrollment = () => {
 
       try {
         enrollmentStore.createEnrollment(newEnrollment);
-        codeCourse.value = "";
+        enrollmentStore.codeCourse = "";
         courseStore.showCreateDialog2 = true;
         return;
       } catch (error) {
@@ -71,6 +75,11 @@ const saveEnrollment = () => {
     codeCourseError.value = "รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง";
   }
 };
+
+const cancel = async () => {
+  await enrollmentStore.getCourseByStudentId(userStore.currentUser!.studentId!);
+  courseStore.showCreateDialog = false;
+};
 </script>
 
 <template>
@@ -78,7 +87,7 @@ const saveEnrollment = () => {
     <v-row justify="center">
       <v-col cols="12" md="8" lg="6">
         <v-card>
-          <v-card-title style="text-align: center;">
+          <v-card-title style="text-align: center">
             <h2>เข้าร่วมรายวิชา</h2>
           </v-card-title>
           <v-card-text>
@@ -91,21 +100,21 @@ const saveEnrollment = () => {
                   clearable
                   label="รหัสวิชา"
                   variant="outlined"
-                  v-model="codeCourse"
+                  v-model="enrollmentStore.codeCourse"
                   :error-messages="codeCourseError"
-                  :rules="[ 
-                    (v: string) =>
-                    /^(?=.*[A-Za-z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{10,}$/.test(v) ||
-                      '*กรุณากรอกตัวอักษรหรือตัวเลขจำนวน 4 ตัว*',
+                  :rules="[
+                    (v: string) => /^[A-Za-z0-9]{4}$/.test(v) || '*กรุณากรอกตัวอักษรหรือตัวเลขจำนวน 4 ตัว*',
                   ]"
                 ></v-text-field>
               </v-card-text>
             </v-card>
           </v-card-text>
           <v-card-actions class="d-flex justify-end">
-            <v-btn style="font-weight: bold;" color="error" @click="courseStore.showCreateDialog = false">ยกเลิก</v-btn>
+            <v-btn style="font-weight: bold" color="error" @click="cancel">ยกเลิก</v-btn>
             <v-spacer></v-spacer>
-            <v-btn style="font-weight: bold;" @click="saveEnrollment" color="primary">ต่อไป</v-btn>
+            <v-btn style="font-weight: bold" @click="saveEnrollment" color="primary"
+              >ต่อไป</v-btn
+            >
           </v-card-actions>
           <v-dialog v-model="courseStore.showCreateDialog2" persistent>
             <CreateEnrolmentDialog2 />
@@ -120,11 +129,13 @@ const saveEnrollment = () => {
 .mb-4 {
   margin-bottom: 1rem;
 }
+
 .title {
   word-wrap: break-word;
   white-space: normal;
   margin-bottom: 2%;
 }
+
 .colorText {
   color: red;
 }

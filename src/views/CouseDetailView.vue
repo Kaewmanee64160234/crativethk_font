@@ -13,7 +13,6 @@ import type { User } from "@/stores/types/User";
 import * as XLSX from "xlsx";
 import { useLoaderStore } from "@/stores/loader.store";
 import { useMessageStore } from "@/stores/message";
-import assignment from "@/services/assignment";
 import Swal from "sweetalert2";
 
 const route = useRoute();
