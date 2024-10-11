@@ -1,53 +1,60 @@
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref,watch } from 'vue';
 import { useAssignmentStore } from '@/stores/assignment.store';
 import type Assignment from '@/stores/types/Assignment';
 
 const assignmentStore = useAssignmentStore();
 const showDialog = ref(true);
+const isValid = ref(false); // State to track form validity
 
 // Define properties for the component
 const props = defineProps<{
   post: Assignment;
-  assignmentId: number; // Ensure this is being set correctly when the component is used
+  assignmentId: number;
 }>();
 
 // Initialize editAssignment with assignmentId
 const editAssignment = ref<any>({
-  assignmentId: props.assignmentId ? props.assignmentId : assignmentStore.currentAssignment?.assignmentId ,
+  assignmentId: props.assignmentId || assignmentStore.currentAssignment?.assignmentId || 0,
   nameAssignment: assignmentStore.currentAssignment?.nameAssignment || '',
-  assignmentTime: props.post.assignmentTime ? props.post.assignmentTime : assignmentStore.currentAssignment?.assignmentTime!,
-  assignmentImages: props.post.assignmentImages ? props.post.assignmentImages : assignmentStore.currentAssignment?.assignmentImages,
-  statusAssignment: props.post.statusAssignment ? props.post.statusAssignment : assignmentStore.currentAssignment?.statusAssignment!,
-  room: props.post.room ? props.post.room : assignmentStore.currentAssignment?.room,
-  attdances: props.post.attdances ? props.post.attdances : assignmentStore.currentAssignment?.attdances,
-  course: props.post.course ? props.post.course : assignmentStore.currentAssignment?.course!,
+  assignmentTime: props.post.assignmentTime || assignmentStore.currentAssignment?.assignmentTime || '',
+  assignmentImages: props.post.assignmentImages || assignmentStore.currentAssignment?.assignmentImages || [],
+  statusAssignment: props.post.statusAssignment || assignmentStore.currentAssignment?.statusAssignment || '',
+  room: props.post.room || assignmentStore.currentAssignment?.room || '',
+  attdances: props.post.attdances || assignmentStore.currentAssignment?.attdances || [],
+  course: props.post.course || assignmentStore.currentAssignment?.course || '',
 });
+
 // Function to save changes
 async function save() {
   try {
-    // Debug: Check if assignmentId is correctly set
     console.log('Assignment ID to update:', editAssignment.value.assignmentId);
 
     // Ensure that assignmentId is valid
-    if (!editAssignment.value.assignmentId || parseInt(editAssignment.value.assignmentId+'') === 0) {
+    const id = editAssignment.value.assignmentId;
+    if (!id || id <= 0) {
       throw new Error('Invalid assignment ID');
     }
 
+    // Validate form before proceeding
+    if (!isValid.value) {
+      throw new Error('Form is not valid. Please check the inputs.');
+    }
+
     // Attempt to update the assignment with the new name
-    await assignmentStore.updateAssignment(editAssignment.value.assignmentId+'',editAssignment.value );
+    await assignmentStore.updateAssignment(String(id), editAssignment.value);
+    console.log('Assignment updated successfully');
     close();
     window.location.reload();
-    console.log('Assignment updated successfully'); // Log success
   } catch (error) {
-    console.error('Error updating assignment:', error); // Log any errors
+    console.error('Error updating assignment:', error);
   }
 }
 
 // Function to close dialog
 function close() {
   showDialog.value = false;
-  assignmentStore.closeEditDialog(); // Ensure the store is cleared or updated
+  assignmentStore.closeEditDialog();
 }
 
 // Hook to initialize assignment data when the component is mounted
@@ -58,15 +65,27 @@ onMounted(() => {
 // Function to initialize the assignment data
 function initializeEditAssignment() {
   editAssignment.value = {
-  assignmentId: props.assignmentId || assignmentStore.currentAssignment?.assignmentId || 0,
-  nameAssignment: assignmentStore.currentAssignment?.nameAssignment || '',
-};
-
+    assignmentId: props.assignmentId || assignmentStore.currentAssignment?.assignmentId || 0,
+    nameAssignment: props.post.nameAssignment || assignmentStore.currentAssignment?.nameAssignment || '',
+    assignmentTime: props.post.assignmentTime || assignmentStore.currentAssignment?.assignmentTime || '',
+    assignmentImages: props.post.assignmentImages || assignmentStore.currentAssignment?.assignmentImages || [],
+    statusAssignment: props.post.statusAssignment || assignmentStore.currentAssignment?.statusAssignment || '',
+    room: props.post.room || assignmentStore.currentAssignment?.room || '',
+    attdances: props.post.attdances || assignmentStore.currentAssignment?.attdances || [],
+    course: props.post.course || assignmentStore.currentAssignment?.course || '',
+  };
 }
-console.log('Props:', props);
-console.log('Edit Assignment ID:', editAssignment.value.assignmentId);
 
+// Validate form method to check inputs
+function validateForm() {
+  // Ensure nameAssignment is between 1 and 50 characters
+  isValid.value = !!editAssignment.value.nameAssignment && editAssignment.value.nameAssignment.length >= 1 && editAssignment.value.nameAssignment.length <= 50;
+}
+
+// Watch for changes in editAssignment fields and validate
+watch(() => editAssignment.value.nameAssignment, validateForm);
 </script>
+
 
 <template>
   <v-container>
@@ -85,21 +104,34 @@ console.log('Edit Assignment ID:', editAssignment.value.assignmentId);
         <!-- Dialog content -->
         <v-card-text>
           <!-- Form to edit assignment name -->
-          <v-form ref="form" @submit.prevent="save">
-            <!-- Text field to input the assignment name -->
-            <v-text-field v-model="editAssignment.nameAssignment" label="Assignment Name" required></v-text-field>
+          <v-form ref="form" @submit.prevent="save" v-model="isValid">
+            <!-- Text field to input the assignment name with validation -->
+            <v-text-field
+              v-model="editAssignment.nameAssignment"
+              label="Assignment Name"
+              variant="outlined"
+              outlined
+              required
+              maxlength="50"
+              :rules="[
+                (v) => !!v || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*',
+                (v) => (v && v.length >= 1 && v.length <= 50) || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*'
+              ]"
+              prepend-inner-icon="mdi-assignment"
+            ></v-text-field>
           </v-form>
         </v-card-text>
         <!-- Dialog actions (buttons) -->
         <v-card-actions>
           <v-spacer></v-spacer>
-          <!-- Button to save changes -->
-          <v-btn color="primary" @click="save">บันทึก</v-btn>
+          <!-- Button to save changes with form validation -->
+          <v-btn color="primary" :disabled="!isValid" @click="save">บันทึก</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
   </v-container>
 </template>
+
 
 <style scoped>
 .headline {

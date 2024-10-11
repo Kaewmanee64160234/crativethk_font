@@ -10,6 +10,7 @@ import ConfirmDialog from "@/components/dialogs/ConfirmDialog.vue";
 import EditAssignment from "@/components/dialogs/EditAssignment.vue";
 
 const router = useRouter();
+const isValid = ref(false);
 const courseStore = useCourseStore();
 const assignmentStore = useAssignmentStore();
 const confirmDlg = ref();
@@ -361,28 +362,38 @@ function close() {
     <v-card>
       <!-- Dialog title without the close button -->
       <v-card-title class="headline">
-        Edit Assignment
+        แก้ไขชื่อการเช็คชื่อ
         <v-spacer></v-spacer>
         <!-- Close button for dialog -->
         <v-btn icon @click="close" class="close-button">
           <v-icon color="red">mdi-close</v-icon>
         </v-btn>
       </v-card-title>
+      
       <!-- Dialog content with form -->
       <v-card-text>
-        <v-form ref="form" @submit.prevent="save">
+        <v-form ref="form" v-model="isValid" @submit.prevent="save">
           <v-text-field
             v-model="props.post.nameAssignment!"
             label="Assignment Name"
+            variant="outlined"
+            outlined
             required
+            maxlength="50"
+            prepend-inner-icon="mdi-assignment"
+            :rules="[
+              (v) => !!v || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*',
+              (v) => (v && v.length >= 1 && v.length <= 50) || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*'
+            ]"
           ></v-text-field>
         </v-form>
       </v-card-text>
+      
       <!-- Dialog actions with Confirm and Cancel buttons -->
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="secondary" @click="showDialogEditAssignment = false">ยกเลิก</v-btn>
-        <v-btn color="primary" @click="save">ยืนยัน</v-btn>
+        <v-btn  color="grey" @click="showDialogEditAssignment = false">ยกเลิก</v-btn>
+        <v-btn  color="primary" :disabled="!isValid" @click="save">ยืนยัน</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -396,6 +407,11 @@ function close() {
 }
 
 .close-button {
-  margin-right: -12px; /* Adjust this value if necessary to align with the edge */
+  margin-right: -12px;
+}
+
+.v-btn.text {
+  text-transform: none;
+  font-weight: bold;
 }
 </style>
