@@ -468,9 +468,9 @@ const confirmExportFile = () => {
       );
       let translatedStatus = "";
 
-      if (status === "มาเรียน") {
+      if (status === "present") {
         translatedStatus = "มา";
-      } else if (status === "มาสาย") {
+      } else if (status === "late") {
         translatedStatus = "สาย";
       } else {
         translatedStatus = "ขาด";
@@ -482,11 +482,31 @@ const confirmExportFile = () => {
     return userData;
   });
 
-  console.log(data);
-
+  // Create the worksheet and workbook
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Report");
+
+  // Define a style for borders
+  const borderStyle = {
+    top: { style: "thin" },
+    bottom: { style: "thin" },
+    left: { style: "thin" },
+    right: { style: "thin" },
+  };
+
+  // Iterate through each cell in the worksheet and apply border styles
+  const range = XLSX.utils.decode_range(ws['!ref']!);
+  for (let R = range.s.r; R <= range.e.r; ++R) {
+    for (let C = range.s.c; C <= range.e.c; ++C) {
+      const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+      if (!ws[cellAddress]) continue;
+      if (!ws[cellAddress].s) ws[cellAddress].s = {};
+      ws[cellAddress].s.border = borderStyle;
+    }
+  }
+
+  // Write the file with the applied styles
   XLSX.writeFile(wb, "Report.xlsx");
 
   console.log("Export successful");
