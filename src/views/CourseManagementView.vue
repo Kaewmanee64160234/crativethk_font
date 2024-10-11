@@ -70,22 +70,22 @@ const advanceStep = () => {
       hasError = true;
     }
 
-    if (courseStore.timeInLec === "00:00") {
+    if (!isValidTime(courseStore.timeInLec) || courseStore.timeInLec === "00:00") {
       courseStore.timeInLecError = "*กรุณากรอกเวลาเป็น HH:MM*";
       hasError = true;
     }
 
-    if (courseStore.timeOutLec === "00:00") {
+    if (!isValidTime(courseStore.timeOutLec) || courseStore.timeOutLec === "00:00") {
       courseStore.timeOutLecError = "*กรุณากรอกเวลาเป็น HH:MM*";
       hasError = true;
     }
     if (courseStore.typeCourse === "Lecture & Lab") {
-      if (courseStore.timeInLab === "00:00") {
+      if (!isValidTime(courseStore.timeInLab) || courseStore.timeInLab === "00:00") {
         courseStore.timeInLabError = "*กรุณากรอกเวลาเป็น HH:MM*";
         hasError = true;
       }
 
-      if (courseStore.timeOutLab === "00:00") {
+      if (!isValidTime(courseStore.timeOutLab) || courseStore.timeOutLab === "00:00") {
         courseStore.timeOutLabError = "*กรุณากรอกเวลาเป็น HH:MM*";
         hasError = true;
       }
@@ -96,9 +96,8 @@ const advanceStep = () => {
   }
 };
 
-const advanceStep_Edit = () => {
+const advanceStep_Edit = async () => {
   let hasError = false;
-
   if (currentStep.value === 1) {
     if (courseStore.currentCourse) {
       if (
@@ -123,20 +122,32 @@ const advanceStep_Edit = () => {
       courseStore.scoreError = "*กรุณากรอกตัวเลข 1-100*";
       hasError = true;
     }
-    if (courseStore.currentCourse!.timeInLec === "00:00") {
+    if (
+      !isValidTime(courseStore.currentCourse!.timeInLec) ||
+      courseStore.currentCourse!.timeInLec === "00:00"
+    ) {
       courseStore.timeInLecError = "*กรุณากรอกเวลาเป็น HH:MM*";
       hasError = true;
     }
-    if (courseStore.currentCourse!.timeOutLec === "00:00") {
+    if (
+      !isValidTime(courseStore.currentCourse!.timeOutLec) ||
+      courseStore.currentCourse!.timeOutLec === "00:00"
+    ) {
       courseStore.timeOutLecError = "*กรุณากรอกเวลาเป็น HH:MM*";
       hasError = true;
     }
     if (courseStore.currentCourse!.typeCourses === "Lecture & Lab") {
-      if (courseStore.currentCourse!.timeInLab === "00:00") {
+      if (
+        !isValidTime(courseStore.currentCourse!.timeInLab!) ||
+        courseStore.currentCourse!.timeInLab === "00:00"
+      ) {
         courseStore.timeInLabError = "*กรุณากรอกเวลาเป็น HH:MM*";
         hasError = true;
       }
-      if (courseStore.currentCourse!.timeOutLab === "00:00") {
+      if (
+        !isValidTime(courseStore.currentCourse!.timeOutLab!) ||
+        courseStore.currentCourse!.timeOutLab === "00:00"
+      ) {
         courseStore.timeOutLabError = "*กรุณากรอกเวลาเป็น HH:MM*";
         hasError = true;
       }
@@ -147,12 +158,18 @@ const advanceStep_Edit = () => {
   }
 };
 
-const retreatStep = () => {
+const isValidTime = (time: string) => {
+  return /^(2[0-3]|[01]?[0-9]):([0-5]?[0-9])$/.test(time);
+};
+
+const retreatStep = async () => {
+  await courseStore.getCourseByTeachId(userStore.currentUser!.userId!);
   if (currentStep.value > 1) {
     currentStep.value--;
   }
   clearCourseError();
 };
+
 const clearCourse = () => {
   courseStore.nameCourse = "";
   courseStore.courseId = "";
@@ -183,6 +200,7 @@ const closeDialog = async () => {
   currentStep.value = 1;
   await courseStore.getCourseByTeachId(userStore.currentUser!.userId!);
   clearCourse();
+  clearCourseError();
 };
 
 const finishCreation = async () => {
@@ -286,7 +304,16 @@ const confirmDelCourse = async (id: string) => {
           <v-img height="100" :src="randomImage()" cover>
             <v-card-title>
               <div class="text-white">กลุ่มเรียนที่ {{ item.session }}</div>
-              <h1 class="text-white">{{ item.nameCourses }}</h1>
+              <h1
+                class="text-white"
+                :class="
+                  item.nameCourses.length > 8
+                    ? 'course-name-multiline'
+                    : 'course-name-singleline'
+                "
+              >
+                {{ item.nameCourses }}
+              </h1>
             </v-card-title>
             <v-menu offset-y>
               <template #activator="{ props }">
@@ -482,9 +509,31 @@ const confirmDelCourse = async (id: string) => {
   /* ปรับค่าตามที่คุณต้องการ */
   margin-bottom: 20px;
 }
+
 @media (max-width: 600px) {
   .avatar {
     top: 25%;
   }
+}
+
+.course-name-singleline {
+  white-space: nowrap;
+  font-size: 2rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+.course-name-multiline {
+  white-space: normal;
+  word-break: break-word;
+  max-width: 150px;
+  font-size: 1.2rem;
+  line-height: 1.2;
+}
+
+.course-name-small {
+  font-size: 1rem; /* smaller font size for more text */
+  line-height: 1.1;
 }
 </style>
