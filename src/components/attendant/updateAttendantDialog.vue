@@ -1,9 +1,23 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import { useAttendanceStore } from "../../stores/attendance.store";
 
 const attendanceStore = useAttendanceStore();
 const selectedStatus = ref(attendanceStore.editAttendance?.attendanceStatus || "");
+watch(
+  () => attendanceStore.editAttendance,
+  (newVal) => {
+    if(newVal) {
+      if(newVal!.attendanceStatus === "absent") {
+        selectedStatus.value = "ไม่มาเรียน";
+      } else if(newVal.attendanceStatus === "late") {
+        selectedStatus.value = "มาสาย";
+      } else {
+        selectedStatus.value = "มาเรียน";
+      }
+    }
+  }
+);
 
 // Define mappings for status
 const statusMap = {
@@ -21,6 +35,17 @@ const reverseStatusMap = {
 
 // Set initial selected status in Thai
 selectedStatus.value = statusMap[attendanceStore.editAttendance?.attendanceStatus] || "";
+
+// Watch the selectedStatus and adjust if the user sets the status to present
+watch(
+  () => selectedStatus.value,
+  (newStatus) => {
+    if (newStatus === "มาเรียน") {
+      // Automatically adjust internal status if needed
+      attendanceStore.editAttendance!.attendanceStatus = "present";
+    }
+  }
+);
 
 // Close the dialog
 const closeDialog = () => {
@@ -40,7 +65,6 @@ const updateAttendanceStatus = () => {
   closeDialog();
 };
 </script>
-
 
 <template>
   <!-- Dialog for updating attendance status -->
@@ -64,7 +88,13 @@ const updateAttendanceStatus = () => {
           <p>
             <strong>สถานะเข้าเรียนปัจจุบัน:</strong>
             <span
-              :style="{ color: attendanceStore.editAttendance?.attendanceStatus === 'absent' ? 'red' : attendanceStore.editAttendance?.attendanceStatus === 'late' ? 'orange' : 'green' }"
+              :style="{
+                color: attendanceStore.editAttendance?.attendanceStatus === 'absent'
+                  ? 'red'
+                  : attendanceStore.editAttendance?.attendanceStatus === 'late'
+                  ? 'orange'
+                  : 'green'
+              }"
             >
               {{ statusMap[attendanceStore.editAttendance?.attendanceStatus] }}
             </span>
@@ -88,6 +118,8 @@ const updateAttendanceStatus = () => {
     </v-card>
   </v-dialog>
 </template>
+
+
 
 
 
