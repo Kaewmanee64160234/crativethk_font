@@ -524,12 +524,15 @@ const confirmAttendance = async (attendance: Attendance) => {
 //reject student
 const reCheckAttendance = async (attendance: Attendance) => {
   try {
-    console.log("Attendance:Ging", attendance);
-
-    await attendanceStore.removeAttendance(attendance.attendanceId + "");
-    await attendanceStore.getAttendanceByAssignmentId(
-      route.params.assignmentId.toString()
+    attendance.attendanceStatus = "absent";
+    attendance.attendanceConfirmStatus = "notconfirm";
+    await attendanceStore.rejectAttendanceByTeacher(
+      attendance.attendanceId + ""
     );
+    if(attendance.user == null) {
+      await attendanceStore.removeAttendance(attendance.attendanceId + "");
+    }
+    alert("Attendance has been recheck.");
   } catch (error) {
     console.error("Error recording attendance:", error);
     alert("Failed to recheck attendance.");
@@ -545,15 +548,24 @@ const nextPage = () => {
     `/reCheckMappingTeacher/course/${courseStore.currentCourse?.coursesId}/assignment/${route.params.assignmentId}`
   );
 };
+const goToCourseDetail = () => {
+  router.push(`/courseDetail/${courseStore.currentCourse?.coursesId}`);
+};
 </script>
 
 <template>
   <v-container class="mt-10">
     <!-- Page Content for Attendance Checking -->
-    <v-card class="mx-auto" color="primary" max-width="1200" outlined style="padding: 20px">
+    <v-card class="mx-auto card-style" color="primary" outlined style="padding: 20px; width: 100%;">
       <v-card-title>
         <h1 class="text-h5">
-         <router-link style="color: aliceblue;"  :to="`/courseDetail/${courseStore.currentCourse?.coursesId}`" > {{ courseStore.currentCourse?.nameCourses }}</router-link> > {{ assignmentStore.currentAssignment?.nameAssignment }}
+          <span
+            style="cursor: pointer; color: aliceblue; text-decoration: none;"
+            @click="goToCourseDetail"
+          >
+            {{ courseStore.currentCourse?.nameCourses }}
+          </span>
+          > {{ assignmentStore.currentAssignment?.nameAssignment }}
         </h1>
       </v-card-title>
     </v-card>

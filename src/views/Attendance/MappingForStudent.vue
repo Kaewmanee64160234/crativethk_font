@@ -92,22 +92,28 @@ const goBackToCourseDetail = () => {
 const confirmTagging = () => {
   router.push("/taggingFace/course/" + queryCourseId+"/assignment/"+route.params.assignmentId);
 };
+// goToCourseDetail
+const goToCourseDetail = () => {
+  router.push(`/courseDetail/${courseStore.currentCourse?.coursesId}`);
+};
 </script>
 
 
 <template>
-  <v-container class="fill-height" style="margin-top: 5%;">
+ <v-container class="fill-height" style="margin-top: 5%;">
     <v-card class="mx-auto card-style" color="primary" outlined style="padding: 20px; width: 100%;">
       <v-card-title>
         <h1 class="text-h5">
-          <router-link style="color: aliceblue;" :to="`/courseDetail/${courseStore.currentCourse?.coursesId}`">
+          <span
+            style="cursor: pointer; color: aliceblue; text-decoration: none;"
+            @click="goToCourseDetail"
+          >
             {{ courseStore.currentCourse?.nameCourses }}
-          </router-link>
+          </span>
           > {{ assignmentStore.currentAssignment?.nameAssignment }}
         </h1>
       </v-card-title>
     </v-card>
- 
         <h1 class="title">ตรวจสอบการเข้าเรียน</h1>
 
 

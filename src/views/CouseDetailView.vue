@@ -76,13 +76,17 @@ const filteredUsers = computed(() => {
 
 // Fetch assignments when the component mounts
 onMounted(async () => {
-  await assignmentStore.getAssignmentByCourseIdPaginate(id.value.toString(), 1);
+  console.log("id", id.value);
+  
+
+   await assignmentStore.getAssignmentByCourseIdPaginate(id.value.toString(), 1),
+   await attendanceStore.getAttendanceByCourseId(id.value.toString()),
+   await userStore.getUserByCourseId(id.value.toString()),
+   await courseStore.getCourseById(id.value.toString()),
+
+
   posts.value = assignmentStore.assignments;
   totalPage.value = assignmentStore.total;
-
-  await attendanceStore.getAttendanceByCourseId(id.value.toString());
-  await userStore.getUserByCourseId(id.value.toString());
-  await courseStore.getCourseById(id.value.toString());
 });
 
 // Watch for changes to `currentPage` and fetch new assignments when it changes
@@ -468,9 +472,9 @@ const confirmExportFile = () => {
       );
       let translatedStatus = "";
 
-      if (status === "มาเรียน") {
+      if (status === "present") {
         translatedStatus = "มา";
-      } else if (status === "มาสาย") {
+      } else if (status === "late") {
         translatedStatus = "สาย";
       } else {
         translatedStatus = "ขาด";
@@ -482,11 +486,31 @@ const confirmExportFile = () => {
     return userData;
   });
 
-  console.log(data);
-
+  // Create the worksheet and workbook
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Report");
+
+  // Define a style for borders
+  const borderStyle = {
+    top: { style: "thin" },
+    bottom: { style: "thin" },
+    left: { style: "thin" },
+    right: { style: "thin" },
+  };
+
+  // Iterate through each cell in the worksheet and apply border styles
+  const range = XLSX.utils.decode_range(ws['!ref']!);
+  for (let R = range.s.r; R <= range.e.r; ++R) {
+    for (let C = range.s.c; C <= range.e.c; ++C) {
+      const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+      if (!ws[cellAddress]) continue;
+      if (!ws[cellAddress].s) ws[cellAddress].s = {};
+      ws[cellAddress].s.border = borderStyle;
+    }
+  }
+
+  // Write the file with the applied styles
   XLSX.writeFile(wb, "Report.xlsx");
 
   console.log("Export successful");
@@ -831,12 +855,11 @@ const getAbsenceCount = (userId: string) => {
           </div>
         </div>
       </v-tab-item>
+
       <v-tab-item v-else>
     <v-card class="mx-auto" color="primary" max-width="1200" outlined style="padding: 20px">
       <v-card-title>
-        <h1 class="text-h5">
-          {{ courseStore.currentCourse?.nameCourses }}
-        </h1>
+        <h1 class="text-h5">{{ courseStore.currentCourse?.nameCourses }}</h1>
       </v-card-title>
     </v-card>
     <v-card class="mx-auto" outlined style="padding: 20px; margin-top: 10px">
@@ -867,6 +890,7 @@ const getAbsenceCount = (userId: string) => {
             </th>
           </tr>
         </thead>
+        <!-- {{attendanceStore.attendances!}} -->
         <tbody>
           <tr
             v-for="user in filteredUsers"
@@ -876,30 +900,22 @@ const getAbsenceCount = (userId: string) => {
               'highlight-yellow': getAbsenceCount(user.userId!) === 3
             }"
           >
-            <td class="text-center vertical-divider">
-              {{ user.studentId }}
-            </td>
+            <td class="text-center vertical-divider">{{ user.studentId }}</td>
             <td class="vertical-divider">
               <span :class="{ 'highlighted-text': getAbsenceCount(user.userId!) > 3 }">
                 {{ user.firstName + " " + user.lastName }}
               </span>
             </td>
+            <td class="text-center vertical-divider">{{ courseStore.currentCourse?.fullScore }}</td>
             <td class="text-center vertical-divider">
-              {{ courseStore.currentCourse?.fullScore }}
-            </td>
-            <td class="text-center vertical-divider">
-              {{
-                calculateTotalScore(
-                  user.userId!,
-                  assignmentStore.assignments
-                )
-              }}
+              {{ calculateTotalScore(user.userId!, assignmentStore.assignments) }}
             </td>
             <td
               v-for="assignment in assignmentStore.assignments"
               :key="assignment.assignmentId"
               class="text-center vertical-divider"
             >
+            <!-- {{getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!)}} -->
               <template
                 v-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'present'"
               >
@@ -945,29 +961,6 @@ const getAbsenceCount = (userId: string) => {
         </tbody>
       </v-table>
     </v-card>
-
-    <!-- Dialog for editing attendance -->
-    <!-- <v-dialog v-model="attendanceStore.showDialog" persistent max-width="400px">
-      <v-card>
-        <v-card-title class="text-center font-weight-bold">
-          แก้ไขสถานะการเช็คชื่อ
-        </v-card-title>
-        <v-divider></v-divider>
-        <v-card-text>
-          <v-select
-            label="เลือกสถานะการเช็คชื่อ"
-            v-model="selectedStatus"
-            :items="['มาเรียน', 'ไม่มาเรียน', 'มาสาย']"
-            solo
-          ></v-select>
-        </v-card-text>
-        <v-card-actions>
-          <v-btn color="error" @click="closeDialog">ยกเลิก</v-btn>
-          <v-spacer></v-spacer>
-          <v-btn color="primary" @click="saveAttendanceStatus">บันทึก</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog> -->
   </v-tab-item>
   </v-container>
   </div>

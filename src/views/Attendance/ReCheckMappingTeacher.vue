@@ -36,6 +36,12 @@ onMounted(async () => {
 const goBackToCourseDetail = () => {
   router.push("/courseDetail/" + queryCourseId.value);
 };
+const goToAssignmentDetail = () => {
+  router.push(
+    `/mapping2/assignment/${assignmentStore.currentAssignment?.assignmentId}/course/${route.params.courseId}`
+  );
+};
+
 
 // confirm student
 const confirmAttendance = async (attendance: Attendance) => {
@@ -72,7 +78,7 @@ const reCheckAttendance = async (attendance: Attendance) => {
 </script>
 
 <template>
-  <v-container fluid class="my-5">
+    <v-container fluid class="my-5">
     <v-card
       class="mx-auto mt-9"
       color="primary"
@@ -80,22 +86,21 @@ const reCheckAttendance = async (attendance: Attendance) => {
       outlined
       style="padding: 20px"
     >
-
       <v-card-title>
         <h1 class="text-h5">
-          <router-link
-            :to="`/courseDetail/${courseStore.currentCourse?.coursesId}`"
-            style="color: aliceblue"
+          <span
+            @click="goBackToCourseDetail"
+            style="cursor: pointer; color: aliceblue; text-decoration: none;"
           >
             {{ courseStore.currentCourse?.nameCourses }}
-          </router-link>
+          </span>
           >
-          <router-link
-            :to="`/mapping2/assignment/${assignmentStore.currentAssignment?.assignmentId}/course/${route.params.courseId}`"
-            style="color: aliceblue"
+          <span
+            @click="goToAssignmentDetail"
+            style="cursor: pointer; color: aliceblue; text-decoration: none;"
           >
             {{ assignmentStore.currentAssignment?.nameAssignment }}
-          </router-link>
+          </span>
           > สรุปการเช็คชื่อ
         </h1>
       </v-card-title>
