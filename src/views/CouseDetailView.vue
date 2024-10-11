@@ -1002,4 +1002,100 @@ const getAbsenceCount = (userId: string) => {
   background-color: #3051ac;
   color: white !important;
 }
+.v-col {
+  padding: 10px 0;
+  /* Provides consistent vertical spacing between rows */
+}
+
+.vertical-divider {
+  border-left: 1px solid #e0e0e0;
+  /* สีของเส้นแบ่ง */
+  height: auto;
+  /* ให้สูงตามความสูงของ col */
+}
+
+.v-card-title {
+  font-weight: bold;
+}
+
+.v-card-text {
+  font-size: 16px;
+}
+
+.ma-2 {
+  margin: 8px;
+}
+
+.v-file-input {
+  margin-bottom: 16px;
+}
+
+.v-btn {
+  margin-bottom: 12px;
+}
+
+.v-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.v-img {
+  border-radius: 8px;
+  /* box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); */
+}
+
+.v-card-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.primary--text {
+  color: #6ca7fa !important;
+}
+.image-container {
+  position: relative;
+}
+
+.delete-icon {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background-color: transparent !important; /* No background */
+  box-shadow: none; /* Remove shadow */
+  padding: 0; /* Remove padding */
+}
+
+.delete-icon:hover {
+  background-color: transparent; /* No hover background */
+}
+/* Scrollable image section */
+.scrollable-image-section {
+  max-height: 200px; /* Adjust this value as needed */
+  overflow-y: auto;
+}
+
+/* Fixed position for action buttons */
+.fixed-action-buttons {
+  position: sticky;
+  bottom: 0;
+  background-color: white; /* Same background as the card */
+  z-index: 1; /* Ensure it stays above content */
+  padding: 16px; /* Add some padding for better spacing */
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1); /* Optional: shadow for better separation */
+}
+
+.image-container {
+  position: relative;
+}
+
+.delete-icon {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background-color: transparent !important;
+  padding: 0;
+}
 </style>
