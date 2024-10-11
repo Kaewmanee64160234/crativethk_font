@@ -527,8 +527,9 @@ const confirmDelCourse = async (id: string) => {
 .course-name-multiline {
   white-space: normal;
   word-break: break-word;
-  max-width: 150px;
-  font-size: 1.2rem;
+  max-width: 180px; /* Adjusted from 150px to give more room */
+  padding-right: 10px; /* Adds space on the right */
+  font-size: 1rem;
   line-height: 1.2;
 }
 
