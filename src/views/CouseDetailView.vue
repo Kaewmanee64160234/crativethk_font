@@ -253,7 +253,6 @@ const checkImageCountAndPost = async () => {
 
     return;
   } else {
-   
     await createPost();
     await closeDialog();
   }
@@ -563,10 +562,11 @@ const closeDialog = () => {
                         outlined
                         prepend-inner-icon="mdi-assignment"
                         required
+                        maxlength="50"
                         :rules="[
-                          (v: any) => !!v || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*',
-                          (v: any) => (v && v.length >= 1 && v.length <= 50) || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*'
-                        ]"
+      (v: any) => !!v || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*',
+      (v: any) => (v && v.length >= 1 && v.length <= 50) || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*'
+    ]"
                       ></v-text-field>
                     </v-card-text>
                   </v-col>
