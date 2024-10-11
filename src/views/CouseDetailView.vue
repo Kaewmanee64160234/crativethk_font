@@ -51,6 +51,8 @@ const videoRef = ref<HTMLVideoElement | null>(null);
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const assignmentManual = ref(false);
 
+
+
 const isTeacher = computed(() => userStore.currentUser?.role === "อาจารย์");
 const filteredAssignments = computed(() => {
   // Only include assignments that have corresponding attendance data.
@@ -503,6 +505,12 @@ const closeDialog = () => {
   capturedImages.value = [];
   imageFiles.value = [];
 };
+const getAbsenceCount = (userId: string) => {
+  return attendanceStore!.attendances!.filter(
+    (attendance) =>
+      attendance.user?.userId === userId && attendance.attendanceStatus === "absent"
+  ).length;
+};
 </script>
 
 <template>
@@ -629,22 +637,22 @@ const closeDialog = () => {
                     </v-btn>
                   </v-col>
                 </v-row>
-              <!-- notification image morethan 20
+                <!-- notification image morethan 20
                 -->
-              <v-row>
-                <v-col cols="12" sm="12">
-                  <v-alert
-                    v-if="capturedImages.length + imageUrls.length > 20"
-                    type="error"
-                    outlined
-                    border="left"
-                    elevation="2"
-                    icon="mdi-alert"
-                  >
-                    ไม่สามารถอัปโหลดรูปภาพเกิน 20 รูป
-                  </v-alert>
-                </v-col>
-              </v-row>
+                <v-row>
+                  <v-col cols="12" sm="12">
+                    <v-alert
+                      v-if="capturedImages.length + imageUrls.length > 20"
+                      type="error"
+                      outlined
+                      border="left"
+                      elevation="2"
+                      icon="mdi-alert"
+                    >
+                      ไม่สามารถอัปโหลดรูปภาพเกิน 20 รูป
+                    </v-alert>
+                  </v-col>
+                </v-row>
 
                 <!-- Uploaded and Captured Images Preview -->
                 <v-row class="scrollable-image-section">
@@ -823,161 +831,174 @@ const closeDialog = () => {
           </div>
         </div>
       </v-tab-item>
-
-      <!-- Tab content for Assignments -->
-      <!-- Tab Item for Users -->
-      <!-- Tab content for Assignment Attendance -->
       <v-tab-item v-else>
-        <v-card
-          class="mx-auto"
-          color="primary"
-          max-width="1200"
-          outlined
-          style="padding: 20px"
-        >
-          <v-card-title>
-            <h1 class="text-h5">
-              {{ courseStore.currentCourse?.nameCourses }}
-            </h1>
-          </v-card-title>
-        </v-card>
-        <v-card
-          class="mx-auto"
-          outlined
-          style="padding: 20px; margin-top: 10px"
-        >
-          <v-row>
-            <v-col col="12" sm="10" style="color: #3051ac">
-              <v-card-title>คะแนนการเช็คชื่อ</v-card-title>
-            </v-col>
-            <v-col
-              col="12"
-              sm="2"
-              v-if="userStore.currentUser?.role === 'อาจารย์'"
+    <v-card class="mx-auto" color="primary" max-width="1200" outlined style="padding: 20px">
+      <v-card-title>
+        <h1 class="text-h5">
+          {{ courseStore.currentCourse?.nameCourses }}
+        </h1>
+      </v-card-title>
+    </v-card>
+    <v-card class="mx-auto" outlined style="padding: 20px; margin-top: 10px">
+      <v-row>
+        <v-col col="12" sm="10" class="text-primary">
+          <v-card-title>คะแนนการเช็คชื่อ</v-card-title>
+        </v-col>
+        <v-col col="12" sm="2" v-if="userStore.currentUser?.role === 'อาจารย์'">
+          <v-btn color="#093271" @click="exportFile" style="width: 200px; color: white;">
+            <v-icon left>mdi-file-export</v-icon>Export คะแนน
+          </v-btn>
+        </v-col>
+      </v-row>
+      <v-divider class="my-4"></v-divider>
+      <v-table>
+        <thead>
+          <tr>
+            <th class="text-center vertical-divider">รหัสนิสิต</th>
+            <th class="text-center vertical-divider">ชื่อ-สกุล</th>
+            <th class="text-center vertical-divider">คะแนนเต็ม</th>
+            <th class="text-center vertical-divider">คะแนนที่ได้</th>
+            <th
+              class="text-center vertical-divider"
+              v-for="assignment in assignmentStore.assignments"
+              :key="assignment.assignmentId"
             >
-              <v-btn color="#093271" @click="exportFile" style="width: 200px"
-                >Export คะแนน</v-btn
+              {{ assignment.nameAssignment }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="user in filteredUsers"
+            :key="user.userId"
+            :class="{
+              'highlight-red': getAbsenceCount(user.userId!) > 3,
+              'highlight-yellow': getAbsenceCount(user.userId!) === 3
+            }"
+          >
+            <td class="text-center vertical-divider">
+              {{ user.studentId }}
+            </td>
+            <td class="vertical-divider">
+              <span :class="{ 'highlighted-text': getAbsenceCount(user.userId!) > 3 }">
+                {{ user.firstName + " " + user.lastName }}
+              </span>
+            </td>
+            <td class="text-center vertical-divider">
+              {{ courseStore.currentCourse?.fullScore }}
+            </td>
+            <td class="text-center vertical-divider">
+              {{
+                calculateTotalScore(
+                  user.userId!,
+                  assignmentStore.assignments
+                )
+              }}
+            </td>
+            <td
+              v-for="assignment in assignmentStore.assignments"
+              :key="assignment.assignmentId"
+              class="text-center vertical-divider"
+            >
+              <template
+                v-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'present'"
               >
-            </v-col>
-          </v-row>
-          <v-table>
-            <thead>
-              <tr>
-                <th class="text-center vertical-divider">รหัสนิสิต</th>
-                <th class="text-center vertical-divider">ชื่อ-สกุล</th>
-                <th class="text-center vertical-divider">คะแนนเต็ม</th>
-                <th class="text-center vertical-divider">คะแนนที่ได้</th>
-                <th
-                  class="text-center vertical-divider"
-                  v-for="assignment in assignmentStore.assignments"
-                  :key="assignment.assignmentId"
+                <v-btn
+                  density="compact"
+                  color="green"
+                  icon="mdi-check-circle"
+                  v-if="isTeacher"
+                  @click="openDialog(assignment, user)"
                 >
-                  {{ assignment.nameAssignment }}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="user in filteredUsers" :key="user.userId">
-                <td class="text-center vertical-divider">
-                  {{ user.studentId }}
-                </td>
-                <td class="vertical-divider">
-                  {{ user.firstName + " " + user.lastName }}
-                </td>
-                <td class="text-center vertical-divider">
-                  {{ courseStore.currentCourse?.fullScore }}
-                </td>
-                <td class="text-center vertical-divider">
-                  {{
-                    calculateTotalScore(
-                      user.userId!,
-                      assignmentStore.assignments
-                    )
-                  }}
-                </td>
-                <td
-                  v-for="assignment in assignmentStore.assignments"
-                  :key="assignment.assignmentId"
-                  class="text-center vertical-divider"
+                  <v-icon>mdi-check-circle</v-icon>
+                </v-btn>
+                <v-icon color="green" v-else>mdi-check-circle</v-icon>
+              </template>
+              <template
+                v-else-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'late'"
+              >
+                <v-btn
+                  density="compact"
+                  color="orange"
+                  icon="mdi-clock-outline"
+                  v-if="isTeacher"
+                  @click="openDialog(assignment, user)"
                 >
-                  <template
-                    v-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'present'"
-                  >
-                    <v-btn
-                      density="compact"
-                      color="green"
-                      icon="mdi-check-circles"
-                      v-if="isTeacher"
-                      @click="openDialog(assignment, user)"
-                    >
-                      <v-icon>mdi-check-circle</v-icon>
-                    </v-btn>
-                    <v-icon color="green" v-else>mdi-check-circle</v-icon>
-                  </template>
-                  <template
-                    v-else-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'late'"
-                  >
-                    <v-btn
-                      density="compact"
-                      color="orange"
-                      icon="mdi-check-circles"
-                      v-if="isTeacher"
-                      @click="openDialog(assignment, user)"
-                    >
-                      <v-icon>mdi-clock-outline</v-icon>
-                    </v-btn>
-                    <v-icon color="orange" v-else>mdi-clock-outline</v-icon>
-                  </template>
-                  <template v-else>
-                    <v-btn
-                      density="compact"
-                      color="red"
-                      icon="mdi-check-circles"
-                      v-if="isTeacher"
-                      @click="openDialog(assignment, user)"
-                    >
-                      <v-icon>mdi-close-circle</v-icon>
-                    </v-btn>
-                    <v-icon color="red" v-else>mdi-close-circle</v-icon>
-                  </template>
-                </td>
-              </tr>
-            </tbody>
-          </v-table>
-        </v-card>
-      </v-tab-item>
-    </v-container>
+                  <v-icon>mdi-clock-outline</v-icon>
+                </v-btn>
+                <v-icon color="orange" v-else>mdi-clock-outline</v-icon>
+              </template>
+              <template v-else>
+                <v-btn
+                  density="compact"
+                  color="red"
+                  icon="mdi-close-circle"
+                  v-if="isTeacher"
+                  @click="openDialog(assignment, user)"
+                >
+                  <v-icon>mdi-close-circle</v-icon>
+                </v-btn>
+                <v-icon color="red" v-else>mdi-close-circle</v-icon>
+              </template>
+            </td>
+          </tr>
+        </tbody>
+      </v-table>
+    </v-card>
+
+    <!-- Dialog for editing attendance -->
+    <!-- <v-dialog v-model="attendanceStore.showDialog" persistent max-width="400px">
+      <v-card>
+        <v-card-title class="text-center font-weight-bold">
+          แก้ไขสถานะการเช็คชื่อ
+        </v-card-title>
+        <v-divider></v-divider>
+        <v-card-text>
+          <v-select
+            label="เลือกสถานะการเช็คชื่อ"
+            v-model="selectedStatus"
+            :items="['มาเรียน', 'ไม่มาเรียน', 'มาสาย']"
+            solo
+          ></v-select>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn color="error" @click="closeDialog">ยกเลิก</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" @click="saveAttendanceStatus">บันทึก</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog> -->
+  </v-tab-item>
+  </v-container>
   </div>
+
   <UpdateAttendantDialogView />
 </template>
 
 <style scoped>
-.v-col {
-  padding: 10px 0;
-  /* Provides consistent vertical spacing between rows */
+.highlight-red {
+  background-color: rgba(255, 0, 0, 0.1);
 }
 
-.vertical-divider {
-  border-left: 1px solid #e0e0e0;
-  /* สีของเส้นแบ่ง */
-  height: auto;
-  /* ให้สูงตามความสูงของ col */
+.highlight-yellow {
+  background-color: rgba(255, 235, 59, 0.1);
+}
+
+.highlighted-text {
+  color: red;
+  font-weight: bold;
+}
+
+.text-primary {
+  color: #3051ac;
 }
 
 .v-card-title {
   font-weight: bold;
 }
 
-.v-card-text {
-  font-size: 16px;
-}
-
-.ma-2 {
-  margin: 8px;
-}
-
-.v-file-input {
-  margin-bottom: 16px;
+.vertical-divider {
+  border-left: 1px solid #e0e0e0;
 }
 
 .v-btn {
@@ -985,67 +1006,7 @@ const closeDialog = () => {
 }
 
 .v-btn:hover {
-  background-color: #e0e0e0;
-}
-
-.v-img {
-  border-radius: 8px;
-  /* box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); */
-}
-
-.v-card-actions {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.text-center {
-  text-align: center;
-}
-
-.primary--text {
-  color: #6ca7fa !important;
-}
-.image-container {
-  position: relative;
-}
-
-.delete-icon {
-  position: absolute;
-  top: -10px;
-  right: -10px;
-  background-color: transparent !important; /* No background */
-  box-shadow: none; /* Remove shadow */
-  padding: 0; /* Remove padding */
-}
-
-.delete-icon:hover {
-  background-color: transparent; /* No hover background */
-}
-/* Scrollable image section */
-.scrollable-image-section {
-  max-height: 200px; /* Adjust this value as needed */
-  overflow-y: auto;
-}
-
-/* Fixed position for action buttons */
-.fixed-action-buttons {
-  position: sticky;
-  bottom: 0;
-  background-color: white; /* Same background as the card */
-  z-index: 1; /* Ensure it stays above content */
-  padding: 16px; /* Add some padding for better spacing */
-  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1); /* Optional: shadow for better separation */
-}
-
-.image-container {
-  position: relative;
-}
-
-.delete-icon {
-  position: absolute;
-  top: -10px;
-  right: -10px;
-  background-color: transparent !important;
-  padding: 0;
+  background-color: #3051ac;
+  color: white !important;
 }
 </style>

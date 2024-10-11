@@ -9,6 +9,7 @@ import { useAttendanceStore } from "@/stores/attendance.store";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog.vue";
 import EditAssignment from "@/components/dialogs/EditAssignment.vue";
 import Swal from "sweetalert2";
+import { useMessageStore } from "@/stores/message";
 
 const router = useRouter();
 const isValid = ref(false);
@@ -28,6 +29,7 @@ const capturedImages = ref<string[]>([]);
 const imageUrls = ref<string[]>([]);
 const imageFiles = ref<File[]>([]);
 const showCamera = ref(false);
+const messageStore = useMessageStore();
 const props = defineProps<{
   post: Assignment;
 }>();
@@ -59,39 +61,36 @@ function formatThaiTime(date: Date) {
 
 const deleteAssignment = async (assignment: Assignment) => {
   try {
-    // Show the confirmation dialog using SweetAlert2
-    const result = await Swal.fire({
-      title: "กรุณายืนยัน", // Confirmation title in Thai
-      text: `คุณต้องการลบการเช็คชื่อ ${assignment.nameAssignment} ใช่หรือไม่`, // Confirmation message in Thai
-      showCancelButton: true, // Display the cancel button
-      confirmButtonColor: "#3085d6", // Color for the confirm button
-      cancelButtonColor: "#d33", // Color for the cancel button
-      confirmButtonText: "ยืนยัน", // Confirm button text in Thai
-      cancelButtonText: "ยกเลิก", // Cancel button text in Thai
-    });
+    // Use the `showConfirm_` function to show the confirmation dialog
+    messageStore.showConfirm_(
+      `คุณต้องการลบการเช็คชื่อ ${assignment.nameAssignment} ใช่หรือไม่`,
+      async () => {
+        // If confirmed, proceed with deleting the assignment
+        await assignmentStore.deleteAssignment(assignment.assignmentId!.toString());
+        await assignmentStore.getAssignmentByCourseId(id.value.toString());
 
-    // If the user confirmed the deletion
-    if (result.isConfirmed) {
-      await assignmentStore.deleteAssignment(assignment.assignmentId!.toString());
-      await assignmentStore.getAssignmentByCourseId(id.value.toString());
+        // Show success dialog after deletion using SweetAlert2
+        await Swal.fire({
+          icon: "success",
+          title: "ลบการเช็คชื่อสำเร็จ", // Success title in Thai
+          text: "การเช็คชื่อถูกลบเรียบร้อยแล้ว", // Success message in Thai
+          confirmButtonColor: "#3085d6",
+          confirmButtonText: "ตกลง", // 'OK' in Thai
+        });
 
-      // Show success dialog after deletion
-      await Swal.fire({
-        icon: "success",
-        title: "ลบการเช็คชื่อสำเร็จ", // Success title in Thai
-        text: "การเช็คชื่อถูกลบเรียบร้อยแล้ว", // Success message in Thai
-        confirmButtonColor: "#3085d6",
-        confirmButtonText: "ตกลง", // 'OK' in Thai
-      });
-
-      // Optionally, reload the page to reflect the deletion
-      window.location.reload();
-      console.log("Assignment deleted successfully");
-    }
+        // Optionally, reload the page to reflect the deletion
+        window.location.reload();
+        console.log("Assignment deleted successfully");
+      },
+      () => {
+        console.log("Deletion cancelled by user.");
+      }
+    );
   } catch (error) {
     console.log("Error deleting assignment:", error);
   }
 };
+
 // function edit
 const editAssignment = async () => {
   showDialogEditAssignment.value = true;
