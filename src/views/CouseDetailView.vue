@@ -629,6 +629,22 @@ const closeDialog = () => {
                     </v-btn>
                   </v-col>
                 </v-row>
+              <!-- notification image morethan 20
+                -->
+              <v-row>
+                <v-col cols="12" sm="12">
+                  <v-alert
+                    v-if="capturedImages.length + imageUrls.length > 20"
+                    type="error"
+                    outlined
+                    border="left"
+                    elevation="2"
+                    icon="mdi-alert"
+                  >
+                    ไม่สามารถอัปโหลดรูปภาพเกิน 20 รูป
+                  </v-alert>
+                </v-col>
+              </v-row>
 
                 <!-- Uploaded and Captured Images Preview -->
                 <v-row class="scrollable-image-section">
