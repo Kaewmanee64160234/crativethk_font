@@ -54,9 +54,10 @@ const openDialog = (title: string, desc: string, okBtn: string, cancel: string) 
   }).then((result) => {
     if (result.isConfirmed) {
       Swal.fire(
-      'Done!',
-      'Everything done.',
+      'สำเร็จ!',
+      'ทำการลบเสร็จวสิ้น',
       'success'
+      
     )
       return Promise.resolve();
     } else if (result.isDismissed) {
