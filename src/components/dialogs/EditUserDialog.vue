@@ -37,10 +37,10 @@ async function save() {
   } else if (!userStore.editUser.firstName || !userStore.editUser.lastName ||
     !/^[ก-๙\s]+$/.test(userStore.editUser.firstName) ||
     !/^[ก-๙\s]+$/.test(userStore.editUser.lastName) ||
-    userStore.editUser.firstName.length > 100 ||
-    userStore.editUser.lastName.length > 100) {
+    userStore.editUser.firstName.length > 50 ||
+    userStore.editUser.lastName.length > 50) {
 
-    showSnackbar('โปรดกรอกชื่อและนามสกุลเป็นภาษาไทย และต้องไม่เกิน 100 ตัวอักษร');
+    showSnackbar('โปรดกรอกชื่อและนามสกุลเป็นภาษาไทย และต้องไม่เกิน 50 ตัวอักษร');
     return;
   }
   //check if year is empty and not 2 numbers
@@ -169,7 +169,7 @@ function float32ArrayToBase64(float32Array: any) {
                   :rules="[ 
                     (v) => !!v || 'โปรดกรอกชื่อ',
                     (v) => /^[ก-๙\s]+$/.test(v) || 'ชื่อต้องไม่เป็นตัวเลขและต้องเป็นภาษาไทยเท่านั้น',
-                    (v) => v.length <= 100 || 'ชื่อต้องไม่เกิน 100 ตัวอักษร'
+                    (v) => v.length <= 50 || 'ชื่อต้องไม่เกิน 50 ตัวอักษร'
                   ]">
                 </v-text-field>
               </v-col>
@@ -179,7 +179,7 @@ function float32ArrayToBase64(float32Array: any) {
                   :rules="[ 
                     (v) => !!v || 'โปรดกรอกนามสกุล',
                     (v) => /^[ก-๙\s]+$/.test(v) || 'นามสกุลต้องไม่เป็นตัวเลขและต้องเป็นภาษาไทยเท่านั้น',
-                    (v) => v.length <= 100 || 'นามสกุลต้องไม่เกิน 100 ตัวอักษร'
+                    (v) => v.length <= 50 || 'นามสกุลต้องไม่เกิน 50 ตัวอักษร'
                   ]">
                 </v-text-field>
               </v-col>

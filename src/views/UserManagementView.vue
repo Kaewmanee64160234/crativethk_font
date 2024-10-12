@@ -12,25 +12,24 @@ const url = import.meta.env.VITE_API_URL;
 
 const userStore = useUserStore();
 const yearOptions = ref<string[]>(['']);
-const page = ref(1);
-const getStudent = ref(0);
 const tab = ref(0);
-const itemsPerPage = 20;
-const statusTeacher = ref(['', 'ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง']);
-const statusStudent = ref(['', 'กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา']);
-const majorOptions = ref(['', 'วิทยาการคอมพิวเตอร์', 'เทคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจดทัล', 'วิศวกรรมซอฟต์แวร์', 'ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ']);
+const statusTeacher = ref(['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง']);
+const statusStudent = ref(['กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา']);
+const majorOptions = ref(['วิทยาการคอมพิวเตอร์', 'เทคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจดทัล', 'วิศวกรรมซอฟต์แวร์', 'ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ']);
 const confirmDlg = ref();
-const paginate = ref(true);
+const studentPage = ref(1);
+const teacherPage = ref(1);
+const adminPage = ref(1);
+
 
 onMounted(async () => {
-  userStore.searchDropdown2 = 'วิทยาการคอมพิวเตอร์';
-  userStore.searchDropdown3 = 'กำลังศึกษา';
-  userStore.searchDropdown4 = 'ดำรงตำแหน่ง';
   await userStore.getUsersById(userStore.currentUser?.userId!);
   await userStore.getCurrentUser()
   await userStore.getUsers();
   await userStore.fetchPaginatedUsers();
   updateYearOptions();
+  userStore.searchDropdown2 = 'วิทยาการคอมพิวเตอร์';
+  userStore.searchDropdown3 = 'กำลังศึกษา';
 })
 // Function to compute and update year options dynamically
 const updateYearOptions = () => {
@@ -38,93 +37,75 @@ const updateYearOptions = () => {
   uniqueYears.sort();
   yearOptions.value = ['', ...uniqueYears];
 };
+
 watch(() => tab.value, () => {
   if (tab.value === 0) {
+    userStore.itemsPerPage = 20;
+    userStore.currentPage = studentPage.value;
+    userStore.totalUsers = 0;
     userStore.searchDropdown2 = 'วิทยาการคอมพิวเตอร์';
     userStore.searchDropdown3 = 'กำลังศึกษา';
+    userStore.getStudentPagination();
   } else if (tab.value === 1) {
+    userStore.itemsPerPage = 20;
+    userStore.currentPage = teacherPage.value;
+    userStore.totalUsers = 0;
     userStore.searchDropdown4 = 'ดำรงตำแหน่ง';
+    userStore.getTeacherPagination();
   } else if (tab.value === 2) {
+    userStore.itemsPerPage = 20;
+    userStore.currentPage = adminPage.value;
+    userStore.totalUsers = 0;
     userStore.searchDropdown4 = 'ดำรงตำแหน่ง';
+    userStore.getAdminPagination();
   }
-  // Add any other logic you want to execute when the tab changes.
 });
+
+// watch(() => tab.value, () => {
+//   if (tab.value === 0) {
+//     userStore.searchDropdown2 = 'วิทยาการคอมพิวเตอร์';
+//     userStore.searchDropdown3 = 'กำลังศึกษา';
+//   } else if (tab.value === 1) {
+//     userStore.searchDropdown4 = 'ดำรงตำแหน่ง';
+//   } else if (tab.value === 2) {
+//     userStore.searchDropdown4 = 'ดำรงตำแหน่ง';
+//   }
+//   // Add any other logic you want to execute when the tab changes.
+// });
+
 
 // Watch for changes in the user array and recalculate year options whenever users are modified
 watch(() => userStore.users, () => {
   updateYearOptions();
 }, { deep: true });
 
-
-watch(() => tab.value, () => {
+watch(studentPage, () => {
   if (tab.value === 0) {
-    userStore.getStudent()
-  }
-  else if (tab.value === 1) {
-    userStore.getTeacher()
-  }
-  else if (tab.value === 2) {
-    userStore.getAdmin()
+    userStore.currentPage = studentPage.value;
+    userStore.getStudentPagination();
   }
 });
 
+watch(teacherPage, () => {
+  if (tab.value === 1) {
+    userStore.currentPage = teacherPage.value;
+    userStore.getTeacherPagination();
+  }
+});
+
+watch(adminPage, () => {
+  if (tab.value === 2) {
+    userStore.currentPage = adminPage.value;
+    userStore.getAdminPagination();
+  }
+});
 
 const paginatedStudents = computed(() => userStore.users.filter(user => user.role === 'นิสิต'));
 const paginatedTeachers = computed(() => userStore.users.filter(user => user.role === 'อาจารย์'));
 const paginatedAdmins = computed(() => userStore.users.filter(user => user.role === 'แอดมิน'));
 
 
-const sortedStudents = computed(() => {
-  return userStore.users
-    .filter(user => user.role == 'นิสิต')
-    // Filter by selected year and major
-    .filter(user => {
-      if (userStore.searchDropdown && userStore.searchDropdown2) {
-        return user.year === userStore.searchDropdown && user.major === userStore.searchDropdown2;
-      }
-      return true;
-    })
-    // Filter by selected year
-    .filter(user => {
-      if (userStore.searchDropdown) {
-        return user.year === userStore.searchDropdown;
-      }
-      return true;
-    })
-    // Filter by selected major
-    .filter(user => {
-      if (userStore.searchDropdown2) {
-        return user.major === userStore.searchDropdown2;
-      }
-      return true;
-    })
-    .sort((a, b) => {
-      if (a.role && b.role) {
-        return a.role.localeCompare(b.role);
-      }
-      return 0;
-    });
-});
-const sortedTeachers = computed(() => {
-  return userStore.users
-    .filter(user => user.role === 'อาจารย์')
-    .sort((a, b) => {
-      if (a.role && b.role) {
-        return a.role.localeCompare(b.role);
-      }
-      return 0;
-    });
-});
-const sortedAdmins = computed(() => {
-  return userStore.users
-    .filter(user => user.role === 'แอดมิน')
-    .sort((a, b) => {
-      if (a.role && b.role) {
-        return a.role.localeCompare(b.role);
-      }
-      return 0;
-    });
-});
+
 const showEditedDialog = (user: User) => {
   if (user.role == 'นิสิต') {
     // Show the student edit dialog
@@ -144,39 +125,6 @@ const showEditedDialog = (user: User) => {
   } else {
     console.log('User does not have a valid ID');
   }
-}
-
-
-// function delete user
-const deleteUser = async (id: number) => {
-  console.log(id);
-  await confirmDlg.value.openDialog(
-    'Please Confirm',
-    `Do you want to delete this customer?`,
-    'Accept',
-    'Cancel'
-  )
-  await userStore.deleteUser(id);
-}
-const showDeleteDialog = (user: User) => {
-  userStore.showDeleteDialog = true;
-  userStore.currentUser = user;
-}
-
-const defaultImagePath = 'path_to_default_image'; // Path to your default/fallback image
-
-function onImageError(event: Event) {
-  console.error('Error loading image');
-  const target = event.target as HTMLImageElement;
-  target.src = 'path_to_default_fallback_image'; // Make sure this default path is correct and accessible
-}
-
-function formattedImageProfile(profileImage: string): string {
-  console.log("Profile Image Data: ", profileImage);
-  if (profileImage && !profileImage.startsWith('data:')) {
-    return `data:image/png;base64,${profileImage}`;
-  }
-  return profileImage;
 }
 </script>
 <template>
@@ -199,16 +147,16 @@ function formattedImageProfile(profileImage: string): string {
           variant="solo" hide-details class="year-dropdown"></v-select>
       </v-col> -->
       <v-col cols="md 4">
-        <v-select v-if="tab === 0" v-model="userStore.searchDropdown2" :items="majorOptions" label="สาขา" dense
+        <v-select v-if="tab === 0 || tab === 1" v-model="userStore.searchDropdown2" :items="majorOptions" label="สาขา" dense
           variant="solo" hide-details class="wide-select year-dropdown "></v-select>
       </v-col>
       <v-col cols="md 4">
         <v-select v-if="tab === 0" v-model="userStore.searchDropdown3" :items="statusStudent" label="สถานะภาพ" dense
-          variant="solo" hide-details class="wide-select year-dropdown"></v-select>
+          variant="solo" hide-details class="wide-select status-dropdown"></v-select>
       </v-col>
       <v-col cols="md 4">
-        <v-select v-if="tab === 1 || tab === 2" v-model="userStore.searchDropdown4" :items="statusTeacher"
-          label="สถานะภาพ" dense variant="solo" hide-details class="year-dropdown"></v-select>
+        <v-select v-if="tab === 1 || tab == 2" v-model="userStore.searchDropdown4" :items="statusTeacher" label="สถานะภาพ" dense
+          variant="solo" hide-details class="wide-select status-dropdown"></v-select>
       </v-col>
       <v-col cols="auto">
         <v-btn color="primary" variant="elevated" @click="userStore.showDialog2 = true" class="custom-btn">
@@ -278,9 +226,16 @@ function formattedImageProfile(profileImage: string): string {
           ไม่พบผู้ใช้งาน
         </div>
         <!-- Pagination student -->
-        <v-pagination v-model="userStore.currentPage" :length="Math.ceil(userStore.totalUsers / userStore.itemsPerPage)"
-          :total-visible="7" rounded="circle" size="large" color="primary" class="my-pagination"></v-pagination>
-
+        <v-pagination
+  v-if="tab === 0"
+  v-model="studentPage"
+  :length="Math.ceil(userStore.totalUsers / userStore.itemsPerPage)"
+  :total-visible="7"
+  rounded="circle"
+  size="large"
+  color="primary"
+  class="my-pagination"
+></v-pagination>
       </v-tab-item>
 
       <!-- Tab content for อาจารย์ -->
@@ -317,8 +272,16 @@ function formattedImageProfile(profileImage: string): string {
           ไม่พบผู้ใช้งาน
         </div>
         <!-- Pagination teacher -->
-        <v-pagination v-model="userStore.currentPage" :length="Math.ceil(userStore.totalUsers / userStore.itemsPerPage)"
-          :total-visible="7" rounded="circle" size="large" color="primary" class="my-pagination"></v-pagination>
+        <v-pagination
+  v-if="tab === 1"
+  v-model="teacherPage"
+  :length="Math.ceil(userStore.totalUsers / userStore.itemsPerPage)"
+  :total-visible="7"
+  rounded="circle"
+  size="large"
+  color="primary"
+  class="my-pagination"
+></v-pagination>
       </v-tab-item>
 
       <!-- Tab content for แอดมิน -->
@@ -355,8 +318,16 @@ function formattedImageProfile(profileImage: string): string {
           ไม่พบผู้ใช้งาน
         </div>
         <!-- Pagination -->
-        <v-pagination v-model="userStore.currentPage" :length="Math.ceil(userStore.totalUsers / userStore.itemsPerPage)"
-          :total-visible="7" rounded="circle" size="large" color="primary" class="my-pagination"></v-pagination>
+        <v-pagination
+  v-if="tab === 2"
+  v-model="adminPage"
+  :length="Math.ceil(userStore.totalUsers / userStore.itemsPerPage)"
+  :total-visible="7"
+  rounded="circle"
+  size="large"
+  color="primary"
+  class="my-pagination"
+></v-pagination>
       </v-tab-item>
     </v-card>
   </v-container>

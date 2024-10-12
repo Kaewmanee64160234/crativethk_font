@@ -8,6 +8,7 @@ const snackbarVisible = ref(false);
 const snackbarMessage = ref('');
 const snackbarColor = ref('error');
 
+
 function showSnackbar(message: string, color: string = 'error') {
     snackbarMessage.value = message;
     snackbarColor.value = color;
@@ -15,37 +16,47 @@ function showSnackbar(message: string, color: string = 'error') {
 }
 
 async function save() {
-    // check if teacherId is empty and not 8 digits
-    // if (!userStore.editUser.teacherId || !/^[0-9]{8}$/.test(userStore.editUser.teacherId)) {
-    //     showSnackbar('โปรดกรอกรหัสอาจารย์ 8 หลัก');
-    //     return;
-    // }
-    if (!userStore.editUser.firstName || !userStore.editUser.lastName ||
+  // Validate the name fields for Thai characters and length
+  if (
+    !userStore.editUser.firstName ||
+    !userStore.editUser.lastName ||
     !/^[ก-๙\s]+$/.test(userStore.editUser.firstName) ||
     !/^[ก-๙\s]+$/.test(userStore.editUser.lastName) ||
-    userStore.editUser.firstName.length > 100 ||
-    userStore.editUser.lastName.length > 100) {
-
-    showSnackbar('โปรดกรอกชื่อและนามสกุลเป็นภาษาไทย และต้องไม่เกิน 100 ตัวอักษร');
+    userStore.editUser.firstName.length > 50 ||
+    userStore.editUser.lastName.length > 50
+  ) {
+    showSnackbar('โปรดกรอกชื่อและนามสกุลเป็นภาษาไทย และต้องไม่เกิน 50 ตัวอักษร');
     return;
   }
 
-    // check if role is not "อาจารย์"
-    else if (userStore.editUser.role !== 'อาจารย์') {
-        showSnackbar('โปรดเลือกตำแหน่งที่ถูกต้อง');
-        return;
-    }
+  // Validate the role field to ensure it's set to "อาจารย์"
+  if (userStore.editUser.role !== 'อาจารย์') {
+    showSnackbar('โปรดเลือกตำแหน่งที่ถูกต้อง');
+    return;
+  }
 
-    // check if status is not valid
-    else if (!['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง'].includes(userStore.editUser.status ?? '')) {
-        showSnackbar('โปรดเลือกสถานะภาพที่ถูกต้อง');
-        return;
-    }
-    await userStore.saveUser();
-    await userStore.resetUser();
-    // window.location.reload();
-    await userStore.closeDialog();
+  // Validate the status field for acceptable values
+  if (!['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง'].includes(userStore.editUser.status ?? '')) {
+    showSnackbar('โปรดเลือกสถานะภาพที่ถูกต้อง');
+    return;
+  }
+
+  // Check for email duplicates, ignoring the current user's own email
+  const emailDuplicate = await userStore.checkEmailDuplicate(userStore.editUser.email ?? '', userStore.editUser.userId);
+  if (emailDuplicate) {
+    showSnackbar('อีเมลนี้ถูกใช้งานแล้ว');
+    return;
+  }
+
+  // Save the user data and reset the form
+  await userStore.saveUser();
+  await userStore.resetUser();
+
+  // Close the edit dialog
+  userStore.closeDialog();
 }
+
+
 
 async function cancel() {
     userStore.resetUser();
@@ -74,14 +85,14 @@ if (!userStore.editUser.role) {
                 <v-text-field label="ชื่อ" dense solo outlined rounded required v-model="userStore.editUser.firstName"
                   :rules="[(v) => !!v || 'โปรดกรอกชื่อ',
                   (v) => /^[ก-๙\s]+$/.test(v) || 'ชื่อต้องไม่เป็นตัวเลขและต้องเป็นภาษาไทยเท่านั้น',
-                  (v) => v.length <= 100 || 'ชื่อต้องไม่เกิน 100 ตัวอักษร']">
+                  (v) => v.length <= 50 || 'ชื่อต้องไม่เกิน 50 ตัวอักษร']">
                 </v-text-field>
               </v-col>
               <v-col cols="6">
                 <v-text-field label="นามสกุล" dense solo outlined rounded required v-model="userStore.editUser.lastName"
                   :rules="[(v) => !!v || 'โปรดกรอกนามสกุล',
                   (v) => /^[ก-๙\s]+$/.test(v) || 'นามสกุลต้องไม่เป็นตัวเลขและต้องเป็นภาษาไทยเท่านั้น',
-                  (v) => v.length <= 100 || 'นามสกุลต้องไม่เกิน 100 ตัวอักษร']">
+                  (v) => v.length <= 50 || 'นามสกุลต้องไม่เกิน 50 ตัวอักษร']">
                 </v-text-field>
               </v-col>
 
