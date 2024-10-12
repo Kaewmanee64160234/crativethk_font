@@ -5,7 +5,6 @@ import { useRoute } from "vue-router";
 import { useUserStore } from "@/stores/user.store";
 import router from "@/router";
 import { useCourseStore } from "@/stores/course.store";
-import assignment from "@/services/assignment";
 import { useAssignmentStore } from "@/stores/assignment.store";
 import type Attendance from "@/stores/types/Attendances";
 import { useMessageStore } from "@/stores/message";
@@ -19,49 +18,50 @@ const assignmentStore = useAssignmentStore();
 const messageStore = useMessageStore();
 const attdent = ref<Attendance[]>([]);
 const queryCourseId = route.params.courseId;
+const isRecheckAllowed = ref(true);
 
 onMounted(async () => {
   await userStore.getCurrentUser();
-  console.log(JSON.stringify(userStore.currentUser));
   await assignmentStore.getAssignmentById(route.params.assignmentId.toString());
-  console.log(JSON.stringify(assignmentStore.currentAssignment));
   await attendanceStore.getAttendanceByAssignmentId(route.params.assignmentId.toString());
-  await userStore.getUserByCourseId(queryCourseId+'');
+  await userStore.getUserByCourseId(queryCourseId + '');
+
+  // Check if more than 1 day has passed since the assignment was created
+  const currentDate = new Date().getTime();
+  const assignmentDate = new Date(assignmentStore.currentAssignment!.createdDate!).getTime();
+  const timeDifference = currentDate - assignmentDate;
+
+  // If the time difference is greater than 24 hours (86400000 ms), disallow recheck
+  isRecheckAllowed.value = timeDifference < 86400000;
+
   attdent.value = [];
-  attdent.value.push(...attendanceStore.attendances!.filter((attend: Attendance) => (attend.user?.studentId === userStore.currentUser?.studentId) && (attend.attendanceImage !== 'noimage.jpg')));
+  attdent.value.push(...attendanceStore.attendances!.filter((attend: Attendance) => 
+    (attend.user?.studentId === userStore.currentUser?.studentId) && 
+    (attend.attendanceImage !== 'noimage.jpg')
+  ));
 });
 
 //confirm attendance
 const confirmAttendance = async (attendance: Attendance) => {
-  // Show a confirmation dialog
   if (confirm("Do you want to confirm this attendance?")) {
     try {
-      // Set attendance status
       attendance.assignment = assignmentStore.currentAssignment;
       attendance.attendanceStatus = "present";
       attendance.attendanceConfirmStatus = "confirmed";
       if (attendance.user === null) {
         attendance.user = userStore.currentUser;
       }
-
-      // Call store method to confirm attendance
       await attendanceStore.confirmAttendance(attendance);
-
-      // Notify user of success
       alert("Attendance has been confirmed.");
-
-      // Redirect after successful confirmation
-      // router.push('/resheckMappingTeacher/' + assignmentStore.currentAssignment?.assignmentId); // Replace '/next-page-route' with your specific route
     } catch (error) {
       console.error("Error recording attendance:", error);
-      alert("Failed to confirm attendance."); // Show error alert
+      alert("Failed to confirm attendance.");
     }
   }
 };
 
 const reCheckAttendance = async (attendance: Attendance) => {
   try {
-
     attendance.assignment = assignmentStore.currentAssignment;
     const date = new Date();
     const currentDate = date.getTime();
@@ -78,7 +78,6 @@ const reCheckAttendance = async (attendance: Attendance) => {
 
     attendance.attendanceConfirmStatus = "recheck";
     attendance.user = userStore.currentUser;
-
     await attendanceStore.confirmAttendance(attendance);
     router.push("/courseDetail/" + queryCourseId);
   } catch (error) {
@@ -91,13 +90,10 @@ const goBackToCourseDetail = () => {
 };
 
 const confirmTagging = () => {
-  router.push("/taggingFace/course/" + queryCourseId+"/assignment/"+route.params.assignmentId);
-};
-// goToCourseDetail
-const goToCourseDetail = () => {
-  router.push(`/courseDetail/${courseStore.currentCourse?.coursesId}`);
+  router.push("/taggingFace/course/" + queryCourseId + "/assignment/" + route.params.assignmentId);
 };
 </script>
+
 
 
 <template>
@@ -147,11 +143,10 @@ const goToCourseDetail = () => {
               class="rounded-lg" ></v-img>
           </v-row>
 
-
           <!-- Re-check Button -->
           <v-row class="mt-3">
             <v-col cols="12">
-              <v-btn block v-if="userStore.currentUser?.role !== 'อาจารย์'" color="#F6BB49" @click="confirmTagging()">
+              <v-btn block v-if="userStore.currentUser?.role !== 'อาจารย์' && isRecheckAllowed" color="#F6BB49" @click="confirmTagging()">
                 ตรวจสอบอีกครั้ง
               </v-btn>
             </v-col>
@@ -187,7 +182,7 @@ const goToCourseDetail = () => {
           <!-- Re-check Button -->
           <v-row class="mt-3">
             <v-col cols="12">
-              <v-btn v-if="userStore.currentUser?.role !== 'อาจารย์'" block color="#F6BB49" @click="confirmTagging()">
+              <v-btn v-if="userStore.currentUser?.role !== 'อาจารย์' && isRecheckAllowed " block color="#F6BB49" @click="confirmTagging()">
                 ตรวจสอบอีกครั้ง
               </v-btn>
             </v-col>
@@ -195,7 +190,7 @@ const goToCourseDetail = () => {
         </v-card>
       </v-col>
       <v-col v-else cols="12">
-        <v-card class="student-card " outlined>
+        <v-card v-if="isRecheckAllowed" class="student-card " outlined>
           <v-row class="align-center justify-center">
             <div class="text-start">
               <div class="subtitle-1 bold-text mt-2">
@@ -207,6 +202,19 @@ const goToCourseDetail = () => {
             </div>
           </v-row>
         </v-card>
+        <v-card v-else class="student-card " outlined>
+          <v-row class="align-center justify-center">
+            <div class="text-start
+            ">
+              <div class="subtitle-1 bold-text mt-2" style="color: red;" >
+
+                หมดเวาลาการตรวจสอบการเข้าเรียน
+              </div>
+             
+            </div>
+          </v-row>
+        </v-card>
+
       </v-col>
     </v-row>
   </v-container>
