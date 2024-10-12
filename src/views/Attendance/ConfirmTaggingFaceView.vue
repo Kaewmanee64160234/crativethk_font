@@ -6,6 +6,7 @@ import { useAssignmentStore } from "@/stores/assignment.store";
 import { useAttendanceStore } from "@/stores/attendance.store";
 import { useUserStore } from "@/stores/user.store";
 import type Attendance from "@/stores/types/Attendances";
+import Swal from "sweetalert2";
 
 interface CanvasRefs {
   [key: number]: HTMLCanvasElement;
@@ -143,8 +144,10 @@ onMounted(async () => {
   });
 });
 
+
 const reCheckAttendance = async (attendance: Attendance) => {
   try {
+    stopCamera();
     attendance.assignment = assignmentStore.currentAssignment;
     const date = new Date();
     const currentDate = date.getTime();
@@ -152,7 +155,6 @@ const reCheckAttendance = async (attendance: Attendance) => {
     const assignmentTime = assignmentDate.getTime();
     const diff = currentDate - assignmentTime;
     console.log("Diff:", diff);
-    
     
     attendance.attendanceStatus = diff > 900000 ? "late" : "present";
     attendance.attendanceConfirmStatus = "recheck";
@@ -168,12 +170,30 @@ const reCheckAttendance = async (attendance: Attendance) => {
       await attendanceStore.confirmAttendance(attendance, imageFile);
     }
 
-    router.push("/courseDetail/" + queryCourseId);
-    showDialog.value = false;
+    // Show SweetAlert confirmation
+    Swal.fire({
+      title: 'ทำการยืน',
+      text: 'Attendance recheck completed.',
+      icon: 'success',
+      confirmButtonText: 'OK',
+    }).then(() => {
+      // When user clicks OK, navigate back
+      router.push("/courseDetail/" + queryCourseId);
+      showDialog.value = false;
+    });
+    
   } catch (error) {
     console.log(error);
+    // Optionally, show an error alert
+    Swal.fire({
+      title: 'Error!',
+      text: 'There was an error while rechecking attendance.',
+      icon: 'error',
+      confirmButtonText: 'OK',
+    });
   }
 };
+
 
 const confirmRecheck = async () => {
   await attendanceStore.getAttendanceByAssignmentAndStudent(
@@ -284,7 +304,7 @@ const stopCamera = () => {
     </v-row>
 
     <v-row style="width: 100%;" >
-      <v-col cols="12" class="d-flex justify-end"> <!-- Changed alignment to 'justify-end' -->
+      <v-col cols="12" class="d-flex justify-end">
         <v-btn style="background-color: #4A678C;color: white;" @click="openUploadDialog">ไม่มีภาพของฉัน</v-btn>
       </v-col>
     </v-row>
@@ -313,26 +333,23 @@ const stopCamera = () => {
       </v-col>
     </v-row>
 
+    <!-- Upload Dialog -->
     <v-dialog v-model="showUploadDialog" max-width="600px">
-      <v-card>
-        <v-card-title>
-          <span class="headline">Upload or Take a Photo</span>
+      <v-card class="elevation-4">
+        <v-card-title class="headline text-h6">
+          Upload or Take a Photo
         </v-card-title>
         <v-card-text>
           <v-file-input label="Upload Image" @change="onFileChange" accept="image/*" />
-          <v-btn color="primary" @click="startCamera">Take Photo</v-btn>
+          <v-btn color="primary" @click="startCamera" class="mt-2">Take Photo</v-btn>
         </v-card-text>
-        <v-row v-if="showCamera">
+        <v-row v-if="showCamera" class="pa-4">
           <v-col cols="12" sm="12">
-            <video
-              ref="videoRef"
-              autoplay
-              style="width: 100%; border-radius: 8px"
-            ></video>
+            <video ref="videoRef" autoplay class="video-preview"></video>
             <canvas ref="canvasRef" style="display: none"></canvas>
           </v-col>
           <v-col cols="12" sm="6">
-            <v-btn @click="captureImage" block>
+            <v-btn @click="captureImage" block class="mb-2">
               <v-icon left>mdi-camera</v-icon>
               Capture Image
             </v-btn>
@@ -350,23 +367,26 @@ const stopCamera = () => {
       </v-card>
     </v-dialog>
 
-    <v-dialog v-model="showDialog" max-width="600px">
-      <v-card>
-        <v-card-title>
-          <span class="headline">Confirm Identity</span>
-        </v-card-title>
+    <!-- Confirm Identity Dialog -->
+    <v-dialog v-model="showDialog" max-width="500px">
+      <v-card class="elevation-4">
+      
         <v-card-text class="text-center">
-          <img :src="croppedImage!" alt="Cropped Face" class="rounded-lg mb-2" />
-          <p>Is this you?</p>
+          <img :src="croppedImage!" alt="Cropped Face" class="rounded-lg mb-3 confirm-image" />
+          <p>ภาพนี้ใช่คุณใช่หรือไม่</p>
         </v-card-text>
         <v-card-actions class="justify-center">
-          <v-btn color="primary" @click="confirmRecheck">Yes</v-btn>
-          <v-btn color="secondary" @click="showDialog = false">No</v-btn>
+          <v-btn variant="flat" color="error" @click="showDialog = false">ไม่</v-btn>
+
+          <v-spacer></v-spacer>
+          <v-btn variant="flat" color="primary" @click="confirmRecheck">ใช่</v-btn>
+
         </v-card-actions>
       </v-card>
     </v-dialog>
   </v-container>
 </template>
+
 
 <style scoped>
 /* Main container to center content */
@@ -385,24 +405,26 @@ const stopCamera = () => {
   margin-top: 10px;
 }
 
-/* Image container to maintain position relative for canvas overlay */
-.image-container {
-  position: relative;
-  width: 100%;
-  max-width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-/* Image styling to keep it centered and contained */
-.image-display {
-  width: 100%;
+/* Ensure image is responsive and not too large or small */
+.confirm-image {
+  width: 70%;
+  max-width: 150px;
   height: auto;
-  max-width: 100%;
-  object-fit: contain;
+  object-fit: cover;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Video preview for camera capture */
+.video-preview {
+  width: 100%;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Elevation for better dialog design */
+.elevation-4 {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
 /* Canvas for overlay effects */

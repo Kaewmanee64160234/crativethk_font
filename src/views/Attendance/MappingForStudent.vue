@@ -195,7 +195,7 @@ const goToCourseDetail = () => {
         </v-card>
       </v-col>
       <v-col v-else cols="12">
-        <v-card class="pa-3 student-card" outlined>
+        <v-card class="student-card " outlined>
           <v-row class="align-center justify-center">
             <div class="text-start">
               <div class="subtitle-1 bold-text mt-2">
@@ -245,6 +245,7 @@ const goToCourseDetail = () => {
   border-radius: 8px;
   transition: box-shadow 0.3s;
   width: 100%;
+  padding:20px;
 }
 
 .student-card:hover {
