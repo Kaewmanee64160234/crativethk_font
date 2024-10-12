@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, onMounted, ref } from "vue";
+import { defineProps, onMounted, ref,watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAssignmentStore } from "@/stores/assignment.store";
 import type Assignment from "@/stores/types/Assignment";
@@ -33,10 +33,21 @@ const messageStore = useMessageStore();
 const props = defineProps<{
   post: Assignment;
 }>();
+const assignmentName = ref<string>(props.post.nameAssignment);
+
 
 onMounted(async () => {
   await assignmentStore.getAssignmentByCourseId(id.value.toString());
+  assignmentName.value = props.post.nameAssignment;
 });
+
+// watch assigment props name set name assigment
+watch(
+  () => props.post,
+  (newVal) => {
+    assignmentName.value = props.post.nameAssignment;
+  }
+);
 
 function formatThaiDate(date: Date) {
   const thaiDate = date
@@ -58,7 +69,6 @@ function formatThaiTime(date: Date) {
   });
 }
 
-
 const deleteAssignment = async (assignment: Assignment) => {
   try {
     // Use the `showConfirm_` function to show the confirmation dialog
@@ -66,7 +76,9 @@ const deleteAssignment = async (assignment: Assignment) => {
       `คุณต้องการลบการเช็คชื่อ ${assignment.nameAssignment} ใช่หรือไม่`,
       async () => {
         // If confirmed, proceed with deleting the assignment
-        await assignmentStore.deleteAssignment(assignment.assignmentId!.toString());
+        await assignmentStore.deleteAssignment(
+          assignment.assignmentId!.toString()
+        );
         await assignmentStore.getAssignmentByCourseId(id.value.toString());
 
         // Show success dialog after deletion using SweetAlert2
@@ -115,7 +127,9 @@ const gotoMappinfForStudent = () => {
 // goToMapping2
 const goToMapping2 = async () => {
   showDialog.value = true;
-  await attdentStore.getAttendanceByAssignmentId(props.post!.assignmentId! + "");
+  await attdentStore.getAttendanceByAssignmentId(
+    props.post!.assignmentId! + ""
+  );
 };
 // Mapping
 const mapping = () => {
@@ -134,7 +148,11 @@ const handleFileChange = (event: Event) => {
         const result = e.target?.result as string;
         if (result) {
           try {
-            const resizedImage = await resizeAndConvertImageToBase64(result, 800, 600);
+            const resizedImage = await resizeAndConvertImageToBase64(
+              result,
+              800,
+              600
+            );
             imageUrls.value.push(resizedImage);
             imageFiles.value.push(file);
           } catch (error) {
@@ -169,7 +187,8 @@ const resizeAndConvertImageToBase64 = (
       ctx.drawImage(img, 0, 0, width, height);
       resolve(canvas.toDataURL("image/jpeg"));
     };
-    img.onerror = () => reject(new Error(`Failed to load image at ${imageUrl}`));
+    img.onerror = () =>
+      reject(new Error(`Failed to load image at ${imageUrl}`));
     img.src = imageUrl;
   });
 };
@@ -238,17 +257,28 @@ const updatePost = async () => {
 };
 async function save() {
   try {
-    // Debug: Check if assignmentId is correctly set
+    const updateAssignment: Assignment = {
+      ...props.post,
+      nameAssignment: assignmentName.value,
+    };
     console.log("Assignment ID to update:", props.post.assignmentId);
 
     // Ensure that assignmentId is valid
-    if (!props.post.assignmentId || parseInt(props.post.assignmentId + "") === 0) {
+    if (
+      !props.post.assignmentId ||
+      parseInt(props.post.assignmentId + "") === 0
+    ) {
       throw new Error("Invalid assignment ID");
     }
 
     // Attempt to update the assignment with the new name
-    await assignmentStore.updateAssignment(props.post.assignmentId + "", props.post);
+    await assignmentStore.updateAssignment(
+      props.post.assignmentId + "",
+      updateAssignment
+    );
+    assignmentName.value = ""; // Clear the assignment name field
     close();
+
     console.log("Assignment updated successfully"); // Log success
   } catch (error) {
     console.error("Error updating assignment:", error); // Log any errors
@@ -265,13 +295,22 @@ function close() {
     <v-card @click="gotoMappinfForStudent()">
       <v-card-text>
         <h4>
-          {{ props.post!.course!.user!.firstName + ' ' + props.post!.course!.user!.lastName }}
+          {{
+            props.post!.course!.user!.firstName +
+            " " +
+            props.post!.course!.user!.lastName
+          }}
           สร้างการเช็คชื่อ : {{ props.post.nameAssignment }}
         </h4>
       </v-card-text>
       <v-card-actions>
         <v-card-text>
-          {{ formatThaiDate(new Date(props.post!.createdDate!)) + " เวลา " +formatThaiTime(new Date(props.post!.createdDate!))+ " น." }}</v-card-text
+          {{
+            formatThaiDate(new Date(props.post!.createdDate!)) +
+            " เวลา " +
+            formatThaiTime(new Date(props.post!.createdDate!)) +
+            " น."
+          }}</v-card-text
         >
         <v-spacer></v-spacer>
         <!-- <v-btn >
@@ -281,7 +320,11 @@ function close() {
         <!-- Dropdown Menu for Teacher Actions -->
         <v-menu v-if="userStore.currentUser?.role == 'อาจารย์'" bottom right>
           <template v-slot:activator="{ props }">
-            <v-btn icon="mdi-dots-vertical" variant="text" v-bind="props"></v-btn>
+            <v-btn
+              icon="mdi-dots-vertical"
+              variant="text"
+              v-bind="props"
+            ></v-btn>
           </template>
           <v-list>
             <v-list-item @click="mapping">
@@ -290,7 +333,9 @@ function close() {
             <v-divider></v-divider>
 
             <v-list-item @click="recheckMapping">
-              <v-list-item-title>ยืนยันนิสิตที่ให้ตรวจสอบอีกครั้ง</v-list-item-title>
+              <v-list-item-title
+                >ยืนยันนิสิตที่ให้ตรวจสอบอีกครั้ง</v-list-item-title
+              >
             </v-list-item>
             <v-divider></v-divider>
             <v-list-item @click="goToMapping2">
@@ -383,9 +428,8 @@ function close() {
         แก้ไขชื่อการเช็คชื่อ
         <v-spacer></v-spacer>
         <!-- Close button for dialog -->
-      
       </v-card-title>
-      
+
       <!-- Dialog content with form -->
       <v-card-text>
         <v-form ref="form" v-model="isValid" @submit.prevent="save">
@@ -399,17 +443,19 @@ function close() {
             prepend-inner-icon="mdi-assignment"
             :rules="[
               (v) => !!v || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*',
-              (v) => (v && v.length >= 1 && v.length <= 50) || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*'
+              (v) =>
+                (v && v.length >= 1 && v.length <= 50) ||
+                '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*',
             ]"
           ></v-text-field>
         </v-form>
       </v-card-text>
-      
+
       <!-- Dialog actions with Confirm and Cancel buttons -->
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn  color="error" @click="close()">ยกเลิก</v-btn>
-        <v-btn  color="primary" :disabled="!isValid" @click="save">ยืนยัน</v-btn>
+        <v-btn color="error" @click="close()">ยกเลิก</v-btn>
+        <v-btn color="primary" :disabled="!isValid" @click="save">ยืนยัน</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

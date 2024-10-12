@@ -107,11 +107,8 @@ export const useAttendanceStore = defineStore("attendanceStore", () => {
       return res.status;
       // await messageStore.showInfo("The information has been sent to the teacher. Please wait for confirmation..");
     } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "คุณได้ถูกทำการยืนยันสถานะแล้ว",
-        text: "หากผิดพลาดกรุณาแจ้งอาจารย์ผู้สอน",
-      });
+     console.log(error);
+     
     }
   };
 
