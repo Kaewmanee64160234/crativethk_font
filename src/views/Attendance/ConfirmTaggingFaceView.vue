@@ -187,6 +187,8 @@ const reCheckAttendance = async (attendance: Attendance) => {
         imageFile
       );
       if (status == 200) {
+
+
         Swal.fire({
           title: "ทำการยืน",
           text: "Attendance recheck completed.",
@@ -312,8 +314,11 @@ const captureImage = () => {
       if (detections.length > 0) {
         const box = detections[0].box;
         croppedImage.value = cropFaceFromImage(ctx, box);
+        showUploadDialog.value = false;
+
         showDialog.value = true;
       } else {
+        showUploadDialog.value = false;
         // sweet in thai
         Swal.fire({
           title: "Error!",
@@ -339,8 +344,26 @@ const stopCamera = () => {
 const goToCourseDetail = () => {
   router.push("/courseDetail/" + queryCourseId);
 };
+const onDialogClose = (val: boolean) => {
+  if (!val) {
+    stopCamera();
+  }
+};
+
+// showUploadDialog close and step camera
+const closeShowUploadDialog = () => {
+  showUploadDialog.value = false;
+  stopCamera();
+};
+
+// showDialog closedialog
+const closeDialogShowDialog = () => {
+  showDialog.value = false;
+  stopCamera();
+};
 
 </script>
+
 
 <template>
   <v-container class="mt-10">
@@ -406,68 +429,46 @@ const goToCourseDetail = () => {
       </v-col>
     </v-row>
 
-    <!-- Upload Dialog -->
-    <v-dialog v-model="showUploadDialog" max-width="600px">
+    <!-- Dialog to upload or capture image -->
+    <v-dialog v-model="showUploadDialog" max-width="600px" @update:model-value="onDialogClose">
       <v-card class="elevation-4">
-        <v-card-title class="headline text-h6">
-          Upload or Take a Photo
-        </v-card-title>
+        <v-card-title class="headline text-h6">Upload หรือถ่ายภาพเพื่อยืนยันตัวตน</v-card-title>
         <v-card-text>
-          <v-file-input
-            label="Upload Image"
-            @change="onFileChange"
-            accept="image/*"
-          />
-          <v-btn color="primary" @click="startCamera" class="mt-2"
-            >Take Photo</v-btn
-          >
+          <v-file-input label="Upload Image" @change="onFileChange" accept="image/*" />
+          <v-btn color="primary" @click="startCamera" class="mt-2">ถ่ายภาพ</v-btn>
         </v-card-text>
+
+        <!-- Camera View -->
         <v-row v-if="showCamera" class="pa-4">
-          <v-col cols="12" sm="12">
+          <v-col cols="12">
             <video ref="videoRef" autoplay class="video-preview"></video>
             <canvas ref="canvasRef" style="display: none"></canvas>
           </v-col>
           <v-col cols="12" sm="6">
-            <v-btn @click="captureImage" block class="mb-2">
-              <v-icon left>mdi-camera</v-icon>
-              Capture Image
-            </v-btn>
+            <v-btn @click="captureImage" block>ถ่ายรูปภาพ</v-btn>
           </v-col>
           <v-col cols="12" sm="6">
-            <v-btn @click="stopCamera" block color="error">
-              <v-icon left>mdi-close</v-icon>
-              Close Camera
-            </v-btn>
+            <v-btn @click="stopCamera" block color="error">ปิดกล้อง</v-btn>
           </v-col>
         </v-row>
+
         <v-card-actions>
-          <v-btn color="secondary" @click="showUploadDialog = false"
-            >Cancel</v-btn
-          >
+          <v-btn color="secondary" @click="closeShowUploadDialog()">ยกเลิก</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
     <!-- Confirm Identity Dialog -->
-    <v-dialog v-model="showDialog" max-width="500px">
+    <v-dialog v-model="showDialog" max-width="500px" @update:model-value="onDialogClose">
       <v-card class="elevation-4">
         <v-card-text class="text-center">
-          <img
-            :src="croppedImage!"
-            alt="Cropped Face"
-            class="rounded-lg mb-3 confirm-image"
-          />
+          <img :src="croppedImage!" alt="Cropped Face" class="rounded-lg mb-3 confirm-image" />
           <p>ภาพนี้ใช่คุณใช่หรือไม่</p>
         </v-card-text>
         <v-card-actions class="justify-center">
-          <v-btn variant="flat" color="error" @click="showDialog = false"
-            >ไม่</v-btn
-          >
-
+          <v-btn variant="flat" color="error" @click="closeDialogShowDialog">ไม่</v-btn>
           <v-spacer></v-spacer>
-          <v-btn variant="flat" color="primary" @click="confirmRecheck"
-            >ใช่</v-btn
-          >
+          <v-btn variant="flat" color="primary" @click="confirmRecheck">ใช่</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

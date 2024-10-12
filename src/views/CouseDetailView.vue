@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch,nextTick } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useAssignmentStore } from "@/stores/assignment.store";
 import CardAssigment from "@/components/assigment/CardAssigment.vue";
@@ -71,6 +71,21 @@ const filteredUsers = computed(() => {
     );
   }
 });
+const handlePaste = (event: ClipboardEvent) => {
+      const pastedText = event.clipboardData?.getData('text') || '';
+      const combinedText = nameAssignment.value + pastedText;
+
+      if (combinedText.length > 50) {
+        event.preventDefault();
+        nextTick(() => {
+          notifyError('ไม่สามารถกรอกเกิน 50 ตัวอักษร');
+        });
+      }
+    };
+
+    const notifyError = (message: string) => {
+      console.error(message);
+    };
 
 // Fetch assignments when the component mounts
 onMounted(async () => {
@@ -357,7 +372,6 @@ const createPost = async () => {
     imageFiles.value
   );
   console.log("newAssignment", assignmentStore.currentAssignment);
-  
 
   if (imageUrls.value.length > 0) {
     imageUrls.value.push(...capturedImages.value);
@@ -522,7 +536,7 @@ const cancelExportFile = () => {
 // closeDialog and reset image and close camera
 const closeDialog = () => {
   stopCamera();
-// reset textfield and
+  // reset textfield and
   nameAssignment.value = "";
   showDialog.value = false;
   imageUrls.value = [];
@@ -596,11 +610,12 @@ const getAbsenceCount = (userId: string) => {
                         prepend-inner-icon="mdi-assignment"
                         required
                         maxlength="50"
+                        @paste="handlePaste"
                         :rules="[
-      (v: any) => !!v || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*',
-      (v: any) => (v && v.length >= 1 && v.length <= 50) || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*'
-    ]"
-                      ></v-text-field>
+    (v: any) => !!v || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*',
+    (v: any) => (v && v.length >= 1 && v.length <= 50) || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*'
+  ]"
+                      />
                     </v-card-text>
                   </v-col>
                 </v-row>
