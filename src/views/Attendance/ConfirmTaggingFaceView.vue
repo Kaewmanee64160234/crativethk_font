@@ -93,7 +93,6 @@ const processImage = async (image: any, index: number) => {
       );
       canvas.parentElement?.appendChild(boxElement);
 
-      // Update the box position and size on window resize
       window.addEventListener("resize", updateBoxStyle);
     });
   }
@@ -193,10 +192,8 @@ const reCheckAttendance = async (attendance: Attendance) => {
           icon: "success",
           confirmButtonText: "OK",
         }).then(() => {
-          // When user clicks OK, navigate back
           router.push("/courseDetail/" + queryCourseId);
           stopCamera();
-
           showDialog.value = false;
         });
       } else {
@@ -209,11 +206,8 @@ const reCheckAttendance = async (attendance: Attendance) => {
         stopCamera();
       }
     }
-
-    // Show SweetAlert confirmation
   } catch (error) {
     console.log(error);
-    // Optionally, show an error alert
     Swal.fire({
       title: "Error!",
       text: "ไม่สามารถทำการยืนยันการเข้าเรียนได้",
@@ -229,9 +223,7 @@ const confirmRecheck = async () => {
     userStore.currentUser!.studentId!
   );
   await reCheckAttendance(attendanceStore.editAttendance);
-  // stop camera
   stopCamera();
-
   showDialog.value = false;
 };
 
@@ -294,6 +286,7 @@ const startCamera = async () => {
   if (videoRef.value) {
     videoRef.value.srcObject = stream;
   }
+
 };
 
 const captureImage = () => {
@@ -310,7 +303,6 @@ const captureImage = () => {
     );
     const imgData = canvasRef.value.toDataURL("image/jpeg");
 
-    // Process the captured image for face detection
     const img = new Image();
     img.src = imgData;
     img.onload = async () => {
@@ -318,18 +310,20 @@ const captureImage = () => {
       if (detections.length > 0) {
         const box = detections[0].box;
         croppedImage.value = cropFaceFromImage(ctx, box);
-        showUploadDialog.value = false;
+        stopCamera();
 
+        showUploadDialog.value = false;
         showDialog.value = true;
       } else {
         showUploadDialog.value = false;
-        // sweet in thai
         Swal.fire({
           title: "Error!",
           text: "ไม่สามารถทำการยืนยันการเข้าเรียนได้",
           icon: "error",
           confirmButtonText: "OK",
         });
+        // close camera
+        stopCamera();
       }
     };
   }
@@ -344,28 +338,28 @@ const stopCamera = () => {
     showCamera.value = false;
   }
 };
-// goToCourseDetail
+
 const goToCourseDetail = () => {
   router.push("/courseDetail/" + queryCourseId);
 };
+
 const onDialogClose = (val: boolean) => {
   if (!val) {
     stopCamera();
   }
 };
 
-// showUploadDialog close and step camera
 const closeShowUploadDialog = () => {
   showUploadDialog.value = false;
   stopCamera();
 };
 
-// showDialog closedialog
 const closeDialogShowDialog = () => {
   showDialog.value = false;
   stopCamera();
 };
 </script>
+
 
 <template>
   <v-container class="mt-10">
@@ -387,6 +381,7 @@ const closeDialogShowDialog = () => {
         </h1>
       </v-card-title>
     </v-card>
+
     <v-row>
       <v-col class="mt-3" cols="12">
         <h1 class="text-center">ตรวจสอบการเข้าเรียน</h1>
@@ -418,13 +413,13 @@ const closeDialogShowDialog = () => {
           <img
             :src="imageUrl"
             class="w-100 rounded-lg"
-            @load="(event:any) => { 
-              const img = event.target; 
-              canvasRefs[index].width = img!.naturalWidth!; 
-              canvasRefs[index].height = img!.naturalHeight!; 
-              canvasRefs[index].style.width = img!.width! + 'px'; 
-              canvasRefs[index].style.height = img!.height! + 'px'; 
-              processImage(img!, index); 
+            @load="(event:any) => {
+              const img = event.target;
+              canvasRefs[index].width = img!.naturalWidth!;
+              canvasRefs[index].height = img!.naturalHeight!;
+              canvasRefs[index].style.width = img!.width! + 'px';
+              canvasRefs[index].style.height = img!.height! + 'px';
+              processImage(img!, index);
             }"
             style="object-fit: contain"
           />
@@ -443,18 +438,18 @@ const closeDialogShowDialog = () => {
       @update:model-value="onDialogClose"
     >
       <v-card class="elevation-4">
-        <v-card-title class="headline text-h6"
-          >Upload หรือถ่ายภาพเพื่อยืนยันตัวตน</v-card-title
-        >
+        <v-card-title class="headline text-h6">
+          Upload หรือถ่ายภาพเพื่อยืนยันตัวตน
+        </v-card-title>
         <v-card-text>
           <v-file-input
             label="Upload Image"
             @change="onFileChange"
             accept="image/*"
           />
-          <v-btn color="primary" @click="startCamera" class="mt-2"
-            >ถ่ายภาพ</v-btn
-          >
+          <v-btn color="primary" @click="startCamera" class="mt-2">
+            ถ่ายภาพ
+          </v-btn>
         </v-card-text>
 
         <!-- Camera View -->
@@ -472,9 +467,9 @@ const closeDialogShowDialog = () => {
         </v-row>
 
         <v-card-actions>
-          <v-btn color="secondary" @click="closeShowUploadDialog()"
-            >ยกเลิก</v-btn
-          >
+          <v-btn color="secondary" @click="closeShowUploadDialog()">
+            ยกเลิก
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -495,18 +490,19 @@ const closeDialogShowDialog = () => {
           <p>ภาพนี้ใช่คุณใช่หรือไม่</p>
         </v-card-text>
         <v-card-actions class="justify-center">
-          <v-btn variant="flat" color="error" @click="closeDialogShowDialog"
-            >ไม่</v-btn
-          >
+          <v-btn variant="flat" color="error" @click="closeDialogShowDialog">
+            ไม่
+          </v-btn>
           <v-spacer></v-spacer>
-          <v-btn variant="flat" color="primary" @click="confirmRecheck"
-            >ใช่</v-btn
-          >
+          <v-btn variant="flat" color="primary" @click="confirmRecheck">
+            ใช่
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
   </v-container>
 </template>
+
 
 <style scoped>
 /* Main container to center content */
