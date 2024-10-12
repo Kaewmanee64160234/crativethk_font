@@ -276,17 +276,16 @@ const stopCamera = () => {
   <v-container class="mt-10">
     <v-row>
       <v-col class="mt-3" cols="12">
-        <h1 class="text-center">Confirm Tagging Face</h1>
+        <h1 class="text-center">ตรวจสอบการเข้าเรียน</h1>
         <p class="text-center description">
-          Please click on your face if it is you. If the image is not you, click the "Not
-          My Image" button.
+          “โปรดคลิกที่ใบหน้าของคุณหากเป็นคุณ หากภาพไม่ใช่คุณ กรุณาคลิกปุ่ม “ไม่มีภาพของฉัน”
         </p>
       </v-col>
     </v-row>
 
-    <v-row>
-      <v-col cols="12" class="align-start justify-start">
-        <v-btn color="secondary" @click="openUploadDialog">ไม่มีภาพของฉัน</v-btn>
+    <v-row style="width: 100%;" >
+      <v-col cols="12" class="d-flex justify-end"> <!-- Changed alignment to 'justify-end' -->
+        <v-btn style="background-color: #4A678C;color: white;" @click="openUploadDialog">ไม่มีภาพของฉัน</v-btn>
       </v-col>
     </v-row>
 
@@ -382,7 +381,7 @@ const stopCamera = () => {
 /* Description text styling */
 .description {
   font-size: 1.1rem;
-  color: #555;
+  color: #ff6e6e;
   margin-top: 10px;
 }
 

@@ -309,6 +309,7 @@ const base64ToFile = (base64: string, filename: string): File => {
 };
 // Function to handle post creation, including image processing and backend communication
 const createPost = async () => {
+  stopCamera();
   console.time("Total createPost execution time");
 
   console.time("Validation check");
@@ -355,11 +356,13 @@ const createPost = async () => {
     },
     imageFiles.value
   );
+  console.log("newAssignment", assignmentStore.currentAssignment);
+  
 
   if (imageUrls.value.length > 0) {
     imageUrls.value.push(...capturedImages.value);
     router.push({
-      path: `/mapping2/assignment/${assignmentStore.assignment?.assignmentId}`,
+      path: `/mapping2/assignment/${assignmentStore.currentAssignment?.assignmentId}`,
       query: { imageUrls: imageUrls.value },
     });
   }
@@ -411,6 +414,7 @@ const createPost = async () => {
     });
 
     // Clear the form and images after navigating
+    closeDialog();
     nameAssignment.value = "";
     imageUrls.value = [];
     capturedImages.value = [];

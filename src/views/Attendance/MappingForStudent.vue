@@ -61,6 +61,7 @@ const confirmAttendance = async (attendance: Attendance) => {
 
 const reCheckAttendance = async (attendance: Attendance) => {
   try {
+
     attendance.assignment = assignmentStore.currentAssignment;
     const date = new Date();
     const currentDate = date.getTime();
@@ -135,16 +136,22 @@ const goToCourseDetail = () => {
               </div>
             </div>
           </v-row>
-          <v-row justify="center">
+          <v-row v-if="student.user" justify="center">
             <!-- Student Image -->
-            <v-img :src="`${url}/attendances/image/${student.attendanceImage}`" height="200px" width="140px"
+            <v-img  :src="`${url}/attendances/image/${student.attendanceImage}`" height="200px" width="140px"
               class="rounded-lg" :alt="`Student Image for ${student.user ? student.user.firstName : 'Unknown'}`"></v-img>
           </v-row>
+          <v-row v-else justify="center">
+            <!-- Student Image -->
+            <v-img  :src="`${url}/attendances/image/${student.attendanceImage}`" height="200px" width="140px"
+              class="rounded-lg" ></v-img>
+          </v-row>
+
 
           <!-- Re-check Button -->
           <v-row class="mt-3">
             <v-col cols="12">
-              <v-btn block v-if="userStore.currentUser?.role !== 'อาจารย์'" color="#F6BB49" @click="reCheckAttendance(student)">
+              <v-btn block v-if="userStore.currentUser?.role !== 'อาจารย์'" color="#F6BB49" @click="confirmTagging()">
                 ตรวจสอบอีกครั้ง
               </v-btn>
             </v-col>
@@ -180,7 +187,7 @@ const goToCourseDetail = () => {
           <!-- Re-check Button -->
           <v-row class="mt-3">
             <v-col cols="12">
-              <v-btn v-if="userStore.currentUser?.role !== 'อาจารย์'" block color="#F6BB49" @click="reCheckAttendance(student)">
+              <v-btn v-if="userStore.currentUser?.role !== 'อาจารย์'" block color="#F6BB49" @click="confirmTagging()">
                 ตรวจสอบอีกครั้ง
               </v-btn>
             </v-col>
