@@ -116,6 +116,7 @@ onMounted(async () => {
       imageUrls.value.map((url, index) => loadImageAndProcess(url, index))
     );
     console.timeEnd("Image Processing Time");
+    await assignmentStore.getAssignmentById(route.params.assignmentId.toString());
 
     // Call createAttendance after all images have been processed
     if (assignmentStore.currentAssignment!.statusAssignment == "completed") {
@@ -474,10 +475,8 @@ const updateAttdent = async () => {
       );
       // console.log("User Attdent:", userAttdent);
       if (userAttdent) {
-        userAttdent.attendanceStatus = "มาเรียน";
-        userAttdent.attendanceConfirmStatus = identifiedUser
-          ? "confirmed"
-          : "notConfirmed";
+        userAttdent.attendanceStatus = "present";
+        userAttdent.attendanceConfirmStatus =  "notConfirmed";
         userAttdent.attendanceScore = parseInt(
           (identifications.value[i].score * 100).toFixed(2)
         );
