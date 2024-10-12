@@ -518,7 +518,8 @@ const cancelExportFile = () => {
 // closeDialog and reset image and close camera
 const closeDialog = () => {
   stopCamera();
-
+// reset textfield and
+  nameAssignment.value = "";
   showDialog.value = false;
   imageUrls.value = [];
   capturedImages.value = [];
