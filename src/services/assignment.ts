@@ -21,9 +21,6 @@ function createAssignment(data:Assignment,files:File[]) {
     formData.append("statusAssignment", data.statusAssignment);
     formData.append("coursesId", data.course.coursesId);
     // formData.append("room", data.room);
-
-
-
     return http.post("/assignments", formData);
 }
 //get Assignment by course id

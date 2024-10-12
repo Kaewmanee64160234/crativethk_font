@@ -476,7 +476,7 @@ const updateAttdent = async () => {
       // console.log("User Attdent:", userAttdent);
       if (userAttdent) {
         userAttdent.attendanceStatus = "present";
-        userAttdent.attendanceConfirmStatus =  "notConfirmed";
+        userAttdent.attendanceConfirmStatus =  "notconfirm";
         userAttdent.attendanceScore = parseInt(
           (identifications.value[i].score * 100).toFixed(2)
         );
@@ -528,6 +528,7 @@ const reCheckAttendance = async (attendance: Attendance) => {
     await attendanceStore.rejectAttendanceByTeacher(
       attendance.attendanceId + ""
     );
+    
     if(attendance.user == null) {
       await attendanceStore.removeAttendance(attendance.attendanceId + "");
     }

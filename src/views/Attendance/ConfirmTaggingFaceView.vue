@@ -187,8 +187,6 @@ const reCheckAttendance = async (attendance: Attendance) => {
         imageFile
       );
       if (status == 200) {
-
-
         Swal.fire({
           title: "ทำการยืน",
           text: "Attendance recheck completed.",
@@ -197,6 +195,8 @@ const reCheckAttendance = async (attendance: Attendance) => {
         }).then(() => {
           // When user clicks OK, navigate back
           router.push("/courseDetail/" + queryCourseId);
+          stopCamera();
+
           showDialog.value = false;
         });
       } else {
@@ -206,6 +206,7 @@ const reCheckAttendance = async (attendance: Attendance) => {
           icon: "error",
           confirmButtonText: "OK",
         });
+        stopCamera();
       }
     }
 
@@ -228,6 +229,9 @@ const confirmRecheck = async () => {
     userStore.currentUser!.studentId!
   );
   await reCheckAttendance(attendanceStore.editAttendance);
+  // stop camera
+  stopCamera();
+
   showDialog.value = false;
 };
 
@@ -361,17 +365,20 @@ const closeDialogShowDialog = () => {
   showDialog.value = false;
   stopCamera();
 };
-
 </script>
-
 
 <template>
   <v-container class="mt-10">
-    <v-card class="mx-auto card-style" color="primary" outlined style="padding: 20px; width: 100%;">
+    <v-card
+      class="mx-auto card-style"
+      color="primary"
+      outlined
+      style="padding: 20px; width: 100%"
+    >
       <v-card-title>
         <h1 class="text-h5">
           <span
-            style="cursor: pointer; color: aliceblue; text-decoration: none;"
+            style="cursor: pointer; color: aliceblue; text-decoration: none"
             @click="goToCourseDetail"
           >
             {{ courseStore.currentCourse?.nameCourses }}
@@ -430,12 +437,24 @@ const closeDialogShowDialog = () => {
     </v-row>
 
     <!-- Dialog to upload or capture image -->
-    <v-dialog v-model="showUploadDialog" max-width="600px" @update:model-value="onDialogClose">
+    <v-dialog
+      v-model="showUploadDialog"
+      max-width="600px"
+      @update:model-value="onDialogClose"
+    >
       <v-card class="elevation-4">
-        <v-card-title class="headline text-h6">Upload หรือถ่ายภาพเพื่อยืนยันตัวตน</v-card-title>
+        <v-card-title class="headline text-h6"
+          >Upload หรือถ่ายภาพเพื่อยืนยันตัวตน</v-card-title
+        >
         <v-card-text>
-          <v-file-input label="Upload Image" @change="onFileChange" accept="image/*" />
-          <v-btn color="primary" @click="startCamera" class="mt-2">ถ่ายภาพ</v-btn>
+          <v-file-input
+            label="Upload Image"
+            @change="onFileChange"
+            accept="image/*"
+          />
+          <v-btn color="primary" @click="startCamera" class="mt-2"
+            >ถ่ายภาพ</v-btn
+          >
         </v-card-text>
 
         <!-- Camera View -->
@@ -453,22 +472,36 @@ const closeDialogShowDialog = () => {
         </v-row>
 
         <v-card-actions>
-          <v-btn color="secondary" @click="closeShowUploadDialog()">ยกเลิก</v-btn>
+          <v-btn color="secondary" @click="closeShowUploadDialog()"
+            >ยกเลิก</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
 
     <!-- Confirm Identity Dialog -->
-    <v-dialog v-model="showDialog" max-width="500px" @update:model-value="onDialogClose">
+    <v-dialog
+      v-model="showDialog"
+      max-width="500px"
+      @update:model-value="onDialogClose"
+    >
       <v-card class="elevation-4">
         <v-card-text class="text-center">
-          <img :src="croppedImage!" alt="Cropped Face" class="rounded-lg mb-3 confirm-image" />
+          <img
+            :src="croppedImage!"
+            alt="Cropped Face"
+            class="rounded-lg mb-3 confirm-image"
+          />
           <p>ภาพนี้ใช่คุณใช่หรือไม่</p>
         </v-card-text>
         <v-card-actions class="justify-center">
-          <v-btn variant="flat" color="error" @click="closeDialogShowDialog">ไม่</v-btn>
+          <v-btn variant="flat" color="error" @click="closeDialogShowDialog"
+            >ไม่</v-btn
+          >
           <v-spacer></v-spacer>
-          <v-btn variant="flat" color="primary" @click="confirmRecheck">ใช่</v-btn>
+          <v-btn variant="flat" color="primary" @click="confirmRecheck"
+            >ใช่</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>

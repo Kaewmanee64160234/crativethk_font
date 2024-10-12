@@ -93,6 +93,7 @@ const updateAttendanceStatus = () => {
                   ? 'red'
                   : attendanceStore.editAttendance?.attendanceStatus === 'late'
                   ? 'orange'
+                  
                   : 'green'
               }"
             >

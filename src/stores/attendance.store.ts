@@ -152,6 +152,8 @@ export const useAttendanceStore = defineStore("attendanceStore", () => {
       const res = await attendaceService.rejectAttendance(attendanceId);
       if (res.data) {
         currentAttendance.value = res.data;
+        console.log("reject",currentAttendance.value);
+        
         getAttendanceByStatusInAssignment(
           currentAttendance.value.assignment?.assignmentId + ""
         );
