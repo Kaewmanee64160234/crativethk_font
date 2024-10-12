@@ -30,6 +30,10 @@ function createAssignment(data:Assignment,files:File[]) {
 function getAssignmentByCourseId(id:string) {
     return http.get(`/assignments/course/${id}`);
 }
+// getAssignmentByCourseIdPaginate
+function getAssignmentByCourseIdPaginate(id:string,page:number) {
+    return http.get(`/assignments/course/${id}/paginate?page=${page}&limit=5`);
+}
 
 // update Assignment
 function updateAssignment(id:string,data:Assignment) {
@@ -46,4 +50,4 @@ function getAssignmentImages(id:string) {
 }
 
 
-export default { getAssignment,createAssignment,getAssignmentById,getAssignmentByCourseId,updateAssignment, deleteAssignment,getAssignmentImages };
+export default { getAssignment,createAssignment,getAssignmentById,getAssignmentByCourseId,updateAssignment, deleteAssignment,getAssignmentImages,getAssignmentByCourseIdPaginate };

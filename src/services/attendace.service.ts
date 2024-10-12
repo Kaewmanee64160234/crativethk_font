@@ -152,6 +152,11 @@ function removeAttendance(attendanceId: string) {
   return http.delete(`/attendances/${attendanceId}`);
 }
 
+// revalidate/:assignmentId
+function revalidateAttendance(assignmentId: string) {
+  return http.get(`/attendances/revalidate/${assignmentId}`);
+}
+
 export default {
   getAttendance,
   createAttendance,
@@ -167,5 +172,6 @@ export default {
   updateAttendanceTeacher,
   getAttendanceByCourseandStudentId,
   getAttendanceByAssignmentAndStudent,
-  removeAttendance
+  removeAttendance,
+  revalidateAttendance
 };

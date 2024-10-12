@@ -8,8 +8,11 @@ import { useUserStore } from "@/stores/user.store";
 import { useAttendanceStore } from "@/stores/attendance.store";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog.vue";
 import EditAssignment from "@/components/dialogs/EditAssignment.vue";
+import Swal from "sweetalert2";
+import { useMessageStore } from "@/stores/message";
 
 const router = useRouter();
+const isValid = ref(false);
 const courseStore = useCourseStore();
 const assignmentStore = useAssignmentStore();
 const confirmDlg = ref();
@@ -26,6 +29,7 @@ const capturedImages = ref<string[]>([]);
 const imageUrls = ref<string[]>([]);
 const imageFiles = ref<File[]>([]);
 const showCamera = ref(false);
+const messageStore = useMessageStore();
 const props = defineProps<{
   post: Assignment;
 }>();
@@ -53,25 +57,40 @@ function formatThaiTime(date: Date) {
     hour12: false, // ใช้ระบบ 24 ชั่วโมง
   });
 }
-// Delete assignment and update UI
-const deleteAssignment = async () => {
+
+
+const deleteAssignment = async (assignment: Assignment) => {
   try {
-    await confirmDlg.value.openDialog(
-      "Please Confirm",
-      `Do you want to delete this Assignment?`,
-      "Accept",
-      "Cancel"
+    // Use the `showConfirm_` function to show the confirmation dialog
+    messageStore.showConfirm_(
+      `คุณต้องการลบการเช็คชื่อ ${assignment.nameAssignment} ใช่หรือไม่`,
+      async () => {
+        // If confirmed, proceed with deleting the assignment
+        await assignmentStore.deleteAssignment(assignment.assignmentId!.toString());
+        await assignmentStore.getAssignmentByCourseId(id.value.toString());
+
+        // Show success dialog after deletion using SweetAlert2
+        await Swal.fire({
+          icon: "success",
+          title: "ลบการเช็คชื่อสำเร็จ", // Success title in Thai
+          text: "การเช็คชื่อถูกลบเรียบร้อยแล้ว", // Success message in Thai
+          confirmButtonColor: "#3085d6",
+          confirmButtonText: "ตกลง", // 'OK' in Thai
+        });
+
+        // Optionally, reload the page to reflect the deletion
+        window.location.reload();
+        console.log("Assignment deleted successfully");
+      },
+      () => {
+        console.log("Deletion cancelled by user.");
+      }
     );
-
-    await assignmentStore.deleteAssignment(props.post!.assignmentId! + "");
-    await assignmentStore.getAssignmentByCourseId(id.value.toString());
-
-    window.location.reload();
-    console.log("Assignment deleted successfully");
   } catch (error) {
     console.log("Error deleting assignment:", error);
   }
 };
+
 // function edit
 const editAssignment = async () => {
   showDialogEditAssignment.value = true;
@@ -97,6 +116,13 @@ const gotoMappinfForStudent = () => {
 const goToMapping2 = async () => {
   showDialog.value = true;
   await attdentStore.getAttendanceByAssignmentId(props.post!.assignmentId! + "");
+};
+// Mapping
+const mapping = () => {
+  assignmentStore.currentAssignment = props.post;
+  router.push(
+    `/mapping2/assignment/${props.post.assignmentId}/course/${courseStore.currentCourse?.coursesId}`
+  );
 };
 
 const handleFileChange = (event: Event) => {
@@ -258,6 +284,11 @@ function close() {
             <v-btn icon="mdi-dots-vertical" variant="text" v-bind="props"></v-btn>
           </template>
           <v-list>
+            <v-list-item @click="mapping">
+              <v-list-item-title>ตรวจสอบการเช็คชื่อ</v-list-item-title>
+            </v-list-item>
+            <v-divider></v-divider>
+
             <v-list-item @click="recheckMapping">
               <v-list-item-title>ยืนยันนิสิตที่ให้ตรวจสอบอีกครั้ง</v-list-item-title>
             </v-list-item>
@@ -270,7 +301,8 @@ function close() {
               <v-list-item-title>แก้ไขชื่อรายการเช็คชื่อ</v-list-item-title>
             </v-list-item>
             <v-divider></v-divider>
-            <v-list-item @click="deleteAssignment">
+
+            <v-list-item @click="deleteAssignment(props.post)">
               <v-list-item-title>ลบรายการเช็คชื่อ</v-list-item-title>
             </v-list-item>
           </v-list>
@@ -348,28 +380,36 @@ function close() {
     <v-card>
       <!-- Dialog title without the close button -->
       <v-card-title class="headline">
-        Edit Assignment
+        แก้ไขชื่อการเช็คชื่อ
         <v-spacer></v-spacer>
         <!-- Close button for dialog -->
-        <v-btn icon @click="close" class="close-button">
-          <v-icon color="red">mdi-close</v-icon>
-        </v-btn>
+      
       </v-card-title>
+      
       <!-- Dialog content with form -->
       <v-card-text>
-        <v-form ref="form" @submit.prevent="save">
+        <v-form ref="form" v-model="isValid" @submit.prevent="save">
           <v-text-field
             v-model="props.post.nameAssignment!"
             label="Assignment Name"
+            variant="outlined"
+            outlined
             required
+            maxlength="50"
+            prepend-inner-icon="mdi-assignment"
+            :rules="[
+              (v) => !!v || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*',
+              (v) => (v && v.length >= 1 && v.length <= 50) || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*'
+            ]"
           ></v-text-field>
         </v-form>
       </v-card-text>
+      
       <!-- Dialog actions with Confirm and Cancel buttons -->
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="secondary" @click="showDialogEditAssignment = false">ยกเลิก</v-btn>
-        <v-btn color="primary" @click="save">ยืนยัน</v-btn>
+        <v-btn  color="error" @click="close()">ยกเลิก</v-btn>
+        <v-btn  color="primary" :disabled="!isValid" @click="save">ยืนยัน</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -383,6 +423,11 @@ function close() {
 }
 
 .close-button {
-  margin-right: -12px; /* Adjust this value if necessary to align with the edge */
+  margin-right: -12px;
+}
+
+.v-btn.text {
+  text-transform: none;
+  font-weight: bold;
 }
 </style>

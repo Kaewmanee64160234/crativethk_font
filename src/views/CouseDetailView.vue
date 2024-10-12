@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { computed, onMounted, ref, watch,nextTick } from "vue";
+import { useRouter, useRoute } from "vue-router";
 import { useAssignmentStore } from "@/stores/assignment.store";
 import CardAssigment from "@/components/assigment/CardAssigment.vue";
 import { useCourseStore } from "@/stores/course.store";
@@ -13,42 +13,56 @@ import type { User } from "@/stores/types/User";
 import * as XLSX from "xlsx";
 import { useLoaderStore } from "@/stores/loader.store";
 import { useMessageStore } from "@/stores/message";
-import assignment from "@/services/assignment";
 import Swal from "sweetalert2";
 
+// Access the router and route objects
+const router = useRouter();
 const route = useRoute();
 const messageStore = useMessageStore();
+
+// Extract the course ID from the route parameters
 const id = ref(route.params.idCourse);
+
+// Define tabs for navigation
 const tabs = [
   { id: 1, title: "โพสต์" },
   { id: 2, title: "รายชื่อผู้เรียน/ผู้สอน" },
   { id: 3, title: "คะแนน" },
 ];
 
-const router = useRouter();
-const tab = ref("โพสต์");
-const posts = ref<Assignment[]>([]);
-const imageUrls = ref<string[]>([]);
-const imageFiles = ref<File[]>([]);
+// Other variables and logic...
 const assignmentStore = useAssignmentStore();
 const courseStore = useCourseStore();
-const showDialog = ref(false);
-const nameAssignment = ref("");
 const userStore = useUserStore();
-const url = import.meta.env.VITE_API_URL;
 const attendanceStore = useAttendanceStore();
-const roomSelect = ref<string>();
 const loaderStore = useLoaderStore();
+const showDialog = ref(false);
+const posts = ref<Assignment[]>([]);
+const totalPage = ref(assignmentStore.lastPage);
 
-const isTeacher = computed(() => userStore.currentUser?.role === "อาจารย์");
+const tab = ref("โพสต์");
+const url = import.meta.env.VITE_API_URL;
+const nameAssignment = ref("");
+const imageUrls = ref<string[]>([]);
+const capturedImages = ref<string[]>([]);
+const imageFiles = ref<File[]>([]);
 const showCamera = ref(false);
 const videoRef = ref<HTMLVideoElement | null>(null);
 const canvasRef = ref<HTMLCanvasElement | null>(null);
-const capturedImages = ref<string[]>([]);
 const assignmentManual = ref(false);
-const snackbarMessage = ref("");
-const snackbar = ref(false);
+
+const isTeacher = computed(() => userStore.currentUser?.role === "อาจารย์");
+const filteredAssignments = computed(() => {
+  // Only include assignments that have corresponding attendance data.
+  return assignmentStore.assignments.filter((assignment) =>
+    attendanceStore.attendances!.some(
+      (att) => att.assignment?.assignmentId === assignment.assignmentId
+    )
+  );
+});
+
 const filteredUsers = computed(() => {
+  // Filter users based on whether the user is a teacher or a student.
   if (isTeacher.value) {
     return userStore.users;
   } else {
@@ -57,15 +71,85 @@ const filteredUsers = computed(() => {
     );
   }
 });
+const handlePaste = (event: ClipboardEvent) => {
+      const pastedText = event.clipboardData?.getData('text') || '';
+      const combinedText = nameAssignment.value + pastedText;
+
+      if (combinedText.length > 50) {
+        event.preventDefault();
+        nextTick(() => {
+          notifyError('ไม่สามารถกรอกเกิน 50 ตัวอักษร');
+        });
+      }
+    };
+
+    const notifyError = (message: string) => {
+      console.error(message);
+    };
+
+// Fetch assignments when the component mounts
 onMounted(async () => {
-  // loader.value = true;
-  await assignmentStore.getAssignmentByCourseId(id.value.toString());
-  await attendanceStore.getAttendanceByCourseId(id.value.toString());
-  await userStore.getUserByCourseId(id.value.toString());
-  await courseStore.getCourseById(id.value.toString());
-  posts.value = assignmentStore.assignments;
-  // loader.value = false;
+  console.log("id", id.value);
+
+  await assignmentStore.getAssignmentByCourseIdPaginate(id.value.toString(), 1),
+    await attendanceStore.getAttendanceByCourseId(id.value.toString()),
+    await userStore.getUserByCourseId(id.value.toString()),
+    await courseStore.getCourseById(id.value.toString()),
+    (posts.value = assignmentStore.assignments);
+  totalPage.value = assignmentStore.total;
 });
+
+// Watch for changes to `currentPage` and fetch new assignments when it changes
+watch(
+  () => assignmentStore.currentPage,
+  async (newPage, oldPage) => {
+    if (newPage !== oldPage) {
+      await assignmentStore.getAssignmentByCourseIdPaginate(
+        id.value.toString(),
+        newPage
+      );
+      posts.value = assignmentStore.assignments;
+      totalPage.value = assignmentStore.total;
+    }
+  }
+);
+
+// Calculate total score based on attendance status.
+const calculateTotalScore = (
+  userId: number,
+  assignments: Assignment[]
+): number => {
+  return assignments.reduce((total, assignment) => {
+    const status = getAttendanceStatus(
+      attendanceStore.attendances || [],
+      userId,
+      assignment.assignmentId!
+    );
+    if (status === "present") {
+      return total + 1;
+    } else if (status === "late") {
+      return total + 0.5;
+    }
+    return total;
+  }, 0);
+};
+
+// Get attendance status for a specific user and assignment.
+const getAttendanceStatus = (
+  attendances: Attendance[],
+  userId: number,
+  assignmentId: number
+): string => {
+  const attendanceIndex = attendances.findIndex(
+    (att: Attendance) =>
+      att.user?.userId === userId &&
+      att.assignment?.assignmentId === assignmentId
+  );
+  return attendances[attendanceIndex]
+    ? attendances[attendanceIndex].attendanceStatus
+    : "absent";
+};
+
 const removeImage = (index: number) => {
   if (index < capturedImages.value.length) {
     capturedImages.value.splice(index, 1);
@@ -86,7 +170,11 @@ const handleFileChange = (event: Event) => {
         const result = e.target?.result as string;
         if (result) {
           try {
-            const resizedImage = await resizeAndConvertImageToBase64(result, 800, 600);
+            const resizedImage = await resizeAndConvertImageToBase64(
+              result,
+              800,
+              600
+            );
             imageUrls.value.push(resizedImage);
             imageFiles.value.push(file);
           } catch (error) {
@@ -98,7 +186,93 @@ const handleFileChange = (event: Event) => {
     });
   }
 };
+const startCamera = async () => {
+  showCamera.value = true;
+  const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+  if (videoRef.value) {
+    videoRef.value.srcObject = stream;
+  }
+};
 
+const captureImage = () => {
+  if (videoRef.value && canvasRef.value) {
+    const ctx = canvasRef.value.getContext("2d");
+    if (!ctx) return;
+    canvasRef.value.width = videoRef.value.videoWidth;
+    canvasRef.value.height = videoRef.value.videoHeight;
+    ctx.drawImage(videoRef.value, 0, 0);
+    const imageUrl = canvasRef.value.toDataURL("image/jpeg");
+    resizeAndConvertImageToBase64(imageUrl, 800, 600)
+      .then((resizedImage) => {
+        capturedImages.value.push(resizedImage);
+        const file = dataURLtoFile(resizedImage, `image-${Date.now()}.jpg`);
+        imageFiles.value.push(file);
+      })
+      .catch((error) => console.error("Error resizing image:", error));
+  }
+};
+
+const stopCamera = () => {
+  if (videoRef.value && videoRef.value.srcObject) {
+    const stream = videoRef.value.srcObject as MediaStream;
+    stream.getTracks().forEach((track) => track.stop());
+    videoRef.value.srcObject = null;
+  }
+  showCamera.value = false;
+};
+
+const dataURLtoFile = (dataurl: string, filename: string) => {
+  const arr = dataurl.split(",");
+  const mime = arr[0].match(/:(.*?);/)?.[1];
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new File([u8arr], filename, { type: mime });
+};
+const checkImageCountAndPost = async () => {
+  if ([...capturedImages.value, ...imageUrls.value].length > 20) {
+    // dialogclosw
+    showDialog.value = false;
+    Swal.fire({
+      icon: "error",
+      title: "ไม่สามารถอัปโหลดรูปภาพได้เกิน 20 รูป",
+    }).then(() => {
+      showDialog.value = true;
+    });
+
+    return;
+  }
+  if (nameAssignment.value === "") {
+    showDialog.value = false;
+
+    Swal.fire({
+      icon: "error",
+      title: "กรุณากรอกชื่อเรื่องการเช็คชื่อ",
+    }).then(() => {
+      showDialog.value = true;
+    });
+
+    return;
+  }
+  if ([...capturedImages.value, ...imageUrls.value].length === 0) {
+    showDialog.value = false;
+
+    Swal.fire({
+      icon: "error",
+      title: "กรุณาเพิ่มรูปภาพ",
+    }).then(() => {
+      showDialog.value = true;
+    });
+
+    return;
+  } else {
+    await createPost();
+    await closeDialog();
+  }
+};
 // Function to resize an image and convert it to a base64 string
 const resizeAndConvertImageToBase64 = (
   imageUrl: string,
@@ -130,7 +304,8 @@ const resizeAndConvertImageToBase64 = (
       const resizedImage = canvas.toDataURL("image/jpeg", quality);
       resolve(resizedImage);
     };
-    img.onerror = () => reject(new Error(`Failed to load image at ${imageUrl}`));
+    img.onerror = () =>
+      reject(new Error(`Failed to load image at ${imageUrl}`));
     img.src = imageUrl;
   });
 };
@@ -149,6 +324,7 @@ const base64ToFile = (base64: string, filename: string): File => {
 };
 // Function to handle post creation, including image processing and backend communication
 const createPost = async () => {
+  stopCamera();
   console.time("Total createPost execution time");
 
   console.time("Validation check");
@@ -195,11 +371,12 @@ const createPost = async () => {
     },
     imageFiles.value
   );
+  console.log("newAssignment", assignmentStore.currentAssignment);
 
   if (imageUrls.value.length > 0) {
     imageUrls.value.push(...capturedImages.value);
     router.push({
-      path: `/mapping2/assignment/${assignmentStore.assignment?.assignmentId}`,
+      path: `/mapping2/assignment/${assignmentStore.currentAssignment?.assignmentId}`,
       query: { imageUrls: imageUrls.value },
     });
   }
@@ -251,6 +428,7 @@ const createPost = async () => {
     });
 
     // Clear the form and images after navigating
+    closeDialog();
     nameAssignment.value = "";
     imageUrls.value = [];
     capturedImages.value = [];
@@ -261,83 +439,6 @@ const createPost = async () => {
   console.timeEnd("Image storage and navigation");
 
   console.timeEnd("Total createPost execution time");
-};
-
-const getAttendanceStatus = (
-  attendances: Attendance[],
-  userId: number,
-  assignmentId: number
-): string => {
-  const attendanceIndex = attendances?.findIndex(
-    (att: Attendance) =>
-      att.user?.userId === userId && att.assignment?.assignmentId === assignmentId
-  );
-  return attendances[attendanceIndex!]
-    ? attendances[attendanceIndex!].attendanceStatus
-    : "ไม่มาเรียน";
-};
-
-const calculateTotalScore = (userId: number, assignments: Assignment[]): number => {
-  return assignments.reduce((total, assignment) => {
-    const status = getAttendanceStatus(
-      attendanceStore.attendances || [],
-      userId,
-      assignment.assignmentId!
-    );
-    if (status === "มาเรียน") {
-      return total + 1;
-    } else if (status === "มาสาย") {
-      return total + 0.5;
-    }
-    return total;
-  }, 0);
-};
-
-const startCamera = async () => {
-  showCamera.value = true;
-  const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-  if (videoRef.value) {
-    videoRef.value.srcObject = stream;
-  }
-};
-
-const captureImage = () => {
-  if (videoRef.value && canvasRef.value) {
-    const ctx = canvasRef.value.getContext("2d");
-    if (!ctx) return;
-    canvasRef.value.width = videoRef.value.videoWidth;
-    canvasRef.value.height = videoRef.value.videoHeight;
-    ctx.drawImage(videoRef.value, 0, 0);
-    const imageUrl = canvasRef.value.toDataURL("image/jpeg");
-    resizeAndConvertImageToBase64(imageUrl, 800, 600)
-      .then((resizedImage) => {
-        capturedImages.value.push(resizedImage);
-        const file = dataURLtoFile(resizedImage, `image-${Date.now()}.jpg`);
-        imageFiles.value.push(file);
-      })
-      .catch((error) => console.error("Error resizing image:", error));
-  }
-};
-
-const stopCamera = () => {
-  if (videoRef.value && videoRef.value.srcObject) {
-    const stream = videoRef.value.srcObject as MediaStream;
-    stream.getTracks().forEach((track) => track.stop());
-    videoRef.value.srcObject = null;
-  }
-  showCamera.value = false;
-};
-
-const dataURLtoFile = (dataurl: string, filename: string) => {
-  const arr = dataurl.split(",");
-  const mime = arr[0].match(/:(.*?);/)?.[1];
-  const bstr = atob(arr[1]);
-  let n = bstr.length;
-  const u8arr = new Uint8Array(n);
-  while (n--) {
-    u8arr[n] = bstr.charCodeAt(n);
-  }
-  return new File([u8arr], filename, { type: mime });
 };
 
 // open show dialog and set value editAttendance
@@ -384,12 +485,12 @@ const confirmExportFile = () => {
       );
       let translatedStatus = "";
 
-      if (status === "มาเรียน") {
-        translatedStatus = "มา";
-      } else if (status === "มาสาย") {
-        translatedStatus = "สาย";
+      if (status === "present") {
+        translatedStatus = "มาเรียน";
+      } else if (status === "late") {
+        translatedStatus = "มาสาย";
       } else {
-        translatedStatus = "ขาด";
+        translatedStatus = "ไม่มาเรียน";
       }
 
       userData[assignment.nameAssignment] = translatedStatus;
@@ -398,11 +499,31 @@ const confirmExportFile = () => {
     return userData;
   });
 
-  console.log(data);
-
+  // Create the worksheet and workbook
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Report");
+
+  // Define a style for borders
+  const borderStyle = {
+    top: { style: "thin" },
+    bottom: { style: "thin" },
+    left: { style: "thin" },
+    right: { style: "thin" },
+  };
+
+  // Iterate through each cell in the worksheet and apply border styles
+  const range = XLSX.utils.decode_range(ws["!ref"]!);
+  for (let R = range.s.r; R <= range.e.r; ++R) {
+    for (let C = range.s.c; C <= range.e.c; ++C) {
+      const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+      if (!ws[cellAddress]) continue;
+      if (!ws[cellAddress].s) ws[cellAddress].s = {};
+      ws[cellAddress].s.border = borderStyle;
+    }
+  }
+
+  // Write the file with the applied styles
   XLSX.writeFile(wb, "Report.xlsx");
 
   console.log("Export successful");
@@ -412,47 +533,22 @@ const cancelExportFile = () => {
   console.log("export failed");
 };
 
-// showSnackbar
-const showSnackbar = ref(false);
-const checkImageCountAndPost = () => {
-  if ([...capturedImages.value, ...imageUrls.value].length > 20) {
-    // dialogclosw
-    showDialog.value = false;
-    Swal.fire({
-      icon: "error",
-      title: "ไม่สามารถอัปโหลดรูปภาพได้เกิน 20 รูป",
-    }).then(() => {
-      showDialog.value = true;
-    });
-
-    return;
-  }
-  if (nameAssignment.value === "") {
-    showDialog.value = false;
-
-    Swal.fire({
-      icon: "error",
-      title: "กรุณากรอกชื่อเรื่องการเช็คชื่อ",
-    }).then(() => {
-      showDialog.value = true;
-    });
-
-    return;
-  }
-  if ([...capturedImages.value, ...imageUrls.value].length === 0) {
-    showDialog.value = false;
-
-    Swal.fire({
-      icon: "error",
-      title: "กรุณาเพิ่มรูปภาพ",
-    }).then(() => {
-      showDialog.value = true;
-    });
-
-    return;
-  } else {
-    createPost();
-  }
+// closeDialog and reset image and close camera
+const closeDialog = () => {
+  stopCamera();
+  // reset textfield and
+  nameAssignment.value = "";
+  showDialog.value = false;
+  imageUrls.value = [];
+  capturedImages.value = [];
+  imageFiles.value = [];
+};
+const getAbsenceCount = (userId: string) => {
+  return attendanceStore!.attendances!.filter(
+    (attendance) =>
+      attendance.user?.userId === userId &&
+      attendance.attendanceStatus === "absent"
+  ).length;
 };
 </script>
 
@@ -513,11 +609,13 @@ const checkImageCountAndPost = () => {
                         outlined
                         prepend-inner-icon="mdi-assignment"
                         required
+                        maxlength="50"
+                        @paste="handlePaste"
                         :rules="[
-                          (v: any) => !!v || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*',
-                          (v: any) => (v && v.length >= 1 && v.length <= 50) || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*'
-                        ]"
-                      ></v-text-field>
+    (v: any) => !!v || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*',
+    (v: any) => (v && v.length >= 1 && v.length <= 50) || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*'
+  ]"
+                      />
                     </v-card-text>
                   </v-col>
                 </v-row>
@@ -528,7 +626,9 @@ const checkImageCountAndPost = () => {
                     <v-card-title style="white-space: nowrap">
                       <h5>
                         อัปโหลดรูปภาพ
-                        <span style="color: red">(ห้ามอัปโหลดรูปภาพเกิน 20 รูป)</span>
+                        <span style="color: red"
+                          >(ห้ามอัปโหลดรูปภาพเกิน 20 รูป)</span
+                        >
                       </h5>
                     </v-card-title>
                     <v-card-text>
@@ -577,6 +677,22 @@ const checkImageCountAndPost = () => {
                     </v-btn>
                   </v-col>
                 </v-row>
+                <!-- notification image morethan 20
+                -->
+                <v-row>
+                  <v-col cols="12" sm="12">
+                    <v-alert
+                      v-if="capturedImages.length + imageUrls.length > 20"
+                      type="error"
+                      outlined
+                      border="left"
+                      elevation="2"
+                      icon="mdi-alert"
+                    >
+                      ไม่สามารถอัปโหลดรูปภาพเกิน 20 รูป
+                    </v-alert>
+                  </v-col>
+                </v-row>
 
                 <!-- Uploaded and Captured Images Preview -->
                 <v-row class="scrollable-image-section">
@@ -606,13 +722,16 @@ const checkImageCountAndPost = () => {
 
             <!-- Dialog Actions (Fixed at the Bottom) -->
             <v-card-actions class="fixed-action-buttons">
-              <v-btn color="error" @click="showDialog = false" outlined> ยกเลิก </v-btn>
+              <v-btn color="error" @click="closeDialog()" outlined>
+                ยกเลิก
+              </v-btn>
               <v-spacer></v-spacer>
 
               <!-- Disable the post button if more than 20 images or if the name is empty -->
               <v-btn
                 :disabled="
-                  [...capturedImages, ...imageUrls].length > 20 || nameAssignment === ''
+                  [...capturedImages, ...imageUrls].length > 20 ||
+                  nameAssignment === ''
                 "
                 color="primary"
                 @click="checkImageCountAndPost"
@@ -622,15 +741,16 @@ const checkImageCountAndPost = () => {
               </v-btn>
             </v-card-actions>
           </v-card>
-
-          <!-- Snackbar for image limit or empty name error -->
-          <v-snackbar v-model="showSnackbar" color="error" top right timeout="3000">
-            {{ snackbarMessage }}
-          </v-snackbar>
         </v-dialog>
 
         <v-row class="pt-5" v-if="posts.length > 0">
-          <v-col cols="12" sm="12" md="12" v-for="post in posts" :key="post.assignmentId">
+          <v-col
+            cols="12"
+            sm="12"
+            md="12"
+            v-for="post in posts"
+            :key="post.assignmentId"
+          >
             <CardAssigment :post="post"></CardAssigment>
           </v-col>
         </v-row>
@@ -655,6 +775,17 @@ const checkImageCountAndPost = () => {
               </p>
             </div>
           </v-col>
+        </v-row>
+        <v-row>
+          <v-row>
+            <v-col style="width: 100%">
+              <v-pagination
+                v-model="assignmentStore.currentPage"
+                :length="Math.ceil(totalPage / 5)"
+                rounded="circle"
+              ></v-pagination>
+            </v-col>
+          </v-row>
         </v-row>
       </v-tab-item>
       <!-- tab member -->
@@ -726,7 +857,13 @@ const checkImageCountAndPost = () => {
               </v-col>
               <v-col cols="10" style="display: flex; align-items: center">
                 <div>
-                  {{ member.studentId + " " + member.firstName + " " + member.lastName }}
+                  {{
+                    member.studentId +
+                    " " +
+                    member.firstName +
+                    " " +
+                    member.lastName
+                  }}
                 </div>
               </v-col>
               <v-divider></v-divider>
@@ -735,9 +872,6 @@ const checkImageCountAndPost = () => {
         </div>
       </v-tab-item>
 
-      <!-- Tab content for Assignments -->
-      <!-- Tab Item for Users -->
-      <!-- Tab content for Assignment Attendance -->
       <v-tab-item v-else>
         <v-card
           class="mx-auto"
@@ -752,17 +886,30 @@ const checkImageCountAndPost = () => {
             </h1>
           </v-card-title>
         </v-card>
-        <v-card class="mx-auto" outlined style="padding: 20px; margin-top: 10px">
+        <v-card
+          class="mx-auto"
+          outlined
+          style="padding: 20px; margin-top: 10px"
+        >
           <v-row>
-            <v-col col="12" sm="10" style="color: #3051ac">
+            <v-col col="12" sm="10" class="text-primary">
               <v-card-title>คะแนนการเช็คชื่อ</v-card-title>
             </v-col>
-            <v-col col="12" sm="2" v-if="userStore.currentUser?.role === 'อาจารย์'">
-              <v-btn color="#093271" @click="exportFile" style="width: 200px"
-                >Export คะแนน</v-btn
+            <v-col
+              col="12"
+              sm="2"
+              v-if="userStore.currentUser?.role === 'อาจารย์'"
+            >
+              <v-btn
+                color="#093271"
+                @click="exportFile"
+                style="width: 200px; color: white"
               >
+                <v-icon left>mdi-file-export</v-icon>Export คะแนน
+              </v-btn>
             </v-col>
           </v-row>
+          <v-divider class="my-4"></v-divider>
           <v-table>
             <thead>
               <tr>
@@ -779,14 +926,28 @@ const checkImageCountAndPost = () => {
                 </th>
               </tr>
             </thead>
+            <!-- {{attendanceStore.attendances!}} -->
             <tbody>
-              <tr v-for="user in filteredUsers" :key="user.userId">
-                <td class="text-center vertical-divider">{{ user.studentId }}</td>
+              <tr
+                v-for="user in filteredUsers"
+                :key="user.userId"
+                :class="{
+              'highlight-red': getAbsenceCount(user.userId!) > 3,
+              'highlight-yellow': getAbsenceCount(user.userId!) === 3
+            }"
+              >
+                <td class="text-center vertical-divider">
+                  {{ user.studentId }}
+                </td>
                 <td class="vertical-divider">
-                  {{ user.firstName + " " + user.lastName }}
+                  <span
+                    :class="{ 'highlighted-text': getAbsenceCount(user.userId!) > 3 }"
+                  >
+                    {{ user.firstName + " " + user.lastName }}
+                  </span>
                 </td>
                 <td class="text-center vertical-divider">
-                  {{ assignmentStore.assignments.length }}
+                  {{ courseStore.currentCourse?.fullScore }}
                 </td>
                 <td class="text-center vertical-divider">
                   {{
@@ -801,13 +962,14 @@ const checkImageCountAndPost = () => {
                   :key="assignment.assignmentId"
                   class="text-center vertical-divider"
                 >
+                  <!-- {{getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!)}} -->
                   <template
-                    v-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'มาเรียน'"
+                    v-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'present'"
                   >
                     <v-btn
                       density="compact"
                       color="green"
-                      icon="mdi-check-circles"
+                      icon="mdi-check-circle"
                       v-if="isTeacher"
                       @click="openDialog(assignment, user)"
                     >
@@ -816,12 +978,12 @@ const checkImageCountAndPost = () => {
                     <v-icon color="green" v-else>mdi-check-circle</v-icon>
                   </template>
                   <template
-                    v-else-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'มาสาย'"
+                    v-else-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'late'"
                   >
                     <v-btn
                       density="compact"
                       color="orange"
-                      icon="mdi-check-circles"
+                      icon="mdi-clock-outline"
                       v-if="isTeacher"
                       @click="openDialog(assignment, user)"
                     >
@@ -833,7 +995,7 @@ const checkImageCountAndPost = () => {
                     <v-btn
                       density="compact"
                       color="red"
-                      icon="mdi-check-circles"
+                      icon="mdi-close-circle"
                       v-if="isTeacher"
                       @click="openDialog(assignment, user)"
                     >
@@ -848,16 +1010,45 @@ const checkImageCountAndPost = () => {
         </v-card>
       </v-tab-item>
     </v-container>
-    <!-- Snackbar for error messages -->
-    <v-snackbar v-model="snackbar" timeout="3000" bottom>
-      {{ snackbarMessage }}
-      <v-btn text @click="snackbar = false">ปิด</v-btn>
-    </v-snackbar>
   </div>
+
   <UpdateAttendantDialogView />
 </template>
 
 <style scoped>
+.highlight-red {
+  background-color: rgba(255, 0, 0, 0.1);
+}
+
+.highlight-yellow {
+  background-color: rgba(255, 235, 59, 0.1);
+}
+
+.highlighted-text {
+  color: red;
+  font-weight: bold;
+}
+
+.text-primary {
+  color: #3051ac;
+}
+
+.v-card-title {
+  font-weight: bold;
+}
+
+.vertical-divider {
+  border-left: 1px solid #e0e0e0;
+}
+
+.v-btn {
+  margin-bottom: 12px;
+}
+
+.v-btn:hover {
+  background-color: #3051ac;
+  /* color: white !important; */
+}
 .v-col {
   padding: 10px 0;
   /* Provides consistent vertical spacing between rows */

@@ -9,7 +9,7 @@ import assignment from "@/services/assignment";
 import { useAssignmentStore } from "@/stores/assignment.store";
 import type Attendance from "@/stores/types/Attendances";
 import { useMessageStore } from "@/stores/message";
-const url = import.meta.env.VITE_API_URL;
+const url = "http://localhost:3000";
 
 const route = useRoute();
 const attendanceStore = useAttendanceStore();
@@ -26,20 +26,41 @@ onMounted(async () => {
   await assignmentStore.getAssignmentById(route.params.assignmentId.toString());
   console.log(JSON.stringify(assignmentStore.currentAssignment));
   await attendanceStore.getAttendanceByAssignmentId(route.params.assignmentId.toString());
-  await userStore.getUserByCourseId(queryCourseId + "");
+  await userStore.getUserByCourseId(queryCourseId+'');
   attdent.value = [];
-  attdent.value.push(
-    ...attendanceStore.attendances!.filter(
-      (attend: Attendance) =>
-        attend.user?.studentId === userStore.currentUser?.studentId &&
-        attend.attendanceImage !== "noimage.jpg"
-    )
-  );
+  attdent.value.push(...attendanceStore.attendances!.filter((attend: Attendance) => (attend.user?.studentId === userStore.currentUser?.studentId) && (attend.attendanceImage !== 'noimage.jpg')));
 });
+
+//confirm attendance
+const confirmAttendance = async (attendance: Attendance) => {
+  // Show a confirmation dialog
+  if (confirm("Do you want to confirm this attendance?")) {
+    try {
+      // Set attendance status
+      attendance.assignment = assignmentStore.currentAssignment;
+      attendance.attendanceStatus = "present";
+      attendance.attendanceConfirmStatus = "confirmed";
+      if (attendance.user === null) {
+        attendance.user = userStore.currentUser;
+      }
+
+      // Call store method to confirm attendance
+      await attendanceStore.confirmAttendance(attendance);
+
+      // Notify user of success
+      alert("Attendance has been confirmed.");
+
+      // Redirect after successful confirmation
+      // router.push('/resheckMappingTeacher/' + assignmentStore.currentAssignment?.assignmentId); // Replace '/next-page-route' with your specific route
+    } catch (error) {
+      console.error("Error recording attendance:", error);
+      alert("Failed to confirm attendance."); // Show error alert
+    }
+  }
+};
 
 const reCheckAttendance = async (attendance: Attendance) => {
   try {
-    console.log("Attendance:Ging", attendance);
 
     attendance.assignment = assignmentStore.currentAssignment;
     const date = new Date();
@@ -47,13 +68,18 @@ const reCheckAttendance = async (attendance: Attendance) => {
     const assignmentDate = new Date(assignmentStore.currentAssignment!.createdDate!);
     const assignmentTime = assignmentDate.getTime();
     const diff = currentDate - assignmentTime;
-    attendance.attendanceStatus = diff > 900000 ? "มาสาย" : "มาเรียน";
+
+    // If the time difference is greater than 15 minutes (900000 ms), set status to "late"
+    if (diff > 900000) {
+      attendance.attendanceStatus = "late";
+    } else {
+      attendance.attendanceStatus = "present";
+    }
+
     attendance.attendanceConfirmStatus = "recheck";
     attendance.user = userStore.currentUser;
-    attendance.attendanceScore = 0;
 
     await attendanceStore.confirmAttendance(attendance);
-
     router.push("/courseDetail/" + queryCourseId);
   } catch (error) {
     console.log(error);
@@ -65,54 +91,43 @@ const goBackToCourseDetail = () => {
 };
 
 const confirmTagging = () => {
-  router.push(
-    "/taggingFace/course/" + queryCourseId + "/assignment/" + route.params.assignmentId
-  );
+  router.push("/taggingFace/course/" + queryCourseId+"/assignment/"+route.params.assignmentId);
+};
+// goToCourseDetail
+const goToCourseDetail = () => {
+  router.push(`/courseDetail/${courseStore.currentCourse?.coursesId}`);
 };
 </script>
+
+
 <template>
-  <v-container class="fill-height" style="margin-top: 5%">
-    <!-- Title Row with Back Button -->
-    <v-row class="align-center">
-      <!-- Title -->
-      <v-col cols="12">
-        <h1 class="title mt-5">ตรวจสอบการเข้าเรียน</h1>
-      </v-col>
-    </v-row>
-    <v-row style="width: 100%">
-      <!-- Back Button -->
-      <v-btn
-        variant="outlined"
-        color="blue"
-        @click="goBackToCourseDetail"
-        class="back-btn"
-      >
-        Go home
-      </v-btn>
-    </v-row>
+ <v-container class="fill-height" style="margin-top: 5%;">
+    <v-card class="mx-auto card-style" color="primary" outlined style="padding: 20px; width: 100%;">
+      <v-card-title>
+        <h1 class="text-h5">
+          <span
+            style="cursor: pointer; color: aliceblue; text-decoration: none;"
+            @click="goToCourseDetail"
+          >
+            {{ courseStore.currentCourse?.nameCourses }}
+          </span>
+          > {{ assignmentStore.currentAssignment?.nameAssignment }}
+        </h1>
+      </v-card-title>
+    </v-card>
+        <h1 class="title">ตรวจสอบการเข้าเรียน</h1>
+
 
     <!-- Conditional rendering for attendance data -->
-    <v-row
-      v-if="userStore.currentUser?.role === 'อาจารย์'"
-      class="row-spacing"
-      style="width: 100%"
-    >
-      <v-col
-        v-for="student in attendanceStore.attendances"
-        :key="student.attendanceId"
-        cols="12"
-        sm="6"
-        md="4"
-        lg="3"
-        xl="3"
-      >
+    <v-row v-if="userStore.currentUser?.role == 'อาจารย์'" style="width: 100%;">
+      <v-col v-for="student in attendanceStore.attendances" :key="student.attendanceId" cols="12" sm="6" md="4" lg="3">
         <v-card class="pa-3 student-card" outlined>
           <!-- Student Information -->
-          <v-row justify="center" align="center" class="row-spacing">
+          <v-row justify="center" align="center">
             <div class="d-flex flex-column align-items-center">
               <div v-if="student.user">
                 <div class="subtitle-1 bold-text mt-2">
-                  <v-icon small class="mr-1">mdi-account-circle</v-icon>
+                 
                   {{ student.user.studentId + " " + student.user.firstName }}
                 </div>
               </div>
@@ -121,23 +136,22 @@ const confirmTagging = () => {
               </div>
             </div>
           </v-row>
-          <v-row justify="center" class="mt-2">
+          <v-row v-if="student.user" justify="center">
             <!-- Student Image -->
-            <v-img
-              :src="`${url}/attendances/image/${student.attendanceImage}`"
-              height="200px"
-              width="auto"
-              class="rounded-lg student-image"
-              :alt="`Student Image for ${
-                student.user ? student.user.firstName : 'Unknown'
-              }`"
-            ></v-img>
+            <v-img  :src="`${url}/attendances/image/${student.attendanceImage}`" height="200px" width="140px"
+              class="rounded-lg" :alt="`Student Image for ${student.user ? student.user.firstName : 'Unknown'}`"></v-img>
+          </v-row>
+          <v-row v-else justify="center">
+            <!-- Student Image -->
+            <v-img  :src="`${url}/attendances/image/${student.attendanceImage}`" height="200px" width="140px"
+              class="rounded-lg" ></v-img>
           </v-row>
 
+
           <!-- Re-check Button -->
-          <v-row class="mt-2" v-if="userStore.currentUser?.role !== 'อาจารย์'">
+          <v-row class="mt-3">
             <v-col cols="12">
-              <v-btn block color="#F6BB49" class="recheck-btn" @click="confirmTagging()">
+              <v-btn block v-if="userStore.currentUser?.role !== 'อาจารย์'" color="#F6BB49" @click="confirmTagging()">
                 ตรวจสอบอีกครั้ง
               </v-btn>
             </v-col>
@@ -147,24 +161,15 @@ const confirmTagging = () => {
     </v-row>
 
     <!-- No attendance detected -->
-    <v-row v-else class="row-spacing" style="width: 100%">
-      <v-col
-        v-if="attdent.length > 0"
-        v-for="student in attdent"
-        :key="student.attendanceId"
-        cols="12"
-        sm="6"
-        md="4"
-        lg="3"
-        xl="3"
-      >
+    <v-row v-else style="width: 100%;">
+      <v-col v-if="attdent.length > 0" v-for="student in attdent" :key="student.attendanceId" cols="12" sm="6" md="4" lg="3">
         <v-card class="pa-3 student-card" outlined>
           <!-- Student Information -->
-          <v-row justify="center" class="align-center row-spacing">
+          <v-row justify="center" align="center">
             <div class="d-flex flex-column align-items-center">
               <div v-if="student.user">
                 <div class="subtitle-1 bold-text mt-2">
-                  <v-icon small class="mr-1">mdi-account-circle</v-icon>
+                 
                   {{ student.user.studentId + " " + student.user.firstName }}
                 </div>
               </div>
@@ -173,23 +178,16 @@ const confirmTagging = () => {
               </div>
             </div>
           </v-row>
-          <v-row justify="center" class="mt-2">
+          <v-row justify="center">
             <!-- Student Image -->
-            <v-img
-              :src="`${url}/attendances/image/${student.attendanceImage}`"
-              height="200px"
-              width="auto"
-              class="rounded-lg student-image"
-              :alt="`Student Image for ${
-                student.user ? student.user.firstName : 'Unknown'
-              }`"
-            ></v-img>
+            <v-img :src="`${url}/attendances/image/${student.attendanceImage}`" height="200px" width="140px"
+              class="rounded-lg" :alt="`Student Image for ${student.user ? student.user.firstName : 'Unknown'}`"></v-img>
           </v-row>
 
           <!-- Re-check Button -->
-          <v-row class="mt-2">
+          <v-row class="mt-3">
             <v-col cols="12">
-              <v-btn block color="#F6BB49" class="recheck-btn" @click="confirmTagging()">
+              <v-btn v-if="userStore.currentUser?.role !== 'อาจารย์'" block color="#F6BB49" @click="confirmTagging()">
                 ตรวจสอบอีกครั้ง
               </v-btn>
             </v-col>
@@ -197,13 +195,13 @@ const confirmTagging = () => {
         </v-card>
       </v-col>
       <v-col v-else cols="12">
-        <v-card class="pa-3 student-card" outlined>
+        <v-card class="student-card " outlined>
           <v-row class="align-center justify-center">
-            <div class="text-center">
+            <div class="text-start">
               <div class="subtitle-1 bold-text mt-2">
                 ไม่สามารถตรวจจับการเข้าร่วมของคุณได้
               </div>
-              <v-btn class="mt-3 confirm-btn" color="primary" @click="confirmTagging()">
+              <v-btn class="mt-3" color="primary" @click="confirmTagging()">
                 ยืนยันว่าคุณอยู่ในห้องเรียน
               </v-btn>
             </div>
@@ -217,38 +215,29 @@ const confirmTagging = () => {
 <style scoped>
 .fill-height {
   min-height: 100vh;
-  width: 100%;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
 }
 
+.card-style {
+  background-color: #f5f5f5;
+  border-radius: 12px;
+  padding: 24px;
+  width: 100%;
+}
+
+.card-title {
+  text-align: start;
+  color: white;
+}
+
 .title {
-  text-align: center;
-  font-size: 2.5rem;
+  width: 100%;
+  text-align: start; /* Align the text to the start */
+  font-size: 2rem;
   font-weight: bold;
-  color: #3f51b5;
-  margin-bottom: 20px;
-}
-
-.back-btn {
-  font-weight: bold;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.bold-text {
-  font-weight: bold;
-  color: #333;
-}
-
-.pa-3 {
-  padding: 20px !important;
-}
-
-.subtitle-1 {
-  font-size: 1.25rem;
-  text-align: center;
 }
 
 .student-card {
@@ -256,11 +245,7 @@ const confirmTagging = () => {
   border-radius: 8px;
   transition: box-shadow 0.3s;
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  margin-bottom: 16px;
+  padding:20px;
 }
 
 .student-card:hover {
@@ -269,39 +254,9 @@ const confirmTagging = () => {
 
 .v-img {
   object-fit: cover;
-  border-radius: 8px;
 }
 
 .v-btn {
   text-transform: none;
-  font-weight: bold;
-}
-
-.recheck-btn {
-  background-color: #f6bb49;
-  color: #fff;
-  transition: background-color 0.3s;
-}
-
-.recheck-btn:hover {
-  background-color: #e0a838;
-}
-
-.confirm-btn {
-  background-color: #3f51b5;
-  color: #fff;
-  transition: background-color 0.3s;
-}
-
-.confirm-btn:hover {
-  background-color: #2e3b8a;
-}
-
-.red--text {
-  color: #f44336;
-}
-
-.row-spacing {
-  margin-bottom: 16px;
 }
 </style>

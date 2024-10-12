@@ -25,6 +25,16 @@ const cancel = async () => {
     courseStore.showCreateDialog2 = false;
   }
 };
+const retreatStep = async () => {
+  enrollmentStore.codeCourse = enrollmentStore.currentEnrollment?.course?.coursesId ?? "";
+  if (enrollmentStore.currentEnrollment) {
+    await enrollmentStore.deleteEnrollment(
+      enrollmentStore.currentEnrollment!.enrollmentId!
+    );
+  }
+  courseStore.showCreateDialog = true;
+  courseStore.showCreateDialog2 = false;
+};
 </script>
 
 <template>
@@ -98,6 +108,7 @@ const cancel = async () => {
           <v-card-actions class="d-flex justify-end">
             <v-btn @click="cancel" color="error">ยกเลิก</v-btn>
             <v-spacer></v-spacer>
+            <v-btn @click="retreatStep">ย้อนกลับ</v-btn>
             <v-btn @click="saveEnrollment" color="primary">เข้าร่วม</v-btn>
           </v-card-actions>
         </v-card>

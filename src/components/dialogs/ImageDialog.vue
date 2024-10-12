@@ -1,13 +1,13 @@
 <script lang="ts" setup>
-import { onMounted, ref, computed, reactive, nextTick } from 'vue';
-import { useUserStore } from '@/stores/user.store';
-import * as faceapi from 'face-api.js';
-import Swal from 'sweetalert2';
-import { useMessageStore } from '@/stores/message';
-import type { User } from '@/stores/types/User';
+import { onMounted, ref, computed, reactive, nextTick } from "vue";
+import { useUserStore } from "@/stores/user.store";
+import * as faceapi from "face-api.js";
+import Swal from "sweetalert2";
+import { useMessageStore } from "@/stores/message";
+import type { User } from "@/stores/types/User";
 import Loader from "@/components/loader/Loader.vue";
-import { useNotiforupdate } from '@/stores/notiforUpdate.store';
-import axios from 'axios';
+import { useNotiforupdate } from "@/stores/notiforUpdate.store";
+import axios from "axios";
 
 interface CanvasRefs {
   [key: number]: HTMLCanvasElement;
@@ -27,7 +27,7 @@ const userStore = useUserStore();
 const showDialog = ref(true);
 const showTeacherDialog = ref(false); // Added this line
 const alertDialog = ref(false);
-const alertMessage = ref('');
+const alertMessage = ref("");
 const identifications = ref<Identification[]>([]);
 const canvasRefs = reactive<CanvasRefs>({});
 const croppedImagesDataUrls = ref<string[]>([]);
@@ -49,27 +49,33 @@ interface Teacher {
 const teachers = ref<Teacher[]>([]);
 
 // Fetching existing images from the user store
-const images = ref<string[]>(userStore.currentUser?.images?.map((image: string) => `${url}/users/image/filename/${image}`) ?? []);
+const images = ref<string[]>(
+  userStore.currentUser?.images?.map(
+    (image: string) => `${url}/users/image/filename/${image}`
+  ) ?? []
+);
 async function close() {
   userStore.closeImageDialog();
 }
 
 onMounted(async () => {
-  await loadModels()
+  await loadModels();
   await userStore.getTeachers();
   // console.log("Users fetched:", userStore.users);
   await userStore.getUsersById(userStore.currentUser?.userId!);
-  images.value = userStore.currentUser?.images?.map((image: string) => `${url}/users/image/filename/${image}`) ?? [];
+  images.value =
+    userStore.currentUser?.images?.map(
+      (image: string) => `${url}/users/image/filename/${image}`
+    ) ?? [];
   try {
     const response = await axios.get(`${import.meta.env.VITE_API_URL}/users/teachers`);
-    teachers.value = response.data;  // Store the fetched teachers
+    teachers.value = response.data; // Store the fetched teachers
   } catch (error) {
-    console.error('Failed to fetch teachers:', error);
+    console.error("Failed to fetch teachers:", error);
   }
 });
 
 async function loadModels() {
-
   try {
     await Promise.all([
       faceapi.nets.ssdMobilenetv1.loadFromUri("/models"),
@@ -80,7 +86,6 @@ async function loadModels() {
     //   const descriptors: Float32Array[] = [];
     //   const faceDescriptionFields = user.faceDescriptions || [];
     //   console.log("faceDescriptionFields", faceDescriptionFields);
-
 
     //   faceDescriptionFields.forEach((description, idx) => {
     //     if (description) {
@@ -98,28 +103,30 @@ async function loadModels() {
     //   }
     // });
     console.timeEnd("Face Description Processing Time");
-    const urls: string[] = JSON.parse(localStorage.getItem('images') || '[]');
+    const urls: string[] = JSON.parse(localStorage.getItem("images") || "[]");
 
     imageUrls.value = urls;
-    localStorage.removeItem('images');
-
+    localStorage.removeItem("images");
 
     console.time("Image Processing Time");
-    await Promise.all(imageUrls.value.map((url, index) => loadImageAndProcess(url, index)));
+    await Promise.all(
+      imageUrls.value.map((url, index) => loadImageAndProcess(url, index))
+    );
     console.timeEnd("Image Processing Time");
   } catch (error) {
     console.error("Error loading face-api models:", error);
-
   }
 }
 
 // Compute selected teacher's name for confirmation step
 const selectedTeacherName = computed(() => {
   if (selectedTeacher.value) {
-    const teacher = teachers.value.find((teacher) => teacher.userId === selectedTeacher.value);
-    return teacher ? `${teacher.firstName} ${teacher.lastName}` : '';
+    const teacher = teachers.value.find(
+      (teacher) => teacher.userId === selectedTeacher.value
+    );
+    return teacher ? `${teacher.firstName} ${teacher.lastName}` : "";
   }
-  return '';
+  return "";
 });
 
 function selectTeacher(teacher: any) {
@@ -132,7 +139,7 @@ function base64ToFloat32Array(base64: string | undefined): Float32Array {
   }
 
   // Ensure the string contains the expected structure and split correctly
-  const base64Data = base64.includes(',') ? base64.split(',')[1] : base64;
+  const base64Data = base64.includes(",") ? base64.split(",")[1] : base64;
   try {
     const binaryString = atob(base64Data);
     const len = binaryString.length;
@@ -146,10 +153,6 @@ function base64ToFloat32Array(base64: string | undefined): Float32Array {
     return new Float32Array();
   }
 }
-
-
-
-
 
 function loadImageAndProcess(dataUrl: string, index: number): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -179,8 +182,11 @@ async function processImage(image: HTMLImageElement, index: number) {
   const ctx = canvas.getContext("2d");
 
   try {
-    const detections = await faceapi.detectAllFaces(image).withFaceLandmarks().withFaceDescriptors();
-    detections.forEach(detection => {
+    const detections = await faceapi
+      .detectAllFaces(image)
+      .withFaceLandmarks()
+      .withFaceDescriptors();
+    detections.forEach((detection) => {
       if (!detection.descriptor) {
         console.error("Descriptor is missing for the detected face");
         return; // Skip this iteration if the descriptor is not available
@@ -199,16 +205,21 @@ async function processImage(image: HTMLImageElement, index: number) {
   }
 }
 
-
-
 function float32ArrayToBase64(float32Array: Float32Array): string {
   const uint8Array = new Uint8Array(float32Array.buffer);
-  const binaryString = String.fromCharCode.apply(null, uint8Array as unknown as number[]);
+  const binaryString = String.fromCharCode.apply(
+    null,
+    (uint8Array as unknown) as number[]
+  );
   return btoa(binaryString);
 }
 
 // resizeAndConvertToBase64
-async function resizeAndConvertToBase64(imageUrl: string, maxWidth: number, maxHeight: number): Promise<string> {
+async function resizeAndConvertToBase64(
+  imageUrl: string,
+  maxWidth: number,
+  maxHeight: number
+): Promise<string> {
   return new Promise<string>((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = "Anonymous";
@@ -248,7 +259,10 @@ function base64ToBlob(base64: string, type: string): Blob {
 }
 
 // Function to calculate Euclidean distance between two face descriptors
-function calculateEuclideanDistance(descriptor1: Float32Array, descriptor2: Float32Array): number {
+function calculateEuclideanDistance(
+  descriptor1: Float32Array,
+  descriptor2: Float32Array
+): number {
   console.log("descriptor1", descriptor1);
   console.log("descriptor2", descriptor2);
 
@@ -258,7 +272,9 @@ function calculateEuclideanDistance(descriptor1: Float32Array, descriptor2: Floa
   }
 
   if (descriptor1.length !== descriptor2.length) {
-    console.error(`Descriptor lengths are not equal. Descriptor1 length: ${descriptor1.length}, Descriptor2 length: ${descriptor2.length}`);
+    console.error(
+      `Descriptor lengths are not equal. Descriptor1 length: ${descriptor1.length}, Descriptor2 length: ${descriptor2.length}`
+    );
     return -1; // Handle this error case appropriately in your application logic
   }
 
@@ -270,14 +286,14 @@ async function saveUserUpdate() {
   if (canUpload.value) {
     isLoading.value = true;
     const processedImages = await Promise.all(
-      imageFiles.value.map(file => resizeAndConvertImageToBase64(URL.createObjectURL(file), 800, 600, 0.7))
+      imageFiles.value.map((file) =>
+        resizeAndConvertImageToBase64(URL.createObjectURL(file), 800, 600, 0.7)
+      )
     );
 
     const filesToUpload = processedImages.map((base64, index) =>
       base64ToFile(base64, `image-${index + 1}.jpg`)
     );
-
-
 
     for (const image of imageFiles.value) {
       const img = new Image();
@@ -285,7 +301,10 @@ async function saveUserUpdate() {
       await new Promise<void>((resolve, reject) => {
         img.onload = async () => {
           try {
-            const detection = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
+            const detection = await faceapi
+              .detectSingleFace(img)
+              .withFaceLandmarks()
+              .withFaceDescriptor();
             if (detection) {
               const descriptor = detection.descriptor;
               const base64Descriptor = float32ArrayToBase64(descriptor);
@@ -304,12 +323,14 @@ async function saveUserUpdate() {
       });
     }
     // map base64Descriptor to base 64 in faceDescriptionsArray
-    const faceDescriptionsArray = faceDescriptionFields.value.map((descriptor) => float32ArrayToBase64(descriptor));
+    const faceDescriptionsArray = faceDescriptionFields.value.map((descriptor) =>
+      float32ArrayToBase64(descriptor)
+    );
 
     userStore.editUser = {
       ...userStore.currentUser,
-      firstName: userStore.currentUser!.firstName || '',
-      lastName: userStore.currentUser!.lastName || '',
+      firstName: userStore.currentUser!.firstName || "",
+      lastName: userStore.currentUser!.lastName || "",
       files: filesToUpload,
       faceDescriptions: faceDescriptionsArray,
       images: imageUrls.value,
@@ -320,11 +341,10 @@ async function saveUserUpdate() {
       await userStore.saveUser();
 
       showDialog.value = false;
-      messageStore.showInfo('Image upload completed.');
+      messageStore.showInfo("Image upload completed.");
       // await userStore.getUsersById(userStore.currentUser?.userId!);
-
     } catch (error) {
-      messageStore.showError('Failed to save user data.');
+      messageStore.showError("Failed to save user data.");
       console.error("Save error:", error);
     } finally {
       isLoading.value = false;
@@ -332,14 +352,18 @@ async function saveUserUpdate() {
   }
 }
 async function save() {
-  if (userStore.currentUser?.registerStatus != 'notConfirmed') {
+  if (userStore.currentUser?.registerStatus != "notConfirmed") {
     if (imageUrls.value && imageUrls.value.length > 0) {
       try {
-        await Promise.all(imageUrls.value.map((url, index) => loadImageAndProcess(url, index)));
+        await Promise.all(
+          imageUrls.value.map((url, index) => loadImageAndProcess(url, index))
+        );
 
         // Convert the user's latest image to a face descriptor
         const latestUserImage = images.value[0]; // Assuming the first image is the latest
-        const croppedFaceDescriptor = await extractFaceDescriptorFromImage(latestUserImage);
+        const croppedFaceDescriptor = await extractFaceDescriptorFromImage(
+          latestUserImage
+        );
 
         if (!croppedFaceDescriptor) {
           console.error("Failed to extract face descriptor from the latest user image.");
@@ -348,7 +372,9 @@ async function save() {
         }
         // Convert user's saved face description from base64 string to Float32Array
         const userFaceDescriptionBase64 = userStore.currentUser?.faceDescriptions?.[0];
-        const userFaceDescriptor = userFaceDescriptionBase64 ? base64ToFloat32Array(userFaceDescriptionBase64) : null;
+        const userFaceDescriptor = userFaceDescriptionBase64
+          ? base64ToFloat32Array(userFaceDescriptionBase64)
+          : null;
         if (!userFaceDescriptor || !croppedFaceDescriptor) {
           console.error("Failed to obtain face descriptors.");
           messageStore.showError("Failed to obtain face descriptors.");
@@ -359,32 +385,38 @@ async function save() {
         console.log("Cropped face descriptor (Float32Array):", croppedFaceDescriptor);
 
         // Compare descriptors
-        const distance = calculateEuclideanDistance(userFaceDescriptor, croppedFaceDescriptor);
+        const distance = calculateEuclideanDistance(
+          userFaceDescriptor,
+          croppedFaceDescriptor
+        );
         console.log("Distance:", distance < 0.4);
 
         if (distance > 0.4) {
           await saveUserUpdate();
-          messageStore.showConfirm('อัปโหลดรูปภาพสำเร็จ');
+          messageStore.showConfirm("อัปโหลดรูปภาพสำเร็จ");
 
-          if (userStore.currentUser!.registerStatus !== 'confirmed') {
-            userStore.currentUser!.registerStatus = 'notConfirmed';
-            await userStore.updateRegisterStatus(userStore.currentUser!.userId!, userStore.currentUser!);
+          if (userStore.currentUser!.registerStatus !== "confirmed") {
+            userStore.currentUser!.registerStatus = "notConfirmed";
+            await userStore.updateRegisterStatus(
+              userStore.currentUser!.userId!,
+              userStore.currentUser!
+            );
           }
 
           await userStore.getUsersById(userStore.currentUser?.userId!);
-        } else if (selectedTeacherName.value == '') {
+        } else if (selectedTeacherName.value == "") {
           showDialog.value = true;
-          showSnackbar('โปรดใส่ชื่ออาจารย์ที่ต้องการส่งรูปภาพ');
+          showSnackbar("โปรดใส่ชื่ออาจารย์ที่ต้องการส่งรูปภาพ");
         } else {
           console.log("Face descriptors do not match.");
           await close();
           await Swal.fire({
-            title: 'รูปภาพไม่ตรงกับข้อมูล',
-            text: 'คุณต้องการส่งรูปภาพไปยังครูหรือไม่',
-            icon: 'warning',
+            title: "รูปภาพไม่ตรงกับข้อมูล",
+            text: "คุณต้องการส่งรูปภาพไปยังครูหรือไม่",
+            icon: "warning",
             showCancelButton: true,
-            confirmButtonText: 'ส่ง',
-            cancelButtonText: 'ยกเลิก',
+            confirmButtonText: "ส่ง",
+            cancelButtonText: "ยกเลิก",
             allowOutsideClick: false,
           }).then(async (result) => {
             if (result.isConfirmed) {
@@ -400,7 +432,10 @@ async function save() {
                   await new Promise<void>((resolve, reject) => {
                     img.onload = async () => {
                       try {
-                        const detection = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
+                        const detection = await faceapi
+                          .detectSingleFace(img)
+                          .withFaceLandmarks()
+                          .withFaceDescriptor();
                         if (detection) {
                           const descriptor = detection.descriptor;
                           const base64Descriptor = float32ArrayToBase64(descriptor);
@@ -430,28 +465,35 @@ async function save() {
                 }
 
                 // Add userId to formData
-                formData.append("userId", userStore.currentUser?.userId!);
-                console.log('Sending formData to create notification...');
+                formData.append("userId", userStore.currentUser!.userId!);
+                console.log("Sending formData to create notification...");
                 await notiStore.createNotiforupdate(formData);
-                console.log('Notification created successfully.');
+                console.log("Notification created successfully.");
 
                 // Send an email to the selected teacher
                 if (selectedTeacher.value) {
-                  const teacher = teachers.value.find((t) => t.userId === selectedTeacher.value);
+                  const teacher = teachers.value.find(
+                    (t) => t.userId === selectedTeacher.value
+                  );
                   if (teacher) {
-                    notiStore.sendEmailToTeacher(teacher.firstName, teacher.lastName, userStore?.currentUser!)
+                    notiStore
+                      .sendEmailToTeacher(
+                        teacher.firstName,
+                        teacher.lastName,
+                        userStore?.currentUser!
+                      )
                       .then(() => {
-                        showSnackbar('อีเมลถูกส่งไปยังอาจารย์แล้ว', 'success');
+                        showSnackbar("อีเมลถูกส่งไปยังอาจารย์แล้ว", "success");
                       })
                       .catch((error) => {
-                        console.error('Failed to send email:', error);
-                        showSnackbar('การส่งอีเมลล้มเหลว', 'error');
+                        console.error("Failed to send email:", error);
+                        showSnackbar("การส่งอีเมลล้มเหลว", "error");
                       });
                   }
                 } else {
-                  showSnackbar('กรุณาเลือกอาจารย์ที่ต้องการส่งรูปภาพ', 'error');
+                  showSnackbar("กรุณาเลือกอาจารย์ที่ต้องการส่งรูปภาพ", "error");
                 }
-                Swal.fire('อัปโหลดรูปภาพสำเร็จ', 'ระบบกำลังประมวลผลข้อมูล', 'success');
+                Swal.fire("อัปโหลดรูปภาพสำเร็จ", "ระบบกำลังประมวลผลข้อมูล", "success");
               } catch (error) {
                 console.error("Failed to create notification:", error);
                 messageStore.showError("Failed to create notification.");
@@ -459,7 +501,6 @@ async function save() {
             } else {
               showDialog.value = true;
             }
-
           });
         }
       } catch (error) {
@@ -472,18 +513,22 @@ async function save() {
   } else {
     await saveUserUpdate();
     await close();
-
   }
 }
 
 // Helper function to extract face descriptor from an image URL
-async function extractFaceDescriptorFromImage(imageUrl: string): Promise<Float32Array | null> {
+async function extractFaceDescriptorFromImage(
+  imageUrl: string
+): Promise<Float32Array | null> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = "Anonymous";
     img.onload = async () => {
       try {
-        const detection = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
+        const detection = await faceapi
+          .detectSingleFace(img)
+          .withFaceLandmarks()
+          .withFaceDescriptor();
         if (detection && detection.descriptor) {
           resolve(detection.descriptor);
         } else {
@@ -532,7 +577,7 @@ const handleFileChange = (event: Event) => {
 };
 
 const base64ToFile = (base64: string, filename: string): File => {
-  const arr = base64.split(',');
+  const arr = base64.split(",");
   const mime = arr[0].match(/:(.*?);/)?.[1];
   const bstr = atob(arr[1]);
   let n = bstr.length;
@@ -547,9 +592,9 @@ const base64ToFile = (base64: string, filename: string): File => {
 
 const resizeAndConvertImageToBase64 = (
   imageUrl: string,
-  maxWidth: number = 400,   // Reduced default maxWidth to 400px
-  maxHeight: number = 400,  // Reduced default maxHeight to 400px
-  quality: number = 0.5     // Lowered quality to 0.5 for better compression
+  maxWidth: number = 400, // Reduced default maxWidth to 400px
+  maxHeight: number = 400, // Reduced default maxHeight to 400px
+  quality: number = 0.5 // Lowered quality to 0.5 for better compression
 ): Promise<string> => {
   return new Promise<string>((resolve, reject) => {
     const img = new Image();
@@ -580,26 +625,24 @@ const resizeAndConvertImageToBase64 = (
   });
 };
 
-
 function checkDuplicateImage(newImageBase64: string): boolean {
   // Check if the new image base64 string is already in the list
   return imageUrls.value.some((uploadedImage) => {
-    const uploadedImageBase64 = uploadedImage.split(',')[1];
-    return uploadedImageBase64 === newImageBase64.split(',')[1];
+    const uploadedImageBase64 = uploadedImage.split(",")[1];
+    return uploadedImageBase64 === newImageBase64.split(",")[1];
   });
 }
 const hasUploadedImages = computed(() => imageUrls.value.length > 0);
 
 const canUpload = computed(() => imageFiles.value.length === 5);
 const uploadRules = computed(() => [
-  () => (imageFiles.value.length === 5 ? true : 'ต้องอัปโหลดรูปภาพให้ครบ 5 รูป'),
+  () => (imageFiles.value.length === 5 ? true : "ต้องอัปโหลดรูปภาพให้ครบ 5 รูป"),
 ]);
 
 const deleteImage = (index: number) => {
   imageUrls.value.splice(index, 1);
   imageFiles.value.splice(index, 1);
   // console.log("image", imageUrls.value)
-
 };
 const checkConfirmImage = () => {
   const created = new Date(userStore.currentUser?.createdDate!);
@@ -608,7 +651,7 @@ const checkConfirmImage = () => {
   // This will compare full date and time
   const isSameDateTime = created.getTime() !== updated.getTime(); // Compares timestamp
 
-  console.log("isSameDateTime", isSameDateTime)
+  console.log("isSameDateTime", isSameDateTime);
   if (isSameDateTime && userStore.currentUser?.registerStatus === "notConfirmed") {
     console.log("ya1");
     return true;
@@ -617,20 +660,20 @@ const checkConfirmImage = () => {
     return false;
   }
 };
-console.log("user2", userStore.currentUser)
+console.log("user2", userStore.currentUser);
 // confirmTeacherSelection
 const confirmTeacherSelection = () => {
   if (selectedTeacher.value) {
     showTeacherDialog.value = false;
   } else {
-    showSnackbar('กรุณาเลือกอาจารย์ที่ต้องการส่งรูปภาพ');
+    showSnackbar("กรุณาเลือกอาจารย์ที่ต้องการส่งรูปภาพ");
   }
 };
 // Snackbar state
 const snackbarVisible = ref(false);
-const snackbarMessage = ref('');
-const snackbarColor = ref('error');
-function showSnackbar(message: string, color: string = 'error') {
+const snackbarMessage = ref("");
+const snackbarColor = ref("error");
+function showSnackbar(message: string, color: string = "error") {
   snackbarMessage.value = message;
   snackbarColor.value = color;
   snackbarVisible.value = true;
@@ -640,7 +683,6 @@ const clearSelectedTeacher = () => {
   selectedTeacher.value = null;
   showTeacherDialog.value = false;
 };
-
 </script>
 
 <template>
@@ -651,9 +693,7 @@ const clearSelectedTeacher = () => {
         <div v-if="isLoading" class="loader-overlay">
           <Loader></Loader>
         </div>
-        <v-card-title class="headline">
-          อัปโหลดรูปภาพ
-        </v-card-title>
+        <v-card-title class="headline"> อัปโหลดรูปภาพ </v-card-title>
         <v-card-text>
           <v-row v-if="!canUpload" class="mt-2">
             <v-col cols="12" class="text-center">
@@ -667,9 +707,19 @@ const clearSelectedTeacher = () => {
           <!-- Existing Images -->
           <!-- {{ images }} -->
           <v-row>
-            <v-col v-for="(image, index) in images" :key="'existing-' + index" cols="2" md="2" lg="2"
-              class="image-container">
-              <v-img :src="image" aspect-ratio="1" class="rounded-lg d-flex align-center justify-center"></v-img>
+            <v-col
+              v-for="(image, index) in images"
+              :key="'existing-' + index"
+              cols="2"
+              md="2"
+              lg="2"
+              class="image-container"
+            >
+              <v-img
+                :src="image"
+                aspect-ratio="1"
+                class="rounded-lg d-flex align-center justify-center"
+              ></v-img>
             </v-col>
           </v-row>
 
@@ -678,48 +728,91 @@ const clearSelectedTeacher = () => {
             <v-col cols="12">
               <v-text class="font-weight-bold">รูปภาพที่อัปโหลด</v-text>
             </v-col>
-            <v-col v-for="(image, index) in imageUrls" :key="'uploaded-' + index" cols="2" md="2" lg="2"
-              class="image-container">
-              <v-img :src="image" aspect-ratio="1" class="rounded-lg ma-2 d-flex align-center justify-center">
-                <v-icon class="remove-btn" color="red" @click="() => deleteImage(index)" size="40">mdi
-                  mdi-close-circle-outline</v-icon>
+            <v-col
+              v-for="(image, index) in imageUrls"
+              :key="'uploaded-' + index"
+              cols="2"
+              md="2"
+              lg="2"
+              class="image-container"
+            >
+              <v-img
+                :src="image"
+                aspect-ratio="1"
+                class="rounded-lg ma-2 d-flex align-center justify-center"
+              >
+                <v-icon
+                  class="remove-btn"
+                  color="red"
+                  @click="() => deleteImage(index)"
+                  size="40"
+                  >mdi mdi-close-circle-outline</v-icon
+                >
               </v-img>
             </v-col>
           </v-row>
           <!-- File Input -->
           <v-row>
             <v-col cols="12" class="mt-4">
-              <div style="margin-bottom: 1%;font-weight: bold;">อัปโหลดรูปภาพ</div>
-              <v-file-input :key="fileInputKey" multiple prepend-icon="mdi-camera" filled @change="handleFileChange"
-                accept="image/*" variant="outlined" :disabled="checkConfirmImage()" :rules="uploadRules"></v-file-input>
+              <div style="margin-bottom: 1%; font-weight: bold">อัปโหลดรูปภาพ</div>
+              <v-file-input
+                :key="fileInputKey"
+                multiple
+                prepend-icon="mdi-camera"
+                filled
+                @change="handleFileChange"
+                accept="image/*"
+                variant="outlined"
+                :disabled="checkConfirmImage()"
+                :rules="uploadRules"
+              ></v-file-input>
             </v-col>
           </v-row>
           <!-- Button to Select Teacher -->
           <v-row class="my-4">
             <v-col cols="12">
-              <v-row align="center">
+              <v-row
+                align="center"
+                v-if="userStore.currentUser?.registerStatus === 'confirmed'"
+              >
                 <v-col cols="auto">
-                  <v-text class="font-weight-bold" style="font-size: 16px; color: #424242;">
+                  <v-text
+                    class="font-weight-bold"
+                    style="font-size: 16px; color: #424242"
+                  >
                     เลือกครูที่จะส่งรูปภาพ:
                   </v-text>
                 </v-col>
                 <v-col cols="auto">
-                  <v-btn color="primary" elevation="2" rounded class="px-4" @click="showTeacherDialog = true">
+                  <v-btn
+                    color="primary"
+                    elevation="2"
+                    rounded
+                    class="px-4"
+                    @click="showTeacherDialog = true"
+                  >
                     เลือกอาจารย์
                   </v-btn>
                 </v-col>
               </v-row>
             </v-col>
-            <v-col cols="12" class="mt-2">
+            <v-col
+              cols="12"
+              class="mt-2"
+              v-if="userStore.currentUser?.registerStatus === 'confirmed'"
+            >
               <v-row align="center">
                 <v-col cols="auto">
-                  <v-text class="font-weight-bold" style="font-size: 16px; color: #424242;">
+                  <v-text
+                    class="font-weight-bold"
+                    style="font-size: 16px; color: #424242"
+                  >
                     อาจารย์ที่เลือก:
                   </v-text>
                 </v-col>
                 <v-col>
-                  <v-text style="font-size: 16px; color: #1976d2;">
-                    {{ selectedTeacherName || 'ยังไม่ได้เลือกอาจารย์' }}
+                  <v-text style="font-size: 16px; color: #1976d2">
+                    {{ selectedTeacherName || "ยังไม่ได้เลือกอาจารย์" }}
                   </v-text>
                 </v-col>
               </v-row>
@@ -728,16 +821,21 @@ const clearSelectedTeacher = () => {
           <!-- Teacher Selection Dialog -->
           <v-dialog v-model="showTeacherDialog" max-width="500px">
             <v-card>
-              <v-card-title class="font-weight-bold" style="font-size: 20px;">
+              <v-card-title class="font-weight-bold" style="font-size: 20px">
                 เลือกอาจารย์
               </v-card-title>
               <v-divider></v-divider>
               <v-card-text>
                 <v-list>
-                  <v-list-item v-for="teacher in teachers" :key="teacher.userId" @click="selectTeacher(teacher)"
-                    class="teacher-list-item" style="cursor: pointer;">
+                  <v-list-item
+                    v-for="teacher in teachers"
+                    :key="teacher.userId"
+                    @click="selectTeacher(teacher)"
+                    class="teacher-list-item"
+                    style="cursor: pointer"
+                  >
                     <v-list-item-content>
-                      <v-list-item-title class="text-body-1" style="font-weight: 500;">
+                      <v-list-item-title class="text-body-1" style="font-weight: 500">
                         {{ teacher.firstName }} {{ teacher.lastName }}
                       </v-list-item-title>
                     </v-list-item-content>
@@ -746,26 +844,44 @@ const clearSelectedTeacher = () => {
               </v-card-text>
               <v-divider></v-divider>
               <v-card-actions class="justify-space-between">
-                <v-btn text color="red" class="font-weight-bold" @click="clearSelectedTeacher">
+                <v-btn
+                  text
+                  color="red"
+                  class="font-weight-bold"
+                  @click="clearSelectedTeacher"
+                >
                   ยกเลิก
                 </v-btn>
-                <v-btn color="primary" class="font-weight-bold" @click="confirmTeacherSelection">
+                <v-btn
+                  color="primary"
+                  class="font-weight-bold"
+                  @click="confirmTeacherSelection"
+                >
                   ยืนยัน
                 </v-btn>
               </v-card-actions>
             </v-card>
           </v-dialog>
           <!-- Upload Button -->
-          <v-row v-if="!hasUploadedImages" style="justify-content: center;font-weight: bold;">
-            <div style="color: red;">ไม่มีรูปภาพ</div>
+          <v-row
+            v-if="!hasUploadedImages"
+            style="justify-content: center; font-weight: bold"
+          >
+            <div style="color: red">ไม่มีรูปภาพ</div>
           </v-row>
           <v-row>
-            <v-btn color="error" style="font-size: 20px;" @click="close" variant="text">
+            <v-btn color="error" style="font-size: 20px" @click="close" variant="text">
               ยกเลิก
             </v-btn>
             <v-spacer></v-spacer>
-            <v-btn :disabled="!canUpload" style="font-size: 20px;"  color="primary" @click="save"
-              v-tooltip="'กรุณาอัปโหลดรูปภาพให้ครบ 5 รูป โดยรูปภาพห้ามซ้ำกัน'" variant="text">
+            <v-btn
+              :disabled="!canUpload"
+              style="font-size: 20px"
+              color="primary"
+              @click="save"
+              v-tooltip="'กรุณาอัปโหลดรูปภาพให้ครบ 5 รูป โดยรูปภาพห้ามซ้ำกัน'"
+              variant="text"
+            >
               ยืนยัน
             </v-btn>
           </v-row>

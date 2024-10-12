@@ -19,13 +19,11 @@ export const useAssignmentStore = defineStore("assignmentStore", () => {
         fullScore: 0,
         nameCourses: "",
         session: "",
-        stdAmount: 0,
         dayInLec: "",
         dayInLab: "",
         timeInLec: "",
         timeOutLec: "",
         typeCourses: "",
-        codeCourses: "",
         user: {
           userId: 0,
           firstName: "",
@@ -46,6 +44,27 @@ export const useAssignmentStore = defineStore("assignmentStore", () => {
   const assignment = ref<Assignment>();
   const currentAssignment = ref<Assignment>();
   const dialogAssignmentTag = ref(false);
+  const total = ref(0);
+const currentPage = ref(1);
+const lastPage = ref(1);
+
+async function fetchAssignments(courseId:string) {
+  await getAssignmentByCourseIdPaginate(courseId, currentPage.value);
+}
+
+function goToNextPage(courseId:string) {
+  if (currentPage.value < lastPage.value) {
+    currentPage.value++;
+    fetchAssignments(courseId);
+  }
+}
+
+function goToPreviousPage(courseId:string) {
+  if (currentPage.value > 1) {
+    currentPage.value--;
+    fetchAssignments(courseId);
+  }
+}
 
   //get
   const getAssignments = async () => {
@@ -134,6 +153,22 @@ export const useAssignmentStore = defineStore("assignmentStore", () => {
       console.log(error);
     }
   }
+  async function getAssignmentByCourseIdPaginate(id: string, page: number) {
+    try {
+      const res = await assignmentService.getAssignmentByCourseIdPaginate(id, page);
+      console.log("res", res);
+      
+      assignments.value = res.data.data; // Set the assignments data
+      console.log("assignments", assignments.value);
+      
+      total.value = res.data.total; // Total assignments count
+      currentPage.value = res.data.page; // Current page
+      lastPage.value = res.data.lastPage; // Last page for navigation
+    } catch (error) {
+      console.error('Error fetching assignments:', error);
+    }
+  }
+  
 
   return {
     assignments,
@@ -149,5 +184,13 @@ export const useAssignmentStore = defineStore("assignmentStore", () => {
     EditAssignment,
     closeEditDialog,
     getAssignmentImages,
+    getAssignmentByCourseIdPaginate,
+    fetchAssignments,
+    goToNextPage,
+    goToPreviousPage,
+    total,
+    currentPage,
+    lastPage,
+
   };
 });

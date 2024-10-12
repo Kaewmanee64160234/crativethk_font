@@ -8,7 +8,7 @@ const userStore = useUserStore();
 const selectedFile = ref(null);
 const checkStd = ref([] as any);
 const isLoading = ref(false);
-const file_ = ref([] as {id:string, name:string}[]);
+const file_ = ref([] as { id: string; name: string }[]);
 
 onMounted(async () => {
   await userStore.getUsers;
@@ -25,7 +25,10 @@ const uploadFile = async () => {
 
     for (let i = 0; i < courseStore.files.length; i++) {
       const fileId = String(courseStore.files[i].id).trim();
-      const userExists = userStore.users.some(user => String(user.studentId).trim() === fileId && user.registerStatus === 'confirmed');
+      const userExists = userStore.users.some(
+        (user) =>
+          String(user.studentId).trim() === fileId && user.registerStatus === "confirmed"
+      );
 
       if (userExists) {
         foundUsers.push(courseStore.files[i]);
@@ -33,32 +36,51 @@ const uploadFile = async () => {
         notFoundUsers.push(courseStore.files[i]);
       }
     }
+
+    // อัปเดตค่า file_
     file_.value = [...notFoundUsers, ...foundUsers];
-    courseStore.files = [...foundUsers];
     checkStd.value = new Array(courseStore.files.length).fill(false);
     for (let i = 0; i < file_.value.length; i++) {
-      checkStd.value[i] = userStore.users.some(user => String(user.studentId).trim() === String(file_.value[i].id).trim() 
-      && user.registerStatus === 'confirmed');
-      console.log("checkStd.value ", checkStd.value);
+      checkStd.value[i] = userStore.users.some(
+        (user) =>
+          String(user.studentId).trim() === String(file_.value[i].id).trim() &&
+          user.registerStatus === "confirmed"
+      );
     }
+
     isLoading.value = false;
   }
 };
 
-
-
-
-
-watch(() => selectedFile, (newVal) => {
-  if (newVal.value) {
-    courseStore.fileError = "";
+watch(
+  () => selectedFile,
+  (newVal) => {
+    if (newVal.value) {
+      courseStore.fileError = "";
+    }
   }
-});
+);
 
 onMounted(async () => {
   await userStore.getUsers();
-
 });
+
+watch(
+  checkStd,
+  (newValues) => {
+    const confirmedFiles = file_.value.filter((_, index) => newValues[index]);
+    courseStore.files = [...confirmedFiles];
+
+    newValues.forEach((value: any, index: any) => {
+      if (!value) {
+        console.log(`Checkbox at index ${index} is unchecked`);
+      } else {
+        console.log(`Checkbox at index ${index} is checked`);
+      }
+    });
+  },
+  { deep: true }
+);
 
 const delFile = () => {
   if (file_.value.length <= 0) {
@@ -72,7 +94,6 @@ const delFile = () => {
   selectedFile.value = null;
   courseStore.fileError = "";
 };
-
 </script>
 
 <template>
@@ -92,8 +113,13 @@ const delFile = () => {
           <v-card-text>
             <v-file-input
               accept=".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-              label="เลือกไฟล์อัปโหลด" variant="outlined" prepend-icon="mdi-file-document-plus-outline"
-              v-model="selectedFile" @change="uploadFile()" :error-messages="courseStore.fileError"></v-file-input>
+              label="เลือกไฟล์อัปโหลด"
+              variant="outlined"
+              prepend-icon="mdi-file-document-plus-outline"
+              v-model="selectedFile"
+              @change="uploadFile()"
+              :error-messages="courseStore.fileError"
+            ></v-file-input>
           </v-card-text>
         </v-col>
         <v-col>
@@ -101,11 +127,13 @@ const delFile = () => {
             <h5>&nbsp;</h5>
           </v-card-title>
           <v-card-text class="d-flex justify-end">
-            <v-btn style="width: 120px;" color="error" @click="delFile">ลบไฟล์ทั้งหมด</v-btn>
+            <v-btn style="width: 120px" color="error" @click="delFile"
+              >ลบไฟล์ทั้งหมด</v-btn
+            >
           </v-card-text>
         </v-col>
       </v-row>
-      <v-card style="max-height: 300px; width: 95%; margin: 0 auto; overflow-y: auto;">
+      <v-card style="max-height: 300px; width: 95%; margin: 0 auto; overflow-y: auto">
         <v-row>
           <v-col>
             <div v-if="file_.length > 0">
@@ -115,22 +143,37 @@ const delFile = () => {
                     <v-img></v-img>
                   </v-avatar>
                 </v-col>
-                <v-col :class="{
-                  'error-text': !userStore.users.some(user =>
-                    String(user.studentId).trim() === String(item.id).trim() && user.registerStatus === 'confirmed')
-                }">
+                <v-col
+                  :class="{
+                    'error-text': !userStore.users.some(
+                      (user) =>
+                        String(user.studentId).trim() === String(item.id).trim() &&
+                        user.registerStatus === 'confirmed'
+                    ),
+                  }"
+                >
                   <h3>{{ item.name }}</h3>
                   <p>{{ item.id + "@go.buu.ac.th" }}</p>
                 </v-col>
                 <v-col cols="auto">
-                  <v-checkbox :disabled="!userStore.users.some(user =>
-                    String(user.studentId).trim() === String(item.id).trim() && user.registerStatus === 'confirmed')"
-                    color="primary" v-model="checkStd[index]"></v-checkbox>
+                  <v-checkbox
+                    :disabled="
+                      !userStore.users.some(
+                        (user) =>
+                          String(user.studentId).trim() === String(item.id).trim() &&
+                          user.registerStatus === 'confirmed'
+                      )
+                    "
+                    color="primary"
+                    v-model="checkStd[index]"
+                  ></v-checkbox>
                 </v-col>
               </v-row>
             </div>
             <div v-else>
-              <v-col style="text-align: center;color: #888888;">รายชื่อนิสิตทั้งหมด</v-col>
+              <v-col style="text-align: center; color: #888888"
+                >รายชื่อนิสิตทั้งหมด</v-col
+              >
             </div>
           </v-col>
         </v-row>

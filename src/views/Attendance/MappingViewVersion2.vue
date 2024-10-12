@@ -51,8 +51,8 @@ const assignmentStore = useAssignmentStore();
 const attendanceStore = useAttendanceStore();
 const isLoading = ref(true); // Add a loading state
 const url = import.meta.env.VITE_API_URL as string;
-const filterOptions = ["Show All", "Show Less Than 50%"];
-const filterOption = ref("Show Less Than 50%");
+const filterOptions = ["แสดงรายชื่อทั้งหมด", "ความถูกต้องน้อยกว่า 50%"];
+const filterOption = ref("ความถูกต้องน้อยกว่า 50%");
 const sortedAttendances = computed(() => {
   return attendanceStore.attendances
     ?.slice()
@@ -62,7 +62,7 @@ const sortedAttendances = computed(() => {
 
 // Filtering attendances based on the selected dropdown option
 const filteredAttendances = computed(() => {
-  if (filterOption.value === "Show Less Than 50%") {
+  if (filterOption.value === "ความถูกต้องน้อยกว่า 50%") {
     return sortedAttendances.value!.filter((attendee) => attendee.attendanceScore! < 50);
   } else {
     return sortedAttendances.value;
@@ -361,7 +361,7 @@ const createAttendance = async () => {
         {
           attendanceId: 0,
           attendanceDate: new Date(),
-          attendanceStatus: "มาเรียน",
+          attendanceStatus: "present",
           attendanceConfirmStatus: identifiedUser ? "confirmed" : "notConfirmed",
           assignment: assignmentStore.currentAssignment,
           user: identifiedUser,
@@ -383,7 +383,7 @@ const createAttendance = async () => {
       );
     }
   }
-
+  await attendanceStore.revalidateAttendance(route.params.assignmentId.toString());
   // Filter users from identifications and create unknown users
   await userStore.getUserByCourseId(
     assignmentStore.currentAssignment?.course.coursesId + ""
@@ -524,12 +524,15 @@ const confirmAttendance = async (attendance: Attendance) => {
 //reject student
 const reCheckAttendance = async (attendance: Attendance) => {
   try {
-    console.log("Attendance:Ging", attendance);
-
-    await attendanceStore.removeAttendance(attendance.attendanceId + "");
-    await attendanceStore.getAttendanceByAssignmentId(
-      route.params.assignmentId.toString()
+    attendance.attendanceStatus = "absent";
+    attendance.attendanceConfirmStatus = "notconfirm";
+    await attendanceStore.rejectAttendanceByTeacher(
+      attendance.attendanceId + ""
     );
+    if(attendance.user == null) {
+      await attendanceStore.removeAttendance(attendance.attendanceId + "");
+    }
+    alert("Attendance has been recheck.");
   } catch (error) {
     console.error("Error recording attendance:", error);
     alert("Failed to recheck attendance.");
@@ -545,66 +548,69 @@ const nextPage = () => {
     `/reCheckMappingTeacher/course/${courseStore.currentCourse?.coursesId}/assignment/${route.params.assignmentId}`
   );
 };
+const goToCourseDetail = () => {
+  router.push(`/courseDetail/${courseStore.currentCourse?.coursesId}`);
+};
 </script>
+
 <template>
   <v-container class="mt-10">
-    <v-card
-      class="mx-auto"
-      color="primary"
-      max-width="1200"
-      outlined
-      style="padding: 20px"
-    >
+    <!-- Page Content for Attendance Checking -->
+    <v-card class="mx-auto card-style" color="primary" outlined style="padding: 20px; width: 100%;">
       <v-card-title>
         <h1 class="text-h5">
-          {{ courseStore.currentCourse?.nameCourses }} >
-          {{ assignmentStore.currentAssignment?.nameAssignment }}
+          <span
+            style="cursor: pointer; color: aliceblue; text-decoration: none;"
+            @click="goToCourseDetail"
+          >
+            {{ courseStore.currentCourse?.nameCourses }}
+          </span>
+          > {{ assignmentStore.currentAssignment?.nameAssignment }}
         </h1>
       </v-card-title>
     </v-card>
-    <!-- Loading Spinner -->
+
+
     <v-row v-if="isLoading">
       <Loader></Loader>
     </v-row>
 
-    <!-- Layout Row for Image Display and Identifications -->
     <v-row v-else style="padding: 20px">
       <v-col cols="12" class="d-flex justify-space-between align-center mb-4">
-        <h1 class="display-1">ตรวจสอบการเช็คชื่อ</h1>
-        <div class="d-flex align-center">
+        <h1 class="display-1 "  >ตรวจสอบการเช็คชื่อ</h1>
+        <div class="d-flex align-end">
           <!-- Navigation Buttons -->
-          <v-btn color="primary" variant="outlined" class="mr-3" @click="goHome">
-            Go Home
-          </v-btn>
-          <v-btn color="primary" variant="outlined" @click="nextPage"> Next Page </v-btn>
-        </div>
+          <v-btn color="primary"  style="color: rgba(9, 50, 113, 1); width: 150px;"  @click="nextPage">ถัดไป</v-btn>
 
-        <div class="status-student d-flex align-center">
-          <v-row class="align-center text-center" justify="center">
-            <v-col cols="auto" class="status-section">
-              <div class="status-number">{{ identifications.length }}</div>
-              <div class="status-label">ตรวจจับได้</div>
-            </v-col>
-            <v-divider vertical></v-divider>
-            <v-col cols="auto" class="status-section">
-              <div class="status-number">{{ userStore.users.length }}</div>
-              <div class="status-label">จำนวนนิสิตทั้งหมด</div>
-            </v-col>
-          </v-row>
         </div>
       </v-col>
 
-      <!-- Filter Dropdown -->
-      <v-col cols="auto">
-        <v-select
-          v-model="filterOption"
-          :items="filterOptions"
-          label="Filter Attendances"
-          variant="solo"
-          dense
-        ></v-select>
-      </v-col>
+      <!-- Filter Dropdown and Status in the Same Row -->
+      <v-row class="d-flex justify-space-between align-center">
+        <!-- Dropdown on the left side -->
+        <v-col cols="auto">
+          <v-select v-model="filterOption" :items="filterOptions" label="แสดงรายชื่อทั้งหมด" variant="solo" dense></v-select>
+        </v-col>
 
+        <!-- Status on the right side -->
+        <v-col cols="auto">
+          <div class="status-student d-flex align-end">
+            <v-row class="align-center text-center" justify="center">
+              <v-col cols="auto" class="status-section">
+                <div class="status-number">{{ identifications.length }}</div>
+                <div class="status-label correct-text">ตรวจจับได้</div>
+              </v-col>
+              <v-divider vertical></v-divider>
+              <v-col cols="auto" class="status-section">
+                <div class="status-number">{{ userStore.users.length }}</div>
+                <div class="status-label" style="color: rgba(0, 75, 188, 1);" >จำนวนนิสิตทั้งหมด</div>
+              </v-col>
+            </v-row>
+          </div>
+        </v-col>
+      </v-row>
+
+      <!-- Attendance Cards -->
       <v-col cols="12" class="pt-5">
         <v-container>
           <v-row>
@@ -620,21 +626,17 @@ const nextPage = () => {
                 class="mb-3 hover-card"
                 :style="{
                   padding: '20px',
-                  backgroundColor: attendee.attendanceScore! >= 50 ? '#F0FDF4' : '#FEF2F2',
+                  backgroundColor: attendee.attendanceScore! >= 50 ? '#F1F1F1' : '#FEF2F2',
                   boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
                   borderRadius: '10px'
                 }"
               >
                 <v-row justify="center">
-                  <v-card-title class="bold-text mt-2 text-center">
+                  <v-card-title class="bold-text mt-2 text-center ellipsis">
                     {{
                       attendee.user
-                        ? attendee.user?.studentId +
-                          " " +
-                          attendee.user?.firstName +
-                          " " +
-                          attendee.user.lastName
-                        : "ไม่พบในฐานข้อมูล"
+                        ? attendee.user?.studentId + ' ' + attendee.user?.firstName 
+                        : 'ไม่พบในฐานข้อมูล'
                     }}
                   </v-card-title>
                 </v-row>
@@ -642,7 +644,7 @@ const nextPage = () => {
                   <v-col cols="6">
                     <v-img
                       :src="`${url}/attendances/image/${attendee.attendanceImage}`"
-                      height="180px"
+                      height="200px"
                       class="rounded-lg"
                       style="border-radius: 10px"
                     ></v-img>
@@ -651,14 +653,14 @@ const nextPage = () => {
                     <v-img
                       v-if="attendee.user?.userId"
                       :src="`${url}/users/${attendee.user?.userId}/image`"
-                      height="180px"
+                      height="200px"
                       class="rounded-lg"
                       style="border-radius: 10px"
                     ></v-img>
                     <v-img
                       v-else
                       src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"
-                      height="180px"
+                      height="200px"
                       class="rounded-lg"
                       style="border-radius: 10px"
                     ></v-img>
@@ -666,13 +668,11 @@ const nextPage = () => {
                 </v-row>
                 <v-row justify="center">
                   <v-card-subtitle
-                    :class="attendee.attendanceScore! >= 50 ? 'correct-text' : 'incorrect-text'"
+                    :class="attendee.attendanceScore! >= 50 ? 'correct-text mb-3' : 'incorrect-text mb-3'"
+                    style="font-weight: bolder;"
                   >
-                    {{
-                      attendee.attendanceScore! >= 50
-                        ? "ความถูกต้อง"
-                        : "ไม่ถูกต้อง"
-                    }}
+                   ความถูกต้อง
+
                     {{ attendee.attendanceScore }}%
                   </v-card-subtitle>
                 </v-row>
@@ -700,6 +700,7 @@ const nextPage = () => {
 <style scoped>
 .bold-text {
   font-weight: bold;
+  font-size: 15pt;
 }
 
 .correct-text {
@@ -727,7 +728,8 @@ const nextPage = () => {
 
 .status-label {
   font-size: 14px;
-  color: #777;
+  font-weight: bold;
+  /* color: #777; */
 }
 
 .v-card {
@@ -746,4 +748,13 @@ const nextPage = () => {
 .v-btn:hover {
   background-color: #f5f5f5;
 }
+
+/* Ellipsis for overflowing text */
+.ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 </style>
+
+
