@@ -77,6 +77,8 @@ onMounted(async () => {
       faceapi.nets.faceLandmark68Net.loadFromUri("/models"),
       faceapi.nets.ssdMobilenetv1.loadFromUri("/models"),
     ]);
+    // get current course
+    await courseStore.getCourseById(route.params.courseId.toString());
     // get user by course id
     await userStore.getUserByCourseId(courseStore.currentCourse?.coursesId + "");
     await assignmentStore.getAssignmentById(route.params.assignmentId.toString());

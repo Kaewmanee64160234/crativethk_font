@@ -25,6 +25,8 @@ onMounted(async () => {
   await assignmentStore.getAssignmentById(route.params.assignmentId.toString());
   await attendanceStore.getAttendanceByAssignmentId(route.params.assignmentId.toString());
   await userStore.getUserByCourseId(queryCourseId + '');
+  // get course by id
+  await courseStore.getCourseById(queryCourseId + '');
 
   // Check if more than 1 day has passed since the assignment was created
   const currentDate = new Date().getTime();
@@ -91,6 +93,10 @@ const goBackToCourseDetail = () => {
 
 const confirmTagging = () => {
   router.push("/taggingFace/course/" + queryCourseId + "/assignment/" + route.params.assignmentId);
+};
+// goToCourseDetail
+const goToCourseDetail = () => {
+  router.push("/courseDetail/" + queryCourseId);
 };
 </script>
 
