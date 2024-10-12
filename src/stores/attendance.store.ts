@@ -8,6 +8,7 @@ import type Attendance from "./types/Attendances";
 import { useMessageStore } from "./message";
 import type { User } from "./types/User";
 import { useUserStore } from "./user.store";
+import Swal from "sweetalert2";
 export const useAttendanceStore = defineStore("attendanceStore", () => {
   const attendances = ref<Attendance[]>();
   const showDialog = ref(false);
@@ -26,7 +27,7 @@ export const useAttendanceStore = defineStore("attendanceStore", () => {
     profileImage: "",
   });
   const messageStore = useMessageStore();
-  const editAttendance = ref<Attendance >({
+  const editAttendance = ref<Attendance>({
     attendanceConfirmStatus: "",
     attendanceDate: new Date(),
     attendanceId: 0,
@@ -42,8 +43,8 @@ export const useAttendanceStore = defineStore("attendanceStore", () => {
     attendanceStatus: "",
     files: [],
   });
-const assignmentStore = useAssignmentStore();
-const userStore = useUserStore();
+  const assignmentStore = useAssignmentStore();
+  const userStore = useUserStore();
   const courseStore = useCourseStore();
   // create attendance
   const createAttendance = async (attendance: Attendance, file: File) => {
@@ -100,15 +101,17 @@ const userStore = useUserStore();
     }
   };
 
-  const confirmAttendance = async (attendance: Attendance,file?:File) => {
+  const confirmAttendance = async (attendance: Attendance, file?: File) => {
     try {
-      const res = await attendaceService.updateAttendance(attendance,file);
+      const res = await attendaceService.updateAttendance(attendance, file);
+      return res.status;
       // await messageStore.showInfo("The information has been sent to the teacher. Please wait for confirmation..");
     } catch (error) {
-      // Log the error object which might contain additional info
-      console.error("Error confirming attendance:", error);
-
-      window.alert("An error occurred during confirmation");
+      Swal.fire({
+        icon: "error",
+        title: "คุณได้ถูกทำการยืนยันสถานะแล้ว",
+        text: "หากผิดพลาดกรุณาแจ้งอาจารย์ผู้สอน",
+      });
     }
   };
 
@@ -173,14 +176,11 @@ const userStore = useUserStore();
   };
 
   // checkAllAttendance
-  const checkAllAttendance = async (
-    assignmentId: string,
-
-  ) => {
+  const checkAllAttendance = async (assignmentId: string) => {
     try {
       const res = await attendaceService.checkAllAttendance(assignmentId);
       console.log(res.data);
-   
+
       router.push("/courseManagement");
     } catch (error) {
       console.log(error);
@@ -211,18 +211,17 @@ const userStore = useUserStore();
         assignmentId,
         studentId
       );
-      if(res.status === 200){
+      if (res.status === 200) {
         console.log(res.data);
         currentAttendance.value = res.data;
         editAttendance.value = res.data;
       }
-      console.log('Attendance updated successfully', currentAttendance.value);
-      
+      console.log("Attendance updated successfully", currentAttendance.value);
     } catch (error) {
       console.log(error);
     }
   };
-// removeAttendance
+  // removeAttendance
   const removeAttendance = async (attendanceId: string) => {
     try {
       const res = await attendaceService.removeAttendance(attendanceId);
@@ -232,7 +231,7 @@ const userStore = useUserStore();
     } catch (error) {
       console.log(error);
     }
-  }
+  };
   // revalidateAttendance
   const revalidateAttendance = async (assignmentId: string) => {
     try {
@@ -265,7 +264,6 @@ const userStore = useUserStore();
     getAttendanceByAssignmentAndStudent,
     removeAttendance,
     attendancesList,
-    revalidateAttendance
-
+    revalidateAttendance,
   };
 });

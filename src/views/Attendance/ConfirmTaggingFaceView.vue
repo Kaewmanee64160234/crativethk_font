@@ -7,6 +7,7 @@ import { useAttendanceStore } from "@/stores/attendance.store";
 import { useUserStore } from "@/stores/user.store";
 import type Attendance from "@/stores/types/Attendances";
 import Swal from "sweetalert2";
+import { useCourseStore } from "@/stores/course.store";
 
 interface CanvasRefs {
   [key: number]: HTMLCanvasElement;
@@ -20,10 +21,12 @@ const croppedImage = ref<string | null>(null);
 const queryCourseId = route.params.courseId;
 const showDialog = ref(false);
 const attendanceStore = useAttendanceStore();
+const courseStore = useCourseStore();
 const userStore = useUserStore();
 const router = useRouter();
 const showUploadDialog = ref(false);
 const showCamera = ref(false);
+const courseId = ref("");
 const videoRef = ref<HTMLVideoElement | null>(null);
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 
@@ -38,7 +41,8 @@ const fetchImages = async () => {
   await assignmentStore.getAssignmentById(assignmentId + "");
   const images = assignmentStore.currentAssignment?.assignmentImages || [];
   imageUrls.value = images.map(
-    (image) => `${import.meta.env.VITE_API_URL}/assignments/image/filename/${image}`
+    (image) =>
+      `${import.meta.env.VITE_API_URL}/assignments/image/filename/${image}`
   );
 };
 
@@ -47,7 +51,10 @@ const processImage = async (image: any, index: number) => {
   if (!canvas) return;
 
   const detections = await faceapi.detectAllFaces(image);
-  const displaySize = { width: image.naturalWidth, height: image.naturalHeight };
+  const displaySize = {
+    width: image.naturalWidth,
+    height: image.naturalHeight,
+  };
   faceapi.matchDimensions(canvas, displaySize);
   const resizedDetections = faceapi.resizeResults(detections, displaySize);
 
@@ -81,7 +88,9 @@ const processImage = async (image: any, index: number) => {
 
       updateBoxStyle();
 
-      boxElement.addEventListener("click", () => handleBoxClick(image, detection.box));
+      boxElement.addEventListener("click", () =>
+        handleBoxClick(image, detection.box)
+      );
       canvas.parentElement?.appendChild(boxElement);
 
       // Update the box position and size on window resize
@@ -125,10 +134,12 @@ const dataURLToFile = (dataurl: string, filename: string) => {
 };
 
 onMounted(async () => {
+  courseId.value = route.params.courseId.toString();
   await loadModels();
   await fetchImages();
 
   await nextTick();
+  await courseStore.getCourseById(courseId.value);
 
   imageUrls.value.forEach((url, index) => {
     const img = new Image();
@@ -144,18 +155,19 @@ onMounted(async () => {
   });
 });
 
-
 const reCheckAttendance = async (attendance: Attendance) => {
   try {
     stopCamera();
     attendance.assignment = assignmentStore.currentAssignment;
     const date = new Date();
     const currentDate = date.getTime();
-    const assignmentDate = new Date(assignmentStore.currentAssignment!.createdDate!);
+    const assignmentDate = new Date(
+      assignmentStore.currentAssignment!.createdDate!
+    );
     const assignmentTime = assignmentDate.getTime();
     const diff = currentDate - assignmentTime;
     console.log("Diff:", diff);
-    
+
     attendance.attendanceStatus = diff > 900000 ? "late" : "present";
     attendance.attendanceConfirmStatus = "recheck";
     attendance.user = userStore.currentUser;
@@ -164,36 +176,49 @@ const reCheckAttendance = async (attendance: Attendance) => {
     console.log("Attendance:", attendance);
 
     if (croppedImage.value) {
-      const imageFile = dataURLToFile(croppedImage.value, "rechecked-image.jpg");
+      const imageFile = dataURLToFile(
+        croppedImage.value,
+        "rechecked-image.jpg"
+      );
       console.log("Image File:", imageFile);
 
-      await attendanceStore.confirmAttendance(attendance, imageFile);
+      const status = await attendanceStore.confirmAttendance(
+        attendance,
+        imageFile
+      );
+      if (status == 200) {
+        Swal.fire({
+          title: "ทำการยืน",
+          text: "Attendance recheck completed.",
+          icon: "success",
+          confirmButtonText: "OK",
+        }).then(() => {
+          // When user clicks OK, navigate back
+          router.push("/courseDetail/" + queryCourseId);
+          showDialog.value = false;
+        });
+      } else {
+        Swal.fire({
+          title: "Error!",
+          text: "ไม่สามารถทำการยืนยันการเข้าเรียนได้",
+          icon: "error",
+          confirmButtonText: "OK",
+        });
+      }
     }
 
     // Show SweetAlert confirmation
-    Swal.fire({
-      title: 'ทำการยืน',
-      text: 'Attendance recheck completed.',
-      icon: 'success',
-      confirmButtonText: 'OK',
-    }).then(() => {
-      // When user clicks OK, navigate back
-      router.push("/courseDetail/" + queryCourseId);
-      showDialog.value = false;
-    });
-    
   } catch (error) {
     console.log(error);
     // Optionally, show an error alert
     Swal.fire({
-      title: 'Error!',
-      text: 'There was an error while rechecking attendance.',
-      icon: 'error',
-      confirmButtonText: 'OK',
+      title: "Error!",
+      text: "ไม่สามารถทำการยืนยันการเข้าเรียนได้",
+      icon: "error",
+      confirmButtonText: "OK",
     });
   }
 };
-
 
 const confirmRecheck = async () => {
   await attendanceStore.getAttendanceByAssignmentAndStudent(
@@ -228,7 +253,12 @@ const onFileChange = async (event: Event) => {
           croppedImage.value = cropFaceFromImage(ctx, box);
           showDialog.value = true;
         } else {
-          alert("No face detected. Please try again.");
+          Swal.fire({
+            title: "Error!",
+            text: "ไม่สามารถทำการยืนยันการเข้าเรียนได้",
+            icon: "error",
+            confirmButtonText: "OK",
+          });
         }
       };
     };
@@ -237,7 +267,10 @@ const onFileChange = async (event: Event) => {
   showUploadDialog.value = false;
 };
 
-const cropFaceFromImage = (ctx: CanvasRenderingContext2D | null, box: faceapi.Box) => {
+const cropFaceFromImage = (
+  ctx: CanvasRenderingContext2D | null,
+  box: faceapi.Box
+) => {
   if (ctx) {
     const imageData = ctx.getImageData(box.x, box.y, box.width, box.height);
     const canvas = document.createElement("canvas");
@@ -262,7 +295,13 @@ const captureImage = () => {
     const ctx = canvasRef.value.getContext("2d");
     canvasRef.value.width = videoRef.value.videoWidth;
     canvasRef.value.height = videoRef.value.videoHeight;
-    ctx?.drawImage(videoRef.value, 0, 0, canvasRef.value.width, canvasRef.value.height);
+    ctx?.drawImage(
+      videoRef.value,
+      0,
+      0,
+      canvasRef.value.width,
+      canvasRef.value.height
+    );
     const imgData = canvasRef.value.toDataURL("image/jpeg");
 
     // Process the captured image for face detection
@@ -275,7 +314,13 @@ const captureImage = () => {
         croppedImage.value = cropFaceFromImage(ctx, box);
         showDialog.value = true;
       } else {
-        alert("No face detected. Please try again.");
+        // sweet in thai
+        Swal.fire({
+          title: "Error!",
+          text: "ไม่สามารถทำการยืนยันการเข้าเรียนได้",
+          icon: "error",
+          confirmButtonText: "OK",
+        });
       }
     };
   }
@@ -290,27 +335,55 @@ const stopCamera = () => {
     showCamera.value = false;
   }
 };
+// goToCourseDetail
+const goToCourseDetail = () => {
+  router.push("/courseDetail/" + queryCourseId);
+};
+
 </script>
 
 <template>
   <v-container class="mt-10">
+    <v-card class="mx-auto card-style" color="primary" outlined style="padding: 20px; width: 100%;">
+      <v-card-title>
+        <h1 class="text-h5">
+          <span
+            style="cursor: pointer; color: aliceblue; text-decoration: none;"
+            @click="goToCourseDetail"
+          >
+            {{ courseStore.currentCourse?.nameCourses }}
+          </span>
+          > {{ assignmentStore.currentAssignment?.nameAssignment }}
+        </h1>
+      </v-card-title>
+    </v-card>
     <v-row>
       <v-col class="mt-3" cols="12">
         <h1 class="text-center">ตรวจสอบการเข้าเรียน</h1>
         <p class="text-center description">
-          “โปรดคลิกที่ใบหน้าของคุณหากเป็นคุณ หากภาพไม่ใช่คุณ กรุณาคลิกปุ่ม “ไม่มีภาพของฉัน”
+          “โปรดคลิกที่ใบหน้าของคุณหากเป็นคุณ หากภาพไม่ใช่คุณ กรุณาคลิกปุ่ม
+          “ไม่มีภาพของฉัน”
         </p>
       </v-col>
     </v-row>
 
-    <v-row style="width: 100%;" >
+    <v-row style="width: 100%">
       <v-col cols="12" class="d-flex justify-end">
-        <v-btn style="background-color: #4A678C;color: white;" @click="openUploadDialog">ไม่มีภาพของฉัน</v-btn>
+        <v-btn
+          style="background-color: #4a678c; color: white"
+          @click="openUploadDialog"
+          >ไม่มีภาพของฉัน</v-btn
+        >
       </v-col>
     </v-row>
 
     <v-row>
-      <v-col cols="12" md="6" v-for="(imageUrl, index) in imageUrls" :key="index">
+      <v-col
+        cols="12"
+        md="6"
+        v-for="(imageUrl, index) in imageUrls"
+        :key="index"
+      >
         <div class="position-relative mb-3">
           <img
             :src="imageUrl"
@@ -340,8 +413,14 @@ const stopCamera = () => {
           Upload or Take a Photo
         </v-card-title>
         <v-card-text>
-          <v-file-input label="Upload Image" @change="onFileChange" accept="image/*" />
-          <v-btn color="primary" @click="startCamera" class="mt-2">Take Photo</v-btn>
+          <v-file-input
+            label="Upload Image"
+            @change="onFileChange"
+            accept="image/*"
+          />
+          <v-btn color="primary" @click="startCamera" class="mt-2"
+            >Take Photo</v-btn
+          >
         </v-card-text>
         <v-row v-if="showCamera" class="pa-4">
           <v-col cols="12" sm="12">
@@ -362,7 +441,9 @@ const stopCamera = () => {
           </v-col>
         </v-row>
         <v-card-actions>
-          <v-btn color="secondary" @click="showUploadDialog = false">Cancel</v-btn>
+          <v-btn color="secondary" @click="showUploadDialog = false"
+            >Cancel</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -370,23 +451,28 @@ const stopCamera = () => {
     <!-- Confirm Identity Dialog -->
     <v-dialog v-model="showDialog" max-width="500px">
       <v-card class="elevation-4">
-      
         <v-card-text class="text-center">
-          <img :src="croppedImage!" alt="Cropped Face" class="rounded-lg mb-3 confirm-image" />
+          <img
+            :src="croppedImage!"
+            alt="Cropped Face"
+            class="rounded-lg mb-3 confirm-image"
+          />
           <p>ภาพนี้ใช่คุณใช่หรือไม่</p>
         </v-card-text>
         <v-card-actions class="justify-center">
-          <v-btn variant="flat" color="error" @click="showDialog = false">ไม่</v-btn>
+          <v-btn variant="flat" color="error" @click="showDialog = false"
+            >ไม่</v-btn
+          >
 
           <v-spacer></v-spacer>
-          <v-btn variant="flat" color="primary" @click="confirmRecheck">ใช่</v-btn>
-
+          <v-btn variant="flat" color="primary" @click="confirmRecheck"
+            >ใช่</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
   </v-container>
 </template>
-
 
 <style scoped>
 /* Main container to center content */
