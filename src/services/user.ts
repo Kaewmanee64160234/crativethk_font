@@ -138,18 +138,39 @@ function searchYears(year: string) {
   });
 }
 //search majors
-function searchMajors(major: string) {
-  return http.get("/users/search/major", {
-    params: { major },
+// function searchMajors(major: string) {
+//   return http.get("/users/search/major", {
+//     params: { major },
+//   });
+// }
+
+//search major paginate
+function searchMajorPagination(major: string, page: number, limit: number) {
+  return http.get(`/users/search/major/pagination`, {
+    params: { major, page, limit },
+  });
+}
+//search satus paginate
+function searchStatusPagination(status: string, page: number, limit: number) {
+  return http.get(`/users/search/status/pagination`, {
+    params: { status, page, limit },
   });
 }
 
-//search statuses
-function searchStatus(status: string) {
-  return http.get("/users/search/status", {
-    params: { status },
+// In userService
+function searchUsersByMajorAndStatus(major: string, status: string, page: number, limit: number) {
+  return http.get('/users/search', {
+    params: { major, status, page, limit },
   });
 }
+
+
+// //search statuses
+// function searchStatus(status: string) {
+//   return http.get("/users/search/status", {
+//     params: { status },
+//   });
+// }
 
 //get user imageProfile by id
 function getUserImage(id: number) {
@@ -186,12 +207,11 @@ function getTeachers() {
   return http.get("/users/teachers"); // Assuming your API base URL is correctly set up
 }
 
-  //check email duplicate
-  function checkEmailDuplicate(email: string) {
-    return http.get(`/users/email/${email}`, {
-      params: { email },
-    });
-  }
+function checkEmailDuplicate(email: string, userId?: number) {
+  return http.get(`/users/email/${email}`, {
+    params: { email, userId },
+  });
+}
 
   //check studentId duplicate
   function checkStudentIdDuplicate(studentId: string) {
@@ -207,30 +227,45 @@ function getTeachers() {
       });
     } 
 
-   //getStudent by role == นิสิต
-    function getStudent() {
-      return http.get("/users/students");
+    //paginate get admin
+    function getAdminPagination(page: number, limit: number) {
+      return http.get(`/users/admins/pagination`, {
+        params: { page, limit },
+      });
     }
-  //get teacher by role == อาจารย์
-    function getTeacher() {
-      return http.get("/users/teachers");
+    //paginate get teacher
+    function getTeacherPagination(page: number, limit: number) {
+      return http.get(`/users/teachers/pagination`, {
+        params: { page, limit },
+      });
     }
-  
-  //get admin by role == แอดมิน
-    function getAdmin() {
-      return http.get("/users/admins");
+
+    //paginate get student
+    function getStudentPagination(page: number, limit: number) {
+      return http.get(`/users/students/pagination`, {
+        params: { page, limit },
+      });
+    }
+
+    //searchStatusTeacher
+    function searchStatusTeacherAndAdmin(status: string) {
+      return http.get(`/users/search/statusTeacherAdmin`, {
+        params: { status },
+      });
     }
 
 export default {
-  searchStatus,
-  getAdmin,
-  getTeacher,
-  getStudent,
+  searchUsersByMajorAndStatus,
+  searchStatusTeacherAndAdmin,
+  getStudentPagination,
+  getTeacherPagination,
+  getAdminPagination,
+  searchStatusPagination,
   getUserPagination,
   checkStudentIdDuplicate,
   checkEmailDuplicate,
   getTeachers,
-  searchMajors,
+  searchMajorPagination,
   searchYears,
   getUserById,
   getUser,

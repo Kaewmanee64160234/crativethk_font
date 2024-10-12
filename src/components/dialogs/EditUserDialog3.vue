@@ -10,41 +10,47 @@ const snackbarMessage = ref('');
 const snackbarColor = ref('error');
 
 function showSnackbar(message: string, color: string = 'error') {
-    snackbarMessage.value = message;
-    snackbarColor.value = color;
-    snackbarVisible.value = true;
+  snackbarMessage.value = message;
+  snackbarColor.value = color;
+  snackbarVisible.value = true;
 }
 
 async function save() {
-    if (!userStore.editUser.firstName || !userStore.editUser.lastName ||
+  if (!userStore.editUser.firstName || !userStore.editUser.lastName ||
     !/^[ก-๙\s]+$/.test(userStore.editUser.firstName) ||
     !/^[ก-๙\s]+$/.test(userStore.editUser.lastName) ||
-    userStore.editUser.firstName.length > 100 ||
-    userStore.editUser.lastName.length > 100) {
+    userStore.editUser.firstName.length > 50 ||
+    userStore.editUser.lastName.length > 50) {
 
-    showSnackbar('โปรดกรอกชื่อและนามสกุลเป็นภาษาไทย และต้องไม่เกิน 100 ตัวอักษร');
+    showSnackbar('โปรดกรอกชื่อและนามสกุลเป็นภาษาไทย และต้องไม่เกิน 50 ตัวอักษร');
     return;
   }
-    // check if role is not "แอดมิน"
-    else if (userStore.editUser.role !== 'แอดมิน') {
-        showSnackbar('โปรดเลือกตำแหน่งที่ถูกต้อง');
-        return;
-    }
+  // check if role is not "แอดมิน"
+  else if (userStore.editUser.role !== 'แอดมิน') {
+    showSnackbar('โปรดเลือกตำแหน่งที่ถูกต้อง');
+    return;
+  }
 
-    // check if status is not valid
-    else if (!['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง'].includes(userStore.editUser.status ?? '')) {
-        showSnackbar('โปรดเลือกสถานะภาพที่ถูกต้อง');
-        return;
-    }
-        await userStore.saveUser();
-        await userStore.resetUser();
-        // window.location.reload(); 
-        await userStore.closeDialog();
+  // check if status is not valid
+  else if (!['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง'].includes(userStore.editUser.status ?? '')) {
+    showSnackbar('โปรดเลือกสถานะภาพที่ถูกต้อง');
+    return;
+  }
+  // Check for email duplicates, ignoring the current user's own email
+  const emailDuplicate = await userStore.checkEmailDuplicate(userStore.editUser.email ?? '', userStore.editUser.userId);
+  if (emailDuplicate) {
+    showSnackbar('อีเมลนี้ถูกใช้งานแล้ว');
+    return;
+  }
+  await userStore.saveUser();
+  await userStore.resetUser();
+  // window.location.reload(); 
+  await userStore.closeDialog();
 }
 
 async function cancel() {
-    userStore.resetUser();
-    userStore.closeDialog();
+  userStore.resetUser();
+  userStore.closeDialog();
 }
 
 // Set the default value for role
@@ -69,7 +75,7 @@ if (!userStore.editUser.role) {
                   :rules="[
                     (v) => !!v || 'โปรดกรอกชื่อ',
                     (v) => /^[ก-๙\s]+$/.test(v) || 'ชื่อต้องไม่เป็นตัวเลขและต้องเป็นภาษาไทยเท่านั้น',
-                    (v) => v.length <= 100 || 'ชื่อต้องไม่เกิน 100 ตัวอักษร'
+                    (v) => v.length <= 50 || 'ชื่อต้องไม่เกิน 50 ตัวอักษร'
                   ]">
                 </v-text-field>
               </v-col>
@@ -79,7 +85,7 @@ if (!userStore.editUser.role) {
                   :rules="[
                     (v) => !!v || 'โปรดกรอกนามสกุล',
                     (v) => /^[ก-๙\s]+$/.test(v) || 'นามสกุลต้องไม่เป็นตัวเลขและต้องเป็นภาษาไทยเท่านั้น',
-                    (v) => v.length <= 100 || 'นามสกุลต้องไม่เกิน 100 ตัวอักษร'
+                    (v) => v.length <= 50 || 'นามสกุลต้องไม่เกิน 50 ตัวอักษร'
                   ]">
                 </v-text-field>
               </v-col>
@@ -91,9 +97,8 @@ if (!userStore.editUser.role) {
               </v-col>
               <!-- Status -->
               <v-col cols="6">
-                <v-select label="สถานะภาพ" :items="['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง']" dense solo outlined
-                  rounded required v-model="userStore.editUser.status" 
-                  :rules="[
+                <v-select label="สถานะภาพ" :items="['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง']" dense solo outlined rounded
+                  required v-model="userStore.editUser.status" :rules="[
                     (v) => !!v || 'โปรดเลือกสถานะภาพ',
                     (v) => ['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง'].includes(v) || 'โปรดเลือกสถานะภาพจากรายการที่ให้ไว้'
                   ]">
@@ -105,7 +110,8 @@ if (!userStore.editUser.role) {
 
         <!-- Card Actions (Buttons) -->
         <v-card-actions class="justify-space-between mt-4">
-          <v-btn text="ยกเลิก" rounded outlined color="red" style="padding: 12px 24px; font-size: 16px;" @click="cancel">
+          <v-btn text="ยกเลิก" rounded outlined color="red" style="padding: 12px 24px; font-size: 16px;"
+            @click="cancel">
             ยกเลิก
           </v-btn>
           <v-btn color="blue" text="ยืนยัน" rounded style="padding: 12px 24px; font-size: 16px;" @click="save">

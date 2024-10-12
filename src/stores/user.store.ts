@@ -33,7 +33,7 @@ export const useUserStore = defineStore("userStore", () => {
   const notiUser = ref<User>();
   const totalUsers = ref(0);
   const currentPage = ref(1);
-  const itemsPerPage = ref(5);
+  const itemsPerPage = ref(20);
 
   const editUser = ref<User & { files: File[] }>({
     userId: 0,
@@ -65,42 +65,68 @@ export const useUserStore = defineStore("userStore", () => {
 
 
   // watch for searchDropdown
-  watch(searchDropdown, (value) => {
+  watch(searchDropdown, async (value) => {
+    currentPage.value = 1;
     console.log(searchDropdown.value)
     if (value === "") {
-      getUsers();
+      await getStudentPagination();
     } else {
       searchYear();
     }
   });
 
   // watch for searchDropdown2
-  watch(searchDropdown2, (value) => {
+  // watch(searchDropdown2, async (value) => {
+  //   currentPage.value = 1;
+  //   console.log(searchDropdown2.value)
+  //   if (value === "") {
+  //     await getStudentPagination();
+  //   } else {
+  //     searchMajorPagination(searchDropdown2.value);
+  //   }
+  // });
+
+  //watch searchUsersByMajorAndStatus
+  // watch([searchDropdown2, searchDropdown3], async () => {
+  //   currentPage.value = 1;
+  //   if (searchDropdown2.value === "" && searchDropdown3.value === "") {
+  //     await getStudentPagination();
+  //   } else {
+  //   searchUsersByMajorAndStatus(searchDropdown2.value, searchDropdown3.value);
+  //   }
+  // });
+
+  //watch for searchDropdown2 paginate
+  watch(searchDropdown2, async (value) => {
+    currentPage.value = 1;
     console.log(searchDropdown2.value)
     if (value === "") {
-      getUsers();
+      await getStudentPagination();
     } else {
-      searchMajor();
+      searchMajorPagination(searchDropdown2.value);
     }
   });
 
-  //watch for searchDropdown3
-  watch(searchDropdown3, (value) => {
+  // //watch for searchDropdown3
+  watch(searchDropdown3, async (value) => {
+    currentPage.value = 1;
     console.log(searchDropdown3.value)
     if (value === "") {
-      getUsers();
+      await getStudentPagination();
     } else {
-      searchStatus();
+      searchStatusPagination(searchDropdown3.value);
     }
   });
 
   //watch for searchDropdown4
-  watch(searchDropdown4, (value) => {
+  watch(searchDropdown4, async (value) => {
+    currentPage.value = 1;
     console.log(searchDropdown4.value)
     if (value === "") {
-      getUsers();
+      await getTeacherPagination();
+      await getAdminPagination();
     } else {
-      searchStatus();
+      searchStatusTeacherAndAdmin();
     }
   });
 
@@ -125,24 +151,68 @@ export const useUserStore = defineStore("userStore", () => {
   };
 
   // search majors
-  const searchMajor = async () => {
+  // const searchMajor = async () => {
+  //   try {
+  //     const response = await userService.searchMajors(searchDropdown2.value);
+  //     users.value = response.data;
+  //   } catch (error) {
+  //     console.error('Error searching users:', error);
+  //   }
+  // };
+
+//searchUsersByMajorAndStatus paginate
+  const searchUsersByMajorAndStatus = async (major: string, status: string) => {
     try {
-      const response = await userService.searchMajors(searchDropdown2.value);
+      const response = await userService.searchUsersByMajorAndStatus(major, status, currentPage.value, itemsPerPage.value);
+      users.value = response.data.data.map((user: any) => mapToUser(user));
+      totalUsers.value = response.data.total;
+    } catch (error) {
+      console.error('Error searching users:', error);
+    }
+  };
+
+  
+  //search majors paginate
+  const searchMajorPagination = async (major: string) => {
+    try {
+      const response = await userService.searchMajorPagination(major, currentPage.value, itemsPerPage.value);
+      users.value = response.data.data.map((user: any) => mapToUser(user));
+      totalUsers.value = response.data.total;
+    } catch (error) {
+      console.error('Error searching users:', error);
+    }
+  };
+  //searchStatusPagination
+  const searchStatusPagination = async (status: string) => {
+    try {
+      const response = await userService.searchStatusPagination(status, currentPage.value, itemsPerPage.value);
+      users.value = response.data.data.map((user: any) => mapToUser(user));
+      totalUsers.value = response.data.total;
+    } catch (error) {
+      console.error('Error searching users:', error);
+    }
+  };
+
+    // search status student
+  // const searchStatus = async () => {
+  //   try {
+  //     const response = await userService.searchStatus(searchDropdown3.value);
+  //     users.value = response.data;
+  //   } catch (error) {
+  //     console.error('Error searching users:', error);
+  //   }
+  // };
+  
+  //search status teacher and admin
+  const searchStatusTeacherAndAdmin = async () => {
+    try {
+      const response = await userService.searchStatusTeacherAndAdmin(searchDropdown4.value);
       users.value = response.data;
     } catch (error) {
       console.error('Error searching users:', error);
     }
   };
 
-  // search status
-  const searchStatus = async () => {
-    try {
-      const response = await userService.searchStatus(searchDropdown3.value);
-      users.value = response.data;
-    } catch (error) {
-      console.error('Error searching users:', error);
-    }
-  };
 
   const getUsers = async () => {
     try {
@@ -336,16 +406,18 @@ export const useUserStore = defineStore("userStore", () => {
       console.error("Error while fetching QR code:", error);
     }
   }
-  //check email duplicate
-  const checkEmailDuplicate = async (email: string) => {
+  
+  const checkEmailDuplicate = async (email: string, userId?: number) => {
     try {
-      const res = await userService.checkEmailDuplicate(email);
+      const res = await userService.checkEmailDuplicate(email, userId);
       console.log("res", res);
       return res.data;
     } catch (error) {
       console.error("Error while checking email duplicate:", error);
     }
   };
+  
+
   //check studentId duplicate
   const checkStudentIdDuplicate = async (studentId: string) => {
     try {
@@ -358,15 +430,18 @@ export const useUserStore = defineStore("userStore", () => {
   };
 
   // watch userStore.currentPage
-  watch([currentPage, itemsPerPage], () => {
-    fetchPaginatedUsers();
-  });
+  // watch([currentPage, itemsPerPage], () => {
+  //   fetchPaginatedUsers();
+  // });
 
   //getUser pagination
   const fetchPaginatedUsers = async () => {
+    const params = {
+      page: currentPage.value,
+      limit: itemsPerPage.value,
+    };
     try {
-      const res = await userService.getUserPagination(currentPage.value,
-        itemsPerPage.value);
+      const res = await userService.getUserPagination(params.page, params.limit);
       if (res.status === 200) {
         users.value = res.data.data.map((user: any) =>
           mapToUser(user)
@@ -379,46 +454,70 @@ export const useUserStore = defineStore("userStore", () => {
     }
   };
 
-  //getStudent by role == นิสิต
-  const getStudent = async () => {
+  //paginate get student
+  const getStudentPagination = async () => {
+    const params = {
+      page: currentPage.value,
+      limit: itemsPerPage.value,
+    };
     try {
-      const res = await userService.getStudent();
-      users.value = res.data;
+      const res = await userService.getStudentPagination(params.page, params.limit);
+      if (res.status === 200) {
+        users.value = res.data.data.map((user: any) =>
+          mapToUser(user)
+        );
+        totalUsers.value = res.data.total;
+        currentPage.value = res.data.currentPage;
+      }
     } catch (error) {
-      console.error("Error while fetching students:", error);
+      console.error("Error while fetching paginated students:", error);
+    }
+  };  
+
+  //paginate get teacher
+  const getTeacherPagination = async () => {
+    try {
+      const res = await userService.getTeacherPagination(currentPage.value,
+        itemsPerPage.value);
+      if (res.status === 200) {
+        users.value = res.data.data.map((user: any) =>
+          mapToUser(user)
+        );
+        totalUsers.value = res.data.total;
+      }
+    } catch (error) {
+      console.error("Error while fetching paginated teachers:", error);
     }
   };
 
-  //getTeacher by role == อาจารย์
-  const getTeacher = async () => {
+  //paginate get admin
+  const getAdminPagination = async () => {
     try {
-      const res = await userService.getTeacher();
-      users.value = res.data;
+      const res = await userService.getAdminPagination(currentPage.value,
+        itemsPerPage.value);
+      if (res.status === 200) {
+        users.value = res.data.data.map((user: any) =>
+          mapToUser(user)
+        );
+        totalUsers.value = res.data.total;
+      }
     } catch (error) {
-      console.error("Error while fetching teachers:", error);
+      console.error("Error while fetching paginated admins:", error);
     }
   };
 
-  //getAdmin by role == แอดมิน
-  const getAdmin = async () => {
-    try {
-      const res = await userService.getAdmin();
-      // console.log("res", res);
-      users.value = res.data;
-    } catch (error) {
-      console.error("Error while fetching admins:", error);
-    }
-  };
 
   return {
-    searchStatus,
-    getAdmin,
-    getTeacher,
-    getStudent,
+    searchUsersByMajorAndStatus,
+    searchStatusPagination,
+    searchStatusTeacherAndAdmin,
+    getStudentPagination,
+    getTeacherPagination,
+    getAdminPagination,
     fetchPaginatedUsers,
     checkStudentIdDuplicate,
     checkEmailDuplicate,
-    searchMajor,
+    searchMajorPagination,
     getTeachers,
     createQrByStdId,
     getCurrentUser,
