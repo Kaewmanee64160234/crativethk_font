@@ -1027,7 +1027,7 @@ const getAbsenceCount = (userId: string) => {
 
 .v-btn:hover {
   background-color: #3051ac;
-  color: white !important;
+  /* color: white !important; */
 }
 .v-col {
   padding: 10px 0;
