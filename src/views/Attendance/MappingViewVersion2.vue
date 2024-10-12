@@ -383,7 +383,7 @@ const createAttendance = async () => {
       );
     }
   }
-
+  await attendanceStore.revalidateAttendance(route.params.assignmentId.toString());
   // Filter users from identifications and create unknown users
   await userStore.getUserByCourseId(
     assignmentStore.currentAssignment?.course.coursesId + ""

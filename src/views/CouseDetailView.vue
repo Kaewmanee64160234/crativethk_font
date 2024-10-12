@@ -51,8 +51,6 @@ const videoRef = ref<HTMLVideoElement | null>(null);
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const assignmentManual = ref(false);
 
-
-
 const isTeacher = computed(() => userStore.currentUser?.role === "อาจารย์");
 const filteredAssignments = computed(() => {
   // Only include assignments that have corresponding attendance data.
@@ -77,15 +75,12 @@ const filteredUsers = computed(() => {
 // Fetch assignments when the component mounts
 onMounted(async () => {
   console.log("id", id.value);
-  
 
-   await assignmentStore.getAssignmentByCourseIdPaginate(id.value.toString(), 1),
-   await attendanceStore.getAttendanceByCourseId(id.value.toString()),
-   await userStore.getUserByCourseId(id.value.toString()),
-   await courseStore.getCourseById(id.value.toString()),
-
-
-  posts.value = assignmentStore.assignments;
+  await assignmentStore.getAssignmentByCourseIdPaginate(id.value.toString(), 1),
+    await attendanceStore.getAttendanceByCourseId(id.value.toString()),
+    await userStore.getUserByCourseId(id.value.toString()),
+    await courseStore.getCourseById(id.value.toString()),
+    (posts.value = assignmentStore.assignments);
   totalPage.value = assignmentStore.total;
 });
 
@@ -473,11 +468,11 @@ const confirmExportFile = () => {
       let translatedStatus = "";
 
       if (status === "present") {
-        translatedStatus = "มา";
+        translatedStatus = "มาเรียน";
       } else if (status === "late") {
-        translatedStatus = "สาย";
+        translatedStatus = "มาสาย";
       } else {
-        translatedStatus = "ขาด";
+        translatedStatus = "ไม่มาเรียน";
       }
 
       userData[assignment.nameAssignment] = translatedStatus;
@@ -500,7 +495,7 @@ const confirmExportFile = () => {
   };
 
   // Iterate through each cell in the worksheet and apply border styles
-  const range = XLSX.utils.decode_range(ws['!ref']!);
+  const range = XLSX.utils.decode_range(ws["!ref"]!);
   for (let R = range.s.r; R <= range.e.r; ++R) {
     for (let C = range.s.c; C <= range.e.c; ++C) {
       const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
@@ -532,7 +527,8 @@ const closeDialog = () => {
 const getAbsenceCount = (userId: string) => {
   return attendanceStore!.attendances!.filter(
     (attendance) =>
-      attendance.user?.userId === userId && attendance.attendanceStatus === "absent"
+      attendance.user?.userId === userId &&
+      attendance.attendanceStatus === "absent"
   ).length;
 };
 </script>
@@ -857,112 +853,143 @@ const getAbsenceCount = (userId: string) => {
       </v-tab-item>
 
       <v-tab-item v-else>
-    <v-card class="mx-auto" color="primary" max-width="1200" outlined style="padding: 20px">
-      <v-card-title>
-        <h1 class="text-h5">{{ courseStore.currentCourse?.nameCourses }}</h1>
-      </v-card-title>
-    </v-card>
-    <v-card class="mx-auto" outlined style="padding: 20px; margin-top: 10px">
-      <v-row>
-        <v-col col="12" sm="10" class="text-primary">
-          <v-card-title>คะแนนการเช็คชื่อ</v-card-title>
-        </v-col>
-        <v-col col="12" sm="2" v-if="userStore.currentUser?.role === 'อาจารย์'">
-          <v-btn color="#093271" @click="exportFile" style="width: 200px; color: white;">
-            <v-icon left>mdi-file-export</v-icon>Export คะแนน
-          </v-btn>
-        </v-col>
-      </v-row>
-      <v-divider class="my-4"></v-divider>
-      <v-table>
-        <thead>
-          <tr>
-            <th class="text-center vertical-divider">รหัสนิสิต</th>
-            <th class="text-center vertical-divider">ชื่อ-สกุล</th>
-            <th class="text-center vertical-divider">คะแนนเต็ม</th>
-            <th class="text-center vertical-divider">คะแนนที่ได้</th>
-            <th
-              class="text-center vertical-divider"
-              v-for="assignment in assignmentStore.assignments"
-              :key="assignment.assignmentId"
+        <v-card
+          class="mx-auto"
+          color="primary"
+          max-width="1200"
+          outlined
+          style="padding: 20px"
+        >
+          <v-card-title>
+            <h1 class="text-h5">
+              {{ courseStore.currentCourse?.nameCourses }}
+            </h1>
+          </v-card-title>
+        </v-card>
+        <v-card
+          class="mx-auto"
+          outlined
+          style="padding: 20px; margin-top: 10px"
+        >
+          <v-row>
+            <v-col col="12" sm="10" class="text-primary">
+              <v-card-title>คะแนนการเช็คชื่อ</v-card-title>
+            </v-col>
+            <v-col
+              col="12"
+              sm="2"
+              v-if="userStore.currentUser?.role === 'อาจารย์'"
             >
-              {{ assignment.nameAssignment }}
-            </th>
-          </tr>
-        </thead>
-        <!-- {{attendanceStore.attendances!}} -->
-        <tbody>
-          <tr
-            v-for="user in filteredUsers"
-            :key="user.userId"
-            :class="{
+              <v-btn
+                color="#093271"
+                @click="exportFile"
+                style="width: 200px; color: white"
+              >
+                <v-icon left>mdi-file-export</v-icon>Export คะแนน
+              </v-btn>
+            </v-col>
+          </v-row>
+          <v-divider class="my-4"></v-divider>
+          <v-table>
+            <thead>
+              <tr>
+                <th class="text-center vertical-divider">รหัสนิสิต</th>
+                <th class="text-center vertical-divider">ชื่อ-สกุล</th>
+                <th class="text-center vertical-divider">คะแนนเต็ม</th>
+                <th class="text-center vertical-divider">คะแนนที่ได้</th>
+                <th
+                  class="text-center vertical-divider"
+                  v-for="assignment in assignmentStore.assignments"
+                  :key="assignment.assignmentId"
+                >
+                  {{ assignment.nameAssignment }}
+                </th>
+              </tr>
+            </thead>
+            <!-- {{attendanceStore.attendances!}} -->
+            <tbody>
+              <tr
+                v-for="user in filteredUsers"
+                :key="user.userId"
+                :class="{
               'highlight-red': getAbsenceCount(user.userId!) > 3,
               'highlight-yellow': getAbsenceCount(user.userId!) === 3
             }"
-          >
-            <td class="text-center vertical-divider">{{ user.studentId }}</td>
-            <td class="vertical-divider">
-              <span :class="{ 'highlighted-text': getAbsenceCount(user.userId!) > 3 }">
-                {{ user.firstName + " " + user.lastName }}
-              </span>
-            </td>
-            <td class="text-center vertical-divider">{{ courseStore.currentCourse?.fullScore }}</td>
-            <td class="text-center vertical-divider">
-              {{ calculateTotalScore(user.userId!, assignmentStore.assignments) }}
-            </td>
-            <td
-              v-for="assignment in assignmentStore.assignments"
-              :key="assignment.assignmentId"
-              class="text-center vertical-divider"
-            >
-            <!-- {{getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!)}} -->
-              <template
-                v-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'present'"
               >
-                <v-btn
-                  density="compact"
-                  color="green"
-                  icon="mdi-check-circle"
-                  v-if="isTeacher"
-                  @click="openDialog(assignment, user)"
+                <td class="text-center vertical-divider">
+                  {{ user.studentId }}
+                </td>
+                <td class="vertical-divider">
+                  <span
+                    :class="{ 'highlighted-text': getAbsenceCount(user.userId!) > 3 }"
+                  >
+                    {{ user.firstName + " " + user.lastName }}
+                  </span>
+                </td>
+                <td class="text-center vertical-divider">
+                  {{ courseStore.currentCourse?.fullScore }}
+                </td>
+                <td class="text-center vertical-divider">
+                  {{
+                    calculateTotalScore(
+                      user.userId!,
+                      assignmentStore.assignments
+                    )
+                  }}
+                </td>
+                <td
+                  v-for="assignment in assignmentStore.assignments"
+                  :key="assignment.assignmentId"
+                  class="text-center vertical-divider"
                 >
-                  <v-icon>mdi-check-circle</v-icon>
-                </v-btn>
-                <v-icon color="green" v-else>mdi-check-circle</v-icon>
-              </template>
-              <template
-                v-else-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'late'"
-              >
-                <v-btn
-                  density="compact"
-                  color="orange"
-                  icon="mdi-clock-outline"
-                  v-if="isTeacher"
-                  @click="openDialog(assignment, user)"
-                >
-                  <v-icon>mdi-clock-outline</v-icon>
-                </v-btn>
-                <v-icon color="orange" v-else>mdi-clock-outline</v-icon>
-              </template>
-              <template v-else>
-                <v-btn
-                  density="compact"
-                  color="red"
-                  icon="mdi-close-circle"
-                  v-if="isTeacher"
-                  @click="openDialog(assignment, user)"
-                >
-                  <v-icon>mdi-close-circle</v-icon>
-                </v-btn>
-                <v-icon color="red" v-else>mdi-close-circle</v-icon>
-              </template>
-            </td>
-          </tr>
-        </tbody>
-      </v-table>
-    </v-card>
-  </v-tab-item>
-  </v-container>
+                  <!-- {{getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!)}} -->
+                  <template
+                    v-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'present'"
+                  >
+                    <v-btn
+                      density="compact"
+                      color="green"
+                      icon="mdi-check-circle"
+                      v-if="isTeacher"
+                      @click="openDialog(assignment, user)"
+                    >
+                      <v-icon>mdi-check-circle</v-icon>
+                    </v-btn>
+                    <v-icon color="green" v-else>mdi-check-circle</v-icon>
+                  </template>
+                  <template
+                    v-else-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'late'"
+                  >
+                    <v-btn
+                      density="compact"
+                      color="orange"
+                      icon="mdi-clock-outline"
+                      v-if="isTeacher"
+                      @click="openDialog(assignment, user)"
+                    >
+                      <v-icon>mdi-clock-outline</v-icon>
+                    </v-btn>
+                    <v-icon color="orange" v-else>mdi-clock-outline</v-icon>
+                  </template>
+                  <template v-else>
+                    <v-btn
+                      density="compact"
+                      color="red"
+                      icon="mdi-close-circle"
+                      v-if="isTeacher"
+                      @click="openDialog(assignment, user)"
+                    >
+                      <v-icon>mdi-close-circle</v-icon>
+                    </v-btn>
+                    <v-icon color="red" v-else>mdi-close-circle</v-icon>
+                  </template>
+                </td>
+              </tr>
+            </tbody>
+          </v-table>
+        </v-card>
+      </v-tab-item>
+    </v-container>
   </div>
 
   <UpdateAttendantDialogView />

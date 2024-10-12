@@ -233,6 +233,17 @@ const userStore = useUserStore();
       console.log(error);
     }
   }
+  // revalidateAttendance
+  const revalidateAttendance = async (assignmentId: string) => {
+    try {
+      const res = await attendaceService.revalidateAttendance(assignmentId);
+      if (res.data) {
+        console.log(res.data);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
   return {
     getAttendanceByCourseandStudentId,
     attendances,
@@ -253,7 +264,8 @@ const userStore = useUserStore();
     updateAttendanceTeacher,
     getAttendanceByAssignmentAndStudent,
     removeAttendance,
-    attendancesList
+    attendancesList,
+    revalidateAttendance
 
   };
 });
