@@ -188,7 +188,7 @@ const goToCourseDetail = () => {
           <!-- Re-check Button -->
           <v-row class="mt-3">
             <v-col cols="12">
-              <v-btn v-if="userStore.currentUser?.role !== 'อาจารย์' && isRecheckAllowed " block color="#F6BB49" @click="confirmTagging()">
+              <v-btn v-if="userStore.currentUser?.role !== 'อาจารย์' && isRecheckAllowed && student.attendanceConfirmStatus === 'notconfirm'  " block color="#F6BB49" @click="confirmTagging()">
                 ตรวจสอบอีกครั้ง
               </v-btn>
             </v-col>

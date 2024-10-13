@@ -1,24 +1,29 @@
 <script setup lang="ts">
-import { ref, computed, watch } from "vue";
+import { ref, watch } from "vue";
 import { useAttendanceStore } from "../../stores/attendance.store";
 
 const attendanceStore = useAttendanceStore();
-const selectedStatus = ref(attendanceStore.editAttendance?.attendanceStatus || "");
+const selectedStatus = ref("");
+const initialStatus = ref("");
+
+// Watch for changes in `editAttendance` and set the initial and selected status
 watch(
   () => attendanceStore.editAttendance,
   (newVal) => {
-    if(newVal) {
-      if(newVal!.attendanceStatus === "absent") {
+    if (newVal) {
+      if (newVal.attendanceStatus === "absent") {
         selectedStatus.value = "ไม่มาเรียน";
-      } else if(newVal.attendanceStatus === "late") {
+      } else if (newVal.attendanceStatus === "late") {
         selectedStatus.value = "มาสาย";
       } else {
         selectedStatus.value = "มาเรียน";
       }
+      // Save the initial status for resetting later
+      initialStatus.value = selectedStatus.value;
     }
-  }
+  },
+  { immediate: true }
 );
-
 
 // Define mappings for status
 const statusMap = {
@@ -34,13 +39,9 @@ const reverseStatusMap = {
   "มาสาย": "late",
 };
 
-// Set initial selected status in Thai
-selectedStatus.value = statusMap[attendanceStore.editAttendance?.attendanceStatus] || "";
-
-
-
-// Close the dialog
+// Close the dialog and reset the selected status to the initial value
 const closeDialog = () => {
+  selectedStatus.value = initialStatus.value; // Reset to initial value
   attendanceStore.showDialog = false;
 };
 
@@ -54,7 +55,7 @@ const updateAttendanceStatus = () => {
   // Convert the selected status back to English for storing
   attendanceStore.editAttendance.attendanceStatus = reverseStatusMap[selectedStatus.value];
   attendanceStore.updateAttendanceTeacher(attendanceStore.editAttendance);
-  closeDialog();
+  attendanceStore.showDialog = false;
 };
 </script>
 
@@ -85,7 +86,6 @@ const updateAttendanceStatus = () => {
                   ? 'red'
                   : attendanceStore.editAttendance?.attendanceStatus === 'late'
                   ? 'orange'
-                  
                   : 'green'
               }"
             >
@@ -112,10 +112,6 @@ const updateAttendanceStatus = () => {
   </v-dialog>
 </template>
 
-
-
-
-
 <style scoped>
 .text-center {
   text-align: center;
@@ -138,4 +134,3 @@ const updateAttendanceStatus = () => {
   text-transform: none;
 }
 </style>
-
