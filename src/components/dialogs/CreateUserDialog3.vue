@@ -50,6 +50,13 @@ async function save() {
         showSnackbar('โปรดกรอกอีเมลให้ถูกต้อง');
         return;
     }
+    // check if email is empty, follows the correct email format, and ends with @go.buu.ac.th
+  else if (!userStore.editUser.email ||
+    !/^[a-zA-Z0-9._%+-]+@go\.buu\.ac\.th$/.test(userStore.editUser.email)) {
+    showSnackbar('โปรดกรอกอีเมลที่ลงท้ายด้วย @go.buu.ac.th');
+    return;
+  }
+
     //checkEmailDuplicate
   const emailDuplicate = await userStore.checkEmailDuplicate(userStore.editUser.email);
   if (emailDuplicate) {
@@ -144,10 +151,13 @@ if (!userStore.editUser.status) {
                   ]">
                 </v-text-field>
               </v-col>
-              <!-- Email -->
-              <v-col cols="6">
+               <!-- Email -->
+               <v-col cols="12">
                 <v-text-field label="อีเมล" dense solo outlined rounded required v-model="userStore.editUser.email"
-                  :rules="[(v) => !!v || 'โปรดกรอกอีเมล', (v) => /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(v) || 'กรอกอีเมลให้ถูกต้อง']">
+                  :rules="[
+                    (v) => !!v || 'โปรดกรอกอีเมล',
+                    (v) => /^[a-zA-Z0-9._%+-]+@go\.buu\.ac\.th$/.test(v) || 'กรอกอีเมลให้ถูกต้อง (ต้องลงท้ายด้วย @go.buu.ac.th)'
+                  ]">
                 </v-text-field>
               </v-col>
               <!-- Status -->
