@@ -481,6 +481,7 @@ const updateAttdent = async () => {
     );
   }
 };
+
 const confirmAttendance = async (attendance: Attendance) => {
   if (confirm("Do you want to confirm this attendance?")) {
     try {
