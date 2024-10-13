@@ -50,6 +50,7 @@ const showCamera = ref(false);
 const videoRef = ref<HTMLVideoElement | null>(null);
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const assignmentManual = ref(false);
+const coursesId = ref("");
 
 const isTeacher = computed(() => userStore.currentUser?.role === "อาจารย์");
 const filteredAssignments = computed(() => {
@@ -327,6 +328,7 @@ const createPost = async () => {
   stopCamera();
   console.time("Total createPost execution time");
 
+  // Validation checks
   console.time("Validation check");
   if (nameAssignment.value === "") {
     console.timeEnd("Validation check");
@@ -336,6 +338,7 @@ const createPost = async () => {
     });
     return;
   }
+
   if ([...capturedImages.value, ...imageUrls.value].length > 20) {
     console.timeEnd("Validation check");
     Swal.fire({
@@ -344,16 +347,14 @@ const createPost = async () => {
     });
     return;
   }
-
   console.timeEnd("Validation check");
 
-  console.time("Room selection");
-  console.timeEnd("Room selection");
-
   console.time("Assignment creation");
+  
+  // Create new assignment object
   const newAssignment = {
     assignmentTime: new Date(),
-    nameAssignment: nameAssignment.value,
+    nameAssignment: nameAssignment.value || new Date().toLocaleString(), // Fallback to date if name is empty
     course: { ...courseStore.currentCourse! },
     assignmentId: 0,
     attdances: [],
@@ -364,82 +365,99 @@ const createPost = async () => {
     assignmentManual: assignmentManual.value,
   };
 
-  await assignmentStore.createAssignment(
-    {
-      ...newAssignment,
-      statusAssignment: "nodata",
-    },
-    imageFiles.value
-  );
-  console.log("newAssignment", assignmentStore.currentAssignment);
+  try {
+    // Step 1: Create assignment
+    await assignmentStore.createAssignment(
+      {
+        ...newAssignment,
+        statusAssignment: "nodata",
+      },
+      [] // Send empty file array initially
+    );
 
-  if (imageUrls.value.length > 0) {
-    imageUrls.value.push(...capturedImages.value);
-    router.push({
-      path: `/mapping2/assignment/${assignmentStore.currentAssignment?.assignmentId}`,
-      query: { imageUrls: imageUrls.value },
+    const createdAssignment = assignmentStore.currentAssignment;
+    console.log("newAssignment", createdAssignment);
+
+    if (!createdAssignment || !createdAssignment.assignmentId) {
+      console.error("Assignment creation failed or assignmentId is undefined.");
+      Swal.fire({
+        icon: "error",
+        title: "เกิดข้อผิดพลาดในการสร้างการเช็คชื่อ",
+      });
+      return;
+    }
+
+    console.timeEnd("Assignment creation");
+
+    // Proceed to image processing and uploads only if there are images
+    if (capturedImages.value.length > 0 || imageUrls.value.length > 0) {
+      console.time("Image processing");
+
+      // Resize and compress images before uploading
+      const processedImages = await Promise.all(
+        imageFiles.value.map((file) =>
+          resizeAndConvertImageToBase64(URL.createObjectURL(file), 800, 600, 0.7)
+        )
+      );
+
+      console.timeEnd("Image processing");
+
+      // Convert base64 images to File objects
+      const filesToUpload = processedImages.map((base64, index) =>
+        base64ToFile(base64, `image-${index + 1}.jpg`)
+      );
+
+      console.time("Backend image upload");
+
+      // Step 2: Upload images
+      await assignmentStore.createAssignment(
+        {
+          ...newAssignment,
+          statusAssignment: "nodata",
+        },
+        filesToUpload
+      );
+
+      console.timeEnd("Backend image upload");
+    }
+
+    // Image storage and navigation
+    console.time("Image storage and navigation");
+
+    // Combine captured images and image URLs, remove duplicates
+    const allImages = [...new Set([...capturedImages.value, ...imageUrls.value])]; // Avoid duplicates
+    localStorage.setItem("images", JSON.stringify(allImages));
+
+    if (allImages.length > 0) {
+      // Navigate to the next page
+      router.push({
+        path: `/mapping2/assignment/${createdAssignment.assignmentId}/course/${id.value}`,
+      });
+
+      // Clear the form and reset images after navigating
+      closeDialog();
+      nameAssignment.value = "";
+      imageUrls.value = [];
+      capturedImages.value = [];
+      imageFiles.value = [];
+    } else {
+      console.error("No images available for posting.");
+    }
+
+    console.timeEnd("Image storage and navigation");
+
+  } catch (error) {
+    console.error("Error creating assignment or uploading images:", error);
+    Swal.fire({
+      icon: "error",
+      title: "เกิดข้อผิดพลาดในการสร้างการเช็คชื่อหรือการอัปโหลดรูปภาพ",
+      text: error.message,
     });
   }
-  // If assignment.name is empty, set it to the current date and time
-  if (newAssignment.nameAssignment === "") {
-    newAssignment.nameAssignment = new Date().toLocaleString();
-  }
-  console.timeEnd("Assignment creation");
-
-  console.time("Image processing");
-  // Resize and compress images before uploading
-  const processedImages = await Promise.all(
-    imageFiles.value.map((file) =>
-      resizeAndConvertImageToBase64(URL.createObjectURL(file), 800, 600, 0.7)
-    )
-  );
-  console.timeEnd("Image processing");
-
-  // Convert base64 images to File objects
-  const filesToUpload = processedImages.map((base64, index) =>
-    base64ToFile(base64, `image-${index + 1}.jpg`)
-  );
-
-  console.time("Backend assignment creation");
-  // Create the assignment in the backend with the converted files
-  await assignmentStore.createAssignment(
-    {
-      ...newAssignment,
-      statusAssignment: "nodata",
-    },
-    filesToUpload
-  );
-  console.timeEnd("Backend assignment creation");
-
-  // Close the create post dialog
-  showDialog.value = false;
-
-  console.time("Image storage and navigation");
-  // Combine captured images and image URLs, and store them in localStorage
-  const allImages = [...capturedImages.value, ...imageUrls.value];
-  localStorage.setItem("images", JSON.stringify(allImages));
-
-  if (allImages.length > 0) {
-    // Navigate to the next page (this part is commented out as per your request)
-    router.push({
-      path: `/mapping2/assignment/${
-        assignmentStore.currentAssignment?.assignmentId
-      }/course/${id.value.toString()}`,
-    });
-
-    // Clear the form and images after navigating
-    closeDialog();
-    nameAssignment.value = "";
-    imageUrls.value = [];
-    capturedImages.value = [];
-    imageFiles.value = [];
-  } else {
-    console.error("No images available for posting.");
-  }
-  console.timeEnd("Image storage and navigation");
 
   console.timeEnd("Total createPost execution time");
 };
+
 
 // open show dialog and set value editAttendance
 const openDialog = (assignment: Assignment, user: User) => {
