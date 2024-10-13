@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, onMounted, ref } from "vue";
+import { defineProps, onMounted, ref,watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAssignmentStore } from "@/stores/assignment.store";
 import type Assignment from "@/stores/types/Assignment";
@@ -36,7 +36,21 @@ const props = defineProps<{
 
 onMounted(async () => {
   await assignmentStore.getAssignmentByCourseId(id.value.toString());
+  assignmentName.value = props.post.nameAssignment;
 });
+const assignmentName = ref<string>(props.post.nameAssignment || "");
+
+// Watch for changes to props.post and update assignmentName
+watch(
+  () => props.post,
+  (newVal) => {
+    assignmentName.value = newVal.nameAssignment;
+  }
+);
+const editAssignment = () => {
+  assignmentName.value = props.post.nameAssignment || ""; // Reset to the original value
+  showDialogEditAssignment.value = true; // Show edit dialog
+};
 
 function formatThaiDate(date: Date) {
   const thaiDate = date
@@ -50,6 +64,7 @@ function formatThaiDate(date: Date) {
 
   return `${thaiDate} ${shortYear}`;
 }
+
 function formatThaiTime(date: Date) {
   return date.toLocaleTimeString("th-TH", {
     hour: "numeric",
@@ -58,7 +73,6 @@ function formatThaiTime(date: Date) {
   });
 }
 
-
 const deleteAssignment = async (assignment: Assignment) => {
   try {
     // Use the `showConfirm_` function to show the confirmation dialog
@@ -66,7 +80,9 @@ const deleteAssignment = async (assignment: Assignment) => {
       `คุณต้องการลบการเช็คชื่อ ${assignment.nameAssignment} ใช่หรือไม่`,
       async () => {
         // If confirmed, proceed with deleting the assignment
-        await assignmentStore.deleteAssignment(assignment.assignmentId!.toString());
+        await assignmentStore.deleteAssignment(
+          assignment.assignmentId!.toString()
+        );
         await assignmentStore.getAssignmentByCourseId(id.value.toString());
 
         // Show success dialog after deletion using SweetAlert2
@@ -91,10 +107,6 @@ const deleteAssignment = async (assignment: Assignment) => {
   }
 };
 
-// function edit
-const editAssignment = async () => {
-  showDialogEditAssignment.value = true;
-};
 //create function goto mapping 2
 const recheckMapping = () => {
   assignmentStore.currentAssignment = props.post;
@@ -115,7 +127,9 @@ const gotoMappinfForStudent = () => {
 // goToMapping2
 const goToMapping2 = async () => {
   showDialog.value = true;
-  await attdentStore.getAttendanceByAssignmentId(props.post!.assignmentId! + "");
+  await attdentStore.getAttendanceByAssignmentId(
+    props.post!.assignmentId! + ""
+  );
 };
 // Mapping
 const mapping = () => {
@@ -134,7 +148,11 @@ const handleFileChange = (event: Event) => {
         const result = e.target?.result as string;
         if (result) {
           try {
-            const resizedImage = await resizeAndConvertImageToBase64(result, 800, 600);
+            const resizedImage = await resizeAndConvertImageToBase64(
+              result,
+              800,
+              600
+            );
             imageUrls.value.push(resizedImage);
             imageFiles.value.push(file);
           } catch (error) {
@@ -169,7 +187,8 @@ const resizeAndConvertImageToBase64 = (
       ctx.drawImage(img, 0, 0, width, height);
       resolve(canvas.toDataURL("image/jpeg"));
     };
-    img.onerror = () => reject(new Error(`Failed to load image at ${imageUrl}`));
+    img.onerror = () =>
+      reject(new Error(`Failed to load image at ${imageUrl}`));
     img.src = imageUrl;
   });
 };
@@ -221,13 +240,13 @@ const captureImage = () => {
 
 // updatePost
 const updatePost = async () => {
-  if (imageUrls.value.length > 0) {
+  if (imageUrls.value.length > 0 || imageFiles.value.length > 0) {
     imageUrls.value.push(...capturedImages.value);
     const allImages = [...capturedImages.value, ...imageUrls.value];
     localStorage.setItem("images", JSON.stringify(allImages));
     router.push({
       path: `/mapping2/assignment/${
-        assignmentStore.currentAssignment?.assignmentId
+        props.post.assignmentId
       }/course/${id.value.toString()}`,
     });
     imageUrls.value = [];
@@ -236,28 +255,104 @@ const updatePost = async () => {
     console.error("No images available for posting.");
   }
 };
+
 async function save() {
   try {
-    // Debug: Check if assignmentId is correctly set
-    console.log("Assignment ID to update:", props.post.assignmentId);
+    const updateAssignment: Assignment = {
+      ...props.post,
+      nameAssignment: assignmentName.value, // Use the edited name
+    };
 
-    // Ensure that assignmentId is valid
-    if (!props.post.assignmentId || parseInt(props.post.assignmentId + "") === 0) {
+    if (!props.post.assignmentId) {
       throw new Error("Invalid assignment ID");
     }
 
-    // Attempt to update the assignment with the new name
-    await assignmentStore.updateAssignment(props.post.assignmentId + "", props.post);
+    // Update the assignment in the store
+    await assignmentStore.updateAssignment(props.post.assignmentId + "", updateAssignment);
+
+    // Close the dialog after saving
     close();
-    console.log("Assignment updated successfully"); // Log success
+
+    // Show success message
+    Swal.fire({
+      icon: "success",
+      title: "อัปเดตการเช็คชื่อสำเร็จ",
+      text: "ชื่อการเช็คชื่อถูกอัปเดตเรียบร้อยแล้ว",
+      confirmButtonColor: "#3085d6",
+      confirmButtonText: "ตกลง",
+    }).then(()=>{
+      window.location.reload();
+    })
   } catch (error) {
-    console.error("Error updating assignment:", error); // Log any errors
+    console.error("Error updating assignment:", error);
+    Swal.fire({
+      icon: "error",
+      title: "เกิดข้อผิดพลาด",
+      text: "ไม่สามารถอัปเดตการเช็คชื่อได้",
+      confirmButtonColor: "#d33",
+      confirmButtonText: "ตกลง",
+    });
   }
 }
 
-function close() {
-  showDialogEditAssignment.value = false;
-}
+const close = () => {
+  assignmentName.value = props.post.nameAssignment || ""; // Reset to original value on cancel
+  showDialogEditAssignment.value = false; // Hide dialog
+  showDialog.value = false;
+};
+// closeDialog
+const closeDialog = () => {
+  showDialog.value = false;
+  // Clear the image data when the dialog is closed
+  capturedImages.value = [];
+  imageUrls.value = [];
+  imageFiles.value = [];
+  showCamera.value = false;
+  if (videoRef.value && videoRef.value.srcObject) {
+    const stream = videoRef.value.srcObject as MediaStream;
+    stream.getTracks().forEach((track) => track.stop());
+    videoRef.value.srcObject = null;
+  }
+
+};
+// removeImage
+const removeImage = (index: number) => {
+  if (index < capturedImages.value.length) {
+    capturedImages.value.splice(index, 1);
+  } else {
+    imageUrls.value.splice(index - capturedImages.value.length, 1);
+  }
+};
+const checkImageCountAndPost = async () => {
+  if ([...capturedImages.value, ...imageUrls.value].length > 20) {
+    // dialogclosw
+    showDialog.value = false;
+    Swal.fire({
+      icon: "error",
+      title: "ไม่สามารถอัปโหลดรูปภาพได้เกิน 20 รูป",
+    }).then(() => {
+      showDialog.value = true;
+    });
+
+    return;
+  }
+ 
+  if ([...capturedImages.value, ...imageUrls.value].length === 0) {
+    showDialog.value = false;
+
+    Swal.fire({
+      icon: "error",
+      title: "กรุณาเพิ่มรูปภาพ",
+    }).then(() => {
+      showDialog.value = true;
+    });
+
+    return;
+  } else {
+    await updatePost();
+     closeDialog();
+  }
+};
 </script>
 
 <template>
@@ -265,13 +360,22 @@ function close() {
     <v-card @click="gotoMappinfForStudent()">
       <v-card-text>
         <h4>
-          {{ props.post!.course!.user!.firstName + ' ' + props.post!.course!.user!.lastName }}
+          {{
+            props.post!.course!.user!.firstName +
+            " " +
+            props.post!.course!.user!.lastName
+          }}
           สร้างการเช็คชื่อ : {{ props.post.nameAssignment }}
         </h4>
       </v-card-text>
       <v-card-actions>
         <v-card-text>
-          {{ formatThaiDate(new Date(props.post!.createdDate!)) + " เวลา " +formatThaiTime(new Date(props.post!.createdDate!))+ " น." }}</v-card-text
+          {{
+            formatThaiDate(new Date(props.post!.createdDate!)) +
+            " เวลา " +
+            formatThaiTime(new Date(props.post!.createdDate!)) +
+            " น."
+          }}</v-card-text
         >
         <v-spacer></v-spacer>
         <!-- <v-btn >
@@ -281,7 +385,11 @@ function close() {
         <!-- Dropdown Menu for Teacher Actions -->
         <v-menu v-if="userStore.currentUser?.role == 'อาจารย์'" bottom right>
           <template v-slot:activator="{ props }">
-            <v-btn icon="mdi-dots-vertical" variant="text" v-bind="props"></v-btn>
+            <v-btn
+              icon="mdi-dots-vertical"
+              variant="text"
+              v-bind="props"
+            ></v-btn>
           </template>
           <v-list>
             <v-list-item @click="mapping">
@@ -290,7 +398,9 @@ function close() {
             <v-divider></v-divider>
 
             <v-list-item @click="recheckMapping">
-              <v-list-item-title>ยืนยันนิสิตที่ให้ตรวจสอบอีกครั้ง</v-list-item-title>
+              <v-list-item-title
+                >ยืนยันนิสิตที่ให้ตรวจสอบอีกครั้ง</v-list-item-title
+              >
             </v-list-item>
             <v-divider></v-divider>
             <v-list-item @click="goToMapping2">
@@ -316,14 +426,21 @@ function close() {
   <!-- Create Post Dialog -->
   <v-dialog v-model="showDialog" persistent max-width="600px">
     <v-card>
-      <v-card-title>
-        <span class="headline">Create Post</span>
-      </v-card-title>
+      
+
+      <v-divider></v-divider>
       <v-card-text>
         <v-container>
+          <!-- Assignment Name Input -->
           <v-row>
-            <h1>Upload file เพื่อเพิ่มนิสิตที่เข้าเรียน</h1>
+            <v-col cols="12" sm="12">
+              <v-card-title>
+                <h3>เพิ่มรูปภาพในงานเช็คชื่อ {{ props.post.nameAssignment }}</h3>
+              </v-card-title>
+            </v-col>
           </v-row>
+
+          <!-- File Upload Input -->
           <v-row>
             <v-col cols="12" sm="12">
               <v-file-input
@@ -337,40 +454,84 @@ function close() {
               ></v-file-input>
             </v-col>
           </v-row>
+
+          <!-- Camera Button -->
           <v-row>
             <v-col cols="12" sm="12">
-              <v-btn color="primary" @click="startCamera">Open Camera</v-btn>
+              <v-btn color="primary" @click="startCamera" block>
+                <v-icon left>mdi-camera</v-icon> เปิดกล้องเพื่อถ่ายรูป
+              </v-btn>
             </v-col>
           </v-row>
+
+          <!-- Camera View -->
           <v-row v-if="showCamera">
             <v-col cols="12" sm="12">
-              <video ref="videoRef" autoplay style="width: 100%"></video>
+              <video ref="videoRef" autoplay style="width: 100%; border-radius: 8px"></video>
               <canvas ref="canvasRef" style="display: none"></canvas>
             </v-col>
             <v-col cols="12" sm="6">
-              <v-btn @click="captureImage" block>Capture Image</v-btn>
+              <v-btn @click="captureImage" block color="primary">ถ่ายรูปภาพ</v-btn>
             </v-col>
             <v-col cols="12" sm="6">
-              <v-btn @click="stopCamera" block>Close Camera</v-btn>
+              <v-btn @click="stopCamera" block color="error">ปิดกล้องถ่ายรูป</v-btn>
             </v-col>
           </v-row>
+
+          <!-- Alert if image count exceeds 20 -->
           <v-row>
+            <v-col cols="12" sm="12">
+              <v-alert
+                v-if="capturedImages.length + imageUrls.length > 20"
+                type="error"
+                outlined
+                border="left"
+                elevation="2"
+                icon="mdi-alert"
+              >
+                ไม่สามารถอัปโหลดรูปภาพเกิน 20 รูป
+              </v-alert>
+            </v-col>
+          </v-row>
+
+          <!-- Uploaded and Captured Images Preview -->
+          <v-row class="scrollable-image-section">
             <v-col
               cols="12"
               sm="6"
               md="4"
               v-for="(image, index) in [...capturedImages, ...imageUrls]"
               :key="index"
+              class="image-container"
             >
-              <v-img :src="image" aspect-ratio="1" class="ma-2"></v-img>
+              <v-card outlined class="ma-2">
+                <v-img :src="image" aspect-ratio="1" class="ma-2"></v-img>
+                <v-btn
+                  icon
+                  @click="removeImage(index)"
+                  class="delete-icon"
+                  variant="text"
+                >
+                  <v-icon color="red">mdi-close</v-icon>
+                </v-btn>
+              </v-card>
             </v-col>
           </v-row>
         </v-container>
       </v-card-text>
+
+      <!-- Dialog Actions -->
       <v-card-actions>
+        <v-btn color="error" @click="closeDialog" outlined>ยกเลิก</v-btn>
         <v-spacer></v-spacer>
-        <v-btn color="error" @click="showDialog = false">ยกเลิก</v-btn>
-        <v-btn color="primary" @click="updatePost()">โพสต์</v-btn>
+        <v-btn
+          :disabled="capturedImages.length + imageUrls.length > 20 || nameAssignment === ''"
+          color="primary"
+          @click="checkImageCountAndPost"
+          outlined
+        >
+          โพสต์
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -378,38 +539,84 @@ function close() {
   <!-- Edit Assignment Dialog -->
   <v-dialog v-model="showDialogEditAssignment" max-width="600px" persistent>
     <v-card>
-      <!-- Dialog title without the close button -->
+      <!-- Close Button at the top-right corner -->
+      <v-btn
+        icon
+        class="close-button"
+        @click="close"
+        absolute
+        top
+        right
+      >
+        <v-icon>mdi-close</v-icon>
+      </v-btn>
+
       <v-card-title class="headline">
         แก้ไขชื่อการเช็คชื่อ
         <v-spacer></v-spacer>
-        <!-- Close button for dialog -->
-      
       </v-card-title>
-      
-      <!-- Dialog content with form -->
+
+      <!-- Form to edit assignment name -->
       <v-card-text>
         <v-form ref="form" v-model="isValid" @submit.prevent="save">
           <v-text-field
-            v-model="props.post.nameAssignment!"
+            v-model="assignmentName"
             label="Assignment Name"
             variant="outlined"
             outlined
             required
             maxlength="50"
             prepend-inner-icon="mdi-assignment"
-            :rules="[
-              (v) => !!v || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*',
-              (v) => (v && v.length >= 1 && v.length <= 50) || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*'
+            :rules="[ 
+              (v) => !!v || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*', 
+              (v) => (v && v.length >= 1 && v.length <= 50) || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*' 
             ]"
-          ></v-text-field>
+          />
         </v-form>
       </v-card-text>
-      
-      <!-- Dialog actions with Confirm and Cancel buttons -->
+
+      <!-- Dialog actions with save and cancel buttons -->
       <v-card-actions>
+        <v-btn color="error" @click="close">ยกเลิก</v-btn>
         <v-spacer></v-spacer>
-        <v-btn  color="error" @click="close()">ยกเลิก</v-btn>
-        <v-btn  color="primary" :disabled="!isValid" @click="save">ยืนยัน</v-btn>
+        <v-btn color="primary" :disabled="!isValid" @click="save">ยืนยัน</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+
+  <!-- Edit Assignment Dialog -->
+  <v-dialog v-model="showDialogEditAssignment" max-width="600px" persistent>
+    <v-card>
+      <v-card-title class="headline">
+        แก้ไขชื่อการเช็คชื่อ
+        <v-spacer></v-spacer>
+      </v-card-title>
+
+      <!-- Form to edit assignment name -->
+      <v-card-text>
+        <v-form ref="form" v-model="isValid" @submit.prevent="save">
+          <v-text-field
+            v-model="assignmentName"
+            label="Assignment Name"
+            variant="outlined"
+            outlined
+            required
+            maxlength="50"
+            prepend-inner-icon="mdi-assignment"
+            :rules="[ 
+              (v) => !!v || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*', 
+              (v) => (v && v.length >= 1 && v.length <= 50) || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*' 
+            ]"
+          />
+        </v-form>
+      </v-card-text>
+
+      <!-- Dialog actions with save and cancel buttons -->
+      <v-card-actions>
+        <v-btn color="error" @click="close">ยกเลิก</v-btn>
+        <v-spacer></v-spacer>
+        <v-btn color="primary" :disabled="!isValid" @click="save">ยืนยัน</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -423,11 +630,22 @@ function close() {
 }
 
 .close-button {
-  margin-right: -12px;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  
 }
 
-.v-btn.text {
-  text-transform: none;
-  font-weight: bold;
+.scrollable-image-section {
+  max-height: 400px;
+  overflow-y: auto;
+}
+.image-container {
+  position: relative;
+}
+.delete-icon {
+  position: absolute;
+  top: 5px;
+  right: 5px;
 }
 </style>

@@ -77,6 +77,8 @@ onMounted(async () => {
       faceapi.nets.faceLandmark68Net.loadFromUri("/models"),
       faceapi.nets.ssdMobilenetv1.loadFromUri("/models"),
     ]);
+    // get current course
+    await courseStore.getCourseById(route.params.courseId.toString());
     // get user by course id
     await userStore.getUserByCourseId(courseStore.currentCourse?.coursesId + "");
     await assignmentStore.getAssignmentById(route.params.assignmentId.toString());
@@ -116,6 +118,7 @@ onMounted(async () => {
       imageUrls.value.map((url, index) => loadImageAndProcess(url, index))
     );
     console.timeEnd("Image Processing Time");
+    await assignmentStore.getAssignmentById(route.params.assignmentId.toString());
 
     // Call createAttendance after all images have been processed
     if (assignmentStore.currentAssignment!.statusAssignment == "completed") {
@@ -474,10 +477,8 @@ const updateAttdent = async () => {
       );
       // console.log("User Attdent:", userAttdent);
       if (userAttdent) {
-        userAttdent.attendanceStatus = "มาเรียน";
-        userAttdent.attendanceConfirmStatus = identifiedUser
-          ? "confirmed"
-          : "notConfirmed";
+        userAttdent.attendanceStatus = "present";
+        userAttdent.attendanceConfirmStatus =  "notconfirm";
         userAttdent.attendanceScore = parseInt(
           (identifications.value[i].score * 100).toFixed(2)
         );
@@ -529,6 +530,7 @@ const reCheckAttendance = async (attendance: Attendance) => {
     await attendanceStore.rejectAttendanceByTeacher(
       attendance.attendanceId + ""
     );
+    
     if(attendance.user == null) {
       await attendanceStore.removeAttendance(attendance.attendanceId + "");
     }

@@ -19,6 +19,7 @@ watch(
   }
 );
 
+
 // Define mappings for status
 const statusMap = {
   present: "มาเรียน",
@@ -36,16 +37,7 @@ const reverseStatusMap = {
 // Set initial selected status in Thai
 selectedStatus.value = statusMap[attendanceStore.editAttendance?.attendanceStatus] || "";
 
-// Watch the selectedStatus and adjust if the user sets the status to present
-watch(
-  () => selectedStatus.value,
-  (newStatus) => {
-    if (newStatus === "มาเรียน") {
-      // Automatically adjust internal status if needed
-      attendanceStore.editAttendance!.attendanceStatus = "present";
-    }
-  }
-);
+
 
 // Close the dialog
 const closeDialog = () => {
@@ -93,6 +85,7 @@ const updateAttendanceStatus = () => {
                   ? 'red'
                   : attendanceStore.editAttendance?.attendanceStatus === 'late'
                   ? 'orange'
+                  
                   : 'green'
               }"
             >
