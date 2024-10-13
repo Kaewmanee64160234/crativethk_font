@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch,nextTick } from "vue";
+import { computed, onMounted, ref, watch, nextTick } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useAssignmentStore } from "@/stores/assignment.store";
 import CardAssigment from "@/components/assigment/CardAssigment.vue";
@@ -72,20 +72,20 @@ const filteredUsers = computed(() => {
   }
 });
 const handlePaste = (event: ClipboardEvent) => {
-      const pastedText = event.clipboardData?.getData('text') || '';
-      const combinedText = nameAssignment.value + pastedText;
+  const pastedText = event.clipboardData?.getData("text") || "";
+  const combinedText = nameAssignment.value + pastedText;
 
-      if (combinedText.length > 50) {
-        event.preventDefault();
-        nextTick(() => {
-          notifyError('ไม่สามารถกรอกเกิน 50 ตัวอักษร');
-        });
-      }
-    };
+  if (combinedText.length > 50) {
+    event.preventDefault();
+    nextTick(() => {
+      notifyError("ไม่สามารถกรอกเกิน 50 ตัวอักษร");
+    });
+  }
+};
 
-    const notifyError = (message: string) => {
-      console.error(message);
-    };
+const notifyError = (message: string) => {
+  console.error(message);
+};
 
 // Fetch assignments when the component mounts
 onMounted(async () => {
@@ -543,12 +543,33 @@ const closeDialog = () => {
   capturedImages.value = [];
   imageFiles.value = [];
 };
-const getAbsenceCount = (userId: string) => {
-  return attendanceStore!.attendances!.filter(
-    (attendance) =>
-      attendance.user?.userId === userId &&
-      attendance.attendanceStatus === "absent"
-  ).length;
+const calculateTotalScoreAndAbsence = (
+  userId: number,
+  assignments: Assignment[]
+): { totalScore: number; absentCount: number } => {
+  // Initialize totalScore and absentCount
+  let totalScore = 0;
+  let absentCount = 0;
+
+  // Loop through all assignments to calculate totalScore and count absences
+  assignments.forEach((assignment) => {
+    const status = getAttendanceStatus(
+      attendanceStore.attendances || [],
+      userId,
+      assignment.assignmentId!
+    );
+
+    // Increment totalScore based on attendance status
+    if (status === "present") {
+      totalScore += 1; // Full point for present
+    } else if (status === "late") {
+      totalScore += 0.5; // Half point for late
+    } else if (status === "absent") {
+      absentCount += 1; // Count absences
+    }
+  });
+
+  return { totalScore, absentCount };
 };
 </script>
 
@@ -932,8 +953,8 @@ const getAbsenceCount = (userId: string) => {
                 v-for="user in filteredUsers"
                 :key="user.userId"
                 :class="{
-              'highlight-red': getAbsenceCount(user.userId!) > 3,
-              'highlight-yellow': getAbsenceCount(user.userId!) === 3
+              'highlight-red':calculateTotalScoreAndAbsence(user.userId!, assignmentStore.assignments)
+              .absentCount > 3
             }"
               >
                 <td class="text-center vertical-divider">
@@ -941,7 +962,8 @@ const getAbsenceCount = (userId: string) => {
                 </td>
                 <td class="vertical-divider">
                   <span
-                    :class="{ 'highlighted-text': getAbsenceCount(user.userId!) > 3 }"
+                    :class="{ 'highlighted-text':         calculateTotalScoreAndAbsence(user.userId!, assignmentStore.assignments)
+          .absentCount > 3 }"
                   >
                     {{ user.firstName + " " + user.lastName }}
                   </span>

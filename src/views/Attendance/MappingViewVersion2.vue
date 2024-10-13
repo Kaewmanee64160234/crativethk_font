@@ -10,6 +10,7 @@ import { useAssignmentStore } from "@/stores/assignment.store";
 import { useCourseStore } from "@/stores/course.store";
 import { useAttendanceStore } from "@/stores/attendance.store";
 import type Attendance from "@/stores/types/Attendances";
+import Swal from "sweetalert2";
 
 interface CanvasRefs {
   [key: number]: HTMLCanvasElement;
@@ -63,7 +64,7 @@ const sortedAttendances = computed(() => {
 // Filtering attendances based on the selected dropdown option
 const filteredAttendances = computed(() => {
   if (filterOption.value === "ความถูกต้องน้อยกว่า 50%") {
-    return sortedAttendances.value!.filter((attendee) => attendee.attendanceScore! < 50);
+    return sortedAttendances.value!.filter((attendee) => attendee.attendanceScore! < 50 && attendee.attendanceStatus == "present");
   } else {
     return sortedAttendances.value;
   }
@@ -365,7 +366,7 @@ const createAttendance = async () => {
           attendanceId: 0,
           attendanceDate: new Date(),
           attendanceStatus: "present",
-          attendanceConfirmStatus: identifiedUser ? "confirmed" : "notConfirmed",
+          attendanceConfirmStatus: identifiedUser ? "confirmed" : "notconfirm",
           assignment: assignmentStore.currentAssignment,
           user: identifiedUser,
           attendanceImage: "",
@@ -406,7 +407,7 @@ const createAttendance = async () => {
           attendanceId: 0,
           attendanceDate: new Date(),
           attendanceStatus: "absent",
-          attendanceConfirmStatus: "notConfirmed",
+          attendanceConfirmStatus: "notconfirm",
           assignment: assignmentStore.currentAssignment,
           user: usersCreateUnknown[i],
           attendanceImage: "",
@@ -508,7 +509,7 @@ const updateAttdent = async () => {
 const confirmAttendance = async (attendance: Attendance) => {
   if (confirm("Do you want to confirm this attendance?")) {
     try {
-      attendance.attendanceStatus = "มาเรียน";
+      attendance.attendanceStatus = "present";
       attendance.attendanceConfirmStatus = "confirmed";
       await attendanceStore.confirmAttendanceByTeacher(attendance.attendanceId + "");
       alert("Attendance has been confirmed.");
@@ -530,11 +531,18 @@ const reCheckAttendance = async (attendance: Attendance) => {
     await attendanceStore.rejectAttendanceByTeacher(
       attendance.attendanceId + ""
     );
-    
     if(attendance.user == null) {
       await attendanceStore.removeAttendance(attendance.attendanceId + "");
     }
-    alert("Attendance has been recheck.");
+    Swal.fire({
+      icon: "success",
+      title: "เรียบร้อย",
+      text: "คุณได้ทำการปฏิเสธการเช็คชื่อนี้เรียบร้อยแล้ว",
+    }).then(async () => {
+      await attendanceStore.getAttendanceByAssignmentId(
+        route.params.assignmentId.toString()
+      );
+    });
   } catch (error) {
     console.error("Error recording attendance:", error);
     alert("Failed to recheck attendance.");
