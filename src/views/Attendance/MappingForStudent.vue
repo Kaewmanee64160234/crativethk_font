@@ -164,7 +164,7 @@ const goToCourseDetail = () => {
     <!-- No attendance detected -->
     <v-row v-else style="width: 100%;">
       <v-col v-if="attdent.length > 0" v-for="student in attdent" :key="student.attendanceId" cols="12" sm="6" md="4" lg="3">
-        <v-card class="pa-3 student-card" outlined>
+        <v-card v-if="isRecheckAllowed" class="pa-3 student-card" outlined>
           <!-- Student Information -->
           <v-row justify="center" align="center">
             <div class="d-flex flex-column align-items-center">
@@ -188,10 +188,22 @@ const goToCourseDetail = () => {
           <!-- Re-check Button -->
           <v-row class="mt-3">
             <v-col cols="12">
-              <v-btn v-if="userStore.currentUser?.role !== 'อาจารย์' && isRecheckAllowed && student.attendanceConfirmStatus === 'notconfirm'  " block color="#F6BB49" @click="confirmTagging()">
+              <v-btn v-if="userStore.currentUser?.role !== 'อาจารย์'  && student.attendanceConfirmStatus === 'notconfirm'  " block color="#F6BB49" @click="confirmTagging()">
                 ตรวจสอบอีกครั้ง
               </v-btn>
             </v-col>
+          </v-row>
+        </v-card>
+        <v-card   v-else class="student-card " outlined>
+          <v-row class="align-center justify-center">
+            <div class="text-start
+            ">
+              <div class="subtitle-1 bold-text mt-2" style="color: red;" >
+
+                หมดเวาลาการตรวจสอบการเข้าเรียน
+              </div>
+             
+            </div>
           </v-row>
         </v-card>
       </v-col>
