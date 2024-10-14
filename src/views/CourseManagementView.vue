@@ -37,7 +37,7 @@ const randomImage = () => {
 const messageStore = useMessageStore();
 onMounted(async () => {
   await userStore.getCurrentUser();
-  await courseStore.getCourseByTeachId(userStore.currentUser!.userId!);
+  await courseStore.getCourseByTeachId(userStore.currentUser?.userId!);
 });
 
 //create function click and push to /courseDetail/:idCourse
@@ -283,8 +283,9 @@ const delCourse = (idCourse: string, nameCourse: string, session: string) => {
 
 const confirmDelCourse = async (id: string) => {
   await courseStore.deleteCourse(id);
-  await courseStore.getCourseByTeachId(userStore.currentUser?.userId!);
   messageStore.showInfo("ลบรายวิชาเรียบร้อยแล้ว");
+  console.log(courseStore.courses.length);
+  await courseStore.getCourseByTeachId(userStore.currentUser?.userId!);
 };
 </script>
 <template>
