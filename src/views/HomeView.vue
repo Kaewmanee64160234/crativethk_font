@@ -59,9 +59,9 @@ const callback = (response: any) => {
         <p v-if="loginError">{{ loginErrorMessage }}</p>
       </div>
         <!-- </div> -->
-        <v-text-field   v-model="email"  label="Login Name" required></v-text-field>
+        <!-- <v-text-field   v-model="email"  label="Login Name" required></v-text-field>
         <v-btn color="white" style="background-color: #5D9C59; width:410px; height: 50px; margin-left: 10%; border-radius: 50px; box-shadow: rgba(50, 50, 93, 0.25) 0px 13px 27px -5px, rgba(0, 0, 0, 0.3) 0px 8px 16px -5px;"
-                      @click="login">Login</v-btn>
+                      @click="login">Login</v-btn> -->
       </div>
     </v-col>
   </v-row>

@@ -506,6 +506,13 @@ export const useUserStore = defineStore("userStore", () => {
     }
   };
 
+  // logpout
+  const logout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('users');
+    currentUser.value = undefined;
+  };
+
 
   return {
     searchUsersByMajorAndStatus,
@@ -559,5 +566,6 @@ export const useUserStore = defineStore("userStore", () => {
     searchDropdown3,
     searchDropdown4,
     searchDropdown5,
+    logout
   };
 });

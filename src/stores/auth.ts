@@ -42,11 +42,13 @@ export const useAuthStore = defineStore("authStore", () => {
         console.log("Stored token:", localStorage.getItem("token"));
         localStorage.setItem("users", JSON.stringify(response.data.user));
         console.log("current user", currentUser.value);
+        console.log("role", currentUser.value.role);
+        
         if (currentUser.value.role === "อาจารย์") {
           router.push("/courseManagement");
         }
         if (currentUser.value.role === "นิสิต") {
-          router.push("/userProfile");
+          router.push("/enrolmentManagement");
         }
         if (currentUser.value.role === "แอดมิน") {
           router.push("/userManagement");

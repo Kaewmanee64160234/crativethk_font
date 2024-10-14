@@ -2,6 +2,8 @@ import { createRouter, createWebHistory } from "vue-router";
 import HomeView from "../views/HomeView.vue";
 import { ref } from "vue";
 import { useUserStore } from "@/stores/user.store";
+import jwtDecode from 'jwt-decode';
+
 const user = ref<any | null>(localStorage.getItem("users"));
 const user_ = JSON.parse(user.value);
 const ezAutorized = () => {
@@ -30,6 +32,8 @@ const router = createRouter({
       },
       meta: {
         layout: "FullLayout",
+        requiresAuth: true,
+
       allowedRoles: ['แอดมิน'], 
 
       },
@@ -45,6 +49,8 @@ const router = createRouter({
       },
       meta: {
         layout: "FullLayout",
+        requiresAuth: true,
+
       allowedRoles: ['แอดมิน','อาจารย์'], 
 
       },
@@ -88,6 +94,8 @@ const router = createRouter({
       meta: {
         layout: "FullLayout",
       allowedRoles: ['นิสิต','อาจารย์'], 
+      requiresAuth: true,
+
 
         // requiresAuth: true,
         // beforeEnter:[ ezAutorized]
@@ -107,6 +115,7 @@ const router = createRouter({
         requiresAuth: true,
         allowedRoles: ['นิสิต','อาจารย์','แอดมิน'], 
 
+
       },
     },
     {
@@ -120,6 +129,8 @@ const router = createRouter({
       },
       meta: {
         layout: "FullLayout",
+        requiresAuth: true,
+
         allowedRoles: ['นิสิต','อาจารย์','แอดมิน'], 
 
       },
@@ -136,6 +147,8 @@ const router = createRouter({
       },
       meta: {
         layout: "FullLayout",
+        requiresAuth: true,
+
         allowedRoles: ['นิสิต','อาจารย์','แอดมิน'], 
 
       },
@@ -153,7 +166,7 @@ const router = createRouter({
       meta: {
         layout: "FullLayout",
         requiresAuth: true,
-        beforeEnter: [ezAutorized],
+
         allowedRoles: ['แอดมิน'], 
 
       },
@@ -169,6 +182,8 @@ const router = createRouter({
       },
       meta: {
         layout: "FullLayout",
+        requiresAuth: true,
+
         allowedRoles: ['นิสิต','อาจารย์','แอดมิน'], 
 
       },
@@ -183,6 +198,8 @@ const router = createRouter({
         menu: () => import("../components/headers/SubHeader.vue"),
       },
       meta: {
+        requiresAuth: true,
+
         allowedRoles: ['นิสิต','อาจารย์'], 
       }
     },
@@ -197,6 +214,8 @@ const router = createRouter({
         menu: () => import("../components/headers/SubHeader.vue"),
       },
       meta: {
+        requiresAuth: true,
+
         allowedRoles: ['อาจารย์'], 
       }
     },
@@ -210,6 +229,8 @@ const router = createRouter({
         menu: () => import("../components/headers/SubHeader.vue"),
       },
       meta: {
+        requiresAuth: true,
+
         allowedRoles: ['นิสิต','อาจารย์','แอดมิน'], 
       },
     },
@@ -224,6 +245,8 @@ const router = createRouter({
         menu: () => import("../components/headers/SubHeader.vue"),
       },
       meta: {
+        requiresAuth: true,
+
         allowedRoles: ['อาจารย์'], 
       }
     },
@@ -237,8 +260,40 @@ const router = createRouter({
         menu: () => import("../components/headers/SubHeader.vue"),
       },
       meta:{
+        requiresAuth: true,
+
         allowedRoles: ['นิสิต'], 
 
+      }
+    },
+    {
+      path: "/checkingHistory/:courseId",
+      name: "checkingHistory",
+      components: {
+        default: () => import("../views/checkingHistory.vue"),
+        header: () => import("../components/headers/MainHeader.vue"),
+        menu: () => import("../components/headers/SubHeader.vue"),
+      },
+      meta:{
+        requiresAuth: true,
+
+        allowedRoles: ['นิสิต'], 
+
+      }
+      // create page  not found
+    },
+    {
+      path: "/confirmRejectNotic/:noticId",
+      name: "confirmRejectNotic",
+      components: {
+        default: () => import("../views/Noticification/ConfirmRejectView.vue"),
+        header: () => import("../components/headers/MainHeader.vue"),
+        menu: () => import("../components/headers/SubHeader.vue"),
+      },
+      meta: {
+        requiresAuth: true,
+
+        allowedRoles: ['อาจารย์'], 
       }
     },
   
@@ -272,20 +327,44 @@ const router = createRouter({
   ],
 });
 
-router.beforeEach((to, from, next) => {
-  const userStore = useUserStore();
-  const userRole = userStore.currentUser?.role;  // Get the current user's role
-  const token = localStorage.getItem('token');   // Check if the user is logged in
-  
-  // Check if route requires authentication and roles
-  if (to.meta.requiresAuth && !token) {
-    next('/');  // Redirect to home if not authenticated
-  } else if (to.meta.allowedRoles && !to.meta.allowedRoles.includes(userRole)) {
-    next('/forbidden');  // Redirect to 403 page if user doesn't have the correct role
-  } else {
-    next();  // Continue navigation if everything is OK
+
+function isTokenExpired(token: string) {
+  try {
+    const decodedToken: any = jwtDecode(token); // Decode the token
+    const currentTime = Date.now() / 1000;  // Get current time in seconds
+    return decodedToken.exp < currentTime;  // Check if token is expired
+  } catch (error) {
+    return true; // If there's an error decoding, assume the token is expired
   }
+}
+
+router.beforeEach(async (to, from, next) => {
+  const userStore = useUserStore();
+  const token = localStorage.getItem('token');   // Retrieve the token from localStorage
+  userStore.getCurrentUser();
+  const userRole = userStore.currentUser?.role;  // Get the current user's role
+  
+  if (to.meta.requiresAuth) {
+    if (!token) {
+      return next('/');
+    }
+
+    if (isTokenExpired(token)) {
+      userStore.logout(); 
+      return next('/');  
+    }
+
+
+
+    // If the route has role-based restrictions, check the user's role
+    if (to.meta.allowedRoles && !to.meta.allowedRoles.includes(userRole)) {
+      return next('/forbidden');  // Redirect to 403 page if user doesn't have the correct role
+    }
+  }
+
+  next();  // Allow navigation if everything is fine
 });
 
-
 export default router;
+
+
