@@ -30,8 +30,8 @@ const router = createRouter({
       },
       meta: {
         layout: "FullLayout",
-        // requiresAuth: true,
-        // beforeEnter:[ ezAutorized]
+      allowedRoles: ['แอดมิน'], 
+
       },
     },
     {
@@ -45,6 +45,8 @@ const router = createRouter({
       },
       meta: {
         layout: "FullLayout",
+      allowedRoles: ['แอดมิน','อาจารย์'], 
+
       },
       beforeEnter: (to, from, next) => {
         const userStore = useUserStore();
@@ -85,6 +87,8 @@ const router = createRouter({
       },
       meta: {
         layout: "FullLayout",
+      allowedRoles: ['นิสิต','อาจารย์'], 
+
         // requiresAuth: true,
         // beforeEnter:[ ezAutorized]
       },
@@ -101,7 +105,8 @@ const router = createRouter({
       meta: {
         layout: "FullLayout",
         requiresAuth: true,
-        beforeEnter: [ezAutorized],
+        allowedRoles: ['นิสิต','อาจารย์','แอดมิน'], 
+
       },
     },
     {
@@ -115,6 +120,8 @@ const router = createRouter({
       },
       meta: {
         layout: "FullLayout",
+        allowedRoles: ['นิสิต','อาจารย์','แอดมิน'], 
+
       },
     },
 
@@ -129,6 +136,8 @@ const router = createRouter({
       },
       meta: {
         layout: "FullLayout",
+        allowedRoles: ['นิสิต','อาจารย์','แอดมิน'], 
+
       },
     },
 
@@ -145,6 +154,8 @@ const router = createRouter({
         layout: "FullLayout",
         requiresAuth: true,
         beforeEnter: [ezAutorized],
+        allowedRoles: ['แอดมิน'], 
+
       },
     },
     {
@@ -158,6 +169,8 @@ const router = createRouter({
       },
       meta: {
         layout: "FullLayout",
+        allowedRoles: ['นิสิต','อาจารย์','แอดมิน'], 
+
       },
     },
     {
@@ -169,6 +182,9 @@ const router = createRouter({
         header: () => import("../components/headers/MainHeader.vue"),
         menu: () => import("../components/headers/SubHeader.vue"),
       },
+      meta: {
+        allowedRoles: ['นิสิต','อาจารย์'], 
+      }
     },
     //resheckMappingTeacher
     {
@@ -180,6 +196,9 @@ const router = createRouter({
         header: () => import("../components/headers/MainHeader.vue"),
         menu: () => import("../components/headers/SubHeader.vue"),
       },
+      meta: {
+        allowedRoles: ['อาจารย์'], 
+      }
     },
     // profileView
     {
@@ -190,17 +209,11 @@ const router = createRouter({
         header: () => import("../components/headers/MainHeader.vue"),
         menu: () => import("../components/headers/SubHeader.vue"),
       },
-    },
-    // chekinghistory
-    {
-      path: "/checkingHistory",
-      name: "checkingHistory",
-      components: {
-        default: () => import("../views/checkingHistory.vue"),
-        header: () => import("../components/headers/MainHeader.vue"),
-        menu: () => import("../components/headers/SubHeader.vue"),
+      meta: {
+        allowedRoles: ['นิสิต','อาจารย์','แอดมิน'], 
       },
     },
+
     // confirmRejectNotic
     {
       path: "/confirmRejectNotic/:noticId",
@@ -210,16 +223,9 @@ const router = createRouter({
         header: () => import("../components/headers/MainHeader.vue"),
         menu: () => import("../components/headers/SubHeader.vue"),
       },
-    },
-    {
-      path: "/checkingHistory/:courseId",
-      name: "checkingHistory",
-      components: {
-        default: () => import("../views/checkingHistory.vue"),
-        header: () => import("../components/headers/MainHeader.vue"),
-        menu: () => import("../components/headers/SubHeader.vue"),
-      },
-      // create page  not found
+      meta: {
+        allowedRoles: ['อาจารย์'], 
+      }
     },
     // tagging face 
     {
@@ -230,6 +236,10 @@ const router = createRouter({
         header: () => import("../components/headers/MainHeader.vue"),
         menu: () => import("../components/headers/SubHeader.vue"),
       },
+      meta:{
+        allowedRoles: ['นิสิต'], 
+
+      }
     },
   
 
@@ -246,7 +256,36 @@ const router = createRouter({
         layout: "FullLayout",
       },
     },
+
+    {
+      path: '/forbidden',
+      name: 'forbidden',
+      components: {
+        default: () => import("../views/ForbiddenView.vue"),
+        header: () => import("../components/headers/MainHeader.vue"),
+        menu: () => import("../components/headers/SubHeader.vue"),
+      },
+      meta: {
+        layout: "FullLayout",
+      },
+    },
   ],
 });
+
+router.beforeEach((to, from, next) => {
+  const userStore = useUserStore();
+  const userRole = userStore.currentUser?.role;  // Get the current user's role
+  const token = localStorage.getItem('token');   // Check if the user is logged in
+  
+  // Check if route requires authentication and roles
+  if (to.meta.requiresAuth && !token) {
+    next('/');  // Redirect to home if not authenticated
+  } else if (to.meta.allowedRoles && !to.meta.allowedRoles.includes(userRole)) {
+    next('/forbidden');  // Redirect to 403 page if user doesn't have the correct role
+  } else {
+    next();  // Continue navigation if everything is OK
+  }
+});
+
 
 export default router;

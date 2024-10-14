@@ -10,8 +10,11 @@ const showNotifications = ref(false);
 const router = useRouter();
 
 onMounted(async () => {
-  await notiforupdateStore.fetchAllNotifications(); // Fetch notifications on mount
-  await notiforupdateStore.getNotificationByUserReceive(userStore.currentUser!);
+  if(userStore.currentUser?.role === 'อาจารย์') {
+    await notiforupdateStore.fetchAllNotifications();
+    await notiforupdateStore.getNotificationByUserReceive(userStore.currentUser!);
+  }
+ 
 });
 
 // Function to navigate to ConfirmRejectView with notification ID

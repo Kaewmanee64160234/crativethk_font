@@ -199,10 +199,8 @@ const goToCourseDetail = () => {
             <div class="text-start
             ">
               <div class="subtitle-1 bold-text mt-2" style="color: red;" >
-
                 หมดเวาลาการตรวจสอบการเข้าเรียน
               </div>
-             
             </div>
           </v-row>
         </v-card>
