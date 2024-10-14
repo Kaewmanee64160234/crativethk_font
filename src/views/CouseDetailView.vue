@@ -105,7 +105,10 @@ watch(
   () => assignmentStore.currentPage,
   async (newPage, oldPage) => {
     if (newPage !== oldPage) {
-      await assignmentStore.getAssignmentByCourseIdPaginate(id.value.toString(), newPage);
+      await assignmentStore.getAssignmentByCourseIdPaginate(
+        id.value.toString(),
+        newPage
+      );
       posts.value = assignmentStore.assignments;
       totalPage.value = assignmentStore.total;
     }
@@ -113,7 +116,10 @@ watch(
 );
 
 // Calculate total score based on attendance status.
-const calculateTotalScore = (userId: number, assignments: Assignment[]): number => {
+const calculateTotalScore = (
+  userId: number,
+  assignments: Assignment[]
+): number => {
   return assignments.reduce((total, assignment) => {
     const status = getAttendanceStatus(
       attendanceStore.attendances || [],
@@ -137,7 +143,8 @@ const getAttendanceStatus = (
 ): string => {
   const attendanceIndex = attendances.findIndex(
     (att: Attendance) =>
-      att.user?.userId === userId && att.assignment?.assignmentId === assignmentId
+      att.user?.userId === userId &&
+      att.assignment?.assignmentId === assignmentId
   );
   return attendances[attendanceIndex]
     ? attendances[attendanceIndex].attendanceStatus
@@ -164,7 +171,11 @@ const handleFileChange = (event: Event) => {
         const result = e.target?.result as string;
         if (result) {
           try {
-            const resizedImage = await resizeAndConvertImageToBase64(result, 800, 600);
+            const resizedImage = await resizeAndConvertImageToBase64(
+              result,
+              800,
+              600
+            );
             imageUrls.value.push(resizedImage);
             imageFiles.value.push(file);
           } catch (error) {
@@ -294,7 +305,8 @@ const resizeAndConvertImageToBase64 = (
       const resizedImage = canvas.toDataURL("image/jpeg", quality);
       resolve(resizedImage);
     };
-    img.onerror = () => reject(new Error(`Failed to load image at ${imageUrl}`));
+    img.onerror = () =>
+      reject(new Error(`Failed to load image at ${imageUrl}`));
     img.src = imageUrl;
   });
 };
@@ -384,7 +396,12 @@ const createPost = async () => {
       // Resize and compress images before uploading
       const processedImages = await Promise.all(
         imageFiles.value.map((file) =>
-          resizeAndConvertImageToBase64(URL.createObjectURL(file), 800, 600, 0.7)
+          resizeAndConvertImageToBase64(
+            URL.createObjectURL(file),
+            800,
+            600,
+            0.7
+          )
         )
       );
 
@@ -398,11 +415,8 @@ const createPost = async () => {
       console.time("Backend image upload");
 
       // Step 2: Upload images
-      await assignmentStore.createAssignment(
-        {
-          ...newAssignment,
-          statusAssignment: "nodata",
-        },
+      await assignmentStore.updateImageAssignment(
+        createdAssignment.assignmentId + "",
         filesToUpload
       );
 
@@ -413,7 +427,9 @@ const createPost = async () => {
     console.time("Image storage and navigation");
 
     // Combine captured images and image URLs, remove duplicates
-    const allImages = [...new Set([...capturedImages.value, ...imageUrls.value])]; // Avoid duplicates
+    const allImages = [
+      ...new Set([...capturedImages.value, ...imageUrls.value]),
+    ]; // Avoid duplicates
     localStorage.setItem("images", JSON.stringify(allImages));
 
     if (allImages.length > 0) {
@@ -651,7 +667,9 @@ const calculateTotalScoreAndAbsence = (
                     <v-card-title style="white-space: nowrap">
                       <h5>
                         อัปโหลดรูปภาพ
-                        <span style="color: red">(ห้ามอัปโหลดรูปภาพเกิน 20 รูป)</span>
+                        <span style="color: red"
+                          >(ห้ามอัปโหลดรูปภาพเกิน 20 รูป)</span
+                        >
                       </h5>
                     </v-card-title>
                     <v-card-text>
@@ -745,13 +763,16 @@ const calculateTotalScoreAndAbsence = (
 
             <!-- Dialog Actions (Fixed at the Bottom) -->
             <v-card-actions class="fixed-action-buttons">
-              <v-btn color="error" @click="closeDialog()" outlined> ยกเลิก </v-btn>
+              <v-btn color="error" @click="closeDialog()" outlined>
+                ยกเลิก
+              </v-btn>
               <v-spacer></v-spacer>
 
               <!-- Disable the post button if more than 20 images or if the name is empty -->
               <v-btn
                 :disabled="
-                  [...capturedImages, ...imageUrls].length > 20 || nameAssignment === ''
+                  [...capturedImages, ...imageUrls].length > 20 ||
+                  nameAssignment === ''
                 "
                 color="primary"
                 @click="checkImageCountAndPost"
@@ -764,7 +785,13 @@ const calculateTotalScoreAndAbsence = (
         </v-dialog>
 
         <v-row class="pt-5" v-if="posts.length > 0">
-          <v-col cols="12" sm="12" md="12" v-for="post in posts" :key="post.assignmentId">
+          <v-col
+            cols="12"
+            sm="12"
+            md="12"
+            v-for="post in posts"
+            :key="post.assignmentId"
+          >
             <CardAssigment :post="post"></CardAssigment>
           </v-col>
         </v-row>
@@ -871,7 +898,13 @@ const calculateTotalScoreAndAbsence = (
               </v-col>
               <v-col cols="10" style="display: flex; align-items: center">
                 <div>
-                  {{ member.studentId + " " + member.firstName + " " + member.lastName }}
+                  {{
+                    member.studentId +
+                    " " +
+                    member.firstName +
+                    " " +
+                    member.lastName
+                  }}
                 </div>
               </v-col>
               <v-divider></v-divider>
@@ -894,12 +927,20 @@ const calculateTotalScoreAndAbsence = (
             </h1>
           </v-card-title>
         </v-card>
-        <v-card class="mx-auto" outlined style="padding: 20px; margin-top: 10px">
+        <v-card
+          class="mx-auto"
+          outlined
+          style="padding: 20px; margin-top: 10px"
+        >
           <v-row>
             <v-col col="12" sm="10" class="text-primary">
               <v-card-title>คะแนนการเช็คชื่อ</v-card-title>
             </v-col>
-            <v-col col="12" sm="2" v-if="userStore.currentUser?.role === 'อาจารย์'">
+            <v-col
+              col="12"
+              sm="2"
+              v-if="userStore.currentUser?.role === 'อาจารย์'"
+            >
               <v-btn
                 color="#093271"
                 @click="exportFile"

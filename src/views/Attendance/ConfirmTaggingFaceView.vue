@@ -415,7 +415,6 @@ const closeDialogShowDialog = () => {
         v-for="(imageUrl, index) in imageUrls"
         :key="index"
       >
-      {{ imageUrl }}
         <div class="position-relative mb-3">
           <img
             :src="imageUrl"
