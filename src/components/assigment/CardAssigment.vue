@@ -425,116 +425,111 @@ const checkImageCountAndPost = async () => {
   <ConfirmDialog ref="confirmDlg" />
   <!-- Create Post Dialog -->
   <v-dialog v-model="showDialog" persistent max-width="600px">
-    <v-card>
-      
+  <v-card>
+    <v-card-title>
+      <h3>เพิ่มรูปภาพในงานเช็คชื่อ {{ props.post.nameAssignment }}</h3>
+    
+    </v-card-title>
 
-      <v-divider></v-divider>
-      <v-card-text>
-        <v-container>
-          <!-- Assignment Name Input -->
-          <v-row>
-            <v-col cols="12" sm="12">
-              <v-card-title>
-                <h3>เพิ่มรูปภาพในงานเช็คชื่อ {{ props.post.nameAssignment }}</h3>
-              </v-card-title>
-            </v-col>
-          </v-row>
+    <v-divider></v-divider>
 
-          <!-- File Upload Input -->
-          <v-row>
-            <v-col cols="12" sm="12">
-              <v-file-input
-                label="Upload Images"
-                prepend-icon="mdi-camera"
-                filled
-                @change="handleFileChange"
-                accept="image/*"
-                variant="outlined"
-                multiple
-              ></v-file-input>
-            </v-col>
-          </v-row>
+    <v-card-text>
+      <v-container>
+        <!-- File Upload Input -->
+        <v-row>
+          <v-col cols="12" sm="12">
+            <v-file-input
+              label="Upload Images"
+              prepend-icon="mdi-camera"
+              filled
+              @change="handleFileChange"
+              accept="image/*"
+              variant="outlined"
+              multiple
+            ></v-file-input>
+          </v-col>
+        </v-row>
 
-          <!-- Camera Button -->
-          <v-row>
-            <v-col cols="12" sm="12">
-              <v-btn color="primary" @click="startCamera" block>
-                <v-icon left>mdi-camera</v-icon> เปิดกล้องเพื่อถ่ายรูป
-              </v-btn>
-            </v-col>
-          </v-row>
+        <!-- Camera Button -->
+        <v-row>
+          <v-col cols="12" sm="12">
+            <v-btn color="primary" @click="startCamera" block>
+              <v-icon left>mdi-camera</v-icon> เปิดกล้องเพื่อถ่ายรูป
+            </v-btn>
+          </v-col>
+        </v-row>
 
-          <!-- Camera View -->
-          <v-row v-if="showCamera">
-            <v-col cols="12" sm="12">
-              <video ref="videoRef" autoplay style="width: 100%; border-radius: 8px"></video>
-              <canvas ref="canvasRef" style="display: none"></canvas>
-            </v-col>
-            <v-col cols="12" sm="6">
-              <v-btn @click="captureImage" block color="primary">ถ่ายรูปภาพ</v-btn>
-            </v-col>
-            <v-col cols="12" sm="6">
-              <v-btn @click="stopCamera" block color="error">ปิดกล้องถ่ายรูป</v-btn>
-            </v-col>
-          </v-row>
+        <!-- Camera View -->
+        <v-row v-if="showCamera">
+          <v-col cols="12" sm="12">
+            <video ref="videoRef" autoplay style="width: 100%; border-radius: 8px"></video>
+            <canvas ref="canvasRef" style="display: none"></canvas>
+          </v-col>
+          <v-col cols="12" sm="6">
+            <v-btn @click="captureImage" block color="primary">ถ่ายรูปภาพ</v-btn>
+          </v-col>
+          <v-col cols="12" sm="6">
+            <v-btn @click="stopCamera" block color="error">ปิดกล้องถ่ายรูป</v-btn>
+          </v-col>
+        </v-row>
 
-          <!-- Alert if image count exceeds 20 -->
-          <v-row>
-            <v-col cols="12" sm="12">
-              <v-alert
-                v-if="capturedImages.length + imageUrls.length > 20"
-                type="error"
-                outlined
-                border="left"
-                elevation="2"
-                icon="mdi-alert"
-              >
-                ไม่สามารถอัปโหลดรูปภาพเกิน 20 รูป
-              </v-alert>
-            </v-col>
-          </v-row>
-
-          <!-- Uploaded and Captured Images Preview -->
-          <v-row class="scrollable-image-section">
-            <v-col
-              cols="12"
-              sm="6"
-              md="4"
-              v-for="(image, index) in [...capturedImages, ...imageUrls]"
-              :key="index"
-              class="image-container"
+        <!-- Alert if image count exceeds 20 -->
+        <v-row>
+          <v-col cols="12" sm="12">
+            <v-alert
+              v-if="capturedImages.length + imageUrls.length > 20"
+              type="error"
+              outlined
+              border="left"
+              elevation="2"
+              icon="mdi-alert"
             >
-              <v-card outlined class="ma-2">
-                <v-img :src="image" aspect-ratio="1" class="ma-2"></v-img>
-                <v-btn
-                  icon
-                  @click="removeImage(index)"
-                  class="delete-icon"
-                  variant="text"
-                >
-                  <v-icon color="red">mdi-close</v-icon>
-                </v-btn>
-              </v-card>
-            </v-col>
-          </v-row>
-        </v-container>
-      </v-card-text>
+              ไม่สามารถอัปโหลดรูปภาพเกิน 20 รูป
+            </v-alert>
+          </v-col>
+        </v-row>
 
-      <!-- Dialog Actions -->
-      <v-card-actions>
-        <v-btn color="error" @click="closeDialog" outlined>ยกเลิก</v-btn>
-        <v-spacer></v-spacer>
-        <v-btn
-          :disabled="capturedImages.length + imageUrls.length > 20 || nameAssignment === ''"
-          color="primary"
-          @click="checkImageCountAndPost"
-          outlined
-        >
-          โพสต์
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+        <!-- Uploaded and Captured Images Preview -->
+        <v-row class="scrollable-image-section">
+          <v-col
+            cols="12"
+            sm="6"
+            md="4"
+            v-for="(image, index) in [...capturedImages, ...imageUrls]"
+            :key="index"
+            class="image-container"
+          >
+            <v-card outlined class="ma-2">
+              <v-img :src="image" aspect-ratio="1" class="ma-2"></v-img>
+              <v-btn
+                icon
+                @click="removeImage(index)"
+                class="delete-icon"
+                variant="text"
+              >
+                <v-icon color="red">mdi-close</v-icon>
+              </v-btn>
+            </v-card>
+          </v-col>
+        </v-row>
+      </v-container>
+    </v-card-text>
+
+    <!-- Dialog Actions -->
+    <v-card-actions>
+      <v-btn color="error" @click="closeDialog" outlined>ยกเลิก</v-btn>
+      <v-spacer></v-spacer>
+      <v-btn
+        :disabled="capturedImages.length + imageUrls.length > 20 || nameAssignment === ''"
+        color="primary"
+        @click="checkImageCountAndPost"
+        outlined
+      >
+        โพสต์
+      </v-btn>
+    </v-card-actions>
+  </v-card>
+</v-dialog>
 
   <!-- Edit Assignment Dialog -->
   <v-dialog v-model="showDialogEditAssignment" max-width="600px" persistent>
@@ -621,7 +616,6 @@ const checkImageCountAndPost = async () => {
     </v-card>
   </v-dialog>
 </template>
-
 <style scoped>
 .headline {
   display: flex;
@@ -633,16 +627,17 @@ const checkImageCountAndPost = async () => {
   position: absolute;
   top: 12px;
   right: 12px;
-  
 }
 
 .scrollable-image-section {
   max-height: 400px;
   overflow-y: auto;
 }
+
 .image-container {
   position: relative;
 }
+
 .delete-icon {
   position: absolute;
   top: 5px;

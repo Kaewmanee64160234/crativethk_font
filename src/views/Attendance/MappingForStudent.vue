@@ -19,6 +19,7 @@ const messageStore = useMessageStore();
 const attdent = ref<Attendance[]>([]);
 const queryCourseId = route.params.courseId;
 const isRecheckAllowed = ref(true);
+const assignmentId = route.params.assignmentId;
 
 onMounted(async () => {
   await userStore.getCurrentUser();
@@ -92,7 +93,7 @@ const goBackToCourseDetail = () => {
 };
 
 const confirmTagging = () => {
-  router.push("/taggingFace/course/" + queryCourseId + "/assignment/" + route.params.assignmentId);
+  router.push("/taggingFace/course/" + queryCourseId + "/assignment/" + assignmentId);
 };
 // goToCourseDetail
 const goToCourseDetail = () => {

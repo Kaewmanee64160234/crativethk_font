@@ -48,7 +48,7 @@ export const useAuthStore = defineStore("authStore", () => {
           router.push("/courseManagement");
         }
         if (currentUser.value.role === "นิสิต") {
-          router.push("/enrolmentManagement");
+          router.push("/userProfile");
         }
         if (currentUser.value.role === "แอดมิน") {
           router.push("/userManagement");
