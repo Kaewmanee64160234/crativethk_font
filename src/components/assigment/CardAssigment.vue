@@ -438,15 +438,20 @@ const checkImageCountAndPost = async () => {
         <!-- File Upload Input -->
         <v-row>
           <v-col cols="12" sm="12">
+                      <h5>
+                        อัปโหลดรูปภาพ
+                        <span style="color: red"
+                          >(ห้ามอัปโหลดรูปภาพเกิน 20 รูป)</span
+                        >
+                      </h5>
             <v-file-input
-              label="Upload Images"
-              prepend-icon="mdi-camera"
-              filled
-              @change="handleFileChange"
-              accept="image/*"
-              variant="outlined"
-              multiple
-            ></v-file-input>
+                        prepend-icon="mdi-image-multiple"
+                        filled
+                        @change="handleFileChange"
+                        accept="image/*"
+                        variant="outlined"
+                        multiple
+                      ></v-file-input>
           </v-col>
         </v-row>
 
@@ -525,7 +530,7 @@ const checkImageCountAndPost = async () => {
         @click="checkImageCountAndPost"
         outlined
       >
-        โพสต์
+      ยืนยัน
       </v-btn>
     </v-card-actions>
   </v-card>
@@ -573,39 +578,41 @@ const checkImageCountAndPost = async () => {
 
   <!-- Edit Assignment Dialog -->
   <v-dialog v-model="showDialogEditAssignment" max-width="600px" persistent>
-    <v-card>
-      <v-card-title class="headline">
-        แก้ไขชื่อการเช็คชื่อ
-        <v-spacer></v-spacer>
-      </v-card-title>
+  <v-card>
+    <!-- Centered title -->
+    <v-card-title class="headline d-flex justify-center">
+      แก้ไขชื่อการเช็คชื่อ
+    </v-card-title>
 
-      <!-- Form to edit assignment name -->
-      <v-card-text>
-        <v-form ref="form" v-model="isValid" @submit.prevent="save">
-          <v-text-field
-            v-model="assignmentName"
-            label="ชื่อรายการเช็คชื่อ"
-            variant="outlined"
-            outlined
-            required
-            maxlength="50"
-            prepend-inner-icon="mdi-assignment"
-            :rules="[ 
-              (v) => !!v || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*', 
-              (v) => (v && v.length >= 1 && v.length <= 50) || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*' 
-            ]"
-          />
-        </v-form>
-      </v-card-text>
+    <!-- Form to edit assignment name -->
+    <v-card-text>
+      <v-form ref="form" v-model="isValid" @submit.prevent="save">
+        <v-text-field
+          v-model="assignmentName"
+          label="ชื่อรายการเช็คชื่อ"
+          variant="outlined"
+          outlined
+          required
+          maxlength="50"
+          prepend-inner-icon="mdi-assignment"
+          :rules="[ 
+            (v) => !!v || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*', 
+            (v) => (v && v.length >= 1 && v.length <= 50) || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*' 
+          ]"
+        />
+      </v-form>
+    </v-card-text>
 
-      <!-- Dialog actions with save and cancel buttons -->
-      <v-card-actions>
-        <v-btn color="error" @click="close">ยกเลิก</v-btn>
-        <v-spacer></v-spacer>
-        <v-btn color="primary" :disabled="!isValid" @click="save">ยืนยัน</v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+    <!-- Dialog actions with save and cancel buttons -->
+    <v-card-actions class="d-flex justify-end">
+      <v-btn color="error" @click="close">ยกเลิก</v-btn>
+      <v-spacer></v-spacer>
+      <v-btn color="primary" :disabled="!isValid" @click="save">ยืนยัน</v-btn>
+    </v-card-actions>
+  </v-card>
+</v-dialog>
+
+
 </template>
 <style scoped>
 .headline {
