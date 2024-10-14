@@ -22,6 +22,8 @@ const isRecheckAllowed = ref(true);
 const assignmentId = route.params.assignmentId;
 
 onMounted(async () => {
+
+
   await userStore.getCurrentUser();
   await assignmentStore.getAssignmentById(route.params.assignmentId.toString());
   await attendanceStore.getAttendanceByAssignmentId(route.params.assignmentId.toString());
@@ -98,6 +100,7 @@ const confirmTagging = () => {
 // goToCourseDetail
 const goToCourseDetail = () => {
   router.push("/courseDetail/" + queryCourseId);
+
 };
 </script>
 
