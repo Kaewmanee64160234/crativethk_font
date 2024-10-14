@@ -40,7 +40,7 @@ onMounted(async () => {
   attdent.value = [];
   attdent.value.push(...attendanceStore.attendances!.filter((attend: Attendance) => 
     (attend.user?.studentId === userStore.currentUser?.studentId) && 
-    (attend.attendanceImage !== 'noimage.jpg')
+    (attend.attendanceImage !== 'noimage.jpg') && attend.attendanceStatus === 'present'
   ));
 });
 
@@ -211,13 +211,18 @@ const goToCourseDetail = () => {
           <v-row class="align-center justify-center">
             <div class="text-start">
               <div class="subtitle-1 bold-text mt-2">
-                ไม่สามารถตรวจจับการเข้าร่วมของคุณได้
+                ระบบไม่สามารถตรวจจับการเข้าร่วมของคุณได้
               </div>
-              <v-btn class="mt-3" color="primary" @click="confirmTagging()">
-                ยืนยันว่าคุณอยู่ในห้องเรียน
-              </v-btn>
+             
             </div>
           </v-row>
+          <v-row class="align-center justify-center">
+        
+
+          <v-btn class="mt-3" color="primary" @click="confirmTagging()">
+                ยืนยันว่าคุณอยู่ในห้องเรียน
+              </v-btn>
+              </v-row>  
         </v-card>
         <v-card v-else class="student-card " outlined>
           <v-row class="align-center justify-center">

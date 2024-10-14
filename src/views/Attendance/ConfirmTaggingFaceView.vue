@@ -37,12 +37,18 @@ const loadModels = async () => {
 };
 
 const fetchImages = async () => {
+  
   const assignmentId = route.params.assignmentId;
   await assignmentStore.getAssignmentById(assignmentId + "");
   const images = assignmentStore.currentAssignment?.assignmentImages || [];
   imageUrls.value = images.map(
-    (image) =>
-      `${import.meta.env.VITE_API_URL}/assignments/image/filename/${image}`
+    (image) =>{
+  console.log("Fetching images",image);
+
+  return  `${import.meta.env.VITE_API_URL}/assignments/image/filename/${image}`
+ 
+    }
+
   );
 };
 
@@ -409,6 +415,7 @@ const closeDialogShowDialog = () => {
         v-for="(imageUrl, index) in imageUrls"
         :key="index"
       >
+      {{ imageUrl }}
         <div class="position-relative mb-3">
           <img
             :src="imageUrl"

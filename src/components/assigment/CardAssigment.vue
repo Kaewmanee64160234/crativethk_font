@@ -534,29 +534,17 @@ const checkImageCountAndPost = async () => {
   <!-- Edit Assignment Dialog -->
   <v-dialog v-model="showDialogEditAssignment" max-width="600px" persistent>
     <v-card>
-      <!-- Close Button at the top-right corner -->
-      <v-btn
-        icon
-        class="close-button"
-        @click="close"
-        absolute
-        top
-        right
-      >
-        <v-icon>mdi-close</v-icon>
-      </v-btn>
-
-      <v-card-title class="headline">
-        แก้ไขชื่อการเช็คชื่อ
-        <v-spacer></v-spacer>
+      <v-card-title class="headline" style="text-align: center; font-weight: bold;">
+        แก้ไขชื่อรายการเช็คชื่อ
       </v-card-title>
 
-      <!-- Form to edit assignment name -->
+      <v-divider></v-divider>
+
       <v-card-text>
         <v-form ref="form" v-model="isValid" @submit.prevent="save">
           <v-text-field
             v-model="assignmentName"
-            label="Assignment Name"
+            label="ชื่อรายการเช็คชื่อ"
             variant="outlined"
             outlined
             required
@@ -570,11 +558,14 @@ const checkImageCountAndPost = async () => {
         </v-form>
       </v-card-text>
 
-      <!-- Dialog actions with save and cancel buttons -->
-      <v-card-actions>
-        <v-btn color="error" @click="close">ยกเลิก</v-btn>
-        <v-spacer></v-spacer>
-        <v-btn color="primary" :disabled="!isValid" @click="save">ยืนยัน</v-btn>
+      <!-- Dialog Actions -->
+      <v-card-actions style="justify-content: space-between;">
+        <v-btn color="error" @click="close" style="color: red; font-weight: bold;">
+          ยกเลิก
+        </v-btn>
+        <v-btn color="primary" :disabled="!isValid" @click="save" style="color: blue; font-weight: bold;">
+          ยืนยัน
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -593,7 +584,7 @@ const checkImageCountAndPost = async () => {
         <v-form ref="form" v-model="isValid" @submit.prevent="save">
           <v-text-field
             v-model="assignmentName"
-            label="Assignment Name"
+            label="ชื่อรายการเช็คชื่อ"
             variant="outlined"
             outlined
             required
