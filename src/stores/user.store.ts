@@ -6,6 +6,7 @@ import { mapToUser, type User } from "./types/User";
 import user from "@/services/user";
 import { useMessageStore } from "./message";
 import notiforupdate from "@/services/notiforupdate";
+import router from "@/router";
 
 export const useUserStore = defineStore("userStore", () => {
   const users = ref<User[]>([]);
@@ -511,6 +512,7 @@ export const useUserStore = defineStore("userStore", () => {
     localStorage.removeItem('token');
     localStorage.removeItem('users');
     currentUser.value = undefined;
+    router.push('/');
   };
 
 

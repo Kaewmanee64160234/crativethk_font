@@ -1,6 +1,9 @@
 <script lang="ts" setup>
 import { useUserStore } from "@/stores/user.store";
 const userStore = useUserStore();
+const logout = () => {
+  userStore.logout();
+};
 </script>
 <template>
   <v-card>
@@ -21,7 +24,7 @@ const userStore = useUserStore();
             <v-list-item link to="/register" prepend-icon="mdi-folder-arrow-up" title="อัปโหลดข้อมูลนิสิต" value="upload-std"></v-list-item>
           </div>
         </v-list>
-        <v-list-item class="bottom-list-item" link to="/" prepend-icon="mdi-location-exit" title="ออกจากระบบ" value="exit"></v-list-item>
+        <v-list-item class="bottom-list-item" link @click="logout" prepend-icon="mdi-location-exit" title="ออกจากระบบ" value="exit"></v-list-item>
       <RouterView name="menu"></RouterView>
     </v-navigation-drawer>
   </v-card>
