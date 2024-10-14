@@ -15,11 +15,10 @@ const userStore = useUserStore();
 const route = useRoute();
 
 const url = import.meta.env.VITE_API_URL;
-const queryCourseId = ref("");
+const queryCourseId = route.params.courseId;
 onMounted(async () => {
   attendanceStore.attendancesList = []
   const id = route.params.assignmentId;
-  queryCourseId.value = route.params.courseId + "";
   await attendanceStore.getAttendanceByStatusInAssignment(id + ""); 
   await assignmentStore.getAssignmentById(id + "");
   await userStore.getUserByCourseId(
@@ -34,7 +33,7 @@ onMounted(async () => {
 });
 
 const goBackToCourseDetail = () => {
-  router.push("/courseDetail/" + queryCourseId.value);
+  router.push("/courseDetail/" + queryCourseId);
 };
 const goToAssignmentDetail = () => {
   router.push(

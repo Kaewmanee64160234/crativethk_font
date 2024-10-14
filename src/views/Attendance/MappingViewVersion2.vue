@@ -639,10 +639,17 @@ const goToCourseDetail = () => {
                   <v-card-title class="bold-text mt-2 text-center ellipsis">
                     {{
                       attendee.user
-                        ? attendee.user?.studentId +
-                          " " +
-                          attendee.user?.firstName
+                        ? attendee.user?.studentId 
+                          
                         : "ไม่พบในฐานข้อมูล"
+                    }}
+                    <br>
+                    {{
+                      attendee.user
+                        ?
+                     attendee.user?.firstName + ' ' + attendee.user?.lastName 
+                        : ""
+                 
                     }}
                   </v-card-title>
                 </v-row>

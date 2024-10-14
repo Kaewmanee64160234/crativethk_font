@@ -171,7 +171,7 @@ const goToCourseDetail = () => {
               <div v-if="student.user">
                 <div class="subtitle-1 bold-text mt-2">
                  
-                  {{ student.user.studentId + " " + student.user.firstName }}
+                  {{ student.user.studentId + " " + student.user.firstName  }}
                 </div>
               </div>
               <div v-else class="text-center red--text bold-text mt-2">
