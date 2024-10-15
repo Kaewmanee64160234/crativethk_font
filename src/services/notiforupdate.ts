@@ -64,5 +64,13 @@ function sendEmailToTeacher(teacherFirstName: string, teacherLastName: string, u
   });
 }
 
+ //getNotification last created by userId
+function getNotificationByUserId(id: string) {
+  return http.get(`/notiforupdates/lastCreated/${id}`, 
+    {params: {id}}
+  );
+}
 
-export default { sendEmailToTeacher,updateNotiforupdateReject, getNotificationByUserReceive,getAllNotiforupdates,createNotificationUpdate,getNotiforupdateById,updateNotiforupdateConfirm, deleteNotiforupdate, getNotiforupdateByUserId };
+
+
+export default { getNotificationByUserId, sendEmailToTeacher,updateNotiforupdateReject, getNotificationByUserReceive,getAllNotiforupdates,createNotificationUpdate,getNotiforupdateById,updateNotiforupdateConfirm, deleteNotiforupdate, getNotiforupdateByUserId };

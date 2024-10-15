@@ -257,8 +257,12 @@ export const useUserStore = defineStore("userStore", () => {
       } else {
         await userService.saveUser(editUser.value);
       }
-
-
+      currentPage.value = 1;
+      itemsPerPage.value = 20;
+      currentPage.value = 1;
+      totalUsers.value = 0;
+      searchDropdown2.value = 'วิทยาการคอมพิวเตอร์';
+      searchDropdown3.value = 'กำลังศึกษา';
       // closeDialog();
     } catch (e) {
       console.error("Failed to save user:", e);
@@ -284,7 +288,7 @@ export const useUserStore = defineStore("userStore", () => {
       console.log(e);
     }
   };
-  const closeDialog = () => {
+  const closeDialog = async () => {
     showDialog.value = false;
     showDialog2.value = false;
     showDialog3.value = false;
@@ -293,6 +297,8 @@ export const useUserStore = defineStore("userStore", () => {
     showEditDialog.value = false;
     showEditDialog2.value = false;
     showEditDialog3.value = false;
+    //getUsers
+    getUsers();
   };
 
   const closeImageDialog = () => {

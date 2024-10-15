@@ -210,7 +210,7 @@ async function processImage(image: HTMLImageElement, index: number) {
     console.timeEnd(`Image Detection and Descriptor Time - Image ${index}`);
   }
 
-  
+
 }
 
 
@@ -365,7 +365,13 @@ async function save() {
   if (userStore.currentUser?.registerStatus != "notConfirmed") {
     if (imageUrls.value && imageUrls.value.length > 0) {
       try {
-        await Promise.all(
+        await notiStore.getNotiforupdateByLastId(userStore.currentUser?.userId+'');
+        console.log("currentNotiforupdate", notiStore.currentNotiforupdate);
+    
+        
+        
+        if(notiStore.currentNotiforupdate?.statusconfirmation !== "pending"){
+          await Promise.all(
           imageUrls.value.map((url, index) => loadImageAndProcess(url, index))
         );
 
@@ -513,6 +519,14 @@ async function save() {
             }
           });
         }
+        }else{
+          // show dialog and returnm
+          // show snaak notification
+          showDialog.value = true;
+          showSnackbar("รอการตรวจสอบจากระบบเนื่องจากคุณกำลังรออนุมัติจากคำขอก่อนหน้านี้", "error");
+
+        }
+     
       } catch (error) {
         console.error("Error in save function:", error);
         messageStore.showError("An error occurred during the save process.");
@@ -696,7 +710,6 @@ const clearSelectedTeacher = () => {
 </script>
 
 <template>
-  <v-container class="pt-12">
     <v-dialog v-model="showDialog" height="800" persistent>
       <v-card class="rounded-lg" outlined>
         <!-- Loader Overlay -->
@@ -717,19 +730,9 @@ const clearSelectedTeacher = () => {
           <!-- Existing Images -->
           <!-- {{ images }} -->
           <v-row>
-            <v-col
-              v-for="(image, index) in images"
-              :key="'existing-' + index"
-              cols="2"
-              md="2"
-              lg="2"
-              class="image-container"
-            >
-              <v-img
-                :src="image"
-                aspect-ratio="1"
-                class="rounded-lg d-flex align-center justify-center"
-              ></v-img>
+            <v-col v-for="(image, index) in images" :key="'existing-' + index" cols="2" md="2" lg="2"
+              class="image-container">
+              <v-img :src="image" aspect-ratio="1" class="rounded-lg d-flex align-center justify-center"></v-img>
             </v-col>
           </v-row>
 
@@ -738,26 +741,11 @@ const clearSelectedTeacher = () => {
             <v-col cols="12">
               <v-text class="font-weight-bold">รูปภาพที่อัปโหลด</v-text>
             </v-col>
-            <v-col
-              v-for="(image, index) in imageUrls"
-              :key="'uploaded-' + index"
-              cols="2"
-              md="2"
-              lg="2"
-              class="image-container"
-            >
-              <v-img
-                :src="image"
-                aspect-ratio="1"
-                class="rounded-lg ma-2 d-flex align-center justify-center"
-              >
-                <v-icon
-                  class="remove-btn"
-                  color="red"
-                  @click="() => deleteImage(index)"
-                  size="40"
-                  >mdi mdi-close-circle-outline</v-icon
-                >
+            <v-col v-for="(image, index) in imageUrls" :key="'uploaded-' + index" cols="2" md="2" lg="2"
+              class="image-container">
+              <v-img :src="image" aspect-ratio="1" class="rounded-lg ma-2 d-flex align-center justify-center">
+                <v-icon class="remove-btn" color="red" @click="() => deleteImage(index)" size="40">mdi
+                  mdi-close-circle-outline</v-icon>
               </v-img>
             </v-col>
           </v-row>
@@ -765,58 +753,30 @@ const clearSelectedTeacher = () => {
           <v-row>
             <v-col cols="12" class="mt-4">
               <div style="margin-bottom: 1%; font-weight: bold">อัปโหลดรูปภาพ</div>
-              <v-file-input
-                :key="fileInputKey"
-                multiple
-                prepend-icon="mdi-camera"
-                filled
-                @change="handleFileChange"
-                accept="image/*"
-                variant="outlined"
-                :disabled="checkConfirmImage()"
-                :rules="uploadRules"
-              ></v-file-input>
+              <v-file-input :key="fileInputKey" multiple prepend-icon="mdi-camera" filled @change="handleFileChange"
+                accept="image/*" variant="outlined" :disabled="checkConfirmImage()" :rules="uploadRules"></v-file-input>
             </v-col>
           </v-row>
           <!-- Button to Select Teacher -->
           <v-row class="my-4">
             <v-col cols="12">
-              <v-row
-                align="center"
-                v-if="userStore.currentUser?.registerStatus === 'confirmed'"
-              >
+              <v-row align="center" v-if="userStore.currentUser?.registerStatus === 'confirmed'">
                 <v-col cols="auto">
-                  <v-text
-                    class="font-weight-bold"
-                    style="font-size: 16px; color: #424242"
-                  >
+                  <v-text class="font-weight-bold" style="font-size: 16px; color: #424242">
                     เลือกครูที่จะส่งรูปภาพ:
                   </v-text>
                 </v-col>
                 <v-col cols="auto">
-                  <v-btn
-                    color="primary"
-                    elevation="2"
-                    rounded
-                    class="px-4"
-                    @click="showTeacherDialog = true"
-                  >
+                  <v-btn color="primary" elevation="2" rounded class="px-4" @click="showTeacherDialog = true">
                     เลือกอาจารย์
                   </v-btn>
                 </v-col>
               </v-row>
             </v-col>
-            <v-col
-              cols="12"
-              class="mt-2"
-              v-if="userStore.currentUser?.registerStatus === 'confirmed'"
-            >
+            <v-col cols="12" class="mt-2" v-if="userStore.currentUser?.registerStatus === 'confirmed'">
               <v-row align="center">
                 <v-col cols="auto">
-                  <v-text
-                    class="font-weight-bold"
-                    style="font-size: 16px; color: #424242"
-                  >
+                  <v-text class="font-weight-bold" style="font-size: 16px; color: #424242">
                     อาจารย์ที่เลือก:
                   </v-text>
                 </v-col>
@@ -837,13 +797,8 @@ const clearSelectedTeacher = () => {
               <v-divider></v-divider>
               <v-card-text>
                 <v-list>
-                  <v-list-item
-                    v-for="teacher in teachers"
-                    :key="teacher.userId"
-                    @click="selectTeacher(teacher)"
-                    class="teacher-list-item"
-                    style="cursor: pointer"
-                  >
+                  <v-list-item v-for="teacher in teachers" :key="teacher.userId" @click="selectTeacher(teacher)"
+                    class="teacher-list-item" style="cursor: pointer">
                     <v-list-item-content>
                       <v-list-item-title class="text-body-1" style="font-weight: 500">
                         {{ teacher.firstName }} {{ teacher.lastName }}
@@ -854,29 +809,17 @@ const clearSelectedTeacher = () => {
               </v-card-text>
               <v-divider></v-divider>
               <v-card-actions class="justify-space-between">
-                <v-btn
-                  
-                  color="red"
-                  class="font-weight-bold"
-                  @click="clearSelectedTeacher"
-                >
+                <v-btn color="red" class="font-weight-bold" @click="clearSelectedTeacher">
                   ยกเลิก
                 </v-btn>
-                <v-btn
-                  color="primary"
-                  class="font-weight-bold"
-                  @click="confirmTeacherSelection"
-                >
+                <v-btn color="primary" class="font-weight-bold" @click="confirmTeacherSelection">
                   ยืนยัน
                 </v-btn>
               </v-card-actions>
             </v-card>
           </v-dialog>
           <!-- Upload Button -->
-          <v-row
-            v-if="!hasUploadedImages"
-            style="justify-content: center; font-weight: bold"
-          >
+          <v-row v-if="!hasUploadedImages" style="justify-content: center; font-weight: bold">
             <div style="color: red">ไม่มีรูปภาพ</div>
           </v-row>
           <v-row>
@@ -884,21 +827,14 @@ const clearSelectedTeacher = () => {
               ยกเลิก
             </v-btn>
             <v-spacer></v-spacer>
-            <v-btn
-              :disabled="!canUpload"
-              style="font-size: 20px"
-              color="primary"
-              @click="save"
-              v-tooltip="'กรุณาอัปโหลดรูปภาพให้ครบ 5 รูป โดยรูปภาพห้ามซ้ำกัน'"
-              variant="text"
-            >
+            <v-btn :disabled="!canUpload" style="font-size: 20px" color="primary" @click="save"
+              v-tooltip="'กรุณาอัปโหลดรูปภาพให้ครบ 5 รูป โดยรูปภาพห้ามซ้ำกัน'" variant="text">
               ยืนยัน
             </v-btn>
           </v-row>
         </v-card-text>
       </v-card>
     </v-dialog>
-  </v-container>
   <!-- Snackbar for showing errors -->
   <v-snackbar v-model="snackbarVisible" :color="snackbarColor" top right :timeout="3000">
     {{ snackbarMessage }}
