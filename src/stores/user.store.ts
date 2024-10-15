@@ -516,7 +516,9 @@ export const useUserStore = defineStore("userStore", () => {
     localStorage.removeItem('token');
     localStorage.removeItem('users');
     currentUser.value = undefined;
+    window.location.reload();
     router.push('/');
+
   };
 
 

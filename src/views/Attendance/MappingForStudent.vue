@@ -42,7 +42,7 @@ onMounted(async () => {
   attdent.value = [];
   attdent.value.push(...attendanceStore.attendances!.filter((attend: Attendance) => 
     (attend.user?.studentId === userStore.currentUser?.studentId) && 
-    (attend.attendanceImage !== 'noimage.jpg') && attend.attendanceStatus === 'present'
+    (attend.attendanceImage !== 'noimage.jpg') && (attend.attendanceStatus === 'present' || attend.attendanceStatus === 'late')
   ));
 });
 
@@ -95,7 +95,9 @@ const goBackToCourseDetail = () => {
 };
 
 const confirmTagging = () => {
+
   router.push("/taggingFace/course/" + queryCourseId + "/assignment/" + assignmentId);
+
 };
 // goToCourseDetail
 const goToCourseDetail = () => {
