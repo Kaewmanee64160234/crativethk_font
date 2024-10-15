@@ -351,8 +351,8 @@ async function saveUserUpdate() {
       await userStore.saveUser();
 
       showDialog.value = false;
-      messageStore.showInfo("Image upload completed.");
-      // await userStore.getUsersById(userStore.currentUser?.userId!);
+      messageStore.showInfo("อัปโหลดรูปภาพสำเร็จ");
+      window.location.reload();
     } catch (error) {
       messageStore.showError("Failed to save user data.");
       console.error("Save error:", error);
@@ -362,7 +362,7 @@ async function saveUserUpdate() {
   }
 }
 async function save() {
-  if (userStore.currentUser?.registerStatus != "notConfirmed") {
+  if (userStore.currentUser?.registerStatus === "confirmed") {
     if (imageUrls.value && imageUrls.value.length > 0) {
       try {
         await Promise.all(
@@ -405,16 +405,8 @@ async function save() {
           await saveUserUpdate();
           messageStore.showConfirm("อัปโหลดรูปภาพสำเร็จ");
 
-          if (userStore.currentUser!.registerStatus !== "confirmed") {
-            userStore.currentUser!.registerStatus = "notConfirmed";
-            await userStore.updateRegisterStatus(
-              userStore.currentUser!.userId!,
-              userStore.currentUser!
-            );
-          }
-
           await userStore.getUsersById(userStore.currentUser?.userId!);
-        } else if (selectedTeacherName.value == "") {
+        } else if (selectedTeacherName.value == "" && userStore.currentUser?.registerStatus === "confirmed") {
           showDialog.value = true;
           showSnackbar("โปรดใส่ชื่ออาจารย์ที่ต้องการส่งรูปภาพ");
         } else {
@@ -521,7 +513,16 @@ async function save() {
       messageStore.showError("No images available to send.");
     }
   } else {
-    await saveUserUpdate();
+    if (userStore.currentUser!.registerStatus === "reConfirmed") {
+      console.log("reConfirmed",userStore.currentUser!.registerStatus);
+            userStore.currentUser!.registerStatus = "notConfirmed";
+            await userStore.updateRegisterStatus(
+              userStore.currentUser!.userId!,
+              userStore.currentUser!
+            );
+          }
+
+    await saveUserUpdate();      
     await close();
   }
 }
@@ -645,9 +646,6 @@ function checkDuplicateImage(newImageBase64: string): boolean {
 const hasUploadedImages = computed(() => imageUrls.value.length > 0);
 
 const canUpload = computed(() => imageFiles.value.length === 5);
-const uploadRules = computed(() => [
-  () => (imageFiles.value.length === 5 ? true : "ต้องอัปโหลดรูปภาพให้ครบ 5 รูป"),
-]);
 
 const deleteImage = (index: number) => {
   imageUrls.value.splice(index, 1);
@@ -655,14 +653,8 @@ const deleteImage = (index: number) => {
   // console.log("image", imageUrls.value)
 };
 const checkConfirmImage = () => {
-  const created = new Date(userStore.currentUser?.createdDate!);
-  const updated = new Date(userStore.currentUser?.updatedDate!);
-
-  // This will compare full date and time
-  const isSameDateTime = created.getTime() !== updated.getTime(); // Compares timestamp
-
-  console.log("isSameDateTime", isSameDateTime);
-  if (isSameDateTime && userStore.currentUser?.registerStatus === "notConfirmed") {
+  console.log("image", userStore.currentUser?.images);
+  if (userStore.currentUser?.images?.length !== 0 && userStore.currentUser?.registerStatus === "notConfirmed") {
     console.log("ya1");
     return true;
   } else {
@@ -670,7 +662,7 @@ const checkConfirmImage = () => {
     return false;
   }
 };
-console.log("user2", userStore.currentUser);
+
 // confirmTeacherSelection
 const confirmTeacherSelection = () => {
   if (selectedTeacher.value) {
@@ -693,6 +685,7 @@ const clearSelectedTeacher = () => {
   selectedTeacher.value = null;
   showTeacherDialog.value = false;
 };
+const showTeacherSelection = computed(() => userStore.currentUser?.registerStatus === 'confirmed');
 </script>
 
 <template>
@@ -774,16 +767,15 @@ const clearSelectedTeacher = () => {
                 accept="image/*"
                 variant="outlined"
                 :disabled="checkConfirmImage()"
-                :rules="uploadRules"
+                :error-messages="imageFiles.length === 5? [] : ['ต้องอัปโหลดรูปภาพให้ครบ 5 รูป']" 
               ></v-file-input>
             </v-col>
           </v-row>
           <!-- Button to Select Teacher -->
-          <v-row class="my-4">
+          <v-row class="my-4"  v-if="showTeacherSelection">
             <v-col cols="12">
               <v-row
                 align="center"
-                v-if="userStore.currentUser?.registerStatus === 'confirmed'"
               >
                 <v-col cols="auto">
                   <v-text
@@ -809,7 +801,6 @@ const clearSelectedTeacher = () => {
             <v-col
               cols="12"
               class="mt-2"
-              v-if="userStore.currentUser?.registerStatus === 'confirmed'"
             >
               <v-row align="center">
                 <v-col cols="auto">
