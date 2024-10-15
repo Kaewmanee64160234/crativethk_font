@@ -65,6 +65,8 @@ async function save() {
   }
     await userStore.saveUser();
     await userStore.resetUser();
+    userStore.currentPage = 1;
+    await userStore.getAdminPagination();
     await userStore.closeDialog();
 }
 

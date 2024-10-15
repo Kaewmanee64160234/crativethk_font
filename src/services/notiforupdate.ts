@@ -64,5 +64,12 @@ function sendEmailToTeacher(teacherFirstName: string, teacherLastName: string, u
   });
 }
 
+//get notification status
+function getNotiforupdateStatus(status: string) {
+  return http.get(`/notiforupdates/status/${status}`,
+    {params: {status}});
+}
 
-export default { sendEmailToTeacher,updateNotiforupdateReject, getNotificationByUserReceive,getAllNotiforupdates,createNotificationUpdate,getNotiforupdateById,updateNotiforupdateConfirm, deleteNotiforupdate, getNotiforupdateByUserId };
+
+
+export default { getNotiforupdateStatus, sendEmailToTeacher,updateNotiforupdateReject, getNotificationByUserReceive,getAllNotiforupdates,createNotificationUpdate,getNotiforupdateById,updateNotiforupdateConfirm, deleteNotiforupdate, getNotiforupdateByUserId };

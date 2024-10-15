@@ -25,7 +25,7 @@ const adminPage = ref(1);
 onMounted(async () => {
   await userStore.getUsersById(userStore.currentUser?.userId!);
   await userStore.getCurrentUser()
-  await userStore.getUsers();
+  // await userStore.getUsers();
   await userStore.fetchPaginatedUsers();
   updateYearOptions();
   userStore.searchDropdown2 = 'วิทยาการคอมพิวเตอร์';
@@ -105,7 +105,6 @@ const paginatedTeachers = computed(() => userStore.users.filter(user => user.rol
 const paginatedAdmins = computed(() => userStore.users.filter(user => user.role === 'แอดมิน'));
 
 
-
 const showEditedDialog = (user: User) => {
   if (user.role == 'นิสิต') {
     // Show the student edit dialog
@@ -125,6 +124,7 @@ const showEditedDialog = (user: User) => {
   } else {
     console.log('User does not have a valid ID');
   }
+  userStore.fetchPaginatedUsers();
 }
 </script>
 <template>

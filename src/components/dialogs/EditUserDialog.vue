@@ -4,12 +4,14 @@ import { useUserStore } from "@/stores/user.store";
 import * as faceapi from "face-api.js";
 import ImageEditDialog from "@/components/dialogs/ImageEditDialog.vue";
 import { onMounted, ref } from "vue";
+
 onMounted(async () => {
   await loadModels();
 });
 
 const userStore = useUserStore();
 const url = import.meta.env.VITE_API_URL;
+
 // Snackbar state
 const snackbarVisible = ref(false);
 const snackbarMessage = ref("");
@@ -22,92 +24,73 @@ function showSnackbar(message: string, color: string = "error") {
 }
 
 async function save() {
+  // Process face images and get face descriptions
   const faceDescriptions = await processFiles(userStore.editUser.files);
   const dataFaceBase64 = faceDescriptions.map((faceDescription) =>
     float32ArrayToBase64(faceDescription)
   );
   userStore.editUser.faceDescriptions = dataFaceBase64;
-  console.log(userStore.editUser.faceDescriptions);
-  //check if studentId is empty and not 8 numbers
-  if (
-    !userStore.editUser.studentId ||
-    !/^[0-9]{8}$/.test(userStore.editUser.studentId)
-  ) {
-    return;
-  } else if (!userStore.editUser.firstName || !userStore.editUser.lastName ||
-    !/^[ก-๙\s]+$/.test(userStore.editUser.firstName) ||
-    !/^[ก-๙\s]+$/.test(userStore.editUser.lastName) ||
-    userStore.editUser.firstName.length > 50 ||
-    userStore.editUser.lastName.length > 50) {
 
+  // Validate the fields before saving
+  if (!userStore.editUser.studentId || !/^[0-9]{8}$/.test(userStore.editUser.studentId)) {
+    showSnackbar('โปรดกรอกรหัสนิสิตให้ถูกต้อง');
+    return;
+  } 
+
+  if (!userStore.editUser.firstName || !userStore.editUser.lastName || 
+    !/^[ก-๙\s]+$/.test(userStore.editUser.firstName) || 
+    !/^[ก-๙\s]+$/.test(userStore.editUser.lastName) || 
+    userStore.editUser.firstName.length > 50 || 
+    userStore.editUser.lastName.length > 50) {
     showSnackbar('โปรดกรอกชื่อและนามสกุลเป็นภาษาไทย และต้องไม่เกิน 50 ตัวอักษร');
     return;
   }
-  //check if year is empty and not 2 numbers
-  else if (
-    !userStore.editUser.year ||
-    !/^[0-9]{2}$/.test(userStore.editUser.year)
-  ) {
+
+  if (!userStore.editUser.year || !/^[0-9]{2}$/.test(userStore.editUser.year)) {
     showSnackbar("โปรดกรอกชั้นปีให้ถูกต้อง");
     return;
   }
-  // check if email is empty and follows the email format
-  else if (!userStore.editUser.email || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(userStore.editUser.email)) {
+
+  if (!userStore.editUser.email || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(userStore.editUser.email)) {
     showSnackbar('โปรดกรอกอีเมลให้ถูกต้อง');
     return;
   }
-  //check if major is empty and not วิทยาการคอมพิวเตอร์, เมคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจดทัล, วิศวกรรมซอฟต์แวร์, ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ
-  else if (
-    !userStore.editUser.major ||
-    ![
-      "วิทยาการคอมพิวเตอร์",
-      "เทคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจิทัล",
-      "วิศวกรรมซอฟต์แวร์",
-      "ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ",
-    ].includes(userStore.editUser.major)
-  ) {
+
+  if (!["วิทยาการคอมพิวเตอร์", "เทคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจิทัล", "วิศวกรรมซอฟต์แวร์", "ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ"].includes(userStore.editUser.major ?? "")) {
     showSnackbar("โปรดเลือกสาขาให้ถูกต้อง");
     return;
   }
-  //check if role is not นิสิต
-  // else if (userStore.editUser.role != "นิสิต") {
-  //   showSnackbar("โปรดเลือกตำแหน่งที่ถูกต้อง");
-  //   return;
-  // }
-  //check if status is not กำลังศึกษา, พ้นสภาพนิสิต, สำเร็จการศึกษา
-  else if (
-    !["กำลังศึกษา", "พ้นสภาพนิสิต", "สำเร็จการศึกษา"].includes(
-      userStore.editUser.status ?? ""
-    )
-  ) {
+
+  if (!["กำลังศึกษา", "พ้นสภาพนิสิต", "สำเร็จการศึกษา"].includes(userStore.editUser.status ?? "")) {
     showSnackbar("โปรดเลือกสถานะภาพที่ถูกต้อง");
     return;
   }
-  //checkStudentIdDuplicate
-  // const studentIdDuplicate = await userStore.checkStudentIdDuplicate(userStore.editUser.studentId);
-  // if (studentIdDuplicate) {
-  //   showSnackbar('รหัสนิสิตนี้ถูกใช้งานแล้ว');
-  //   return;
-  // }
+
+  // Save user data if validation passes
   await userStore.saveUser();
   userStore.resetUser();
-  // window.location.reload();
+  userStore.currentPage = 1;
+  await userStore.getStudentPagination();
   userStore.closeDialog();
 }
+
 async function loadModels() {
   await faceapi.nets.ssdMobilenetv1.loadFromUri("/models");
   await faceapi.nets.faceLandmark68Net.loadFromUri("/models");
   await faceapi.nets.faceRecognitionNet.loadFromUri("/models");
 }
+
 async function cancel() {
   userStore.resetUser();
   userStore.closeDialog();
 }
 
-// Set the default value for role
+// Set default role for user
 if (!userStore.editUser.role) {
   userStore.editUser.role = "นิสิต";
 }
+
+// Create an image element for face processing
 async function createImageElement(file: File): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -123,6 +106,8 @@ async function createImageElement(file: File): Promise<HTMLImageElement> {
     reader.readAsDataURL(file);
   });
 }
+
+// Process uploaded files to extract face descriptions
 async function processFiles(files: File[]): Promise<Float32Array[]> {
   const faceDescriptions: Float32Array[] = [];
 
@@ -143,6 +128,8 @@ async function processFiles(files: File[]): Promise<Float32Array[]> {
 
   return faceDescriptions;
 }
+
+// Convert Float32Array to base64 for storage
 function float32ArrayToBase64(float32Array: any) {
   const uint8Array = new Uint8Array(float32Array.buffer);
   let binary = "";
@@ -152,6 +139,7 @@ function float32ArrayToBase64(float32Array: any) {
   return btoa(binary);
 }
 </script>
+
 <template>
   <v-container>
     <v-row justify="center">
@@ -173,6 +161,7 @@ function float32ArrayToBase64(float32Array: any) {
                   ]">
                 </v-text-field>
               </v-col>
+
               <!-- Last Name -->
               <v-col cols="6">
                 <v-text-field label="นามสกุล" dense solo outlined rounded required v-model="userStore.editUser.lastName"
@@ -262,32 +251,6 @@ function float32ArrayToBase64(float32Array: any) {
 
 .v-btn {
   font-weight: bold;
-  font-size: 16px;
-}
-
-.v-card-actions {
-  padding: 0 16px;
-}
-
-.v-snackbar {
-  font-size: 14px;
-  font-weight: bold;
-}
-/* Styling for fields and layout */
-.v-card {
-  background-color: #fff;
-  border-radius: 15px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.v-text-field,
-.v-combobox {
-  background-color: #f4f6f8;
-  border-radius: 8px;
-}
-
-.v-btn {
-  font-weight: bold;
   font-size: 14px;
 }
 
@@ -300,4 +263,3 @@ function float32ArrayToBase64(float32Array: any) {
   font-weight: bold;
 }
 </style>
-

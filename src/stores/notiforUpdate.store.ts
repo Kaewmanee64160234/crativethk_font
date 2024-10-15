@@ -92,8 +92,18 @@ export const useNotiforupdate = defineStore("notiforupdateStore", () => {
     }
   }
 
+  //get notification status
+  const getNotiforupdateStatus = async (status: string) => {
+    try {
+      const res = await notiforupdateService.getNotiforupdateStatus(status);
+      notiforupdates.value = res.data;
+    } catch (error) {
+      console.log(error);
+    }
+  }
   return {
     sendEmailToTeacher,
+    getNotiforupdateStatus,
     notiforupdates, // Make sure this is returned so the list can be used in components
     currentNotiforupdate,
     fetchAllNotifications,
