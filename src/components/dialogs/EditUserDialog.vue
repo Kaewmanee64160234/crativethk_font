@@ -91,8 +91,11 @@ async function save() {
   // }
   await userStore.saveUser();
   userStore.resetUser();
+
   // window.location.reload();
   userStore.closeDialog();
+  userStore.currentPage = 1;
+  userStore.getStudentPagination();
 }
 async function loadModels() {
   await faceapi.nets.ssdMobilenetv1.loadFromUri("/models");

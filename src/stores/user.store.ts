@@ -258,7 +258,7 @@ export const useUserStore = defineStore("userStore", () => {
         await userService.saveUser(editUser.value);
       }
 
-      await getUsers(); // Refresh or reload user list
+
       // closeDialog();
     } catch (e) {
       console.error("Failed to save user:", e);
@@ -270,7 +270,6 @@ export const useUserStore = defineStore("userStore", () => {
     try {
       await userService.deleteUser(id);
       messageStore.showInfo("User has been deleted successfully.");
-      await getUsers();
     } catch (e) {
       console.log(e);
     }
