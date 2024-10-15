@@ -15,7 +15,7 @@ const yearOptions = ref<string[]>(['']);
 const tab = ref(0);
 const statusTeacher = ref(['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง']);
 const statusStudent = ref(['กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา']);
-const majorOptions = ref(['วิทยาการคอมพิวเตอร์', 'เทคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจดทัล', 'วิศวกรรมซอฟต์แวร์', 'ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ']);
+const majorOptions = ref(['วิทยาการคอมพิวเตอร์', 'เทคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจิทัล', 'วิศวกรรมซอฟต์แวร์', 'ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ']);
 const confirmDlg = ref();
 const studentPage = computed(() => userStore.studentPage);
 const adminPage = computed(() => userStore.adminPage);

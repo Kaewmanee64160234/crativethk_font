@@ -111,6 +111,7 @@ export const useUserStore = defineStore("userStore", () => {
     console.log(searchDropdown2.value)
     if (value === "") {
       await getStudentPagination();
+      await getTeacherPagination();
     } else {
       searchMajorPagination(searchDropdown2.value);
     }
