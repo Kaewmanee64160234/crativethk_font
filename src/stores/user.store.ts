@@ -36,6 +36,9 @@ export const useUserStore = defineStore("userStore", () => {
   const currentPage = ref(1);
   const itemsPerPage = ref(20);
   const teachers = ref<User[]>([]);
+  const studentPage = ref(1);
+  const teacherPage = ref(1);
+  const adminPage = ref(1);
 
   const editUser = ref<User & { files: File[] }>({
     userId: 0,
@@ -56,10 +59,14 @@ export const useUserStore = defineStore("userStore", () => {
   });
 
   // watch for searchQuery
-  watch(searchQuery, (value) => {
+  watch(searchQuery, async (value) => {
+    currentPage.value = 1;
     console.log(searchQuery.value)
     if (value === "") {
-      getUsers();
+      currentPage.value = 1;
+      await getStudentPagination();
+      // await getAdminPagination();
+      // await getTeacherPagination();
     } else {
       searchUser();
     }
@@ -162,7 +169,7 @@ export const useUserStore = defineStore("userStore", () => {
   //   }
   // };
 
-//searchUsersByMajorAndStatus paginate
+  //searchUsersByMajorAndStatus paginate
   const searchUsersByMajorAndStatus = async (major: string, status: string) => {
     try {
       const response = await userService.searchUsersByMajorAndStatus(major, status, currentPage.value, itemsPerPage.value);
@@ -173,7 +180,7 @@ export const useUserStore = defineStore("userStore", () => {
     }
   };
 
-  
+
   //search majors paginate
   const searchMajorPagination = async (major: string) => {
     try {
@@ -195,7 +202,7 @@ export const useUserStore = defineStore("userStore", () => {
     }
   };
 
-    // search status student
+  // search status student
   // const searchStatus = async () => {
   //   try {
   //     const response = await userService.searchStatus(searchDropdown3.value);
@@ -204,7 +211,7 @@ export const useUserStore = defineStore("userStore", () => {
   //     console.error('Error searching users:', error);
   //   }
   // };
-  
+
   //search status teacher and admin
   const searchStatusTeacherAndAdmin = async () => {
     try {
@@ -411,7 +418,7 @@ export const useUserStore = defineStore("userStore", () => {
       console.error("Error while fetching QR code:", error);
     }
   }
-  
+
   const checkEmailDuplicate = async (email: string, userId?: number) => {
     try {
       const res = await userService.checkEmailDuplicate(email, userId);
@@ -421,7 +428,7 @@ export const useUserStore = defineStore("userStore", () => {
       console.error("Error while checking email duplicate:", error);
     }
   };
-  
+
 
   //check studentId duplicate
   const checkStudentIdDuplicate = async (studentId: string) => {
@@ -461,10 +468,17 @@ export const useUserStore = defineStore("userStore", () => {
 
   //paginate get student
   const getStudentPagination = async () => {
-    const params = {
+    let params;
+    if (currentPage.value == undefined) {
+      params = {
+        page: 1,
+        limit: itemsPerPage.value,
+      }
+    }
+    params = {
       page: currentPage.value,
       limit: itemsPerPage.value,
-    };
+    }
     try {
       const res = await userService.getStudentPagination(params.page, params.limit);
       if (res.status === 200) {
@@ -477,21 +491,31 @@ export const useUserStore = defineStore("userStore", () => {
     } catch (error) {
       console.error("Error while fetching paginated students:", error);
     }
-  };  
+  };
 
-  //paginate get teacher
   const getTeacherPagination = async () => {
+    let params;
+    if (currentPage.value == undefined) {
+      params = {
+        page: 1,
+        limit: itemsPerPage.value,
+      }
+    }
+    params = {
+      page: currentPage.value,
+      limit: itemsPerPage.value,
+    }
     try {
-      const res = await userService.getTeacherPagination(currentPage.value,
-        itemsPerPage.value);
+      const res = await userService.getTeacherPagination(params.page, params.limit);
       if (res.status === 200) {
         users.value = res.data.data.map((user: any) =>
           mapToUser(user)
         );
         totalUsers.value = res.data.total;
+        currentPage.value = res.data.currentPage;
       }
     } catch (error) {
-      console.error("Error while fetching paginated teachers:", error);
+      console.error("Error while fetching paginated students:", error);
     }
   };
 
@@ -523,6 +547,9 @@ export const useUserStore = defineStore("userStore", () => {
 
 
   return {
+    studentPage,
+    teacherPage,
+    adminPage,
     searchUsersByMajorAndStatus,
     searchStatusPagination,
     searchStatusTeacherAndAdmin,

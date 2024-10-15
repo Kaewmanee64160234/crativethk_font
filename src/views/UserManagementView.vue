@@ -17,9 +17,9 @@ const statusTeacher = ref(['ดำรงตำแหน่ง', 'สิ้นส
 const statusStudent = ref(['กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา']);
 const majorOptions = ref(['วิทยาการคอมพิวเตอร์', 'เทคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจดทัล', 'วิศวกรรมซอฟต์แวร์', 'ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ']);
 const confirmDlg = ref();
-const studentPage = ref(1);
-const teacherPage = ref(1);
-const adminPage = ref(1);
+const studentPage = computed(() => userStore.studentPage);
+const adminPage = computed(() => userStore.adminPage);
+const teacherPage = computed(() => userStore.teacherPage);
 
 
 onMounted(async () => {
@@ -41,7 +41,7 @@ const updateYearOptions = () => {
 watch(() => tab.value, () => {
   if (tab.value === 0) {
     userStore.itemsPerPage = 20;
-    userStore.currentPage = studentPage.value;
+    userStore.currentPage = userStore.studentPage;
     userStore.totalUsers = 0;
     userStore.searchDropdown2 = 'วิทยาการคอมพิวเตอร์';
     userStore.searchDropdown3 = 'กำลังศึกษา';
@@ -79,12 +79,14 @@ watch(() => userStore.users, () => {
   updateYearOptions();
 }, { deep: true });
 
+
 watch(studentPage, () => {
   if (tab.value === 0) {
     userStore.currentPage = studentPage.value;
     userStore.getStudentPagination();
   }
 });
+
 
 watch(teacherPage, () => {
   if (tab.value === 1) {
@@ -93,12 +95,15 @@ watch(teacherPage, () => {
   }
 });
 
+
 watch(adminPage, () => {
   if (tab.value === 2) {
     userStore.currentPage = adminPage.value;
     userStore.getAdminPagination();
   }
 });
+
+
 
 const paginatedStudents = computed(() => userStore.users.filter(user => user.role === 'นิสิต'));
 const paginatedTeachers = computed(() => userStore.users.filter(user => user.role === 'อาจารย์'));
@@ -228,14 +233,16 @@ const showEditedDialog = (user: User) => {
         <!-- Pagination student -->
         <v-pagination
   v-if="tab === 0"
-  v-model="studentPage"
+  v-model="userStore.studentPage"
   :length="Math.ceil(userStore.totalUsers / userStore.itemsPerPage)"
   :total-visible="7"
   rounded="circle"
+  :disabled="userStore.users.length === 0 || userStore.totalUsers <= userStore.itemsPerPage || userStore.searchQuery  .length > 0"
   size="large"
   color="primary"
   class="my-pagination"
-></v-pagination>
+/>
+
       </v-tab-item>
 
       <!-- Tab content for อาจารย์ -->
