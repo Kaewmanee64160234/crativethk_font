@@ -8,8 +8,6 @@ import ConfirmDialog from '@/components/dialogs/ConfirmDialog.vue';
 import type { User } from '@/stores/types/User';
 import { useUserStore } from '@/stores/user.store';
 import { onMounted, ref, watch, computed } from 'vue';
-const url = import.meta.env.VITE_API_URL;
-
 const userStore = useUserStore();
 const yearOptions = ref<string[]>(['']);
 const tab = ref(0);
