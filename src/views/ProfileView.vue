@@ -109,16 +109,17 @@ const secondPart = () => {
                     <strong style="color: #093271">ชั้นปี </strong
                     >{{ userStore.currentUser?.year }}
                   </v-col>
-                  <v-col
-                    cols="12"
-                    md="9"
-                    v-if="isStudent || isTeacher"
-                    style="white-space: pre-wrap"
-                  >
+                  <v-col cols="12" v-if="isTeacher" style="white-space: pre-wrap">
+                    <strong style="color: #093271">สาขา </strong
+                    >{{ userStore.currentUser?.major }}
+                  </v-col>
+                  <v-col cols="12" md="9" v-if="isStudent" style="white-space: pre-wrap">
                     <strong style="color: #093271">สาขา </strong>
                     <span>{{ firstPart() }}</span>
-                    <br />
-                    <span style="margin-left: 18%">{{ secondPart() }}</span>
+                    <br v-if="secondPart()" />
+                    <span v-if="secondPart()" style="margin-left: 18%">{{
+                      secondPart()
+                    }}</span>
                   </v-col>
                   <v-col cols="12">
                     <strong style="color: #093271">ตำแหน่ง </strong
@@ -132,7 +133,7 @@ const secondPart = () => {
                   </v-col>
                 </v-row>
               </v-col>
-              <v-col col="2">
+              <v-col col="2" v-if="isStudent">
                 <v-img
                   :src="userStore.QR"
                   style="width: 200px; height: 200px; object-fit: cover"

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, onMounted, ref,watch } from "vue";
+import { defineProps, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAssignmentStore } from "@/stores/assignment.store";
 import type Assignment from "@/stores/types/Assignment";
@@ -80,9 +80,7 @@ const deleteAssignment = async (assignment: Assignment) => {
       `คุณต้องการลบการเช็คชื่อ ${assignment.nameAssignment} ใช่หรือไม่`,
       async () => {
         // If confirmed, proceed with deleting the assignment
-        await assignmentStore.deleteAssignment(
-          assignment.assignmentId!.toString()
-        );
+        await assignmentStore.deleteAssignment(assignment.assignmentId!.toString());
         await assignmentStore.getAssignmentByCourseId(id.value.toString());
 
         // Show success dialog after deletion using SweetAlert2
@@ -127,9 +125,7 @@ const gotoMappinfForStudent = () => {
 // goToMapping2
 const goToMapping2 = async () => {
   showDialog.value = true;
-  await attdentStore.getAttendanceByAssignmentId(
-    props.post!.assignmentId! + ""
-  );
+  await attdentStore.getAttendanceByAssignmentId(props.post!.assignmentId! + "");
 };
 // Mapping
 const mapping = () => {
@@ -148,11 +144,7 @@ const handleFileChange = (event: Event) => {
         const result = e.target?.result as string;
         if (result) {
           try {
-            const resizedImage = await resizeAndConvertImageToBase64(
-              result,
-              800,
-              600
-            );
+            const resizedImage = await resizeAndConvertImageToBase64(result, 800, 600);
             imageUrls.value.push(resizedImage);
             imageFiles.value.push(file);
           } catch (error) {
@@ -187,8 +179,7 @@ const resizeAndConvertImageToBase64 = (
       ctx.drawImage(img, 0, 0, width, height);
       resolve(canvas.toDataURL("image/jpeg"));
     };
-    img.onerror = () =>
-      reject(new Error(`Failed to load image at ${imageUrl}`));
+    img.onerror = () => reject(new Error(`Failed to load image at ${imageUrl}`));
     img.src = imageUrl;
   });
 };
@@ -268,7 +259,10 @@ async function save() {
     }
 
     // Update the assignment in the store
-    await assignmentStore.updateAssignment(props.post.assignmentId + "", updateAssignment);
+    await assignmentStore.updateAssignment(
+      props.post.assignmentId + "",
+      updateAssignment
+    );
 
     // Close the dialog after saving
     close();
@@ -280,9 +274,9 @@ async function save() {
       text: "ชื่อการเช็คชื่อถูกอัปเดตเรียบร้อยแล้ว",
       confirmButtonColor: "#3085d6",
       confirmButtonText: "ตกลง",
-    }).then(()=>{
+    }).then(() => {
       window.location.reload();
-    })
+    });
   } catch (error) {
     console.error("Error updating assignment:", error);
     Swal.fire({
@@ -313,7 +307,6 @@ const closeDialog = () => {
     stream.getTracks().forEach((track) => track.stop());
     videoRef.value.srcObject = null;
   }
-
 };
 // removeImage
 const removeImage = (index: number) => {
@@ -336,7 +329,7 @@ const checkImageCountAndPost = async () => {
 
     return;
   }
- 
+
   if ([...capturedImages.value, ...imageUrls.value].length === 0) {
     showDialog.value = false;
 
@@ -350,7 +343,7 @@ const checkImageCountAndPost = async () => {
     return;
   } else {
     await updatePost();
-     closeDialog();
+    closeDialog();
   }
 };
 </script>
@@ -385,11 +378,7 @@ const checkImageCountAndPost = async () => {
         <!-- Dropdown Menu for Teacher Actions -->
         <v-menu v-if="userStore.currentUser?.role == 'อาจารย์'" bottom right>
           <template v-slot:activator="{ props }">
-            <v-btn
-              icon="mdi-dots-vertical"
-              variant="text"
-              v-bind="props"
-            ></v-btn>
+            <v-btn icon="mdi-dots-vertical" variant="text" v-bind="props"></v-btn>
           </template>
           <v-list>
             <v-list-item @click="mapping">
@@ -398,9 +387,7 @@ const checkImageCountAndPost = async () => {
             <v-divider></v-divider>
 
             <v-list-item @click="recheckMapping">
-              <v-list-item-title
-                >ยืนยันนิสิตที่ให้ตรวจสอบอีกครั้ง</v-list-item-title
-              >
+              <v-list-item-title>ยืนยันนิสิตที่ให้ตรวจสอบอีกครั้ง</v-list-item-title>
             </v-list-item>
             <v-divider></v-divider>
             <v-list-item @click="goToMapping2">
@@ -425,121 +412,142 @@ const checkImageCountAndPost = async () => {
   <ConfirmDialog ref="confirmDlg" />
   <!-- Create Post Dialog -->
   <v-dialog v-model="showDialog" persistent max-width="600px">
-  <v-card>
-    <v-card-title>
-      <h3>เพิ่มรูปภาพในงานเช็คชื่อ {{ props.post.nameAssignment }}</h3>
-    
-    </v-card-title>
+    <v-card>
+      <v-card-title style="text-align: center">
+        <h4>อัปโหลดรูปภาพเพิ่มเติมใน {{ props.post.nameAssignment }}</h4>
+      </v-card-title>
 
-    <v-divider></v-divider>
+      <v-divider></v-divider>
 
-    <v-card-text>
-      <v-container>
-        <!-- File Upload Input -->
-        <v-row>
-          <v-col cols="12" sm="12">
-                      <h5>
-                        อัปโหลดรูปภาพ
-                        <span style="color: red"
-                          >(ห้ามอัปโหลดรูปภาพเกิน 20 รูป)</span
-                        >
-                      </h5>
-            <v-file-input
-                        prepend-icon="mdi-image-multiple"
-                        filled
-                        @change="handleFileChange"
-                        accept="image/*"
-                        variant="outlined"
-                        multiple
-                      ></v-file-input>
-          </v-col>
-        </v-row>
-
-        <!-- Camera Button -->
-        <v-row>
-          <v-col cols="12" sm="12">
-            <v-btn color="primary" @click="startCamera" block>
-              <v-icon left>mdi-camera</v-icon> เปิดกล้องเพื่อถ่ายรูป
-            </v-btn>
-          </v-col>
-        </v-row>
-
-        <!-- Camera View -->
-        <v-row v-if="showCamera">
-          <v-col cols="12" sm="12">
-            <video ref="videoRef" autoplay style="width: 100%; border-radius: 8px"></video>
-            <canvas ref="canvasRef" style="display: none"></canvas>
-          </v-col>
-          <v-col cols="12" sm="6">
-            <v-btn @click="captureImage" block color="primary">ถ่ายรูปภาพ</v-btn>
-          </v-col>
-          <v-col cols="12" sm="6">
-            <v-btn @click="stopCamera" block color="error">ปิดกล้องถ่ายรูป</v-btn>
-          </v-col>
-        </v-row>
-
-        <!-- Alert if image count exceeds 20 -->
-        <v-row>
-          <v-col cols="12" sm="12">
-            <v-alert
-              v-if="capturedImages.length + imageUrls.length > 20"
-              type="error"
-              outlined
-              border="left"
-              elevation="2"
-              icon="mdi-alert"
-            >
-              ไม่สามารถอัปโหลดรูปภาพเกิน 20 รูป
-            </v-alert>
-          </v-col>
-        </v-row>
-
-        <!-- Uploaded and Captured Images Preview -->
-        <v-row class="scrollable-image-section">
-          <v-col
-            cols="12"
-            sm="6"
-            md="4"
-            v-for="(image, index) in [...capturedImages, ...imageUrls]"
-            :key="index"
-            class="image-container"
-          >
-            <v-card outlined class="ma-2">
-              <v-img :src="image" aspect-ratio="1" class="ma-2"></v-img>
-              <v-btn
-                icon
-                @click="removeImage(index)"
-                class="delete-icon"
-                variant="text"
-              >
-                <v-icon color="red">mdi-close</v-icon>
+      <v-card-text>
+        <v-container>
+          <!-- File Upload Input -->
+          <v-row>
+            <v-col cols="12" sm="7">
+              <v-card-title style="white-space: nowrap">
+                <h6>
+                  อัปโหลดรูปภาพ
+                  <span style="color: red">(ห้ามอัปโหลดรูปภาพเกิน 20 รูป)</span>
+                </h6>
+              </v-card-title>
+              <v-card-text>
+                <v-file-input
+                  label="(อัปโหลดสูงสุด 20 รูป)"
+                  prepend-icon="mdi-image-multiple"
+                  filled
+                  @change="handleFileChange"
+                  accept="image/*"
+                  variant="outlined"
+                  multiple
+                ></v-file-input>
+              </v-card-text>
+            </v-col>
+            <v-col cols="12" sm="5">
+              <v-card-title>
+                <h5>&nbsp;</h5>
+              </v-card-title>
+              <v-card-text>
+                <v-btn color="primary" @click="startCamera" block>
+                  <v-icon left>mdi-camera</v-icon>
+                  เปิดกล้องเพื่อถ่ายรูป
+                </v-btn>
+              </v-card-text>
+            </v-col>
+          </v-row>
+          <!-- Camera View -->
+          <v-row v-if="showCamera">
+            <v-col cols="12" sm="12">
+              <video
+                ref="videoRef"
+                autoplay
+                style="width: 100%; border-radius: 8px"
+              ></video>
+              <canvas ref="canvasRef" style="display: none"></canvas>
+            </v-col>
+            <v-col cols="12" sm="4">
+              <v-btn @click="captureImage" block color="primary">
+                <!-- <v-icon left>mdi-camera</v-icon> -->
+                ถ่ายรูปภาพ
               </v-btn>
-            </v-card>
-          </v-col>
-        </v-row>
-      </v-container>
-    </v-card-text>
+            </v-col>
+            <v-spacer></v-spacer>
+            <v-col cols="12" sm="4">
+              <v-btn @click="stopCamera" block color="error">
+                <!-- <v-icon left>mdi-close</v-icon> -->
+                ปิดกล้องถ่ายรูป
+              </v-btn>
+            </v-col>
+          </v-row>
 
-    <!-- Dialog Actions -->
-    <v-card-actions>
-      <v-btn color="error" @click="closeDialog" outlined>ยกเลิก</v-btn>
-      <v-spacer></v-spacer>
-      <v-btn
-        :disabled="capturedImages.length + imageUrls.length > 20 || nameAssignment === ''"
-        color="primary"
-        @click="checkImageCountAndPost"
-        outlined
-      >
-      ยืนยัน
-      </v-btn>
-    </v-card-actions>
-  </v-card>
-</v-dialog>
+          <!-- Alert if image count exceeds 20 -->
+          <v-row>
+            <v-col cols="12" sm="12">
+              <v-alert
+                v-if="capturedImages.length + imageUrls.length > 20"
+                type="error"
+                outlined
+                border="start"
+                elevation="2"
+                icon="mdi-alert"
+              >
+                ไม่สามารถอัปโหลดรูปภาพเกิน 20 รูป
+              </v-alert>
+            </v-col>
+          </v-row>
+          <!-- Uploaded and Captured Images Preview -->
+          <v-row
+            class="scrollable-image-section"
+            v-if="imageUrls.length > 0 || capturedImages.length > 0"
+          >
+            <v-col
+              cols="12"
+              sm="6"
+              md="4"
+              v-for="(image, index) in [...capturedImages, ...imageUrls]"
+              :key="index"
+              class="image-container"
+            >
+              <v-card outlined class="ma-2">
+                <v-img :src="image" aspect-ratio="1" class="ma-2"></v-img>
+                <v-btn
+                  icon
+                  @click="removeImage(index)"
+                  class="delete-icon"
+                  variant="text"
+                >
+                  <v-icon color="red">mdi-close</v-icon>
+                </v-btn>
+              </v-card>
+            </v-col>
+          </v-row>
+          <v-row v-else>
+            <v-col style="text-align: center; color: #a9a9a9">ไม่มีรูปภาพ</v-col>
+          </v-row>
+        </v-container>
+      </v-card-text>
+
+      <!-- Dialog Actions -->
+      <v-card-actions>
+        <v-btn color="error" @click="closeDialog" outlined>ยกเลิก</v-btn>
+        <v-spacer></v-spacer>
+        <v-btn
+          :disabled="
+            capturedImages.length + imageUrls.length > 20 || nameAssignment === ''
+          "
+          color="primary"
+          @click="checkImageCountAndPost"
+          outlined
+        >
+          ยืนยัน
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 
   <!-- Edit Assignment Dialog -->
   <v-dialog v-model="showDialogEditAssignment" max-width="600px" persistent>
     <v-card>
-      <v-card-title class="headline" style="text-align: center; font-weight: bold;">
+      <v-card-title class="headline" style="text-align: center; font-weight: bold">
         แก้ไขชื่อรายการเช็คชื่อ
       </v-card-title>
 
@@ -555,64 +563,70 @@ const checkImageCountAndPost = async () => {
             required
             maxlength="50"
             prepend-inner-icon="mdi-assignment"
-            :rules="[ 
-              (v) => !!v || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*', 
-              (v) => (v && v.length >= 1 && v.length <= 50) || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*' 
+            :rules="[
+              (v) => !!v || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*',
+              (v) =>
+                (v && v.length >= 1 && v.length <= 50) ||
+                '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*',
             ]"
           />
         </v-form>
       </v-card-text>
 
       <!-- Dialog Actions -->
-      <v-card-actions style="justify-content: space-between;">
-        <v-btn color="error" @click="close" style="color: red; font-weight: bold;">
+      <v-card-actions style="justify-content: space-between">
+        <v-btn color="error" @click="close" style="color: red; font-weight: bold">
           ยกเลิก
         </v-btn>
-        <v-btn color="primary" :disabled="!isValid" @click="save" style="color: blue; font-weight: bold;">
+        <v-btn
+          color="primary"
+          :disabled="!isValid"
+          @click="save"
+          style="color: blue; font-weight: bold"
+        >
           ยืนยัน
         </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
 
-
   <!-- Edit Assignment Dialog -->
   <v-dialog v-model="showDialogEditAssignment" max-width="600px" persistent>
-  <v-card>
-    <!-- Centered title -->
-    <v-card-title class="headline d-flex justify-center">
-      แก้ไขชื่อการเช็คชื่อ
-    </v-card-title>
+    <v-card>
+      <!-- Centered title -->
+      <v-card-title class="headline d-flex justify-center">
+        แก้ไขชื่อการเช็คชื่อ
+      </v-card-title>
 
-    <!-- Form to edit assignment name -->
-    <v-card-text>
-      <v-form ref="form" v-model="isValid" @submit.prevent="save">
-        <v-text-field
-          v-model="assignmentName"
-          label="ชื่อรายการเช็คชื่อ"
-          variant="outlined"
-          outlined
-          required
-          maxlength="50"
-          prepend-inner-icon="mdi-assignment"
-          :rules="[ 
-            (v) => !!v || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*', 
-            (v) => (v && v.length >= 1 && v.length <= 50) || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*' 
-          ]"
-        />
-      </v-form>
-    </v-card-text>
+      <!-- Form to edit assignment name -->
+      <v-card-text>
+        <v-form ref="form" v-model="isValid" @submit.prevent="save">
+          <v-text-field
+            v-model="assignmentName"
+            label="ชื่อรายการเช็คชื่อ"
+            variant="outlined"
+            outlined
+            required
+            maxlength="50"
+            prepend-inner-icon="mdi-assignment"
+            :rules="[
+              (v) => !!v || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*',
+              (v) =>
+                (v && v.length >= 1 && v.length <= 50) ||
+                '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*',
+            ]"
+          />
+        </v-form>
+      </v-card-text>
 
-    <!-- Dialog actions with save and cancel buttons -->
-    <v-card-actions class="d-flex justify-end">
-      <v-btn color="error" @click="close">ยกเลิก</v-btn>
-      <v-spacer></v-spacer>
-      <v-btn color="primary" :disabled="!isValid" @click="save">ยืนยัน</v-btn>
-    </v-card-actions>
-  </v-card>
-</v-dialog>
-
-
+      <!-- Dialog actions with save and cancel buttons -->
+      <v-card-actions class="d-flex justify-end">
+        <v-btn color="error" @click="close">ยกเลิก</v-btn>
+        <v-spacer></v-spacer>
+        <v-btn color="primary" :disabled="!isValid" @click="save">ยืนยัน</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 <style scoped>
 .headline {
@@ -628,7 +642,8 @@ const checkImageCountAndPost = async () => {
 }
 
 .scrollable-image-section {
-  max-height: 400px;
+  max-height: 200px;
+  /* Adjust this value as needed */
   overflow-y: auto;
 }
 

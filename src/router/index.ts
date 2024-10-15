@@ -277,7 +277,7 @@ const router = createRouter({
       meta:{
         requiresAuth: true,
 
-        allowedRoles: ['นิสิต'], 
+        allowedRoles: ['นิสิต','อาจารย์'], 
 
       }
       // create page  not found

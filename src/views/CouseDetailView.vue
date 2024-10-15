@@ -105,10 +105,7 @@ watch(
   () => assignmentStore.currentPage,
   async (newPage, oldPage) => {
     if (newPage !== oldPage) {
-      await assignmentStore.getAssignmentByCourseIdPaginate(
-        id.value.toString(),
-        newPage
-      );
+      await assignmentStore.getAssignmentByCourseIdPaginate(id.value.toString(), newPage);
       posts.value = assignmentStore.assignments;
       totalPage.value = assignmentStore.total;
     }
@@ -116,10 +113,7 @@ watch(
 );
 
 // Calculate total score based on attendance status.
-const calculateTotalScore = (
-  userId: number,
-  assignments: Assignment[]
-): number => {
+const calculateTotalScore = (userId: number, assignments: Assignment[]): number => {
   return assignments.reduce((total, assignment) => {
     const status = getAttendanceStatus(
       attendanceStore.attendances || [],
@@ -143,8 +137,7 @@ const getAttendanceStatus = (
 ): string => {
   const attendanceIndex = attendances.findIndex(
     (att: Attendance) =>
-      att.user?.userId === userId &&
-      att.assignment?.assignmentId === assignmentId
+      att.user?.userId === userId && att.assignment?.assignmentId === assignmentId
   );
   return attendances[attendanceIndex]
     ? attendances[attendanceIndex].attendanceStatus
@@ -171,11 +164,7 @@ const handleFileChange = (event: Event) => {
         const result = e.target?.result as string;
         if (result) {
           try {
-            const resizedImage = await resizeAndConvertImageToBase64(
-              result,
-              800,
-              600
-            );
+            const resizedImage = await resizeAndConvertImageToBase64(result, 800, 600);
             imageUrls.value.push(resizedImage);
             imageFiles.value.push(file);
           } catch (error) {
@@ -305,8 +294,7 @@ const resizeAndConvertImageToBase64 = (
       const resizedImage = canvas.toDataURL("image/jpeg", quality);
       resolve(resizedImage);
     };
-    img.onerror = () =>
-      reject(new Error(`Failed to load image at ${imageUrl}`));
+    img.onerror = () => reject(new Error(`Failed to load image at ${imageUrl}`));
     img.src = imageUrl;
   });
 };
@@ -396,12 +384,7 @@ const createPost = async () => {
       // Resize and compress images before uploading
       const processedImages = await Promise.all(
         imageFiles.value.map((file) =>
-          resizeAndConvertImageToBase64(
-            URL.createObjectURL(file),
-            800,
-            600,
-            0.7
-          )
+          resizeAndConvertImageToBase64(URL.createObjectURL(file), 800, 600, 0.7)
         )
       );
 
@@ -427,9 +410,7 @@ const createPost = async () => {
     console.time("Image storage and navigation");
 
     // Combine captured images and image URLs, remove duplicates
-    const allImages = [
-      ...new Set([...capturedImages.value, ...imageUrls.value]),
-    ]; // Avoid duplicates
+    const allImages = [...new Set([...capturedImages.value, ...imageUrls.value])]; // Avoid duplicates
     localStorage.setItem("images", JSON.stringify(allImages));
 
     if (allImages.length > 0) {
@@ -635,11 +616,10 @@ const calculateTotalScoreAndAbsence = (
             <v-divider></v-divider>
             <v-card-text>
               <v-container>
-                <!-- Assignment Name Input -->
                 <v-row>
                   <v-col cols="12" sm="12">
                     <v-card-title>
-                      <h5>ชื่อเรื่องการเช็คชื่อ</h5>
+                      <h6>ชื่อเรื่องการเช็คชื่อ</h6>
                     </v-card-title>
                     <v-card-text>
                       <v-text-field
@@ -648,14 +628,13 @@ const calculateTotalScoreAndAbsence = (
                         v-model="nameAssignment"
                         variant="outlined"
                         outlined
-                        prepend-inner-icon="mdi-assignment"
                         required
                         maxlength="50"
                         @paste="handlePaste"
                         :rules="[
-    (v: any) => !!v || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*',
-    (v: any) => (v && v.length >= 1 && v.length <= 50) || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*'
-  ]"
+                          (v: any) => !!v || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*',
+                          (v: any) => (v && v.length >= 1 && v.length <= 50) || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*'
+                        ]"
                       />
                     </v-card-text>
                   </v-col>
@@ -663,18 +642,16 @@ const calculateTotalScoreAndAbsence = (
 
                 <!-- File Upload and Camera Controls -->
                 <v-row>
-                  <v-col cols="12" sm="12">
+                  <v-col cols="12" sm="7">
                     <v-card-title style="white-space: nowrap">
-                      <h5>
+                      <h6>
                         อัปโหลดรูปภาพ
-                        <span style="color: red"
-                          >(ห้ามอัปโหลดรูปภาพเกิน 20 รูป)</span
-                        >
-                      </h5>
+                        <span style="color: red">(ห้ามอัปโหลดรูปภาพเกิน 20 รูป)</span>
+                      </h6>
                     </v-card-title>
                     <v-card-text>
                       <v-file-input
-                        label="อัปโหลดรูปภาพ (จำนวนไฟล์สูงสุด 20 รูป)"
+                        label="(อัปโหลดสูงสุด 20 รูป)"
                         prepend-icon="mdi-image-multiple"
                         filled
                         @change="handleFileChange"
@@ -684,17 +661,18 @@ const calculateTotalScoreAndAbsence = (
                       ></v-file-input>
                     </v-card-text>
                   </v-col>
-                </v-row>
-
-                <v-row>
-                  <v-col cols="12" sm="12">
-                    <v-btn color="primary" @click="startCamera" block>
-                      <v-icon left>mdi-camera</v-icon>
-                      เปิดกล้องเพื่อถ่ายรูป
-                    </v-btn>
+                  <v-col cols="12" sm="5">
+                    <v-card-title>
+                      <h5>&nbsp;</h5>
+                    </v-card-title>
+                    <v-card-text>
+                      <v-btn color="primary" @click="startCamera" block>
+                        <v-icon left>mdi-camera</v-icon>
+                        เปิดกล้องเพื่อถ่ายรูป
+                      </v-btn>
+                    </v-card-text>
                   </v-col>
                 </v-row>
-
                 <!-- Camera View -->
                 <v-row v-if="showCamera">
                   <v-col cols="12" sm="12">
@@ -705,13 +683,14 @@ const calculateTotalScoreAndAbsence = (
                     ></video>
                     <canvas ref="canvasRef" style="display: none"></canvas>
                   </v-col>
-                  <v-col cols="12" sm="6">
+                  <v-col cols="12" sm="4">
                     <v-btn @click="captureImage" block color="primary">
                       <!-- <v-icon left>mdi-camera</v-icon> -->
                       ถ่ายรูปภาพ
                     </v-btn>
                   </v-col>
-                  <v-col cols="12" sm="6">
+                  <v-spacer></v-spacer>
+                  <v-col cols="12" sm="4">
                     <v-btn @click="stopCamera" block color="error">
                       <!-- <v-icon left>mdi-close</v-icon> -->
                       ปิดกล้องถ่ายรูป
@@ -726,7 +705,7 @@ const calculateTotalScoreAndAbsence = (
                       v-if="capturedImages.length + imageUrls.length > 20"
                       type="error"
                       outlined
-                      border="left"
+                      border="start"
                       elevation="2"
                       icon="mdi-alert"
                     >
@@ -736,7 +715,10 @@ const calculateTotalScoreAndAbsence = (
                 </v-row>
 
                 <!-- Uploaded and Captured Images Preview -->
-                <v-row class="scrollable-image-section">
+                <v-row
+                  class="scrollable-image-section"
+                  v-if="imageUrls.length > 0 || capturedImages.length > 0"
+                >
                   <v-col
                     cols="12"
                     sm="6"
@@ -758,21 +740,21 @@ const calculateTotalScoreAndAbsence = (
                     </v-card>
                   </v-col>
                 </v-row>
+                <v-row v-else>
+                  <v-col style="text-align: center; color: #a9a9a9">ไม่มีรูปภาพ</v-col>
+                </v-row>
               </v-container>
             </v-card-text>
 
             <!-- Dialog Actions (Fixed at the Bottom) -->
             <v-card-actions class="fixed-action-buttons">
-              <v-btn color="error" @click="closeDialog()" outlined>
-                ยกเลิก
-              </v-btn>
+              <v-btn color="error" @click="closeDialog()" outlined> ยกเลิก </v-btn>
               <v-spacer></v-spacer>
 
               <!-- Disable the post button if more than 20 images or if the name is empty -->
               <v-btn
                 :disabled="
-                  [...capturedImages, ...imageUrls].length > 20 ||
-                  nameAssignment === ''
+                  [...capturedImages, ...imageUrls].length > 20 || nameAssignment === ''
                 "
                 color="primary"
                 @click="checkImageCountAndPost"
@@ -785,13 +767,7 @@ const calculateTotalScoreAndAbsence = (
         </v-dialog>
 
         <v-row class="pt-5" v-if="posts.length > 0">
-          <v-col
-            cols="12"
-            sm="12"
-            md="12"
-            v-for="post in posts"
-            :key="post.assignmentId"
-          >
+          <v-col cols="12" sm="12" md="12" v-for="post in posts" :key="post.assignmentId">
             <CardAssigment :post="post"></CardAssigment>
           </v-col>
         </v-row>
@@ -898,13 +874,7 @@ const calculateTotalScoreAndAbsence = (
               </v-col>
               <v-col cols="10" style="display: flex; align-items: center">
                 <div>
-                  {{
-                    member.studentId +
-                    " " +
-                    member.firstName +
-                    " " +
-                    member.lastName
-                  }}
+                  {{ member.studentId + " " + member.firstName + " " + member.lastName }}
                 </div>
               </v-col>
               <v-divider></v-divider>
@@ -927,20 +897,12 @@ const calculateTotalScoreAndAbsence = (
             </h1>
           </v-card-title>
         </v-card>
-        <v-card
-          class="mx-auto"
-          outlined
-          style="padding: 20px; margin-top: 10px"
-        >
+        <v-card class="mx-auto" outlined style="padding: 20px; margin-top: 10px">
           <v-row>
             <v-col col="12" sm="10" class="text-primary">
               <v-card-title>คะแนนการเช็คชื่อ</v-card-title>
             </v-col>
-            <v-col
-              col="12"
-              sm="2"
-              v-if="userStore.currentUser?.role === 'อาจารย์'"
-            >
+            <v-col col="12" sm="2" v-if="userStore.currentUser?.role === 'อาจารย์'">
               <v-btn
                 color="#093271"
                 @click="exportFile"
@@ -973,17 +935,19 @@ const calculateTotalScoreAndAbsence = (
                 v-for="user in filteredUsers"
                 :key="user.userId"
                 :class="{
-              'highlight-red':calculateTotalScoreAndAbsence(user.userId!, assignmentStore.assignments)
-              .absentCount > 3
-            }"
+                'highlight-red': calculateTotalScoreAndAbsence(user.userId!, assignmentStore.assignments)
+                  .absentCount > 3
+              }"
               >
                 <td class="text-center vertical-divider">
                   {{ user.studentId }}
                 </td>
                 <td class="vertical-divider">
                   <span
-                    :class="{ 'highlighted-text':         calculateTotalScoreAndAbsence(user.userId!, assignmentStore.assignments)
-          .absentCount > 3 }"
+                    :class="{
+                    'highlighted-text': calculateTotalScoreAndAbsence(user.userId!, assignmentStore.assignments)
+                      .absentCount > 3
+                  }"
                   >
                     {{ user.firstName + " " + user.lastName }}
                   </span>
@@ -1091,6 +1055,7 @@ const calculateTotalScoreAndAbsence = (
   background-color: #3051ac;
   /* color: white !important; */
 }
+
 .v-col {
   padding: 10px 0;
   /* Provides consistent vertical spacing between rows */
@@ -1144,6 +1109,7 @@ const calculateTotalScoreAndAbsence = (
 .primary--text {
   color: #6ca7fa !important;
 }
+
 .image-container {
   position: relative;
 }
@@ -1152,17 +1118,23 @@ const calculateTotalScoreAndAbsence = (
   position: absolute;
   top: -10px;
   right: -10px;
-  background-color: transparent !important; /* No background */
-  box-shadow: none; /* Remove shadow */
-  padding: 0; /* Remove padding */
+  background-color: transparent !important;
+  /* No background */
+  box-shadow: none;
+  /* Remove shadow */
+  padding: 0;
+  /* Remove padding */
 }
 
 .delete-icon:hover {
-  background-color: transparent; /* No hover background */
+  background-color: transparent;
+  /* No hover background */
 }
+
 /* Scrollable image section */
 .scrollable-image-section {
-  max-height: 200px; /* Adjust this value as needed */
+  max-height: 200px;
+  /* Adjust this value as needed */
   overflow-y: auto;
 }
 
@@ -1170,10 +1142,14 @@ const calculateTotalScoreAndAbsence = (
 .fixed-action-buttons {
   position: sticky;
   bottom: 0;
-  background-color: white; /* Same background as the card */
-  z-index: 1; /* Ensure it stays above content */
-  padding: 16px; /* Add some padding for better spacing */
-  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1); /* Optional: shadow for better separation */
+  background-color: white;
+  /* Same background as the card */
+  z-index: 1;
+  /* Ensure it stays above content */
+  padding: 16px;
+  /* Add some padding for better spacing */
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+  /* Optional: shadow for better separation */
 }
 
 .image-container {
