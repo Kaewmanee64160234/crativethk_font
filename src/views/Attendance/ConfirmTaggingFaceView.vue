@@ -8,6 +8,7 @@ import { useUserStore } from "@/stores/user.store";
 import type Attendance from "@/stores/types/Attendances";
 import Swal from "sweetalert2";
 import { useCourseStore } from "@/stores/course.store";
+import Loader from "@/components/loader/Loader.vue";
 
 interface CanvasRefs {
   [key: number]: HTMLCanvasElement;
@@ -27,6 +28,7 @@ const router = useRouter();
 const showUploadDialog = ref(false);
 const showCamera = ref(false);
 const courseId = ref("");
+const isLoading = ref(false);
 const videoRef = ref<HTMLVideoElement | null>(null);
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 
@@ -37,19 +39,14 @@ const loadModels = async () => {
 };
 
 const fetchImages = async () => {
-  
   const assignmentId = route.params.assignmentId;
   await assignmentStore.getAssignmentById(assignmentId + "");
   const images = assignmentStore.currentAssignment?.assignmentImages || [];
-  imageUrls.value = images.map(
-    (image) =>{
-  console.log("Fetching images",image);
+  imageUrls.value = images.map((image) => {
+    console.log("Fetching images", image);
 
-  return  `${import.meta.env.VITE_API_URL}/assignments/image/filename/${image}`
- 
-    }
-
-  );
+    return `${import.meta.env.VITE_API_URL}/assignments/image/filename/${image}`;
+  });
 };
 
 const processImage = async (image: any, index: number) => {
@@ -94,9 +91,7 @@ const processImage = async (image: any, index: number) => {
 
       updateBoxStyle();
 
-      boxElement.addEventListener("click", () =>
-        handleBoxClick(image, detection.box)
-      );
+      boxElement.addEventListener("click", () => handleBoxClick(image, detection.box));
       canvas.parentElement?.appendChild(boxElement);
 
       window.addEventListener("resize", updateBoxStyle);
@@ -166,9 +161,7 @@ const reCheckAttendance = async (attendance: Attendance) => {
     attendance.assignment = assignmentStore.currentAssignment;
     const date = new Date();
     const currentDate = date.getTime();
-    const assignmentDate = new Date(
-      assignmentStore.currentAssignment!.createdDate!
-    );
+    const assignmentDate = new Date(assignmentStore.currentAssignment!.createdDate!);
     const assignmentTime = assignmentDate.getTime();
     const diff = currentDate - assignmentTime;
     console.log("Diff:", diff);
@@ -181,20 +174,14 @@ const reCheckAttendance = async (attendance: Attendance) => {
     console.log("Attendance:", attendance);
 
     if (croppedImage.value) {
-      const imageFile = dataURLToFile(
-        croppedImage.value,
-        "rechecked-image.jpg"
-      );
+      const imageFile = dataURLToFile(croppedImage.value, "rechecked-image.jpg");
       console.log("Image File:", imageFile);
 
-      const status = await attendanceStore.confirmAttendance(
-        attendance,
-        imageFile
-      );
+      const status = await attendanceStore.confirmAttendance(attendance, imageFile);
       if (status == 200) {
         Swal.fire({
-          title: "ทำการยืน",
-          text: "Attendance recheck completed.",
+          title: "ทำการยืนยันเรียบเรียบแล้ว",
+          text: "กรุณาตรวจสอบอีกครั้งในรายวิชาที่เรียน",
           icon: "success",
           confirmButtonText: "OK",
         }).then(() => {
@@ -239,6 +226,7 @@ const openUploadDialog = () => {
 
 const onFileChange = async (event: Event) => {
   const file = (event.target as HTMLInputElement).files?.[0];
+  isLoading.value = true; // Show loader when file upload starts
   if (file) {
     const reader = new FileReader();
     reader.onload = async (e) => {
@@ -264,17 +252,17 @@ const onFileChange = async (event: Event) => {
             confirmButtonText: "OK",
           });
         }
+        isLoading.value = false; // Hide loader after processing is done
       };
     };
     reader.readAsDataURL(file);
+  } else {
+    isLoading.value = false; // Hide loader if no file is selected
   }
   showUploadDialog.value = false;
 };
 
-const cropFaceFromImage = (
-  ctx: CanvasRenderingContext2D | null,
-  box: faceapi.Box
-) => {
+const cropFaceFromImage = (ctx: CanvasRenderingContext2D | null, box: faceapi.Box) => {
   if (ctx) {
     const imageData = ctx.getImageData(box.x, box.y, box.width, box.height);
     const canvas = document.createElement("canvas");
@@ -292,21 +280,15 @@ const startCamera = async () => {
   if (videoRef.value) {
     videoRef.value.srcObject = stream;
   }
-
 };
 
 const captureImage = () => {
   if (videoRef.value && canvasRef.value) {
+    isLoading.value = true;
     const ctx = canvasRef.value.getContext("2d");
     canvasRef.value.width = videoRef.value.videoWidth;
     canvasRef.value.height = videoRef.value.videoHeight;
-    ctx?.drawImage(
-      videoRef.value,
-      0,
-      0,
-      canvasRef.value.width,
-      canvasRef.value.height
-    );
+    ctx?.drawImage(videoRef.value, 0, 0, canvasRef.value.width, canvasRef.value.height);
     const imgData = canvasRef.value.toDataURL("image/jpeg");
 
     const img = new Image();
@@ -331,6 +313,7 @@ const captureImage = () => {
         // close camera
         stopCamera();
       }
+      isLoading.value = false;
     };
   }
 };
@@ -366,9 +349,11 @@ const closeDialogShowDialog = () => {
 };
 </script>
 
-
 <template>
   <v-container class="mt-10">
+    <div v-if="isLoading" class="loader-overlay">
+      <Loader></Loader>
+    </div>
     <v-card
       class="mx-auto card-style"
       color="primary"
@@ -400,37 +385,30 @@ const closeDialogShowDialog = () => {
 
     <v-row style="width: 100%">
       <v-col cols="12" class="d-flex justify-end">
-        <v-btn
-          style="background-color: #4a678c; color: white"
-          @click="openUploadDialog"
+        <v-btn style="background-color: #4a678c; color: white" @click="openUploadDialog"
           >ไม่มีภาพของฉัน</v-btn
         >
       </v-col>
     </v-row>
 
     <v-row>
-      <v-col
-        cols="12"
-        md="6"
-        v-for="(imageUrl, index) in imageUrls"
-        :key="index"
-      >
+      <v-col cols="12" md="6" v-for="(imageUrl, index) in imageUrls" :key="index">
         <div class="position-relative mb-3">
           <img
             :src="imageUrl"
             class="w-100 rounded-lg"
-            @load="(event:any) => {
-              const img = event.target;
-              canvasRefs[index].width = img!.naturalWidth!;
-              canvasRefs[index].height = img!.naturalHeight!;
-              canvasRefs[index].style.width = img!.width! + 'px';
-              canvasRefs[index].style.height = img!.height! + 'px';
-              processImage(img!, index);
-            }"
+            @load="(event: any) => {
+            const img = event.target;
+            canvasRefs[index].width = img!.naturalWidth!;
+            canvasRefs[index].height = img!.naturalHeight!;
+            canvasRefs[index].style.width = img!.width! + 'px';
+            canvasRefs[index].style.height = img!.height! + 'px';
+            processImage(img!, index);
+          }"
             style="object-fit: contain"
           />
           <canvas
-            :ref="(el:any) => canvasRefs[index] = el"
+            :ref="(el: any) => canvasRefs[index] = el"
             class="position-absolute top-0 left-0 w-100 h-100"
           ></canvas>
         </div>
@@ -444,48 +422,69 @@ const closeDialogShowDialog = () => {
       @update:model-value="onDialogClose"
     >
       <v-card class="elevation-4">
-        <v-card-title class="headline text-h6">
-          Upload หรือถ่ายภาพเพื่อยืนยันตัวตน
+        <v-card-title style="text-align: center">
+          <h4>อัปโหลดรูปภาพ</h4>
         </v-card-title>
-        <v-card-text>
-          <v-file-input
-            label="Upload Image"
-            @change="onFileChange"
-            accept="image/*"
-          />
-          <v-btn color="primary" @click="startCamera" class="mt-2">
-            ถ่ายภาพ
-          </v-btn>
-        </v-card-text>
-
+        <v-divider></v-divider>
+        <!-- <v-card-text>
+          <v-file-input label="Upload Image" @change="onFileChange" accept="image/*" />
+          <v-btn color="primary" @click="startCamera" class="mt-2"> ถ่ายภาพ </v-btn>
+        </v-card-text> -->
+        <v-row>
+          <v-col cols="12" sm="7" style="margin-top: 3%">
+            <v-card-title style="white-space: nowrap">
+              <h6>
+                อัปโหลดรูปภาพ
+                <span style="color: red">(อัปโหลดรูปได้เพียง 1 รูป)</span>
+              </h6>
+            </v-card-title>
+            <v-card-text>
+              <v-file-input
+                label="(อัปโหลดได้เพียง 1 รูป)"
+                prepend-icon="mdi-image-multiple"
+                filled
+                @change="onFileChange"
+                accept="image/*"
+                variant="outlined"
+                multiple
+              ></v-file-input>
+            </v-card-text>
+          </v-col>
+          <v-col cols="12" sm="5" style="margin-top: 3%">
+            <v-card-title>
+              <h5>&nbsp;</h5>
+            </v-card-title>
+            <v-card-text>
+              <v-btn color="primary" @click="startCamera" block>
+                <v-icon left>mdi-camera</v-icon>
+                เปิดกล้องเพื่อถ่ายรูป
+              </v-btn>
+            </v-card-text>
+          </v-col>
+        </v-row>
         <!-- Camera View -->
-        <v-row v-if="showCamera" class="pa-4">
-          <v-col cols="12">
-            <video ref="videoRef" autoplay class="video-preview"></video>
+        <v-row v-if="showCamera">
+          <v-col cols="12" sm="12" style="text-align: center">
+            <video ref="videoRef" autoplay style="width: 80%; border-radius: 8px"></video>
             <canvas ref="canvasRef" style="display: none"></canvas>
           </v-col>
-          <v-col cols="12" sm="6">
-            <v-btn @click="captureImage" block>ถ่ายรูปภาพ</v-btn>
+          <v-col cols="12" sm="4" style="margin-left: 10%">
+            <v-btn @click="captureImage" block color="primary"> ถ่ายรูปภาพ </v-btn>
           </v-col>
-          <v-col cols="12" sm="6">
-            <v-btn @click="stopCamera" block color="error">ปิดกล้อง</v-btn>
+          <v-spacer></v-spacer>
+          <v-col cols="12" sm="4" style="margin-right: 10%">
+            <v-btn @click="stopCamera" block color="error"> ปิดกล้องถ่ายรูป </v-btn>
           </v-col>
         </v-row>
 
         <v-card-actions>
-          <v-btn color="secondary" @click="closeShowUploadDialog()">
-            ยกเลิก
-          </v-btn>
+          <v-btn color="error" @click="closeShowUploadDialog()"> ยกเลิก </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
     <!-- Confirm Identity Dialog -->
-    <v-dialog
-      v-model="showDialog"
-      max-width="500px"
-      @update:model-value="onDialogClose"
-    >
+    <v-dialog v-model="showDialog" max-width="500px" @update:model-value="onDialogClose">
       <v-card class="elevation-4">
         <v-card-text class="text-center">
           <img
@@ -493,22 +492,19 @@ const closeDialogShowDialog = () => {
             alt="Cropped Face"
             class="rounded-lg mb-3 confirm-image"
           />
-          <p>ภาพนี้ใช่คุณใช่หรือไม่</p>
+          <p>ภาพนี้ใช่คุณใช่หรือไม่ ?</p>
         </v-card-text>
         <v-card-actions class="justify-center">
           <v-btn variant="flat" color="error" @click="closeDialogShowDialog">
-            ไม่
+            ไม่ใช่
           </v-btn>
           <v-spacer></v-spacer>
-          <v-btn variant="flat" color="primary" @click="confirmRecheck">
-            ใช่
-          </v-btn>
+          <v-btn variant="flat" color="primary" @click="confirmRecheck"> ใช่ </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
   </v-container>
 </template>
-
 
 <style scoped>
 /* Main container to center content */
@@ -542,6 +538,19 @@ const closeDialogShowDialog = () => {
   width: 100%;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.loader-overlay {
+  position: fixed; /* Cover entire page */
+  top: 0;
+  left: 0;
+  width: 100vw; /* Full width */
+  height: 100vh; /* Full height */
+  background-color: rgba(255, 255, 255, 0.6); /* Semi-transparent background */
+  z-index: 10000; /* High enough to be on top of everything */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Elevation for better dialog design */
