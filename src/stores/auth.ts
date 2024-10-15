@@ -28,9 +28,10 @@ export const useAuthStore = defineStore("authStore", () => {
     console.log(response);
   };
   //login user
-  const login = async (value: string) => {
+  const login = async (value: string,image1:string) => {
     try {
       currentUser.value.email = value;
+      currentUser.value.profileImage = image1;
       const response = await auth.login(currentUser.value);
       console.log("res", response);
       // console.log()

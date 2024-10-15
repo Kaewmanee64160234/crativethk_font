@@ -84,15 +84,14 @@ const secondPart = () => {
           <v-card-text>
             <v-row>
               <v-col col="4" class="d-flex justify-center align-center">
-                <img
-                  style="
+                <img   style="
                     width: 200px;
                     height: 200px;
                     object-fit: cover;
                     border-radius: 50%;
-                  "
-                  :src="`${url}/users/${userStore.currentUser!.userId}/image`"
-                />
+                  "  :src="`${userStore.currentUser!.profileImage}`"/>
+
+              
               </v-col>
               <v-col col="4" v-if="userStore.currentUser">
                 <v-row>
