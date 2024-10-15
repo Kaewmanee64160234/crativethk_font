@@ -94,7 +94,8 @@ async function save() {
 
   // window.location.reload();
   userStore.closeDialog();
-  userStore.currentPage = 1;
+  // userStore.currentPage = 1;
+  userStore.studentPage = 1;
   userStore.getStudentPagination();
 }
 async function loadModels() {
