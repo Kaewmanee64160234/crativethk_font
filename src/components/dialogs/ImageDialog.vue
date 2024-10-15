@@ -68,8 +68,14 @@ onMounted(async () => {
       (image: string) => `${url}/users/image/filename/${image}`
     ) ?? [];
   try {
-    const response = await axios.get(`${import.meta.env.VITE_API_URL}/users/teachers`);
-    teachers.value = response.data; // Store the fetched teachers
+    await userStore.getTeachers();
+    userStore.teachers.forEach((teacher) => {
+      teachers.value.push({
+        userId: teacher.userId!,
+        firstName: teacher.firstName!,
+        lastName: teacher.lastName!,
+      });
+    });
   } catch (error) {
     console.error("Failed to fetch teachers:", error);
   }
@@ -203,7 +209,11 @@ async function processImage(image: HTMLImageElement, index: number) {
     document.body.removeChild(canvas);
     console.timeEnd(`Image Detection and Descriptor Time - Image ${index}`);
   }
+
+  
 }
+
+
 
 function float32ArrayToBase64(float32Array: Float32Array): string {
   const uint8Array = new Uint8Array(float32Array.buffer);

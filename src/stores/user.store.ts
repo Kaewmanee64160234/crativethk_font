@@ -35,6 +35,7 @@ export const useUserStore = defineStore("userStore", () => {
   const totalUsers = ref(0);
   const currentPage = ref(1);
   const itemsPerPage = ref(20);
+  const teachers = ref<User[]>([]);
 
   const editUser = ref<User & { files: File[] }>({
     userId: 0,
@@ -390,7 +391,7 @@ export const useUserStore = defineStore("userStore", () => {
   const getTeachers = async () => {
     try {
       const res = await userService.getTeachers();
-      users.value = res.data;
+      teachers.value = res.data.map((user: any) => mapToUser(user));
     } catch (error) {
       console.error('Error fetching teachers:', error);
     }
@@ -568,6 +569,7 @@ export const useUserStore = defineStore("userStore", () => {
     searchDropdown3,
     searchDropdown4,
     searchDropdown5,
-    logout
+    logout,
+    teachers
   };
 });
