@@ -435,7 +435,7 @@ const createPost = async () => {
     Swal.fire({
       icon: "error",
       title: "เกิดข้อผิดพลาดในการสร้างการเช็คชื่อหรือการอัปโหลดรูปภาพ",
-      text: error.message,
+      text: (error as any).message,
     });
   }
 

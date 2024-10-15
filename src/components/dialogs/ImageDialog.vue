@@ -475,7 +475,7 @@ async function save() {
                 }
 
                 // Add userId to formData
-                formData.append("userId", userStore.currentUser!.userId!);
+                formData.append("userId", String(userStore.currentUser!.userId!));
                 console.log("Sending formData to create notification...");
                 await notiStore.createNotiforupdate(formData);
                 console.log("Notification created successfully.");
@@ -855,7 +855,7 @@ const clearSelectedTeacher = () => {
               <v-divider></v-divider>
               <v-card-actions class="justify-space-between">
                 <v-btn
-                  text
+                  
                   color="red"
                   class="font-weight-bold"
                   @click="clearSelectedTeacher"

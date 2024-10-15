@@ -249,10 +249,8 @@ export const useAttendanceStore = defineStore("attendanceStore", () => {
     croppedImagesDataUrls: string[],
     currentAssignment: Assignment,status:string,confirmStatus:string) => {
     try {
-      const res = await attendaceService.submitAttendancesInBatches(identifications, croppedImagesDataUrls, currentAssignment,status,confirmStatus);
-      if (res) {
-        console.log(res);
-      }
+       await attendaceService.submitAttendancesInBatches(identifications, croppedImagesDataUrls, currentAssignment,status,confirmStatus);
+      
     } catch (error) {
       console.log(error);
     }

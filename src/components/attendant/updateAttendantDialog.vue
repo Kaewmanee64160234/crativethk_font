@@ -26,14 +26,14 @@ watch(
 );
 
 // Define mappings for status
-const statusMap = {
+const statusMap: { [key: string]: string } = {
   present: "มาเรียน",
   absent: "ไม่มาเรียน",
   late: "มาสาย",
 };
 
 // Reverse the mapping for setting the internal values
-const reverseStatusMap = {
+const reverseStatusMap: { [key: string]: string } = {
   "มาเรียน": "present",
   "ไม่มาเรียน": "absent",
   "มาสาย": "late",
@@ -53,7 +53,7 @@ const updateAttendanceStatus = () => {
   }
 
   // Convert the selected status back to English for storing
-  attendanceStore.editAttendance.attendanceStatus = reverseStatusMap[selectedStatus.value];
+  attendanceStore.editAttendance.attendanceStatus = reverseStatusMap[selectedStatus.value]  ;
   attendanceStore.updateAttendanceTeacher(attendanceStore.editAttendance);
   attendanceStore.showDialog = false;
 };
@@ -89,7 +89,7 @@ const updateAttendanceStatus = () => {
                   : 'green'
               }"
             >
-              {{ statusMap[attendanceStore.editAttendance?.attendanceStatus] }}
+              {{ statusMap[attendanceStore.editAttendance?.attendanceStatus || ''] }}
             </span>
           </p>
         </div>

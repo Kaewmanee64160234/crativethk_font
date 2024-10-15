@@ -532,7 +532,7 @@ const checkImageCountAndPost = async () => {
         <v-spacer></v-spacer>
         <v-btn
           :disabled="
-            capturedImages.length + imageUrls.length > 20 || nameAssignment === ''
+            capturedImages.length + imageUrls.length > 20 || props.post.nameAssignment === ''
           "
           color="primary"
           @click="checkImageCountAndPost"

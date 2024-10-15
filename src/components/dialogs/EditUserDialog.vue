@@ -230,7 +230,7 @@ function float32ArrayToBase64(float32Array: any) {
 
         <!-- Card Actions (Buttons) -->
         <v-card-actions class="justify-space-between mt-4">
-          <v-btn text color="red" rounded outlined class="ml-4" style="padding: 12px 24px; font-size: 16px;" @click="cancel">
+          <v-btn  color="red" rounded outlined class="ml-4" style="padding: 12px 24px; font-size: 16px;" @click="cancel">
             ยกเลิก
           </v-btn>
           <v-btn color="blue" text="ยืนยัน" rounded class="mr-4" style="padding: 12px 24px; font-size: 16px;" @click="save">

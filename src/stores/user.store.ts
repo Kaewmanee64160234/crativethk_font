@@ -370,8 +370,6 @@ export const useUserStore = defineStore("userStore", () => {
     }
   }
 
-
-
   const getFileUser = async (file: File) => {
     try {
       const formData = new FormData();

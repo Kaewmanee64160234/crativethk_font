@@ -136,23 +136,6 @@ const router = createRouter({
       },
     },
 
-    {
-      //CheckAttendanceView
-      path: "/checkAttendance/:idCourse",
-      name: "checkAttendance",
-      components: {
-        default: () => import("../views/CheckAttdentView.vue"),
-        header: () => import("../components/headers/MainHeader.vue"),
-        menu: () => import("../components/headers/SubHeader.vue"),
-      },
-      meta: {
-        layout: "FullLayout",
-        requiresAuth: true,
-
-        allowedRoles: ['นิสิต','อาจารย์','แอดมิน'], 
-
-      },
-    },
 
     {
       //UserManagementView
@@ -357,7 +340,7 @@ router.beforeEach(async (to, from, next) => {
 
 
     // If the route has role-based restrictions, check the user's role
-    if (to.meta.allowedRoles && !to.meta.allowedRoles.includes(userRole)) {
+    if (Array.isArray(to.meta.allowedRoles) && !to.meta.allowedRoles.includes(userRole)) {
       return next('/forbidden');  // Redirect to 403 page if user doesn't have the correct role
     }
   }
