@@ -12,13 +12,11 @@ const loginErrorMessage = ref("");
 let galleryImageBase64 = "";
 
 const login = async () => {
-<<<<<<< HEAD
-  authStore.login(email.value);
+  authStore.login(
+    email.value,
+    "https://lh3.googleusercontent.com/a/ACg8ocKNsZ8K1c4_O0GG2IPT75qQOTyJT5TskC-zkamhsHsaoCFu4Ao=s96-c"
+  );
 };
-=======
-    authStore.login(email.value,"https://lh3.googleusercontent.com/a/ACg8ocKNsZ8K1c4_O0GG2IPT75qQOTyJT5TskC-zkamhsHsaoCFu4Ao=s96-c");
-}
->>>>>>> fc4287d43b2e870dbc2d2dafc2df54b4bcdcf557
 const callback = (response: any) => {
   console.log(response);
 
@@ -29,17 +27,8 @@ const callback = (response: any) => {
     if (user!.hd! !== "go.buu.ac.th") {
       alert(response.hd + " is not a go.buu.ac.th domain");
     } else {
-<<<<<<< HEAD
-      authStore.login(user.email);
-=======
-    console.log('User:', user.picture);
-      
-    authStore.login(user.email,user.picture);
-    
-
-     
-
->>>>>>> fc4287d43b2e870dbc2d2dafc2df54b4bcdcf557
+      console.log("User:", user.picture);
+      authStore.login(user.email, user.picture);
     }
   } else {
     loginErrorMessage.value = "Unable to login. Please try again.";
@@ -123,8 +112,6 @@ const callback = (response: any) => {
                   width: 180px;
                 "
               />
-
-<<<<<<< HEAD
               <p v-if="loginError">{{ loginErrorMessage }}</p>
             </div>
             <!-- </div> -->
@@ -140,24 +127,12 @@ const callback = (response: any) => {
                 box-shadow: rgba(50, 50, 93, 0.25) 0px 13px 27px -5px,
                   rgba(0, 0, 0, 0.3) 0px 8px 16px -5px;
               "
-              @click="login"
+              @click="login()"
               >Login</v-btn
             >
           </div>
         </v-col>
       </v-row>
-=======
-        <p v-if="loginError">{{ loginErrorMessage }}</p>
-      </div>
-        <!-- </div> -->
-        <v-text-field   v-model="email"  label="Login Name" required></v-text-field>
-        <v-btn color="white" style="background-color: #5D9C59; width:410px; height: 50px; margin-left: 10%; border-radius: 50px; box-shadow: rgba(50, 50, 93, 0.25) 0px 13px 27px -5px, rgba(0, 0, 0, 0.3) 0px 8px 16px -5px;"
-                      @click="login()">Login</v-btn>
-      </div>
-    </v-col>
-  </v-row>
-      
->>>>>>> fc4287d43b2e870dbc2d2dafc2df54b4bcdcf557
     </v-card>
   </div>
 </template>
