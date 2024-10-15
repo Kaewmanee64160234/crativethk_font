@@ -1,151 +1,89 @@
 <script lang="ts" setup>
 import { useMessageStore } from '@/stores/message';
-import type { User } from '@/stores/types/User';
 import { useUserStore } from '@/stores/user.store';
-import { onMounted, ref, computed } from 'vue';
-import * as faceapi from "face-api.js";
-import { useRoute, useRouter } from 'vue-router';
-import Loader from "@/components/loader/Loader.vue";
 import { useNotiforupdate } from '@/stores/notiforUpdate.store';
+import { onMounted, ref, computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import Swal from 'sweetalert2';
+import Loader from "@/components/loader/Loader.vue";
 
 const userStore = useUserStore();
 const notiforupdateStore = useNotiforupdate();
-const noticId = ref();
-// const firstNotification = computed(() => notiforupdateStore.notiforupdates[0]);
-
-//Notification find by UserId
-const firstNotification = computed(() => {
-  return notiforupdateStore.notiforupdates.find((notification) => notification.userReceive?.studentId === noticId.value);
-});
-
-const user = ref<User | undefined>(undefined);
-const url = 'http://localhost:3000';
-const imageUrls = ref<string[]>([]);
-const imageUrls2 = ref<string[]>([]);
+const noticId = ref<string | null>(null);
 const route = useRoute();
 const router = useRouter();
+const imageUrls = ref<string[]>([]);
+const imageUrls2 = ref<string[]>([]);
 const isLoading = ref(false);
-const faceDescriptors = ref<Float32Array[]>([]);
-const similarityScores = ref<number[]>([]);
 
-
-const messageStore = useMessageStore();
 onMounted(async () => {
   isLoading.value = true;
   try {
-    //getNotificationById
+    // Get notification by ID
     noticId.value = route.params.noticId as string;
-    console.log("stdId", noticId.value);
     await notiforupdateStore.getNotiforupdateById(noticId.value);
-    console.log("notiforupdateStore", notiforupdateStore.currentNotiforupdate);
+    const url = 'http://localhost:3000';
     imageUrls.value = notiforupdateStore.currentNotiforupdate!.images!.map((image: string) => `${url}/notiforupdates/image/filename/${image}`);
-    // imageUrls2 get by userId
+
+    // Fetch user images
     const userId = notiforupdateStore.currentNotiforupdate?.userSender?.userId;
     if (userId) {
       const response = await fetch(`${url}/users/${userId}/images`);
-      if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(`Failed to fetch images for user ${userId}: ${errorData}`);
-      }
       const data = await response.json();
-      if (data.images) {
-        const userImages = data.images.map((image: string) => `${url}/users/image/filename/${image}`);
-        imageUrls2.value = [...imageUrls2.value, ...userImages];
-        console.log("User's Previous Image URLs:", userImages);
-      } else {
-        console.warn(`No images found for user ${userId}`);
-      }
+      imageUrls2.value = data.images.map((image: string) => `${url}/users/image/filename/${image}`);
     }
-
-
   } catch (error) {
-    console.error('Error fetching notification images:', error);
+    console.error('Error fetching images:', error);
   } finally {
     isLoading.value = false;
   }
 });
 
-// Calculate similarity between all face descriptors
-const calculateSimilarity = () => {
-  similarityScores.value = [];
-
-  for (let i = 0; i < faceDescriptors.value.length - 1; i++) {
-    for (let j = i + 1; j < faceDescriptors.value.length; j++) {
-      const score = faceapi.euclideanDistance(faceDescriptors.value[i], faceDescriptors.value[j]);
-      similarityScores.value.push(score);
-    }
-  }
-};
-
-//cancelNotice
+// SweetAlert for rejecting the notification
 const cancelNotice = async () => {
-  try {
-    if (notiforupdateStore.currentNotiforupdate) {
-      const notiforupdateId = notiforupdateStore.currentNotiforupdate.notiforupdateId;
-      if (notiforupdateId) {
-        // Call the store method to update the notification status
-        await notiforupdateStore.updateNotiforupdateReject(
-          String(notiforupdateId),
-          notiforupdateStore.currentNotiforupdate
-        );
-        // Update local state to reflect the status change
-        notiforupdateStore.currentNotiforupdate.statusconfirmation = 'rejected';
-      } else {
-        throw new Error('Notification ID is undefined.');
-      }
-      messageStore.showInfo('การแจ้งเตือนถูกปฏิเสธสำเร็จแล้ว');
-      // Use setTimeout to wait for 3 seconds before navigating and refreshing
-      setTimeout(() => {
-        router.push('/courseManagement').then(() => {
-          window.location.reload();
-        });
-      }, 2000); // 2 second delay
-    } else {
-      console.error('No notification to reject.');
+  Swal.fire({
+    icon: 'warning',
+    title: 'คุณต้องการปฏิเสธการอัปเดตรูปภาพหรือไม่',
+    showCancelButton: true,
+    confirmButtonText: 'ยืนยัน',
+    cancelButtonText: 'ยกเลิก',
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33'
+  }).then(async (result) => {
+    if (result.isConfirmed && notiforupdateStore.currentNotiforupdate) {
+      await notiforupdateStore.updateNotiforupdateReject(
+        String(notiforupdateStore.currentNotiforupdate.notiforupdateId),
+        notiforupdateStore.currentNotiforupdate
+      );
+      Swal.fire('สำเร็จ!', 'การแจ้งเตือนถูกปฏิเสธ', 'success');
+      router.push('/courseManagement').then(() => window.location.reload());
     }
-  } catch (error) {
-    messageStore.showError('Failed to reject notification.');
-    console.error('Error rejecting notice:', error);
-  }
+  });
 };
 
-//confirmNotification
+// SweetAlert for confirming the notification
 const confirmNotice = async () => {
-  try {
-    if (notiforupdateStore.currentNotiforupdate) {
-      const notiforupdateId = notiforupdateStore.currentNotiforupdate.notiforupdateId;
-
-      if (notiforupdateId) {
-        // Call the store method to update the notification status
-        await notiforupdateStore.updateNotiforupdateConfirm(
-          String(notiforupdateId),
-          notiforupdateStore.currentNotiforupdate
-        );
-
-        // Update local state to reflect the status change
-        notiforupdateStore.currentNotiforupdate.statusconfirmation = 'confirmed';
-
-        console.log(notiforupdateStore.currentNotiforupdate);
-
-      } else {
-        throw new Error('Notification ID is undefined.');
-      }
-      messageStore.showInfo('ยืนยันการแจ้งเตือนสำเร็จแล้ว');
-      // Optionally, navigate to another route
+  Swal.fire({
+    icon: 'success',
+    title: 'คุณต้องการยืนยันการอัปโหลดใช่หรือไม่',
+    showCancelButton: true,
+    confirmButtonText: 'ยืนยัน',
+    cancelButtonText: 'ยกเลิก',
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33'
+  }).then(async (result) => {
+    if (result.isConfirmed && notiforupdateStore.currentNotiforupdate) {
+      await notiforupdateStore.updateNotiforupdateConfirm(
+        String(notiforupdateStore.currentNotiforupdate.notiforupdateId),
+        notiforupdateStore.currentNotiforupdate
+      );
+      Swal.fire('สำเร็จ!', 'การแจ้งเตือนถูกยืนยัน', 'success');
       router.push('/courseManagement');
-    } else {
-      console.error('No notification to confirm.');
     }
-  } catch (error) {
-    messageStore.showError('Failed to confirm notification.');
-    console.error('Error confirming notice:', error);
-  }
+  });
 };
-
-
-
-
 </script>
+
 
 <template>
   <v-container style="padding-top: 120px;">
@@ -153,13 +91,15 @@ const confirmNotice = async () => {
       <div v-if="isLoading" class="loader-overlay">
         <Loader></Loader>
       </div>
+
+      <!-- Title -->
       <v-row>
         <v-col style="text-align: center;">
-          <h1>ยืนยันการเปลี่ยนรูปนิสิต</h1>
+          <h1 style="color: green;">ยืนยันการอัปเดตรูปภาพ</h1>
         </v-col>
       </v-row>
 
-      <!-- Check if notifications exist and show only the first one -->
+      <!-- Student Information -->
       <v-row class="d-flex justify-center">
         <v-col cols="12" class="text-center">
           <h3>
@@ -168,10 +108,21 @@ const confirmNotice = async () => {
             {{ notiforupdateStore.currentNotiforupdate?.userSender?.lastName }}
           </h3>
         </v-col>
-
-        <!-- Display notification images -->
+      </v-row>
+      <v-row class="d-flex justify-center">
         <v-col cols="12" class="text-center">
-          <h3>รูปนิสิตใหม่</h3>
+          <h3 style="color: blue;">รูปภาพเก่า</h3>
+        </v-col>
+        <v-col v-for="(image, index) in imageUrls2" :key="'user-image-' + index" cols="2" md="2" lg="2"
+          class="image-container">
+          <v-img :src="image" aspect-ratio="1" class="rounded-lg ma-2 d-flex align-center justify-center">
+          </v-img>
+        </v-col>
+      </v-row>
+      <!-- New Student Images Section -->
+      <v-row class="d-flex justify-center">
+        <v-col cols="12" class="text-center">
+          <h3 style="color: blue;">รูปภาพใหม่</h3>
         </v-col>
         <v-col v-for="(image, index) in imageUrls" :key="'notification-image-' + index" cols="2" md="2" lg="2"
           class="image-container">
@@ -180,23 +131,13 @@ const confirmNotice = async () => {
         </v-col>
       </v-row>
 
-      <!-- Display User Images Below the Notification Images -->
-      <v-row class="d-flex justify-center">
-        <v-col cols="12" class="text-center">
-          <h3>รูปนิสิตเดิม</h3>
-        </v-col>
-        <!-- {{  notiforupdateStore.currentNotiforupdate?.images }} -->
+      <!-- Old Student Images Section -->
+     
 
-        <v-col v-for="(image, index) in imageUrls2" :key="'user-image-' + index" cols="2" md="2" lg="2"
-          class="image-container">
-          <v-img :src="image" aspect-ratio="1" class="rounded-lg ma-2 d-flex align-center justify-center">
-          </v-img>
-        </v-col>
-      </v-row>
-      <v-card-actions>
-        <v-btn color="error" @click="cancelNotice">ปฎิเสธ</v-btn>
-        <v-spacer></v-spacer>
-        <v-btn color="success" @click="confirmNotice">ยืนยัน</v-btn>
+      <!-- Actions -->
+      <v-card-actions class="justify-space-between">
+        <v-btn color="error" @click="cancelNotice" style="padding: 12px 24px;">ปฎิเสธ</v-btn>
+        <v-btn color="success" @click="confirmNotice" style="padding: 12px 24px;">ยืนยัน</v-btn>
       </v-card-actions>
     </v-card>
   </v-container>
@@ -222,3 +163,4 @@ const confirmNotice = async () => {
   justify-content: center;
 }
 </style>
+

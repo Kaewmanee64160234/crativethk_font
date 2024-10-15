@@ -73,7 +73,8 @@ else if (!userStore.editUser.email || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA
   // Save the user data and reset the form
   await userStore.saveUser();
   await userStore.resetUser();
-
+  userStore.currentPage = 1;
+  await userStore.getTeacherPagination();
   // Close the edit dialog
   userStore.closeDialog();
 userStore.currentPage = 1;

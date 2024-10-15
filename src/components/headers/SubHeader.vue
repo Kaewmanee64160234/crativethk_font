@@ -1,8 +1,10 @@
 <script lang="ts" setup>
+import router from "@/router";
 import { useUserStore } from "@/stores/user.store";
 const userStore = useUserStore();
 const logout = () => {
   userStore.logout();
+  router.push("/");
 };
 </script>
 <template>

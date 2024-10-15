@@ -92,8 +92,18 @@ export const useNotiforupdate = defineStore("notiforupdateStore", () => {
     }
   }
 
+  //getNotification last created by userId
+  const getNotiforupdateByLastId = async (id: string) => {
+    try {
+      const res = await notiforupdateService.getNotificationByUserId(id);
+      currentNotiforupdate.value = mapToNotice(res.data);
+    } catch (error) {
+      console.log(error);
+    }
+  }
   return {
     sendEmailToTeacher,
+    getNotiforupdateByLastId,
     notiforupdates, // Make sure this is returned so the list can be used in components
     currentNotiforupdate,
     fetchAllNotifications,
