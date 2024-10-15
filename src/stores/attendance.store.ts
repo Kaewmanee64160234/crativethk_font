@@ -9,6 +9,8 @@ import { useMessageStore } from "./message";
 import type { User } from "./types/User";
 import { useUserStore } from "./user.store";
 import Swal from "sweetalert2";
+import type { Identification } from "./types/identification.type";
+import type Assignment from "./types/Assignment";
 export const useAttendanceStore = defineStore("attendanceStore", () => {
   const attendances = ref<Attendance[]>();
   const showDialog = ref(false);
@@ -242,6 +244,17 @@ export const useAttendanceStore = defineStore("attendanceStore", () => {
       console.log(error);
     }
   };
+  // submitAttendances
+  const submitAttendances = async ( identifications: Identification[],
+    croppedImagesDataUrls: string[],
+    currentAssignment: Assignment,status:string,confirmStatus:string) => {
+    try {
+       await attendaceService.submitAttendancesInBatches(identifications, croppedImagesDataUrls, currentAssignment,status,confirmStatus);
+      
+    } catch (error) {
+      console.log(error);
+    }
+  }
   return {
     getAttendanceByCourseandStudentId,
     attendances,
@@ -264,5 +277,6 @@ export const useAttendanceStore = defineStore("attendanceStore", () => {
     removeAttendance,
     attendancesList,
     revalidateAttendance,
+    submitAttendances
   };
 });

@@ -84,7 +84,6 @@ export const useCourseStore = defineStore("courseStore", () => {
   const getCourseById = async (id: string) => {
     try {
       const res = await courseService.getCourseById(id);
-
       currentCourse.value = res.data;
       console.log(currentCourse.value);
     } catch (e) {

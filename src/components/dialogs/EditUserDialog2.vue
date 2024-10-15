@@ -77,6 +77,8 @@ else if (!userStore.editUser.email || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA
   await userStore.getTeacherPagination();
   // Close the edit dialog
   userStore.closeDialog();
+userStore.currentPage = 1;
+  userStore.getTeacherPagination();
 }
 
 

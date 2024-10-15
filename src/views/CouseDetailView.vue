@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch,nextTick } from "vue";
+import { computed, onMounted, ref, watch, nextTick } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useAssignmentStore } from "@/stores/assignment.store";
 import CardAssigment from "@/components/assigment/CardAssigment.vue";
@@ -50,6 +50,7 @@ const showCamera = ref(false);
 const videoRef = ref<HTMLVideoElement | null>(null);
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const assignmentManual = ref(false);
+const coursesId = ref("");
 
 const isTeacher = computed(() => userStore.currentUser?.role === "อาจารย์");
 const filteredAssignments = computed(() => {
@@ -72,20 +73,20 @@ const filteredUsers = computed(() => {
   }
 });
 const handlePaste = (event: ClipboardEvent) => {
-      const pastedText = event.clipboardData?.getData('text') || '';
-      const combinedText = nameAssignment.value + pastedText;
+  const pastedText = event.clipboardData?.getData("text") || "";
+  const combinedText = nameAssignment.value + pastedText;
 
-      if (combinedText.length > 50) {
-        event.preventDefault();
-        nextTick(() => {
-          notifyError('ไม่สามารถกรอกเกิน 50 ตัวอักษร');
-        });
-      }
-    };
+  if (combinedText.length > 50) {
+    event.preventDefault();
+    nextTick(() => {
+      notifyError("ไม่สามารถกรอกเกิน 50 ตัวอักษร");
+    });
+  }
+};
 
-    const notifyError = (message: string) => {
-      console.error(message);
-    };
+const notifyError = (message: string) => {
+  console.error(message);
+};
 
 // Fetch assignments when the component mounts
 onMounted(async () => {
@@ -104,10 +105,7 @@ watch(
   () => assignmentStore.currentPage,
   async (newPage, oldPage) => {
     if (newPage !== oldPage) {
-      await assignmentStore.getAssignmentByCourseIdPaginate(
-        id.value.toString(),
-        newPage
-      );
+      await assignmentStore.getAssignmentByCourseIdPaginate(id.value.toString(), newPage);
       posts.value = assignmentStore.assignments;
       totalPage.value = assignmentStore.total;
     }
@@ -115,10 +113,7 @@ watch(
 );
 
 // Calculate total score based on attendance status.
-const calculateTotalScore = (
-  userId: number,
-  assignments: Assignment[]
-): number => {
+const calculateTotalScore = (userId: number, assignments: Assignment[]): number => {
   return assignments.reduce((total, assignment) => {
     const status = getAttendanceStatus(
       attendanceStore.attendances || [],
@@ -142,8 +137,7 @@ const getAttendanceStatus = (
 ): string => {
   const attendanceIndex = attendances.findIndex(
     (att: Attendance) =>
-      att.user?.userId === userId &&
-      att.assignment?.assignmentId === assignmentId
+      att.user?.userId === userId && att.assignment?.assignmentId === assignmentId
   );
   return attendances[attendanceIndex]
     ? attendances[attendanceIndex].attendanceStatus
@@ -170,11 +164,7 @@ const handleFileChange = (event: Event) => {
         const result = e.target?.result as string;
         if (result) {
           try {
-            const resizedImage = await resizeAndConvertImageToBase64(
-              result,
-              800,
-              600
-            );
+            const resizedImage = await resizeAndConvertImageToBase64(result, 800, 600);
             imageUrls.value.push(resizedImage);
             imageFiles.value.push(file);
           } catch (error) {
@@ -304,8 +294,7 @@ const resizeAndConvertImageToBase64 = (
       const resizedImage = canvas.toDataURL("image/jpeg", quality);
       resolve(resizedImage);
     };
-    img.onerror = () =>
-      reject(new Error(`Failed to load image at ${imageUrl}`));
+    img.onerror = () => reject(new Error(`Failed to load image at ${imageUrl}`));
     img.src = imageUrl;
   });
 };
@@ -327,6 +316,7 @@ const createPost = async () => {
   stopCamera();
   console.time("Total createPost execution time");
 
+  // Validation checks
   console.time("Validation check");
   if (nameAssignment.value === "") {
     console.timeEnd("Validation check");
@@ -336,6 +326,7 @@ const createPost = async () => {
     });
     return;
   }
+
   if ([...capturedImages.value, ...imageUrls.value].length > 20) {
     console.timeEnd("Validation check");
     Swal.fire({
@@ -344,16 +335,14 @@ const createPost = async () => {
     });
     return;
   }
-
   console.timeEnd("Validation check");
 
-  console.time("Room selection");
-  console.timeEnd("Room selection");
-
   console.time("Assignment creation");
+
+  // Create new assignment object
   const newAssignment = {
     assignmentTime: new Date(),
-    nameAssignment: nameAssignment.value,
+    nameAssignment: nameAssignment.value || new Date().toLocaleString(), // Fallback to date if name is empty
     course: { ...courseStore.currentCourse! },
     assignmentId: 0,
     attdances: [],
@@ -364,79 +353,91 @@ const createPost = async () => {
     assignmentManual: assignmentManual.value,
   };
 
-  await assignmentStore.createAssignment(
-    {
-      ...newAssignment,
-      statusAssignment: "nodata",
-    },
-    imageFiles.value
-  );
-  console.log("newAssignment", assignmentStore.currentAssignment);
+  try {
+    // Step 1: Create assignment
+    await assignmentStore.createAssignment(
+      {
+        ...newAssignment,
+        statusAssignment: "nodata",
+      },
+      [] // Send empty file array initially
+    );
 
-  if (imageUrls.value.length > 0) {
-    imageUrls.value.push(...capturedImages.value);
-    router.push({
-      path: `/mapping2/assignment/${assignmentStore.currentAssignment?.assignmentId}`,
-      query: { imageUrls: imageUrls.value },
+    const createdAssignment = assignmentStore.currentAssignment;
+    console.log("newAssignment", createdAssignment);
+
+    if (!createdAssignment || !createdAssignment.assignmentId) {
+      console.error("Assignment creation failed or assignmentId is undefined.");
+      Swal.fire({
+        icon: "error",
+        title: "เกิดข้อผิดพลาดในการสร้างการเช็คชื่อ",
+      });
+      return;
+    }
+
+    console.timeEnd("Assignment creation");
+
+    // Proceed to image processing and uploads only if there are images
+    if (capturedImages.value.length > 0 || imageUrls.value.length > 0) {
+      console.time("Image processing");
+
+      // Resize and compress images before uploading
+      const processedImages = await Promise.all(
+        imageFiles.value.map((file) =>
+          resizeAndConvertImageToBase64(URL.createObjectURL(file), 800, 600, 0.7)
+        )
+      );
+
+      console.timeEnd("Image processing");
+
+      // Convert base64 images to File objects
+      const filesToUpload = processedImages.map((base64, index) =>
+        base64ToFile(base64, `image-${index + 1}.jpg`)
+      );
+
+      console.time("Backend image upload");
+
+      // Step 2: Upload images
+      await assignmentStore.updateImageAssignment(
+        createdAssignment.assignmentId + "",
+        filesToUpload
+      );
+
+      console.timeEnd("Backend image upload");
+    }
+
+    // Image storage and navigation
+    console.time("Image storage and navigation");
+
+    // Combine captured images and image URLs, remove duplicates
+    const allImages = [...new Set([...capturedImages.value, ...imageUrls.value])]; // Avoid duplicates
+    localStorage.setItem("images", JSON.stringify(allImages));
+
+    if (allImages.length > 0) {
+      // Navigate to the next page
+      router.push({
+        path: `/mapping2/assignment/${createdAssignment.assignmentId}/course/${id.value}`,
+      });
+
+      // Clear the form and reset images after navigating
+      closeDialog();
+      nameAssignment.value = "";
+      imageUrls.value = [];
+      capturedImages.value = [];
+      imageFiles.value = [];
+    } else {
+      console.error("No images available for posting.");
+    }
+
+    console.timeEnd("Image storage and navigation");
+  } catch (error) {
+    console.error("Error creating assignment or uploading images:", error);
+    Swal.fire({
+      icon: "error",
+      title: "เกิดข้อผิดพลาดในการสร้างการเช็คชื่อหรือการอัปโหลดรูปภาพ",
+      text: (error as any).message,
     });
   }
-  // If assignment.name is empty, set it to the current date and time
-  if (newAssignment.nameAssignment === "") {
-    newAssignment.nameAssignment = new Date().toLocaleString();
-  }
-  console.timeEnd("Assignment creation");
-
-  console.time("Image processing");
-  // Resize and compress images before uploading
-  const processedImages = await Promise.all(
-    imageFiles.value.map((file) =>
-      resizeAndConvertImageToBase64(URL.createObjectURL(file), 800, 600, 0.7)
-    )
-  );
-  console.timeEnd("Image processing");
-
-  // Convert base64 images to File objects
-  const filesToUpload = processedImages.map((base64, index) =>
-    base64ToFile(base64, `image-${index + 1}.jpg`)
-  );
-
-  console.time("Backend assignment creation");
-  // Create the assignment in the backend with the converted files
-  await assignmentStore.createAssignment(
-    {
-      ...newAssignment,
-      statusAssignment: "nodata",
-    },
-    filesToUpload
-  );
-  console.timeEnd("Backend assignment creation");
-
-  // Close the create post dialog
-  showDialog.value = false;
-
-  console.time("Image storage and navigation");
-  // Combine captured images and image URLs, and store them in localStorage
-  const allImages = [...capturedImages.value, ...imageUrls.value];
-  localStorage.setItem("images", JSON.stringify(allImages));
-
-  if (allImages.length > 0) {
-    // Navigate to the next page (this part is commented out as per your request)
-    router.push({
-      path: `/mapping2/assignment/${
-        assignmentStore.currentAssignment?.assignmentId
-      }/course/${id.value.toString()}`,
-    });
-
-    // Clear the form and images after navigating
-    closeDialog();
-    nameAssignment.value = "";
-    imageUrls.value = [];
-    capturedImages.value = [];
-    imageFiles.value = [];
-  } else {
-    console.error("No images available for posting.");
-  }
-  console.timeEnd("Image storage and navigation");
 
   console.timeEnd("Total createPost execution time");
 };
@@ -543,12 +544,33 @@ const closeDialog = () => {
   capturedImages.value = [];
   imageFiles.value = [];
 };
-const getAbsenceCount = (userId: string) => {
-  return attendanceStore!.attendances!.filter(
-    (attendance) =>
-      attendance.user?.userId === userId &&
-      attendance.attendanceStatus === "absent"
-  ).length;
+const calculateTotalScoreAndAbsence = (
+  userId: number,
+  assignments: Assignment[]
+): { totalScore: number; absentCount: number } => {
+  // Initialize totalScore and absentCount
+  let totalScore = 0;
+  let absentCount = 0;
+
+  // Loop through all assignments to calculate totalScore and count absences
+  assignments.forEach((assignment) => {
+    const status = getAttendanceStatus(
+      attendanceStore.attendances || [],
+      userId,
+      assignment.assignmentId!
+    );
+
+    // Increment totalScore based on attendance status
+    if (status === "present") {
+      totalScore += 1; // Full point for present
+    } else if (status === "late") {
+      totalScore += 0.5; // Half point for late
+    } else if (status === "absent") {
+      absentCount += 1; // Count absences
+    }
+  });
+
+  return { totalScore, absentCount };
 };
 </script>
 
@@ -594,11 +616,10 @@ const getAbsenceCount = (userId: string) => {
             <v-divider></v-divider>
             <v-card-text>
               <v-container>
-                <!-- Assignment Name Input -->
                 <v-row>
                   <v-col cols="12" sm="12">
                     <v-card-title>
-                      <h5>ชื่อเรื่องการเช็คชื่อ</h5>
+                      <h6>ชื่อเรื่องการเช็คชื่อ</h6>
                     </v-card-title>
                     <v-card-text>
                       <v-text-field
@@ -607,14 +628,13 @@ const getAbsenceCount = (userId: string) => {
                         v-model="nameAssignment"
                         variant="outlined"
                         outlined
-                        prepend-inner-icon="mdi-assignment"
                         required
                         maxlength="50"
                         @paste="handlePaste"
                         :rules="[
-    (v: any) => !!v || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*',
-    (v: any) => (v && v.length >= 1 && v.length <= 50) || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*'
-  ]"
+                          (v: any) => !!v || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*',
+                          (v: any) => (v && v.length >= 1 && v.length <= 50) || '*กรุณากรอกตัวอักษร 1-50 ตัวอักษร*'
+                        ]"
                       />
                     </v-card-text>
                   </v-col>
@@ -622,18 +642,16 @@ const getAbsenceCount = (userId: string) => {
 
                 <!-- File Upload and Camera Controls -->
                 <v-row>
-                  <v-col cols="12" sm="12">
+                  <v-col cols="12" sm="7">
                     <v-card-title style="white-space: nowrap">
-                      <h5>
+                      <h6>
                         อัปโหลดรูปภาพ
-                        <span style="color: red"
-                          >(ห้ามอัปโหลดรูปภาพเกิน 20 รูป)</span
-                        >
-                      </h5>
+                        <span style="color: red">(ห้ามอัปโหลดรูปภาพเกิน 20 รูป)</span>
+                      </h6>
                     </v-card-title>
                     <v-card-text>
                       <v-file-input
-                        label="อัปโหลดรูปภาพ (จำนวนไฟล์สูงสุด 20 รูป)"
+                        label="(อัปโหลดสูงสุด 20 รูป)"
                         prepend-icon="mdi-image-multiple"
                         filled
                         @change="handleFileChange"
@@ -643,17 +661,18 @@ const getAbsenceCount = (userId: string) => {
                       ></v-file-input>
                     </v-card-text>
                   </v-col>
-                </v-row>
-
-                <v-row>
-                  <v-col cols="12" sm="12">
-                    <v-btn color="primary" @click="startCamera" block>
-                      <v-icon left>mdi-camera</v-icon>
-                      เปิดกล้องเพื่อถ่ายรูป
-                    </v-btn>
+                  <v-col cols="12" sm="5">
+                    <v-card-title>
+                      <h5>&nbsp;</h5>
+                    </v-card-title>
+                    <v-card-text>
+                      <v-btn color="primary" @click="startCamera" block>
+                        <v-icon left>mdi-camera</v-icon>
+                        เปิดกล้องเพื่อถ่ายรูป
+                      </v-btn>
+                    </v-card-text>
                   </v-col>
                 </v-row>
-
                 <!-- Camera View -->
                 <v-row v-if="showCamera">
                   <v-col cols="12" sm="12">
@@ -664,13 +683,14 @@ const getAbsenceCount = (userId: string) => {
                     ></video>
                     <canvas ref="canvasRef" style="display: none"></canvas>
                   </v-col>
-                  <v-col cols="12" sm="6">
+                  <v-col cols="12" sm="4">
                     <v-btn @click="captureImage" block color="primary">
                       <!-- <v-icon left>mdi-camera</v-icon> -->
                       ถ่ายรูปภาพ
                     </v-btn>
                   </v-col>
-                  <v-col cols="12" sm="6">
+                  <v-spacer></v-spacer>
+                  <v-col cols="12" sm="4">
                     <v-btn @click="stopCamera" block color="error">
                       <!-- <v-icon left>mdi-close</v-icon> -->
                       ปิดกล้องถ่ายรูป
@@ -685,7 +705,7 @@ const getAbsenceCount = (userId: string) => {
                       v-if="capturedImages.length + imageUrls.length > 20"
                       type="error"
                       outlined
-                      border="left"
+                      border="start"
                       elevation="2"
                       icon="mdi-alert"
                     >
@@ -695,7 +715,10 @@ const getAbsenceCount = (userId: string) => {
                 </v-row>
 
                 <!-- Uploaded and Captured Images Preview -->
-                <v-row class="scrollable-image-section">
+                <v-row
+                  class="scrollable-image-section"
+                  v-if="imageUrls.length > 0 || capturedImages.length > 0"
+                >
                   <v-col
                     cols="12"
                     sm="6"
@@ -717,21 +740,21 @@ const getAbsenceCount = (userId: string) => {
                     </v-card>
                   </v-col>
                 </v-row>
+                <v-row v-else>
+                  <v-col style="text-align: center; color: #a9a9a9">ไม่มีรูปภาพ</v-col>
+                </v-row>
               </v-container>
             </v-card-text>
 
             <!-- Dialog Actions (Fixed at the Bottom) -->
             <v-card-actions class="fixed-action-buttons">
-              <v-btn color="error" @click="closeDialog()" outlined>
-                ยกเลิก
-              </v-btn>
+              <v-btn color="error" @click="closeDialog()" outlined> ยกเลิก </v-btn>
               <v-spacer></v-spacer>
 
               <!-- Disable the post button if more than 20 images or if the name is empty -->
               <v-btn
                 :disabled="
-                  [...capturedImages, ...imageUrls].length > 20 ||
-                  nameAssignment === ''
+                  [...capturedImages, ...imageUrls].length > 20 || nameAssignment === ''
                 "
                 color="primary"
                 @click="checkImageCountAndPost"
@@ -744,13 +767,7 @@ const getAbsenceCount = (userId: string) => {
         </v-dialog>
 
         <v-row class="pt-5" v-if="posts.length > 0">
-          <v-col
-            cols="12"
-            sm="12"
-            md="12"
-            v-for="post in posts"
-            :key="post.assignmentId"
-          >
+          <v-col cols="12" sm="12" md="12" v-for="post in posts" :key="post.assignmentId">
             <CardAssigment :post="post"></CardAssigment>
           </v-col>
         </v-row>
@@ -857,13 +874,7 @@ const getAbsenceCount = (userId: string) => {
               </v-col>
               <v-col cols="10" style="display: flex; align-items: center">
                 <div>
-                  {{
-                    member.studentId +
-                    " " +
-                    member.firstName +
-                    " " +
-                    member.lastName
-                  }}
+                  {{ member.studentId + " " + member.firstName + " " + member.lastName }}
                 </div>
               </v-col>
               <v-divider></v-divider>
@@ -886,20 +897,12 @@ const getAbsenceCount = (userId: string) => {
             </h1>
           </v-card-title>
         </v-card>
-        <v-card
-          class="mx-auto"
-          outlined
-          style="padding: 20px; margin-top: 10px"
-        >
+        <v-card class="mx-auto" outlined style="padding: 20px; margin-top: 10px">
           <v-row>
             <v-col col="12" sm="10" class="text-primary">
               <v-card-title>คะแนนการเช็คชื่อ</v-card-title>
             </v-col>
-            <v-col
-              col="12"
-              sm="2"
-              v-if="userStore.currentUser?.role === 'อาจารย์'"
-            >
+            <v-col col="12" sm="2" v-if="userStore.currentUser?.role === 'อาจารย์'">
               <v-btn
                 color="#093271"
                 @click="exportFile"
@@ -932,16 +935,19 @@ const getAbsenceCount = (userId: string) => {
                 v-for="user in filteredUsers"
                 :key="user.userId"
                 :class="{
-              'highlight-red': getAbsenceCount(user.userId!) > 3,
-              'highlight-yellow': getAbsenceCount(user.userId!) === 3
-            }"
+                'highlight-red': calculateTotalScoreAndAbsence(user.userId!, assignmentStore.assignments)
+                  .absentCount > 3
+              }"
               >
                 <td class="text-center vertical-divider">
                   {{ user.studentId }}
                 </td>
                 <td class="vertical-divider">
                   <span
-                    :class="{ 'highlighted-text': getAbsenceCount(user.userId!) > 3 }"
+                    :class="{
+                    'highlighted-text': calculateTotalScoreAndAbsence(user.userId!, assignmentStore.assignments)
+                      .absentCount > 3
+                  }"
                   >
                     {{ user.firstName + " " + user.lastName }}
                   </span>
@@ -1049,6 +1055,7 @@ const getAbsenceCount = (userId: string) => {
   background-color: #3051ac;
   /* color: white !important; */
 }
+
 .v-col {
   padding: 10px 0;
   /* Provides consistent vertical spacing between rows */
@@ -1102,6 +1109,7 @@ const getAbsenceCount = (userId: string) => {
 .primary--text {
   color: #6ca7fa !important;
 }
+
 .image-container {
   position: relative;
 }
@@ -1110,17 +1118,23 @@ const getAbsenceCount = (userId: string) => {
   position: absolute;
   top: -10px;
   right: -10px;
-  background-color: transparent !important; /* No background */
-  box-shadow: none; /* Remove shadow */
-  padding: 0; /* Remove padding */
+  background-color: transparent !important;
+  /* No background */
+  box-shadow: none;
+  /* Remove shadow */
+  padding: 0;
+  /* Remove padding */
 }
 
 .delete-icon:hover {
-  background-color: transparent; /* No hover background */
+  background-color: transparent;
+  /* No hover background */
 }
+
 /* Scrollable image section */
 .scrollable-image-section {
-  max-height: 200px; /* Adjust this value as needed */
+  max-height: 200px;
+  /* Adjust this value as needed */
   overflow-y: auto;
 }
 
@@ -1128,10 +1142,14 @@ const getAbsenceCount = (userId: string) => {
 .fixed-action-buttons {
   position: sticky;
   bottom: 0;
-  background-color: white; /* Same background as the card */
-  z-index: 1; /* Ensure it stays above content */
-  padding: 16px; /* Add some padding for better spacing */
-  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1); /* Optional: shadow for better separation */
+  background-color: white;
+  /* Same background as the card */
+  z-index: 1;
+  /* Ensure it stays above content */
+  padding: 16px;
+  /* Add some padding for better spacing */
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+  /* Optional: shadow for better separation */
 }
 
 .image-container {

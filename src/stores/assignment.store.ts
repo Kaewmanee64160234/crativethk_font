@@ -105,6 +105,8 @@ function goToPreviousPage(courseId:string) {
     try {
       const res = await assignmentService.getAssignmentById(id);
       currentAssignment.value = res.data;
+      console.log("currentAssignment", currentAssignment.value);
+      
     } catch (e) {
       console.log(e);
     }
@@ -123,6 +125,7 @@ function goToPreviousPage(courseId:string) {
       console.error("Error updating assignment:", e);
     }
   };
+
   const deleteAssignment = async (id: string) => {
     try {
       const response = await assignmentService.deleteAssignment(id);
@@ -168,6 +171,19 @@ function goToPreviousPage(courseId:string) {
       console.error('Error fetching assignments:', error);
     }
   }
+  // updateImageAssignment
+  const updateImageAssignment = async (id: string, files: File[]) => {
+    try {
+      const res = await assignmentService.updateImageAssignment(id, files);
+      if (res.data) {
+        console.log("assignment updated", res.data);
+      } else {
+        alert("Error updating assignment");
+      }
+    } catch (e) {
+      console.error("Error updating assignment:", e);
+    }
+  };
   
 
   return {
@@ -191,6 +207,7 @@ function goToPreviousPage(courseId:string) {
     total,
     currentPage,
     lastPage,
+    updateImageAssignment
 
   };
 });

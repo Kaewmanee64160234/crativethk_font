@@ -15,6 +15,7 @@ function createAssignment(data:Assignment,files:File[]) {
     const formData = new FormData();
     files.forEach((file) => {
         formData.append("files", file, file.name);
+        
     });
     formData.append("nameAssignment", data.nameAssignment);
     formData.append("assignmentTime", data.assignmentTime.toISOString());
@@ -22,6 +23,16 @@ function createAssignment(data:Assignment,files:File[]) {
     formData.append("coursesId", data.course.coursesId);
     // formData.append("room", data.room);
     return http.post("/assignments", formData);
+}
+
+//  @Patch(':id/image')
+function updateImageAssignment
+(id:string,files:File[]) {
+    const formData = new FormData();
+    files.forEach((file) => {
+        formData.append("files", file, file.name);
+    });
+    return http.patch(`/assignments/${id}/image`, formData);
 }
 //get Assignment by course id
 function getAssignmentByCourseId(id:string) {
@@ -47,4 +58,4 @@ function getAssignmentImages(id:string) {
 }
 
 
-export default { getAssignment,createAssignment,getAssignmentById,getAssignmentByCourseId,updateAssignment, deleteAssignment,getAssignmentImages,getAssignmentByCourseIdPaginate };
+export default { getAssignment,createAssignment,getAssignmentById,getAssignmentByCourseId,updateAssignment, deleteAssignment,getAssignmentImages,getAssignmentByCourseIdPaginate,updateImageAssignment };

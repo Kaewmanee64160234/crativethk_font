@@ -10,15 +10,28 @@
   const router = useRouter();
 
   onMounted(async () => {
-    await notiforupdateStore.fetchAllNotifications(); // Fetch notifications on mount
-    await notiforupdateStore.getNotificationByUserReceive(userStore.currentUser!);
-  });
+    if (userStore.currentUser?.role === 'อาจารย์') {
+      // await notiforupdateStore.fetchAllNotifications();
+      await notiforupdateStore.getNotificationByUserReceive(userStore.currentUser!);
+      console.log(notiforupdateStore.notiforupdates);
+    }
+
+      // เรียงลำดับ notification ตามวันที่ใหม่สุด
+      notiforupdateStore.notiforupdates.sort((a, b) => {
+        const dateA = a.createdDate ? new Date(a.createdDate).getTime() : 0;
+        const dateB = b.createdDate ? new Date(b.createdDate).getTime() : 0;
+        return dateB - dateA; // เรียงจากวันที่ใหม่ไปเก่า
+      });
+
+    });
+
+
 
   // Function to navigate to ConfirmRejectView with notification ID
   function click(noticId: number) {
     router.push(`/confirmRejectNotic/${noticId}`);
   }
-  </script>
+</script>
 
   <template>
     <v-app-bar scroll-behavior="elevate" color="#3051AC">
@@ -58,15 +71,16 @@
                   <!-- Notification Date -->
                   <v-list-item-subtitle>
                     {{ notification.createdDate ? new Date(notification.createdDate).toLocaleDateString('th-TH') + ' ' +
-                      new
-                        Date(notification.createdDate).toLocaleTimeString('th-TH', {
-                          hour: '2-digit', minute: '2-digit',
-                    hour12: false
+                      new Date(notification.createdDate).toLocaleTimeString('th-TH', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false
                     }) : 'Date not available' }}
                   </v-list-item-subtitle>
                 </v-list-item-content>
               </v-list-item>
             </v-list>
+
 
             <!-- No Notifications Message -->
             <v-list v-else>

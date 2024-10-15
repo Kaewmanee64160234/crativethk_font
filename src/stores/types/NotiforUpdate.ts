@@ -35,7 +35,7 @@ export function mapToNotice(data: any): NotiforUpdate {
         notiforupdateId: data.notiforupdateId,
         images: images,
         faceDescriptions: faceDescriptions,
-        statusconfirmation: data.statusconfirmation,
+        statusconfirmation: data.statusConfirmation,
         userReceive: data.userReceive,
         userSender: data.userSender,
         createdDate: data.createdDate ? new Date(data.createdDate) : undefined,

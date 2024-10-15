@@ -19,8 +19,11 @@ const messageStore = useMessageStore();
 const attdent = ref<Attendance[]>([]);
 const queryCourseId = route.params.courseId;
 const isRecheckAllowed = ref(true);
+const assignmentId = route.params.assignmentId;
 
 onMounted(async () => {
+
+
   await userStore.getCurrentUser();
   await assignmentStore.getAssignmentById(route.params.assignmentId.toString());
   await attendanceStore.getAttendanceByAssignmentId(route.params.assignmentId.toString());
@@ -39,7 +42,7 @@ onMounted(async () => {
   attdent.value = [];
   attdent.value.push(...attendanceStore.attendances!.filter((attend: Attendance) => 
     (attend.user?.studentId === userStore.currentUser?.studentId) && 
-    (attend.attendanceImage !== 'noimage.jpg')
+    (attend.attendanceImage !== 'noimage.jpg') && attend.attendanceStatus === 'present'
   ));
 });
 
@@ -92,11 +95,12 @@ const goBackToCourseDetail = () => {
 };
 
 const confirmTagging = () => {
-  router.push("/taggingFace/course/" + queryCourseId + "/assignment/" + route.params.assignmentId);
+  router.push("/taggingFace/course/" + queryCourseId + "/assignment/" + assignmentId);
 };
 // goToCourseDetail
 const goToCourseDetail = () => {
   router.push("/courseDetail/" + queryCourseId);
+
 };
 </script>
 
@@ -164,14 +168,14 @@ const goToCourseDetail = () => {
     <!-- No attendance detected -->
     <v-row v-else style="width: 100%;">
       <v-col v-if="attdent.length > 0" v-for="student in attdent" :key="student.attendanceId" cols="12" sm="6" md="4" lg="3">
-        <v-card class="pa-3 student-card" outlined>
+        <v-card v-if="isRecheckAllowed" class="pa-3 student-card" outlined>
           <!-- Student Information -->
           <v-row justify="center" align="center">
             <div class="d-flex flex-column align-items-center">
               <div v-if="student.user">
                 <div class="subtitle-1 bold-text mt-2">
                  
-                  {{ student.user.studentId + " " + student.user.firstName }}
+                  {{ student.user.studentId + " " + student.user.firstName  }}
                 </div>
               </div>
               <div v-else class="text-center red--text bold-text mt-2">
@@ -188,10 +192,20 @@ const goToCourseDetail = () => {
           <!-- Re-check Button -->
           <v-row class="mt-3">
             <v-col cols="12">
-              <v-btn v-if="userStore.currentUser?.role !== 'อาจารย์' && isRecheckAllowed " block color="#F6BB49" @click="confirmTagging()">
+              <v-btn v-if="userStore.currentUser?.role !== 'อาจารย์'  && student.attendanceConfirmStatus === 'notconfirm'  " block color="#F6BB49" @click="confirmTagging()">
                 ตรวจสอบอีกครั้ง
               </v-btn>
             </v-col>
+          </v-row>
+        </v-card>
+        <v-card   v-else class="student-card " outlined>
+          <v-row class="align-center justify-center">
+            <div class="text-start
+            ">
+              <div class="subtitle-1 bold-text mt-2" style="color: red;" >
+                หมดเวาลาการตรวจสอบการเข้าเรียน
+              </div>
+            </div>
           </v-row>
         </v-card>
       </v-col>
@@ -200,13 +214,18 @@ const goToCourseDetail = () => {
           <v-row class="align-center justify-center">
             <div class="text-start">
               <div class="subtitle-1 bold-text mt-2">
-                ไม่สามารถตรวจจับการเข้าร่วมของคุณได้
+                ระบบไม่สามารถตรวจจับการเข้าร่วมของคุณได้
               </div>
-              <v-btn class="mt-3" color="primary" @click="confirmTagging()">
-                ยืนยันว่าคุณอยู่ในห้องเรียน
-              </v-btn>
+             
             </div>
           </v-row>
+          <v-row class="align-center justify-center">
+        
+
+          <v-btn class="mt-3" color="primary" @click="confirmTagging()">
+                ยืนยันว่าคุณอยู่ในห้องเรียน
+              </v-btn>
+              </v-row>  
         </v-card>
         <v-card v-else class="student-card " outlined>
           <v-row class="align-center justify-center">

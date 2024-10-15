@@ -109,7 +109,16 @@ const confirmNotice = async () => {
           </h3>
         </v-col>
       </v-row>
-
+      <v-row class="d-flex justify-center">
+        <v-col cols="12" class="text-center">
+          <h3 style="color: blue;">รูปภาพเก่า</h3>
+        </v-col>
+        <v-col v-for="(image, index) in imageUrls2" :key="'user-image-' + index" cols="2" md="2" lg="2"
+          class="image-container">
+          <v-img :src="image" aspect-ratio="1" class="rounded-lg ma-2 d-flex align-center justify-center">
+          </v-img>
+        </v-col>
+      </v-row>
       <!-- New Student Images Section -->
       <v-row class="d-flex justify-center">
         <v-col cols="12" class="text-center">
@@ -123,16 +132,7 @@ const confirmNotice = async () => {
       </v-row>
 
       <!-- Old Student Images Section -->
-      <v-row class="d-flex justify-center">
-        <v-col cols="12" class="text-center">
-          <h3 style="color: blue;">รูปภาพที่อัปเดต</h3>
-        </v-col>
-        <v-col v-for="(image, index) in imageUrls2" :key="'user-image-' + index" cols="2" md="2" lg="2"
-          class="image-container">
-          <v-img :src="image" aspect-ratio="1" class="rounded-lg ma-2 d-flex align-center justify-center">
-          </v-img>
-        </v-col>
-      </v-row>
+     
 
       <!-- Actions -->
       <v-card-actions class="justify-space-between">

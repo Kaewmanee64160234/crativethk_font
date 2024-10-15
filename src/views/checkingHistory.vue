@@ -11,12 +11,9 @@ import type { User } from "@/stores/types/User";
 import UpdateAttendantDialogView from "@/components/attendant/updateAttendantDialog.vue";
 import type Attendance from "@/stores/types/Attendances";
 
-const router = useRouter();
-const courseName = ref("OOAD 2023");
 const courseStore = useCourseStore();
 const assignmentStore = useAssignmentStore();
 const attendanceStore = useAttendanceStore();
-const enrollmentStore = useEnrollmentStore();
 const userStore = useUserStore();
 const route = useRoute();
 const id = ref(route.params.courseId);
@@ -41,16 +38,17 @@ onMounted(async () => {
 });
 
 const getAttendanceStatus = (
-  attendances: Attendance[] | undefined,
+  attendances: Attendance[],
+  userId: number,
   assignmentId: number
 ): string => {
-  if (!attendances) return "absent";
-  const attendance = attendances.find(
-    (att) =>
-      att.user?.userId === currentUser.value?.userId &&
-      att.assignment?.assignmentId === assignmentId
+  const attendanceIndex = attendances.findIndex(
+    (att: Attendance) =>
+      att.user?.userId === userId && att.assignment?.assignmentId === assignmentId
   );
-  return attendance ? attendance.attendanceStatus : "absent";
+  return attendances[attendanceIndex]
+    ? attendances[attendanceIndex].attendanceStatus
+    : "absent";
 };
 
 const getAttendanceStatusTeacher = (
@@ -65,21 +63,6 @@ const getAttendanceStatusTeacher = (
   return attendances[attendanceIndex!]
     ? attendances[attendanceIndex!].attendanceStatus
     : "absent";
-};
-
-const calculateTotalScore = (assignments: Assignment[]): number => {
-  return assignments.reduce((total, assignment) => {
-    const status = getAttendanceStatus(
-      attendanceStore.attendances,
-      assignment.assignmentId!
-    );
-    if (status === "มาเรียน") {
-      return total + 1;
-    } else if (status === "มาสาย") {
-      return total + 0.5;
-    }
-    return total;
-  }, 0);
 };
 
 const calculateTotalScoreForTeacher = (
@@ -112,6 +95,59 @@ const openDialog = (assignment: Assignment, user: User) => {
   attendanceStore.userAttendance = user;
   attendanceStore.showDialog = true;
 };
+const calculateTotalScoreAndAbsence = (
+  userId: number,
+  assignments: Assignment[]
+): { totalScore: number; absentCount: number } => {
+  // Initialize totalScore and absentCount
+  let totalScore = 0;
+  let absentCount = 0;
+
+  // Loop through all assignments to calculate totalScore and count absences
+  assignments.forEach((assignment) => {
+    const status = getAttendanceStatus(
+      attendanceStore.attendances || [],
+      userId,
+      assignment.assignmentId!
+    );
+
+    // Increment totalScore based on attendance status
+    if (status === "present") {
+      totalScore += 1; // Full point for present
+    } else if (status === "late") {
+      totalScore += 0.5; // Half point for late
+    } else if (status === "absent") {
+      absentCount += 1; // Count absences
+    }
+  });
+
+  return { totalScore, absentCount };
+};
+const calculateTotalScore = (userId: number, assignments: Assignment[]): number => {
+  return assignments.reduce((total, assignment) => {
+    const status = getAttendanceStatus(
+      attendanceStore.attendances || [],
+      userId,
+      assignment.assignmentId!
+    );
+    if (status === "present") {
+      return total + 1;
+    } else if (status === "late") {
+      return total + 0.5;
+    }
+    return total;
+  }, 0);
+};
+const filteredUsers = computed(() => {
+  // Filter users based on whether the user is a teacher or a student.
+  if (isTeacher.value) {
+    return userStore.users;
+  } else {
+    return userStore.users.filter(
+      (user) => user.userId === userStore.currentUser?.userId
+    );
+  }
+});
 const isTeacher = computed(() => userStore.currentUser?.role === "อาจารย์");
 const isStudent = computed(() => userStore.currentUser?.role === "นิสิต");
 </script>
@@ -130,12 +166,12 @@ const isStudent = computed(() => userStore.currentUser?.role === "นิสิ�
       <v-table>
         <thead>
           <tr>
-            <th class="text-left vertical-divider">Student ID</th>
-            <th class="text-left vertical-divider">Student Name</th>
-            <th class="text-left vertical-divider">Full Score</th>
-            <th class="text-left vertical-divider">Score</th>
+            <th class="text-center vertical-divider">รหัสนิสิต</th>
+            <th class="text-center vertical-divider">ชื่อ-สกุล</th>
+            <th class="text-center vertical-divider">คะแนนเต็ม</th>
+            <th class="text-center vertical-divider">คะแนนที่ได้</th>
             <th
-              class="vertical-divider"
+              class="text-center vertical-divider"
               v-for="assignment in assignmentStore.assignments"
               :key="assignment.assignmentId"
             >
@@ -143,33 +179,83 @@ const isStudent = computed(() => userStore.currentUser?.role === "นิสิ�
             </th>
           </tr>
         </thead>
+        <!-- {{attendanceStore.attendances!}} -->
         <tbody>
-          <tr v-if="currentUser">
-            <td class="vertical-divider">{{ currentUser.studentId }}</td>
-            <td class="vertical-divider">
-              {{ currentUser.firstName + " " + currentUser.lastName }}
+          <tr
+            v-for="user in filteredUsers"
+            :key="user.userId"
+            :class="{
+        'highlight-red':calculateTotalScoreAndAbsence(user.userId!, assignmentStore.assignments)
+        .absentCount > 3
+      }"
+          >
+            <td class="text-center vertical-divider">
+              {{ user.studentId }}
             </td>
-            <td class="vertical-divider">{{ assignmentStore.assignments.length }}</td>
             <td class="vertical-divider">
-              {{ calculateTotalScore(assignmentStore.assignments) }}
+              <span
+                :class="{ 'highlighted-text':         calculateTotalScoreAndAbsence(user.userId!, assignmentStore.assignments)
+    .absentCount > 3 }"
+              >
+                {{ user.firstName + " " + user.lastName }}
+              </span>
+            </td>
+            <td class="text-center vertical-divider">
+              {{ courseStore.currentCourse?.fullScore }}
+            </td>
+            <td class="text-center vertical-divider">
+              {{
+              calculateTotalScore(
+                user.userId!,
+                assignmentStore.assignments
+              )
+              }}
             </td>
             <td
               v-for="assignment in assignmentStore.assignments"
               :key="assignment.assignmentId"
-              class="vertical-divider"
+              class="text-center vertical-divider"
             >
+              <!-- {{getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!)}} -->
               <template
-                v-if="getAttendanceStatus(attendanceStore.attendances, assignment.assignmentId!) === 'มาเรียน'"
+                v-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'present'"
               >
-                <v-icon color="green">mdi-check-circle</v-icon>
+                <v-btn
+                  density="compact"
+                  color="green"
+                  icon="mdi-check-circle"
+                  v-if="isTeacher"
+                  @click="openDialog(assignment, user)"
+                >
+                  <v-icon>mdi-check-circle</v-icon>
+                </v-btn>
+                <v-icon color="green" v-else>mdi-check-circle</v-icon>
               </template>
               <template
-                v-else-if="getAttendanceStatus(attendanceStore.attendances, assignment.assignmentId!) === 'มาสาย'"
+                v-else-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'late'"
               >
-                <v-icon color="orange">mdi-clock-outline</v-icon>
+                <v-btn
+                  density="compact"
+                  color="orange"
+                  icon="mdi-clock-outline"
+                  v-if="isTeacher"
+                  @click="openDialog(assignment, user)"
+                >
+                  <v-icon>mdi-clock-outline</v-icon>
+                </v-btn>
+                <v-icon color="orange" v-else>mdi-clock-outline</v-icon>
               </template>
               <template v-else>
-                <v-icon color="red">mdi-close-circle</v-icon>
+                <v-btn
+                  density="compact"
+                  color="red"
+                  icon="mdi-close-circle"
+                  v-if="isTeacher"
+                  @click="openDialog(assignment, user)"
+                >
+                  <v-icon>mdi-close-circle</v-icon>
+                </v-btn>
+                <v-icon color="red" v-else>mdi-close-circle</v-icon>
               </template>
             </td>
           </tr>
@@ -188,12 +274,12 @@ const isStudent = computed(() => userStore.currentUser?.role === "นิสิ�
       <v-table>
         <thead>
           <tr>
-            <th class="text-left vertical-divider">Student ID</th>
-            <th class="text-left vertical-divider">Student Name</th>
-            <th class="text-left vertical-divider">Full Score</th>
-            <th class="text-left vertical-divider">Score</th>
+            <th class="text-center vertical-divider">รหัสนิสิต</th>
+            <th class="text-center vertical-divider">ชื่อ-สกุล</th>
+            <th class="text-center vertical-divider">คะแนนเต็ม</th>
+            <th class="text-center vertical-divider">คะแนนที่ได้</th>
             <th
-              class="vertical-divider"
+              class="text-center vertical-divider"
               v-for="assignment in assignmentStore.assignments"
               :key="assignment.assignmentId"
             >
@@ -201,26 +287,50 @@ const isStudent = computed(() => userStore.currentUser?.role === "นิสิ�
             </th>
           </tr>
         </thead>
+        <!-- {{attendanceStore.attendances!}} -->
         <tbody>
-          <tr v-for="user in userStore.users" :key="user.userId">
-            <td class="vertical-divider">{{ user.studentId }}</td>
-            <td class="vertical-divider">{{ user.firstName + " " + user.lastName }}</td>
-            <td class="vertical-divider">{{ assignmentStore.assignments.length }}</td>
+          <tr
+            v-for="user in filteredUsers"
+            :key="user.userId"
+            :class="{
+        'highlight-red':calculateTotalScoreAndAbsence(user.userId!, assignmentStore.assignments)
+        .absentCount > 3
+      }"
+          >
+            <td class="text-center vertical-divider">
+              {{ user.studentId }}
+            </td>
             <td class="vertical-divider">
-              {{ calculateTotalScoreForTeacher(user.userId!, assignmentStore.assignments) }}
+              <span
+                :class="{ 'highlighted-text':         calculateTotalScoreAndAbsence(user.userId!, assignmentStore.assignments)
+    .absentCount > 3 }"
+              >
+                {{ user.firstName + " " + user.lastName }}
+              </span>
+            </td>
+            <td class="text-center vertical-divider">
+              {{ courseStore.currentCourse?.fullScore }}
+            </td>
+            <td class="text-center vertical-divider">
+              {{
+              calculateTotalScore(
+                user.userId!,
+                assignmentStore.assignments
+              )
+              }}
             </td>
             <td
               v-for="assignment in assignmentStore.assignments"
               :key="assignment.assignmentId"
-              class="vertical-divider"
+              class="text-center vertical-divider"
             >
               <template
-                v-if="getAttendanceStatusTeacher(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'มาเรียน'"
+                v-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'present'"
               >
                 <v-btn
                   density="compact"
                   color="green"
-                  icon="mdi-check-circles"
+                  icon="mdi-check-circle"
                   v-if="isTeacher"
                   @click="openDialog(assignment, user)"
                 >
@@ -229,12 +339,12 @@ const isStudent = computed(() => userStore.currentUser?.role === "นิสิ�
                 <v-icon color="green" v-else>mdi-check-circle</v-icon>
               </template>
               <template
-                v-else-if="getAttendanceStatusTeacher(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'มาสาย'"
+                v-else-if="getAttendanceStatus(attendanceStore.attendances!, user.userId!, assignment.assignmentId!) === 'late'"
               >
                 <v-btn
                   density="compact"
                   color="orange"
-                  icon="mdi-check-circles"
+                  icon="mdi-clock-outline"
                   v-if="isTeacher"
                   @click="openDialog(assignment, user)"
                 >
@@ -246,7 +356,7 @@ const isStudent = computed(() => userStore.currentUser?.role === "นิสิ�
                 <v-btn
                   density="compact"
                   color="red"
-                  icon="mdi-check-circles"
+                  icon="mdi-close-circle"
                   v-if="isTeacher"
                   @click="openDialog(assignment, user)"
                 >

@@ -6,6 +6,7 @@ import { mapToUser, type User } from "./types/User";
 import user from "@/services/user";
 import { useMessageStore } from "./message";
 import notiforupdate from "@/services/notiforupdate";
+import router from "@/router";
 
 export const useUserStore = defineStore("userStore", () => {
   const users = ref<User[]>([]);
@@ -34,6 +35,7 @@ export const useUserStore = defineStore("userStore", () => {
   const totalUsers = ref(0);
   const currentPage = ref(1);
   const itemsPerPage = ref(20);
+  const teachers = ref<User[]>([]);
 
   const editUser = ref<User & { files: File[] }>({
     userId: 0,
@@ -261,9 +263,6 @@ export const useUserStore = defineStore("userStore", () => {
       totalUsers.value = 0;
       searchDropdown2.value = 'วิทยาการคอมพิวเตอร์';
       searchDropdown3.value = 'กำลังศึกษา';
-
-  
-      await getStudentPagination(); // Refresh or reload
       // closeDialog();
     } catch (e) {
       console.error("Failed to save user:", e);
@@ -275,10 +274,6 @@ export const useUserStore = defineStore("userStore", () => {
     try {
       await userService.deleteUser(id);
       messageStore.showInfo("User has been deleted successfully.");
-      // await getUsers();
-      await getAdminPagination(); // Refresh or reload user list
-      await getTeacherPagination(); // Refresh or reload
-      await getStudentPagination(); // Refresh or reload
     } catch (e) {
       console.log(e);
     }
@@ -303,11 +298,7 @@ export const useUserStore = defineStore("userStore", () => {
     showEditDialog2.value = false;
     showEditDialog3.value = false;
     //getUsers
-    // getUsers();
-    await getAdminPagination(); // Refresh or reload user list
-    await getTeacherPagination(); // Refresh or reload
-    await getStudentPagination(); // Refresh or reload
-    
+    getUsers();
   };
 
   const closeImageDialog = () => {
@@ -385,8 +376,6 @@ export const useUserStore = defineStore("userStore", () => {
     }
   }
 
-
-
   const getFileUser = async (file: File) => {
     try {
       const formData = new FormData();
@@ -405,7 +394,7 @@ export const useUserStore = defineStore("userStore", () => {
   const getTeachers = async () => {
     try {
       const res = await userService.getTeachers();
-      users.value = res.data;
+      teachers.value = res.data.map((user: any) => mapToUser(user));
     } catch (error) {
       console.error('Error fetching teachers:', error);
     }
@@ -522,6 +511,14 @@ export const useUserStore = defineStore("userStore", () => {
     }
   };
 
+  // logpout
+  const logout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('users');
+    currentUser.value = undefined;
+    router.push('/');
+  };
+
 
   return {
     searchUsersByMajorAndStatus,
@@ -575,5 +572,7 @@ export const useUserStore = defineStore("userStore", () => {
     searchDropdown3,
     searchDropdown4,
     searchDropdown5,
+    logout,
+    teachers
   };
 });
