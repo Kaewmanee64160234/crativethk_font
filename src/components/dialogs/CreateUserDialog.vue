@@ -124,7 +124,11 @@ function float32ArrayToBase64(float32Array: any) {
                   required
                   variant="solo"
                   v-model="userStore.editUser.firstName"
-                  :rules="[(v:any) => !!v || 'โปรดกรอกขื่อ']"
+                  :rules="[
+                    (v) => !!v || 'โปรดกรอกขื่อ',
+                    (v) =>
+                      /[ก-ฮ]/.test(v) || 'ชื่อจะต้องมีตัวอักษรอย่างน้อย 1 ตัว',
+                  ]"
                 ></v-text-field>
               </v-col>
               <v-col cols="12">
