@@ -67,7 +67,16 @@ const confirmDelEnrolment = async (id: number) => {
           <v-img height="100" :src="randomImage()" cover>
             <v-card-title>
               <div class="text-white">กลุ่มเรียนที่ {{ item.course?.session }}</div>
-              <h1 class="text-white">{{ item.course?.nameCourses }}</h1>
+              <h1
+                class="text-white"
+                :class="
+                  item.course!.nameCourses?.length > 8
+                    ? 'course-name-multiline'
+                    : 'course-name-singleline'
+                "
+              >
+                {{ item.course!.nameCourses }}
+              </h1>
             </v-card-title>
             <v-menu offset-y>
               <template #activator="{ props }">
@@ -191,5 +200,26 @@ const confirmDelEnrolment = async (id: number) => {
   .avatar {
     top: 25%;
   }
+}
+.course-name-singleline {
+  white-space: nowrap;
+  font-size: 2rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+.course-name-multiline {
+  white-space: normal;
+  word-break: break-word;
+  max-width: 180px; /* Adjusted from 150px to give more room */
+  padding-right: 10px; /* Adds space on the right */
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.course-name-small {
+  font-size: 1rem; /* smaller font size for more text */
+  line-height: 1.1;
 }
 </style>

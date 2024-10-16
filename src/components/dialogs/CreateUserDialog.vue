@@ -100,7 +100,7 @@ function float32ArrayToBase64(float32Array:any) {
                                     :rules="[(v:any) => !!v || 'โปรดกรอกรหัสนิสิต', (v:any) => /^[0-9]{8}$/.test(v) || 'โปรดกรอกข้อมูลเฉพาะตัวเลข 8 หลัก']"></v-text-field>
                             </v-col>
                             <v-col cols="12">
-                                <v-text-field label="ชื่อ" dense solo required v-model="userStore.editUser.firstName"
+                                <v-text-field label="ชื่อ" dense solo required  variant="solo" v-model="userStore.editUser.firstName"
                                     :rules="[(v:any) => !!v || 'โปรดกรอกขื่อ']"></v-text-field>
                             </v-col>
                             <v-col cols="12">

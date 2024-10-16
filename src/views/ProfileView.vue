@@ -31,7 +31,6 @@ onMounted(async () => {
     await courseStore.getCourseByTeachId(userStore.currentUser!.userId!);
   }
   if (isStudent.value && userStore.currentUser!.studentId) {
-    // await userStore.createQrByStdId(userStore.currentUser!.studentId);
     await enrollmentStore.getCourseByStudentId(userStore.currentUser!.studentId!);
     await userStore.getUsersByStdId(userStore.currentUser!.studentId!);
     user.value = userStore.regisUser;
@@ -43,7 +42,7 @@ onMounted(async () => {
       (images.value.length > 0 && user.value?.registerStatus == "notConfirmed") ||
       user.value?.registerStatus == "reConfirmed"
     ) {
-      userStore.createQrByStdId(user.value.studentId!);
+      await userStore.createQrByStdId(user.value.studentId!);
     }
     console.log("image", images.value);
   }

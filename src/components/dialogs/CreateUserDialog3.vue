@@ -127,7 +127,7 @@ if (!userStore.editUser.status) {
   <v-container>
     <v-row justify="center">
       <v-card class="mx-auto elevation-3" style="width: 60vw; padding: 30px; border-radius: 15px;">
-        <v-card-title class="pb-0" style="font-size: 24px; font-weight: 600;">เพิ่มผู้ใช้แอดมิน</v-card-title>
+        <v-card-title class="pb-0" style="font-size: 24px; font-weight: 600;text-align: center;">เพิ่มผู้ใช้แอดมิน</v-card-title>
         <v-divider class="my-4"></v-divider>
 
         <v-row>
@@ -135,7 +135,7 @@ if (!userStore.editUser.status) {
             <v-row>
               <!-- First Name -->
               <v-col cols="6">
-                <v-text-field label="ชื่อ" dense solo outlined rounded required v-model="userStore.editUser.firstName"
+                <v-text-field label="ชื่อ" variant="solo" v-model="userStore.editUser.firstName"
                   :rules="[
                     (v) => !!v || 'โปรดกรอกชื่อ',
                     (v) => /^[ก-๙\s]+$/.test(v) || 'ชื่อต้องไม่เป็นตัวเลขและต้องเป็นภาษาไทยเท่านั้น',
@@ -145,7 +145,7 @@ if (!userStore.editUser.status) {
               </v-col>
               <!-- Last Name -->
               <v-col cols="6">
-                <v-text-field label="นามสกุล" dense solo outlined rounded required v-model="userStore.editUser.lastName"
+                <v-text-field label="นามสกุล" variant="solo" v-model="userStore.editUser.lastName"
                   :rules="[
                     (v) => !!v || 'โปรดกรอกนามสกุล',
                     (v) => /^[ก-๙\s]+$/.test(v) || 'นามสกุลต้องไม่เป็นตัวเลขและต้องเป็นภาษาไทยเท่านั้น',
@@ -155,7 +155,7 @@ if (!userStore.editUser.status) {
               </v-col>
                <!-- Email -->
                <v-col cols="12">
-                <v-text-field label="อีเมล" dense solo outlined rounded required v-model="userStore.editUser.email"
+                <v-text-field label="อีเมล" variant="solo" v-model="userStore.editUser.email"
                   :rules="[
                     (v) => !!v || 'โปรดกรอกอีเมล',
                     (v) => /^[a-zA-Z0-9._%+-]+@go\.buu\.ac\.th$/.test(v) || 'กรอกอีเมลให้ถูกต้อง (ต้องลงท้ายด้วย @go.buu.ac.th)'
@@ -164,8 +164,8 @@ if (!userStore.editUser.status) {
               </v-col>
               <!-- Status -->
               <v-col cols="6">
-                <v-combobox label="สถานะภาพ" :items="['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง']" dense solo outlined
-                  rounded required v-model="userStore.editUser.status" 
+                <v-combobox label="สถานะภาพ" :items="['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง']" variant="solo"
+                 v-model="userStore.editUser.status" 
                   :rules="[
                     (v) => !!v || 'โปรดเลือกสถานะภาพ',
                     (v) => ['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง'].includes(v) || 'โปรดเลือกสถานะภาพจากรายการที่ให้ไว้'
@@ -208,7 +208,6 @@ if (!userStore.editUser.status) {
 
 .v-text-field,
 .v-combobox {
-  background-color: #f4f6f8;
   border-radius: 8px;
 }
 
