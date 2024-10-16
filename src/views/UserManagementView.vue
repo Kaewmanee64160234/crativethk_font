@@ -11,8 +11,8 @@ import { onMounted, ref, computed, watch } from 'vue';
 
 const userStore = useUserStore();
 const yearOptions = ref<string[]>(['']);
-const statusTeacher = ref(['','ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง']);
-const statusStudent = ref(['','กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา']);
+const statusTeacher = ref(['', 'ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง']);
+const statusStudent = ref(['', 'กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา']);
 const majorOptions = ref([
   '',
   'วิทยาการคอมพิวเตอร์',
@@ -92,64 +92,28 @@ watch(params, async () => {
 
     <!-- Search Bar and Filters -->
     <v-row class="mb-6" align="center">
+      <v-col cols="md 4">
+        <v-text-field style="width: 200px;" v-model="params.search" label="ค้าหาผู้ใช้งาน"
+          append-inner-icon="mdi-magnify" hide-details dense variant="solo" class="search-bar"></v-text-field>
+      </v-col>
+
+      <v-col cols="md 4">
+        <v-select v-if="userStore.tab === 0 || userStore.tab === 1" v-model="params.major" :items="majorOptions"
+          label="สาขา" dense variant="solo" hide-details class="wide-select"></v-select>
+      </v-col>
+
+      <v-col cols="md 4">
+        <v-select v-if="userStore.tab === 0" v-model="params.status" :items="statusStudent" label="สถานะภาพ" dense
+          variant="solo" hide-details class="wide-select"></v-select>
+      </v-col>
+
+      <v-col cols="md 4">
+        <v-select v-if="userStore.tab === 1 || userStore.tab === 2" v-model="params.status" :items="statusTeacher"
+          label="สถานะภาพ" dense variant="solo" hide-details class="wide-select"></v-select>
+      </v-col>
+
       <v-col cols="auto">
-        <v-text-field 
-          style="width: 200px;" 
-          v-model="params.search" 
-          label="ค้าหาผู้ใช้งาน"
-          append-inner-icon="mdi-magnify" 
-          hide-details 
-          dense 
-          variant="solo" 
-          class="search-bar"
-        ></v-text-field>
-      </v-col>
-      
-      <v-col cols="md 4">
-        <v-select 
-          v-model="params.major" 
-          :items="majorOptions" 
-          label="สาขา" 
-          dense 
-          variant="solo" 
-          hide-details 
-          class="wide-select"
-        ></v-select>
-      </v-col>
-      
-      <v-col cols="md 4">
-        <v-select 
-          v-if="userStore.tab === 0" 
-          v-model="params.status" 
-          :items="statusStudent" 
-          label="สถานะภาพ" 
-          dense 
-          variant="solo" 
-          hide-details 
-          class="wide-select"
-        ></v-select>
-      </v-col>
-      
-      <v-col cols="md 4">
-        <v-select 
-          v-if="userStore.tab === 1 || userStore.tab === 2" 
-          v-model="params.status" 
-          :items="statusTeacher" 
-          label="สถานะภาพ" 
-          dense 
-          variant="solo" 
-          hide-details 
-          class="wide-select"
-        ></v-select>
-      </v-col>
-      
-      <v-col cols="auto">
-        <v-btn 
-          color="primary" 
-          variant="elevated" 
-          @click="userStore.showDialog2 = true" 
-          class="custom-btn"
-        >
+        <v-btn color="primary" variant="elevated" @click="userStore.showDialog2 = true" class="custom-btn">
           <v-icon left size="20">mdi-account-plus-outline</v-icon>
           เพิ่มผู้ใช้อาจารย์
           <v-dialog v-model="userStore.showDialog2" persistent>
@@ -157,14 +121,9 @@ watch(params, async () => {
           </v-dialog>
         </v-btn>
       </v-col>
-      
+
       <v-col cols="auto">
-        <v-btn 
-          color="primary" 
-          variant="elevated" 
-          @click="userStore.showDialog4 = true" 
-          class="custom-btn"
-        >
+        <v-btn color="primary" variant="elevated" @click="userStore.showDialog4 = true" class="custom-btn">
           <v-icon left size="20">mdi-account-plus-outline</v-icon>
           เพิ่มผู้ใช้แอดมิน
           <v-dialog v-model="userStore.showDialog4" persistent>
@@ -187,10 +146,10 @@ watch(params, async () => {
         <thead>
           <tr>
             <th class="text-left"></th>
-            <th class="text-left">รหัส</th>
+            <th v-if="userStore.tab === 0" class="text-left">รหัส</th> <!-- Show ID for students only -->
             <th class="text-left">ชื่อ-นามสกุล</th>
-            <th class="text-left">ชั้นปี</th>
-            <th class="text-left">สาขา</th>
+            <th v-if="userStore.tab === 0" class="text-left">ชั้นปี</th> <!-- Show Year for students only -->
+            <th v-if="userStore.tab !== 2" class="text-left">สาขา</th> <!-- Show Major for students and teachers -->
             <th class="text-left">สถานะภาพ</th>
             <th class="text-center">ตัวเลือกเพิ่มเติม</th>
           </tr>
@@ -198,39 +157,31 @@ watch(params, async () => {
         <tbody>
           <tr v-for="(user, index) in userStore.users" :key="index">
             <td>{{ index + 1 }}</td>
-            <td>{{ user.studentId || user.teacherId }}</td>
+            <td v-if="userStore.tab === 0">{{ user.studentId || user.teacherId }}</td>
+            <!-- Show ID for students only -->
             <td>{{ user.firstName + ' ' + user.lastName }}</td>
-            <td>{{ user.year }}</td>
-            <td>{{ user.major }}</td>
+            <td v-if="userStore.tab === 0">{{ user.year }}</td> <!-- Show Year for students only -->
+            <td v-if="userStore.tab !== 2">{{ user.major }}</td> <!-- Show Major for students and teachers -->
             <td style="color: seagreen;">{{ user.status }}</td>
-            <td>
-              <v-btn 
-                small 
-                class="ma-1" 
-                style="background-color: #4C515A; color: azure;" 
-                @click="showEditedDialog(user)"
-              >
+            <td class="button-container">
+              <v-btn small class="ma-1" style=" background-color: #4C515A; color: azure;"
+                @click="showEditedDialog(user)">
                 <v-icon left>mdi-pencil</v-icon>
                 แก้ไขข้อมูล
               </v-btn>
             </td>
+
           </tr>
         </tbody>
       </v-table>
+
       <div v-else class="no-users-message" style="text-align: center; color: red; margin-top: 20px;">
         ไม่พบผู้ใช้งาน
       </div>
-      
+
       <!-- Pagination -->
-      <v-pagination
-        v-model="params.page"
-        :length="Math.ceil(userStore.totalUsers / params.limit)"
-        :total-visible="7"
-        rounded="circle"
-        size="large"
-        color="primary"
-        class="my-pagination"
-      />
+      <v-pagination v-model="params.page" :length="Math.ceil(userStore.totalUsers / params.limit)" :total-visible="7"
+        rounded="circle" size="large" color="primary" class="my-pagination" />
     </v-card>
   </v-container>
 
@@ -330,6 +281,15 @@ watch(params, async () => {
 .custom-btn v-icon {
   margin-right: 5px;
 }
+
+.button-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  /* Ensure it takes the full height of the cell */
+}
+
 
 .d-flex {
   display: flex;
