@@ -406,6 +406,16 @@ export const useUserStore = defineStore("userStore", () => {
     }
   }
 
+  //getTeacher by major
+  const getTeacherByMajor = async (major: string) => {
+    try {
+      const res = await userService.getTeacherByMajor(major);
+      users.value = res.data;
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
   // get teacher
   const getTeachers = async () => {
     try {
@@ -579,6 +589,7 @@ export const useUserStore = defineStore("userStore", () => {
   };
 
   return {
+    getTeacherByMajor,
     studentPage,
     teacherPage,
     adminPage,

@@ -75,7 +75,7 @@ const confirmNotice = async () => {
         notiforupdateStore.currentNotiforupdate
       );
       Swal.fire('สำเร็จ!', 'การแจ้งเตือนถูกยืนยัน', 'success');
-      router.push('/courseManagement');
+      router.push('/courseManagement').then(() => window.location.reload());
     }
   });
 };

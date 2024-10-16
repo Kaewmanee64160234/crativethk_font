@@ -42,7 +42,7 @@ async function save() {
 
     // check if status is not valid
     else if (!['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง'].includes(userStore.editUser.status ?? '')) {
-        showSnackbar('โปรดเลือกสถานะภาพที่ถูกต้อง');
+        showSnackbar('โปรดเลือกสถานภาพที่ถูกต้อง');
         return;
     }
     // check if email empty and email format
@@ -137,11 +137,11 @@ if (!userStore.editUser.status) {
               </v-col>
               <!-- Status -->
               <v-col cols="6">
-                <v-combobox label="สถานะภาพ" :items="['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง']" variant="solo"
+                <v-combobox label="สถานภาพ" :items="['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง']" variant="solo"
                  v-model="userStore.editUser.status" 
                   :rules="[
-                    (v) => !!v || 'โปรดเลือกสถานะภาพ',
-                    (v) => ['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง'].includes(v) || 'โปรดเลือกสถานะภาพจากรายการที่ให้ไว้'
+                    (v) => !!v || 'โปรดเลือกสถานภาพ',
+                    (v) => ['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง'].includes(v) || 'โปรดเลือกสถานภาพจากรายการที่ให้ไว้'
                   ]">
                 </v-combobox>
               </v-col>

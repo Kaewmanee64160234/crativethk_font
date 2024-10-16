@@ -192,15 +192,15 @@ function float32ArrayToBase64(float32Array: any) {
               </v-col>
               <v-col cols="12">
                 <v-combobox
-                  label="สถานะภาพ"
+                  label="สถานภาพ"
                   :items="['กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา']"
                   dense
                   solo
                   required
                   v-model="userStore.editUser.status"
                   :rules="[
-                                (v:any) => !!v || 'โปรดเลือกสถานะภาพ',
-                                (v:any) => ['กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา'].includes(v) || 'โปรดเลือกสถานะภาพจากรายการที่ให้ไว้'
+                                (v:any) => !!v || 'โปรดเลือกสถานภาพ',
+                                (v:any) => ['กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา'].includes(v) || 'โปรดเลือกสถานภาพจากรายการที่ให้ไว้'
                             ]"
                 ></v-combobox>
               </v-col>

@@ -31,6 +31,7 @@ interface Teacher {
   userId: number;
   firstName: string;
   lastName: string;
+  major: string; // Added this line
 }
 const teachers = ref<Teacher[]>([]);
 
@@ -46,26 +47,39 @@ async function close() {
 
 onMounted(async () => {
   await loadModels();
-  await userStore.getTeachers();
-  // console.log("Users fetched:", userStore.users);
+
+  // Fetch current user's data
   await userStore.getUsersById(userStore.currentUser?.userId!);
-  images.value =
-    userStore.currentUser?.images?.map(
-      (image: string) => `${url}/users/image/filename/${image}`
-    ) ?? [];
+
+  // Fetch all teachers
   try {
     await userStore.getTeachers();
-    userStore.teachers.forEach((teacher) => {
+    // Map teacher data to include major information
+    userStore.teachers.forEach(teacher => {
       teachers.value.push({
         userId: teacher.userId!,
         firstName: teacher.firstName!,
         lastName: teacher.lastName!,
+        major: teacher.major || "" // Ensure teacher's major is available
       });
     });
   } catch (error) {
     console.error("Failed to fetch teachers:", error);
   }
+
+  // Update images
+  images.value = userStore.currentUser?.images?.map(
+    (image: string) => `${url}/users/image/filename/${image}`
+  ) ?? [];
 });
+
+
+const filteredTeachers = computed(() => {
+  const studentMajor = userStore.currentUser?.major; // Assume user's major is available here
+  if (!studentMajor) return [];
+  return teachers.value.filter(teacher => teacher.major === studentMajor);
+});
+
 
 async function loadModels() {
   try {
@@ -453,6 +467,7 @@ async function save() {
 
                   // Add userId to formData
                   formData.append("userId", String(userStore.currentUser!.userId!));
+                  formData.append("userRecieve", String(selectedTeacher.value));
                   console.log("Sending formData to create notification...");
                   await notiStore.createNotiforupdate(formData);
                   console.log("Notification created successfully.");
@@ -763,35 +778,38 @@ const showTeacherSelection = computed(() => userStore.currentUser?.registerStatu
           </v-col>
         </v-row>
         <!-- Teacher Selection Dialog -->
-        <v-dialog v-model="showTeacherDialog" max-width="500px">
-          <v-card>
-            <v-card-title class="font-weight-bold" style="font-size: 20px">
-              เลือกอาจารย์
-            </v-card-title>
-            <v-divider></v-divider>
-            <v-card-text>
-              <v-list>
-                <v-list-item v-for="teacher in teachers" :key="teacher.userId" @click="selectTeacher(teacher)"
-                  class="teacher-list-item" style="cursor: pointer">
-                  <v-list-item-content>
-                    <v-list-item-title class="text-body-1" style="font-weight: 500">
-                      {{ teacher.firstName }} {{ teacher.lastName }}
-                    </v-list-item-title>
-                  </v-list-item-content>
-                </v-list-item>
-              </v-list>
-            </v-card-text>
-            <v-divider></v-divider>
-            <v-card-actions class="justify-space-between">
-              <v-btn color="red" class="font-weight-bold" @click="clearSelectedTeacher">
-                ยกเลิก
-              </v-btn>
-              <v-btn color="primary" class="font-weight-bold" @click="confirmTeacherSelection">
-                ยืนยัน
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
+        <!-- Teacher Selection Dialog -->
+<v-dialog v-model="showTeacherDialog" max-width="500px">
+  <v-card>
+    <v-card-title class="font-weight-bold" style="font-size: 20px">
+      เลือกอาจารย์
+    </v-card-title>
+    <v-divider></v-divider>
+    <v-card-text>
+      <v-list>
+        <!-- Use the filtered teachers based on student's major -->
+        <v-list-item v-for="teacher in filteredTeachers" :key="teacher.userId" @click="selectTeacher(teacher)"
+          class="teacher-list-item" style="cursor: pointer">
+          <v-list-item-content>
+            <v-list-item-title class="text-body-1" style="font-weight: 500">
+              {{ teacher.firstName }} {{ teacher.lastName }}
+            </v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+      </v-list>
+    </v-card-text>
+    <v-divider></v-divider>
+    <v-card-actions class="justify-space-between">
+      <v-btn color="red" class="font-weight-bold" @click="clearSelectedTeacher">
+        ยกเลิก
+      </v-btn>
+      <v-btn color="primary" class="font-weight-bold" @click="confirmTeacherSelection">
+        ยืนยัน
+      </v-btn>
+    </v-card-actions>
+  </v-card>
+</v-dialog>
+
         <!-- Upload Button -->
         <v-row v-if="!hasUploadedImages" style="justify-content: center; font-weight: bold">
           <div style="color: red">ไม่มีรูปภาพ</div>

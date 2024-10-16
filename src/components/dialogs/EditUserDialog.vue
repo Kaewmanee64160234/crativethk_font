@@ -86,7 +86,7 @@ async function save() {
       userStore.editUser.status ?? ""
     )
   ) {
-    showSnackbar("โปรดเลือกสถานะภาพที่ถูกต้อง");
+    showSnackbar("โปรดเลือกสถานภาพที่ถูกต้อง");
     return;
   }
   //checkStudentIdDuplicate
@@ -281,7 +281,7 @@ function float32ArrayToBase64(float32Array: any) {
               <!-- Status -->
               <v-col cols="12">
                 <v-select
-                  label="สถานะภาพ"
+                  label="สถานภาพ"
                   :items="['กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา']"
                   variant="solo"
                   v-model="userStore.editUser.status"

@@ -32,7 +32,7 @@ async function save() {
 
   // check if status is not valid
   else if (!['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง'].includes(userStore.editUser.status ?? '')) {
-    showSnackbar('โปรดเลือกสถานะภาพที่ถูกต้อง');
+    showSnackbar('โปรดเลือกสถานภาพที่ถูกต้อง');
     return;
   }
   // check if email is empty, follows the correct email format, and ends with @go.buu.ac.th
@@ -114,9 +114,9 @@ if (!userStore.editUser.role) {
               </v-col>
               <!-- Status -->
               <v-col cols="6">
-                <v-select label="สถานะภาพ" :items="['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง']" variant="solo" v-model="userStore.editUser.status" :rules="[
-                    (v) => !!v || 'โปรดเลือกสถานะภาพ',
-                    (v) => ['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง'].includes(v) || 'โปรดเลือกสถานะภาพจากรายการที่ให้ไว้'
+                <v-select label="สถานภาพ" :items="['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง']" variant="solo" v-model="userStore.editUser.status" :rules="[
+                    (v) => !!v || 'โปรดเลือกสถานภาพ',
+                    (v) => ['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง'].includes(v) || 'โปรดเลือกสถานภาพจากรายการที่ให้ไว้'
                   ]">
                 </v-select>
               </v-col>
