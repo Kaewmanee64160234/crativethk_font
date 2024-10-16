@@ -2,13 +2,8 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import attendaceService from "@/services/attendace.service";
 import router from "@/router";
-import { useAssignmentStore } from "./assignment.store";
-import { useCourseStore } from "./course.store";
 import type Attendance from "./types/Attendances";
-import { useMessageStore } from "./message";
 import type { User } from "./types/User";
-import { useUserStore } from "./user.store";
-import Swal from "sweetalert2";
 import type { Identification } from "./types/identification.type";
 import type Assignment from "./types/Assignment";
 export const useAttendanceStore = defineStore("attendanceStore", () => {
@@ -28,7 +23,6 @@ export const useAttendanceStore = defineStore("attendanceStore", () => {
     registerStatus: "",
     profileImage: "",
   });
-  const messageStore = useMessageStore();
   const editAttendance = ref<Attendance>({
     attendanceConfirmStatus: "",
     attendanceDate: new Date(),
@@ -36,7 +30,6 @@ export const useAttendanceStore = defineStore("attendanceStore", () => {
     attendanceImage: "",
     attendanceStatus: "",
   });
-  const assigmentStore = useAssignmentStore();
   const currentAttendance = ref<Attendance & { files: File[] }>({
     attendanceConfirmStatus: "",
     attendanceDate: new Date(),
@@ -45,9 +38,6 @@ export const useAttendanceStore = defineStore("attendanceStore", () => {
     attendanceStatus: "",
     files: [],
   });
-  const assignmentStore = useAssignmentStore();
-  const userStore = useUserStore();
-  const courseStore = useCourseStore();
   // create attendance
   const createAttendance = async (attendance: Attendance, file: File) => {
     try {

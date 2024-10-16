@@ -1,15 +1,12 @@
 <script lang="ts" setup>
-import { useMessageStore } from "@/stores/message";
 import { useUserStore } from "@/stores/user.store";
 import * as faceapi from "face-api.js";
-import ImageEditDialog from "@/components/dialogs/ImageEditDialog.vue";
 import { onMounted, ref } from "vue";
 onMounted(async () => {
   await loadModels();
 });
 
 const userStore = useUserStore();
-const url = import.meta.env.VITE_API_URL;
 // Snackbar state
 const snackbarVisible = ref(false);
 const snackbarMessage = ref("");

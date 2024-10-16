@@ -7,15 +7,13 @@ import router from "@/router";
 import { useCourseStore } from "@/stores/course.store";
 import { useAssignmentStore } from "@/stores/assignment.store";
 import type Attendance from "@/stores/types/Attendances";
-import { useMessageStore } from "@/stores/message";
-const url = "http://localhost:3000";
+const url = import.meta.env.VITE_API_URL;
 
 const route = useRoute();
 const attendanceStore = useAttendanceStore();
 const userStore = useUserStore();
 const courseStore = useCourseStore();
 const assignmentStore = useAssignmentStore();
-const messageStore = useMessageStore();
 const attdent = ref<Attendance[]>([]);
 const queryCourseId = route.params.courseId;
 const isRecheckAllowed = ref(true);
@@ -46,53 +44,9 @@ onMounted(async () => {
   ));
 });
 
-//confirm attendance
-const confirmAttendance = async (attendance: Attendance) => {
-  if (confirm("Do you want to confirm this attendance?")) {
-    try {
-      attendance.assignment = assignmentStore.currentAssignment;
-      attendance.attendanceStatus = "present";
-      attendance.attendanceConfirmStatus = "confirmed";
-      if (attendance.user === null) {
-        attendance.user = userStore.currentUser;
-      }
-      await attendanceStore.confirmAttendance(attendance);
-      alert("Attendance has been confirmed.");
-    } catch (error) {
-      console.error("Error recording attendance:", error);
-      alert("Failed to confirm attendance.");
-    }
-  }
-};
 
-const reCheckAttendance = async (attendance: Attendance) => {
-  try {
-    attendance.assignment = assignmentStore.currentAssignment;
-    const date = new Date();
-    const currentDate = date.getTime();
-    const assignmentDate = new Date(assignmentStore.currentAssignment!.createdDate!);
-    const assignmentTime = assignmentDate.getTime();
-    const diff = currentDate - assignmentTime;
 
-    // If the time difference is greater than 15 minutes (900000 ms), set status to "late"
-    if (diff > 900000) {
-      attendance.attendanceStatus = "late";
-    } else {
-      attendance.attendanceStatus = "present";
-    }
 
-    attendance.attendanceConfirmStatus = "recheck";
-    attendance.user = userStore.currentUser;
-    await attendanceStore.confirmAttendance(attendance);
-    router.push("/courseDetail/" + queryCourseId);
-  } catch (error) {
-    console.log(error);
-  }
-};
-
-const goBackToCourseDetail = () => {
-  router.push("/courseDetail/" + queryCourseId);
-};
 
 const confirmTagging = () => {
 

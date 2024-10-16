@@ -2,7 +2,6 @@
 import { useUserStore } from '@/stores/user.store';
 import { ref } from 'vue';
 const userStore = useUserStore();
-const url = import.meta.env.BASE_URL;
 
 // Snackbar state
 const snackbarVisible = ref(false);

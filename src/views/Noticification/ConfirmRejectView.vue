@@ -1,13 +1,10 @@
 <script lang="ts" setup>
-import { useMessageStore } from '@/stores/message';
-import { useUserStore } from '@/stores/user.store';
 import { useNotiforupdate } from '@/stores/notiforUpdate.store';
-import { onMounted, ref, computed } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
 import Loader from "@/components/loader/Loader.vue";
 
-const userStore = useUserStore();
 const notiforupdateStore = useNotiforupdate();
 const noticId = ref<string | null>(null);
 const route = useRoute();

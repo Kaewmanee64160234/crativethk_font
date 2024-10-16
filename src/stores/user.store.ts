@@ -1,11 +1,9 @@
 // src/stores/user.ts
 import { defineStore } from "pinia";
-import { getCurrentInstance, ref, watch } from "vue";
+import {  ref, watch } from "vue";
 import userService from "@/services/user"; // Import the userService module
 import { mapToUser, type User } from "./types/User";
-import user from "@/services/user";
 import { useMessageStore } from "./message";
-import notiforupdate from "@/services/notiforupdate";
 import router from "@/router";
 
 export const useUserStore = defineStore("userStore", () => {

@@ -19,7 +19,6 @@ const user = ref<User | undefined>(undefined);
 
 const isStudent = computed(() => userStore.currentUser?.role === "นิสิต");
 const isTeacher = computed(() => userStore.currentUser?.role === "อาจารย์");
-const isAdmin = computed(() => userStore.currentUser?.role === "แอดมิน");
 
 const showChekingHistory = (course: Course) => {
   router.push("/checkingHistory/" + course.coursesId);

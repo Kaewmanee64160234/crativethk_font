@@ -1,37 +1,23 @@
 <script lang="ts" setup>
-import { onMounted, ref, computed, reactive, nextTick } from "vue";
+import { onMounted, ref, computed, reactive } from "vue";
 import { useUserStore } from "@/stores/user.store";
 import * as faceapi from "face-api.js";
 import Swal from "sweetalert2";
 import { useMessageStore } from "@/stores/message";
-import type { User } from "@/stores/types/User";
 import Loader from "@/components/loader/Loader.vue";
 import { useNotiforupdate } from "@/stores/notiforUpdate.store";
-import axios from "axios";
 
 interface CanvasRefs {
   [key: number]: HTMLCanvasElement;
 }
 
-interface Identification {
-  name: string;
-  studentId: string;
-  imageUrl: string;
-  score: number;
-  user: User;
-}
 
 const messageStore = useMessageStore();
 const isLoading = ref(false);
 const userStore = useUserStore();
 const showDialog = ref(true);
 const showTeacherDialog = ref(false); // Added this line
-const alertDialog = ref(false);
-const alertMessage = ref("");
-const identifications = ref<Identification[]>([]);
 const canvasRefs = reactive<CanvasRefs>({});
-const croppedImagesDataUrls = ref<string[]>([]);
-const userDescriptors = new Map<string, Float32Array[]>();
 const url = import.meta.env.VITE_API_URL;
 
 const imageUrls = ref<string[]>([]);
@@ -185,7 +171,6 @@ async function processImage(image: HTMLImageElement, index: number) {
   document.body.appendChild(canvas);
   canvas.width = image.naturalWidth;
   canvas.height = image.naturalHeight;
-  const ctx = canvas.getContext("2d");
 
   try {
     const detections = await faceapi
@@ -197,11 +182,7 @@ async function processImage(image: HTMLImageElement, index: number) {
         console.error("Descriptor is missing for the detected face");
         return; // Skip this iteration if the descriptor is not available
       }
-      const base64Descriptor = float32ArrayToBase64(detection.descriptor);
-      if (base64Descriptor) {
-        const float32Array = base64ToFloat32Array(base64Descriptor);
-        // Continue processing with float32Array
-      }
+     
     });
   } catch (error) {
     console.error("Failed to process face detection:", error);
@@ -225,48 +206,48 @@ function float32ArrayToBase64(float32Array: Float32Array): string {
 }
 
 // resizeAndConvertToBase64
-async function resizeAndConvertToBase64(
-  imageUrl: string,
-  maxWidth: number,
-  maxHeight: number
-): Promise<string> {
-  return new Promise<string>((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "Anonymous";
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return reject(new Error("Canvas context not available"));
-      // Calculate the aspect ratio and resize
-      const ratio = Math.min(maxWidth / img.width, maxHeight / img.height);
-      const width = img.width * ratio;
-      const height = img.height * ratio;
+// async function resizeAndConvertToBase64(
+//   imageUrl: string,
+//   maxWidth: number,
+//   maxHeight: number
+// ): Promise<string> {
+//   return new Promise<string>((resolve, reject) => {
+//     const img = new Image();
+//     img.crossOrigin = "Anonymous";
+//     img.onload = () => {
+//       const canvas = document.createElement("canvas");
+//       const ctx = canvas.getContext("2d");
+//       if (!ctx) return reject(new Error("Canvas context not available"));
+//       // Calculate the aspect ratio and resize
+//       const ratio = Math.min(maxWidth / img.width, maxHeight / img.height);
+//       const width = img.width * ratio;
+//       const height = img.height * ratio;
 
-      // Set canvas dimensions
-      canvas.width = width;
-      canvas.height = height;
+//       // Set canvas dimensions
+//       canvas.width = width;
+//       canvas.height = height;
 
-      // Draw the resized image onto the canvas
-      ctx.drawImage(img, 0, 0, width, height);
+//       // Draw the resized image onto the canvas
+//       ctx.drawImage(img, 0, 0, width, height);
 
-      // Convert the canvas to a base64 string with the specified quality
-      const resizedImage = canvas.toDataURL("image/jpeg", 0.5);
-      resolve(resizedImage);
-    };
-    img.onerror = () => reject(new Error(`Failed to load image at ${imageUrl}`));
-    img.src = imageUrl;
-  });
-}
+//       // Convert the canvas to a base64 string with the specified quality
+//       const resizedImage = canvas.toDataURL("image/jpeg", 0.5);
+//       resolve(resizedImage);
+//     };
+//     img.onerror = () => reject(new Error(`Failed to load image at ${imageUrl}`));
+//     img.src = imageUrl;
+//   });
+// }
 // base64ToBlob
-function base64ToBlob(base64: string, type: string): Blob {
-  const binaryString = atob(base64.split(",")[1]);
-  const len = binaryString.length;
-  const bytes = new Uint8Array(len);
-  for (let i = 0; i < len; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-  return new Blob([bytes], { type });
-}
+// function base64ToBlob(base64: string, type: string): Blob {
+//   const binaryString = atob(base64.split(",")[1]);
+//   const len = binaryString.length;
+//   const bytes = new Uint8Array(len);
+//   for (let i = 0; i < len; i++) {
+//     bytes[i] = binaryString.charCodeAt(i);
+//   }
+//   return new Blob([bytes], { type });
+// }
 
 // Function to calculate Euclidean distance between two face descriptors
 function calculateEuclideanDistance(
@@ -316,8 +297,6 @@ async function saveUserUpdate() {
               .withFaceLandmarks()
               .withFaceDescriptor();
             if (detection) {
-              const descriptor = detection.descriptor;
-              const base64Descriptor = float32ArrayToBase64(descriptor);
               faceDescriptionFields.value.push(detection.descriptor); // Store as Base64 string
             }
             resolve();
@@ -545,7 +524,7 @@ async function save() {
 async function extractFaceDescriptorFromImage(
   imageUrl: string
 ): Promise<Float32Array | null> {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = "Anonymous";
     img.onload = async () => {

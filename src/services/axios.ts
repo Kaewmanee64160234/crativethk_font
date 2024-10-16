@@ -4,13 +4,7 @@ const instance = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
 });
 
-function delay(time: number) {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      resolve(true);
-    }, time);
-  });
-}
+
 
 instance.interceptors.request.use(
   async function (config) {

@@ -2,7 +2,6 @@
 import { useUserStore } from '@/stores/user.store';
 import { ref } from 'vue';
 const userStore = useUserStore();
-const url = import.meta.env.VITE_API_URL;
 // Snackbar state
 const snackbarVisible = ref(false);
 const snackbarMessage = ref('');

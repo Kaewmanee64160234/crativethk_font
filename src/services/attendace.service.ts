@@ -11,11 +11,7 @@ function getAttendance() {
 function getAttendanceById(id: string) {
   return http.get(`/attendances/${id}`);
 }
-function printFormData(formData: FormData) {
-  formData.forEach((value, key) => {
-    console.log(`${key}: ${value}`);
-  });
-}
+
 
 function createAttendance(data: Attendance, file: File) {
   const formData = new FormData();
@@ -176,7 +172,7 @@ const submitAttendances = async (
   const formData = new FormData();
 
   // Serialize the attendance data as JSON and append it as a form field
-  const attendanceData = identifications.map((identification, i) => ({
+  const attendanceData = identifications.map((identification) => ({
     studentId: identification.studentId,
     attendanceStatus: status,
     attendanceConfirmStatus: confirmStatus,

@@ -1,11 +1,9 @@
 <script lang="ts" setup>
-import { useMessageStore } from '@/stores/message';
 import { useUserStore } from '@/stores/user.store';
 import * as faceapi from 'face-api.js';
 import { onMounted, ref } from 'vue';
 
 const userStore = useUserStore();
-const messageStore = useMessageStore();
 
 // Snackbar state
 const snackbarVisible = ref(false);
@@ -99,46 +97,44 @@ async function save() {
 // check if status is not valid
 
 
-const onImageError = (event: any) => {
-  event.target.src = 'path_to_default_image'; // Provide the path to a default image
-};
 
-async function createImageElement(file: File): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
 
-    reader.onload = () => {
-      const img = new Image();
-      img.src = reader.result as string;
-      img.onload = () => resolve(img);
-      img.onerror = reject;
-    };
+// async function createImageElement(file: File): Promise<HTMLImageElement> {
+//   return new Promise((resolve, reject) => {
+//     const reader = new FileReader();
 
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
+//     reader.onload = () => {
+//       const img = new Image();
+//       img.src = reader.result as string;
+//       img.onload = () => resolve(img);
+//       img.onerror = reject;
+//     };
 
-async function processFiles(files: File[]): Promise<Float32Array[]> {
-  const faceDescriptions: Float32Array[] = [];
+//     reader.onerror = reject;
+//     reader.readAsDataURL(file);
+//   });
+// }
 
-  for (const file of files) {
-    const imgElement = await createImageElement(file);
-    const faceDescription = await faceapi
-      .detectSingleFace(imgElement, new faceapi.SsdMobilenetv1Options())
-      .withFaceLandmarks()
-      .withFaceDescriptor();
+// async function processFiles(files: File[]): Promise<Float32Array[]> {
+//   const faceDescriptions: Float32Array[] = [];
 
-    if (faceDescription) {
-      faceDescriptions.push(faceDescription.descriptor);
-    }
+//   for (const file of files) {
+//     const imgElement = await createImageElement(file);
+//     const faceDescription = await faceapi
+//       .detectSingleFace(imgElement, new faceapi.SsdMobilenetv1Options())
+//       .withFaceLandmarks()
+//       .withFaceDescriptor();
 
-    // Clean up the created image element
-    imgElement.remove();
-  }
+//     if (faceDescription) {
+//       faceDescriptions.push(faceDescription.descriptor);
+//     }
 
-  return faceDescriptions;
-}
+//     // Clean up the created image element
+//     imgElement.remove();
+//   }
+
+//   return faceDescriptions;
+// }
 
 function showSnackbar(message: string, color: string = 'error') {
   snackbarMessage.value = message;

@@ -83,44 +83,8 @@ async function cancel() {
     userStore.resetUser();
     userStore.closeDialog();
 }
-const onImageError = (event: any) => {
-  event.target.src = 'path_to_default_image'; // Provide the path to a default image
-};
-async function createImageElement(file: File): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    
-    reader.onload = () => {
-      const img = new Image();
-      img.src = reader.result as string;
-      img.onload = () => resolve(img);
-      img.onerror = reject;
-    };
-    
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-async function processFiles(files: File[]): Promise<Float32Array[]> {
-  const faceDescriptions: Float32Array[] = [];
 
-  for (const file of files) {
-    const imgElement = await createImageElement(file);
-    const faceDescription = await faceapi
-      .detectSingleFace(imgElement, new faceapi.SsdMobilenetv1Options())
-      .withFaceLandmarks()
-      .withFaceDescriptor();
-    
-    if (faceDescription) {
-      faceDescriptions.push(faceDescription.descriptor);
-    }
 
-    // Clean up the created image element
-    imgElement.remove();
-  }
-
-  return faceDescriptions;
-}
 
 // Set the default value for role
 if (!userStore.editUser.role) {

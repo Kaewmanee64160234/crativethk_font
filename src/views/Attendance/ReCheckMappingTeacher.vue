@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import {  onMounted } from "vue";
 import { useAttendanceStore } from "../../stores/attendance.store";
 import { useRoute } from "vue-router";
 import type Attendance from "@/stores/types/Attendances";
 import { useAssignmentStore } from "@/stores/assignment.store";
-import type Assignment from "@/stores/types/Assignment";
 import { useCourseStore } from "@/stores/course.store";
 import { useUserStore } from "@/stores/user.store";
 import router from "@/router";

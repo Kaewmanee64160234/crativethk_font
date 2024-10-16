@@ -5,7 +5,7 @@ import { useEnrollmentStore } from "@/stores/enrollment.store";
 import { useMessageStore } from "@/stores/message";
 import type Course from "@/stores/types/Course";
 import { useUserStore } from "@/stores/user.store";
-import { onMounted, ref } from "vue";
+import { onMounted } from "vue";
 import { useRouter } from "vue-router";
 const courseStore = useCourseStore();
 const messageStore = useMessageStore();

@@ -3,7 +3,6 @@ import { ref, reactive, onMounted, computed } from "vue";
 import * as faceapi from "face-api.js";
 import { useUserStore } from "@/stores/user.store";
 import { useRoute, useRouter } from "vue-router";
-import type { FaceDetection, WithFaceDescriptor } from "face-api.js";
 import Loader from "@/components/loader/Loader.vue";
 import type { User } from "@/stores/types/User";
 import { useAssignmentStore } from "@/stores/assignment.store";
@@ -155,7 +154,6 @@ async function processImage(image: HTMLImageElement, index: number) {
   document.body.appendChild(canvas);
   canvas.width = image.naturalWidth;
   canvas.height = image.naturalHeight;
-  const ctx = canvas.getContext("2d");
 
   try {
     const detections = await faceapi
@@ -380,7 +378,7 @@ const createAttendance = async () => {
   console.log("Create unknown users", usersCreateUnknown);
 
   // Add unknown users to identifications and submit their attendance as "absent"
-  const unknownUsers = usersCreateUnknown.map((user, i) => ({
+  const unknownUsers = usersCreateUnknown.map((user) => ({
     name: "Unknown",
     studentId: user.studentId!,
     imageUrl: "", // No image for unknown users
@@ -432,18 +430,7 @@ const updateAttdent = async () => {
         type: "image/jpeg",
       });
 
-      let identifiedUser =
-        identifications.value[i].name !== "Unknown"
-          ? userStore.users.find(
-              (user) => user.firstName === identifications.value[i].name
-            )
-          : ({
-              studentId: i + "",
-              firstName: "Unknown",
-              lastName: "Unknown",
-              faceDescriptions: [],
-            } as User);
-
+     
       // find user from attdent from name identifiv=cation
       await attendanceStore.getAttendanceByAssignmentId(
         route.params.assignmentId.toString()
@@ -482,24 +469,7 @@ const updateAttdent = async () => {
   }
 };
 
-const confirmAttendance = async (attendance: Attendance) => {
-  if (confirm("Do you want to confirm this attendance?")) {
-    try {
-      attendance.attendanceStatus = "present";
-      attendance.attendanceConfirmStatus = "confirmed";
-      await attendanceStore.confirmAttendanceByTeacher(
-        attendance.attendanceId + ""
-      );
-      alert("Attendance has been confirmed.");
-      await attendanceStore.getAttendanceByAssignmentId(
-        route.params.assignmentId.toString()
-      );
-    } catch (error) {
-      console.error("Error recording attendance:", error);
-      alert("Failed to confirm attendance.");
-    }
-  }
-};
+
 
 //reject student
 const reCheckAttendance = async (attendance: Attendance) => {
@@ -527,9 +497,7 @@ const reCheckAttendance = async (attendance: Attendance) => {
   }
 };
 
-const goHome = () => {
-  router.push("/courseDetail/" + courseStore.currentCourse?.coursesId);
-};
+
 
 const nextPage = () => {
   router.push(

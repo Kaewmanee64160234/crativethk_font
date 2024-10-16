@@ -2,7 +2,6 @@
 // src/services/user.ts
 import type { User } from "@/stores/types/User";
 import http from "./axios";
-import axios from "axios";
 
 function getUser() {
   return http.get("/users", {

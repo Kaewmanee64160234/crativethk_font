@@ -65,8 +65,6 @@ const cancelRegister = async () => {
 
 const resizeAndConvertToBase64 = (
     imgUrl: string,
-    maxWidth: number,
-    maxHeight: number
 ): Promise<string> => {
     return new Promise((resolve, reject) => {
         const img = new Image();

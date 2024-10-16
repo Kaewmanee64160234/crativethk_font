@@ -7,7 +7,7 @@ import EditUserDialog3 from '@/components/dialogs/EditUserDialog3.vue';
 import ConfirmDialog from '@/components/dialogs/ConfirmDialog.vue';
 import type { User } from '@/stores/types/User';
 import { useUserStore } from '@/stores/user.store';
-import { onMounted, ref, computed, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 
 const userStore = useUserStore();
 const yearOptions = ref<string[]>(['']);
@@ -157,7 +157,7 @@ watch(params, async () => {
         <tbody>
           <tr v-for="(user, index) in userStore.users" :key="index">
             <td>{{ index + 1 }}</td>
-            <td v-if="userStore.tab === 0">{{ user.studentId || user.teacherId }}</td>
+            <td v-if="userStore.tab === 0">{{ user.studentId }}</td>
             <!-- Show ID for students only -->
             <td>{{ user.firstName + ' ' + user.lastName }}</td>
             <td v-if="userStore.tab === 0">{{ user.year }}</td> <!-- Show Year for students only -->

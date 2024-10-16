@@ -1,18 +1,9 @@
 import { createRouter, createWebHistory } from "vue-router";
 import HomeView from "../views/HomeView.vue";
-import { ref } from "vue";
 import { useUserStore } from "@/stores/user.store";
 import jwtDecode from 'jwt-decode';
 
-const user = ref<any | null>(localStorage.getItem("users"));
-const user_ = JSON.parse(user.value);
-const ezAutorized = () => {
-  if (user_.role.toLowerCase() === "users") {
-    return router.push("/pageNotFound");
-  } else {
-    return true;
-  }
-};
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [

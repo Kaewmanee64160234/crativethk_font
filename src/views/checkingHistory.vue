@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute } from "vue-router";
 import { useCourseStore } from "@/stores/course.store";
 import { useAssignmentStore } from "@/stores/assignment.store";
 import { useAttendanceStore } from "@/stores/attendance.store";
 import { useUserStore } from "@/stores/user.store";
-import { useEnrollmentStore } from "@/stores/enrollment.store";
 import type Assignment from "@/stores/types/Assignment";
 import type { User } from "@/stores/types/User";
 import UpdateAttendantDialogView from "@/components/attendant/updateAttendantDialog.vue";
@@ -20,7 +19,6 @@ const id = ref(route.params.courseId);
 const posts = ref<Assignment[]>([]);
 const showDialog = ref(false);
 
-const currentUser = computed(() => userStore.currentUser);
 
 onMounted(async () => {
   await assignmentStore.getAssignmentByCourseId(id.value.toString());
@@ -51,38 +49,8 @@ const getAttendanceStatus = (
     : "absent";
 };
 
-const getAttendanceStatusTeacher = (
-  attendances: Attendance[],
-  userId: number,
-  assignmentId: number
-): string => {
-  const attendanceIndex = attendances?.findIndex(
-    (att: Attendance) =>
-      att.user?.userId === userId && att.assignment?.assignmentId === assignmentId
-  );
-  return attendances[attendanceIndex!]
-    ? attendances[attendanceIndex!].attendanceStatus
-    : "absent";
-};
 
-const calculateTotalScoreForTeacher = (
-  userId: number,
-  assignments: Assignment[]
-): number => {
-  return assignments.reduce((total, assignment) => {
-    const status = getAttendanceStatusTeacher(
-      attendanceStore.attendances || [],
-      userId,
-      assignment.assignmentId!
-    );
-    if (status === "มาเรียน") {
-      return total + 1;
-    } else if (status === "มาสาย") {
-      return total + 0.5;
-    }
-    return total;
-  }, 0);
-};
+
 const openDialog = (assignment: Assignment, user: User) => {
   //filter attendance from assignments
   const attendance = attendanceStore.attendances?.findIndex(

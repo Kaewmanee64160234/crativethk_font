@@ -1,15 +1,11 @@
 <script lang="ts" setup>
-import router from "@/router";
 import { useAuthStore } from "@/stores/auth";
-import type { User } from "@/stores/types/User";
-import { onMounted, ref } from "vue";
+import {  ref } from "vue";
 import { decodeCredential, GoogleLogin } from "vue3-google-login";
 const authStore = useAuthStore();
-const currentUser = ref<User>();
 const loginError = ref(false);
 const email = ref("");
 const loginErrorMessage = ref("");
-let galleryImageBase64 = "";
 
 const login = async () => {
   authStore.login(

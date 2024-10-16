@@ -7,7 +7,6 @@ import { useCourseStore } from "@/stores/course.store";
 import { useUserStore } from "@/stores/user.store";
 import { useAttendanceStore } from "@/stores/attendance.store";
 import ConfirmDialog from "@/components/dialogs/ConfirmDialog.vue";
-import EditAssignment from "@/components/dialogs/EditAssignment.vue";
 import Swal from "sweetalert2";
 import { useMessageStore } from "@/stores/message";
 
@@ -20,7 +19,6 @@ const route = useRoute();
 const id = ref(route.params.idCourse);
 const userStore = useUserStore();
 const attdentStore = useAttendanceStore();
-const courseId = route.params.courseId;
 const showDialog = ref(false);
 const showDialogEditAssignment = ref(false);
 const videoRef = ref<HTMLVideoElement | null>(null);

@@ -2,7 +2,7 @@
   import { useUserStore } from '@/stores/user.store';
   import { useNotiforupdate } from '@/stores/notiforUpdate.store';
   import { onMounted, ref } from 'vue';
-  import { useRoute, useRouter } from 'vue-router';
+  import {  useRouter } from 'vue-router';
 
   const userStore = useUserStore();
   const notiforupdateStore = useNotiforupdate();

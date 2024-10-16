@@ -1,7 +1,5 @@
 <script lang="ts" setup>
-import router from "@/router";
 import { useMessageStore } from "@/stores/message";
-import type { User } from "@/stores/types/User";
 import { useUserStore } from "@/stores/user.store";
 import Loader from "@/components/loader/Loader.vue";
 import { computed, onMounted, ref } from "vue";

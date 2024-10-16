@@ -2,7 +2,6 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import type { User } from "./types/User";
-import type Person from "./types/Person";
 import auth from "../services/auth.service";
 import router from "@/router";
 import Swal from "sweetalert2";

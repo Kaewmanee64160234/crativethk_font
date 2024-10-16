@@ -11,7 +11,6 @@ import type Attendance from "@/stores/types/Attendances";
 import UpdateAttendantDialogView from "@/components/attendant/updateAttendantDialog.vue";
 import type { User } from "@/stores/types/User";
 import * as XLSX from "xlsx";
-import { useLoaderStore } from "@/stores/loader.store";
 import { useMessageStore } from "@/stores/message";
 import Swal from "sweetalert2";
 
@@ -35,7 +34,6 @@ const assignmentStore = useAssignmentStore();
 const courseStore = useCourseStore();
 const userStore = useUserStore();
 const attendanceStore = useAttendanceStore();
-const loaderStore = useLoaderStore();
 const showDialog = ref(false);
 const posts = ref<Assignment[]>([]);
 const totalPage = ref(assignmentStore.lastPage);
@@ -50,17 +48,9 @@ const showCamera = ref(false);
 const videoRef = ref<HTMLVideoElement | null>(null);
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const assignmentManual = ref(false);
-const coursesId = ref("");
 
 const isTeacher = computed(() => userStore.currentUser?.role === "อาจารย์");
-const filteredAssignments = computed(() => {
-  // Only include assignments that have corresponding attendance data.
-  return assignmentStore.assignments.filter((assignment) =>
-    attendanceStore.attendances!.some(
-      (att) => att.assignment?.assignmentId === assignment.assignmentId
-    )
-  );
-});
+
 
 const filteredUsers = computed(() => {
   // Filter users based on whether the user is a teacher or a student.
@@ -151,9 +141,7 @@ const removeImage = (index: number) => {
     imageUrls.value.splice(index - capturedImages.value.length, 1);
   }
 };
-const processFile = (url: string) => {
-  imageUrls.value.push(url);
-};
+
 
 const handleFileChange = (event: Event) => {
   const input = event.target as HTMLInputElement;
