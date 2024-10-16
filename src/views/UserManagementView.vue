@@ -112,7 +112,7 @@
 
         <v-col cols="md 4">
           <v-select v-if="userStore.tab === 1 || userStore.tab === 2" v-model="params.status" :items="statusTeacher"
-            label="สถานะภาพ" dense variant="solo" hide-details class="wide-select"></v-select>
+            label="สถานภาพ" dense variant="solo" hide-details class="wide-select"></v-select>
         </v-col>
 
         <v-col cols="auto">
@@ -153,7 +153,7 @@
               <th class="text-left">ชื่อ-นามสกุล</th>
               <th v-if="userStore.tab === 0" class="text-left">ชั้นปี</th> <!-- Show Year for students only -->
               <th v-if="userStore.tab !== 2" class="text-left">สาขา</th> <!-- Show Major for students and teachers -->
-              <th class="text-left">สถานะภาพ</th>
+              <th class="text-left">สถานภาพ</th>
               <th class="text-center">ตัวเลือกเพิ่มเติม</th>
             </tr>
           </thead>

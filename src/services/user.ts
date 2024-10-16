@@ -207,6 +207,11 @@ function getTeachers() {
   return http.get("/users/teachers"); // Assuming your API base URL is correctly set up
 }
 
+//getTeacher by Major
+function getTeacherByMajor(major: string) {
+  return http.get(`/users/teacher/${major}`);
+}
+
 function checkEmailDuplicate(email: string, userId?: number) {
   return http.get(`/users/email/${email}`, {
     params: { email, userId },
@@ -270,6 +275,7 @@ function checkEmailDuplicate(email: string, userId?: number) {
     };
 
 export default {
+  getTeacherByMajor,
   searchUsersByMajorAndStatus,
   searchStatusTeacherAndAdmin,
   getStudentPagination,
