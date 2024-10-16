@@ -34,13 +34,17 @@ async function save() {
     !/^[0-9]{8}$/.test(userStore.editUser.studentId)
   ) {
     return;
-  } else if (!userStore.editUser.firstName || !userStore.editUser.lastName ||
+  } else if (
+    !userStore.editUser.firstName ||
+    !userStore.editUser.lastName ||
     !/^[ก-๙\s]+$/.test(userStore.editUser.firstName) ||
     !/^[ก-๙\s]+$/.test(userStore.editUser.lastName) ||
     userStore.editUser.firstName.length > 50 ||
-    userStore.editUser.lastName.length > 50) {
-
-    showSnackbar('โปรดกรอกชื่อและนามสกุลเป็นภาษาไทย และต้องไม่เกิน 50 ตัวอักษร');
+    userStore.editUser.lastName.length > 50
+  ) {
+    showSnackbar(
+      "โปรดกรอกชื่อและนามสกุลเป็นภาษาไทย และต้องไม่เกิน 50 ตัวอักษร"
+    );
     return;
   }
   //check if year is empty and not 2 numbers
@@ -52,8 +56,13 @@ async function save() {
     return;
   }
   // check if email is empty and follows the email format
-  else if (!userStore.editUser.email || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(userStore.editUser.email)) {
-    showSnackbar('โปรดกรอกอีเมลให้ถูกต้อง');
+  else if (
+    !userStore.editUser.email ||
+    !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(
+      userStore.editUser.email
+    )
+  ) {
+    showSnackbar("โปรดกรอกอีเมลให้ถูกต้อง");
     return;
   }
   //check if major is empty and not วิทยาการคอมพิวเตอร์, เมคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจดทัล, วิศวกรรมซอฟต์แวร์, ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ
@@ -94,10 +103,14 @@ async function save() {
 
   // window.location.reload();
   userStore.closeDialog();
-  // userStore.currentPage = 1;
-  userStore.studentPage = 1;
-  userStore.currentPage = 1;
-  userStore.getStudentPagination();
+  userStore.tab = 0;
+
+  await userStore.fetchPaginatedFilterUsers({
+    role: "นิสิต",
+    major: "",
+    status: "",
+    search: "",
+  });
 }
 async function loadModels() {
   await faceapi.nets.ssdMobilenetv1.loadFromUri("/models");
@@ -160,8 +173,15 @@ function float32ArrayToBase64(float32Array: any) {
 <template>
   <v-container>
     <v-row justify="center">
-      <v-card class="mx-auto elevation-3" style="width: 50vw; padding: 30px; border-radius: 15px;">
-        <v-card-title class="pb-0" style="font-size: 24px; font-weight: 600;text-align: center;">แก้ไขข้อมูลนิสิต</v-card-title>
+      <v-card
+        class="mx-auto elevation-3"
+        style="width: 50vw; padding: 30px; border-radius: 15px"
+      >
+        <v-card-title
+          class="pb-0"
+          style="font-size: 24px; font-weight: 600; text-align: center"
+          >แก้ไขข้อมูลนิสิต</v-card-title
+        >
         <v-divider class="my-4"></v-divider>
 
         <v-row>
@@ -170,60 +190,105 @@ function float32ArrayToBase64(float32Array: any) {
             <v-row>
               <!-- First Name -->
               <v-col cols="6">
-                <v-text-field label="ชื่อ" variant="solo" v-model="userStore.editUser.firstName"
-                  :rules="[ 
+                <v-text-field
+                  label="ชื่อ"
+                  variant="solo"
+                  v-model="userStore.editUser.firstName"
+                  :rules="[
                     (v) => !!v || 'โปรดกรอกชื่อ',
-                    (v) => /^[ก-๙\s]+$/.test(v) || 'ชื่อต้องไม่เป็นตัวเลขและต้องเป็นภาษาไทยเท่านั้น',
-                    (v) => v.length <= 50 || 'ชื่อต้องไม่เกิน 50 ตัวอักษร'
-                  ]">
+                    (v) =>
+                      /^[ก-๙\s]+$/.test(v) ||
+                      'ชื่อต้องไม่เป็นตัวเลขและต้องเป็นภาษาไทยเท่านั้น',
+                    (v) => v.length <= 50 || 'ชื่อต้องไม่เกิน 50 ตัวอักษร',
+                  ]"
+                >
                 </v-text-field>
               </v-col>
               <!-- Last Name -->
               <v-col cols="6">
-                <v-text-field label="นามสกุล" variant="solo" v-model="userStore.editUser.lastName"
-                  :rules="[ 
+                <v-text-field
+                  label="นามสกุล"
+                  variant="solo"
+                  v-model="userStore.editUser.lastName"
+                  :rules="[
                     (v) => !!v || 'โปรดกรอกนามสกุล',
-                    (v) => /^[ก-๙\s]+$/.test(v) || 'นามสกุลต้องไม่เป็นตัวเลขและต้องเป็นภาษาไทยเท่านั้น',
-                    (v) => v.length <= 50 || 'นามสกุลต้องไม่เกิน 50 ตัวอักษร'
-                  ]">
+                    (v) =>
+                      /^[ก-๙\s]+$/.test(v) ||
+                      'นามสกุลต้องไม่เป็นตัวเลขและต้องเป็นภาษาไทยเท่านั้น',
+                    (v) => v.length <= 50 || 'นามสกุลต้องไม่เกิน 50 ตัวอักษร',
+                  ]"
+                >
                 </v-text-field>
               </v-col>
 
               <!-- Email (disabled) -->
               <v-col cols="12">
-                <v-text-field label="อีเมล" variant="solo" v-model="userStore.editUser.email"
+                <v-text-field
+                  label="อีเมล"
+                  variant="solo"
+                  v-model="userStore.editUser.email"
                   disabled
-                  :rules="[ 
-                    (v) => !!v || 'โปรดกรอกอีเมล', 
-                    (v) => /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(v) || 'กรอกอีเมลให้ถูกต้อง'
-                  ]">
+                  :rules="[
+                    (v) => !!v || 'โปรดกรอกอีเมล',
+                    (v) =>
+                      /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(
+                        v
+                      ) || 'กรอกอีเมลให้ถูกต้อง',
+                  ]"
+                >
                 </v-text-field>
               </v-col>
 
               <!-- Year -->
               <v-col cols="6">
-                <v-text-field label="ชั้นปี" variant="solo" v-model="userStore.editUser.year"
-                  :rules="[ 
+                <v-text-field
+                  label="ชั้นปี"
+                  variant="solo"
+                  v-model="userStore.editUser.year"
+                  :rules="[
                     (v) => !!v || 'โปรดใส่ชั้นปีเช่น 63, 64, 65',
-                    (v) => /^[0-9]{2}$/.test(v) || 'โปรดกรอกข้อมูลเฉพาะตัวเลข 2 หลัก'
-                  ]">
+                    (v) =>
+                      /^[0-9]{2}$/.test(v) ||
+                      'โปรดกรอกข้อมูลเฉพาะตัวเลข 2 หลัก',
+                  ]"
+                >
                 </v-text-field>
               </v-col>
 
               <!-- Major -->
               <v-col cols="6">
-                <v-select label="สาขา" :items="['วิทยาการคอมพิวเตอร์', 'เทคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจิทัล', 'วิศวกรรมซอฟต์แวร์', 'ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ']"
-                variant="solo" v-model="userStore.editUser.major" 
-                  :rules="[ 
+                <v-select
+                  label="สาขา"
+                  :items="[
+                    'วิทยาการคอมพิวเตอร์',
+                    'เทคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจิทัล',
+                    'วิศวกรรมซอฟต์แวร์',
+                    'ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ',
+                  ]"
+                  variant="solo"
+                  v-model="userStore.editUser.major"
+                  :rules="[
                     (v) => !!v || 'โปรดเลือกสาขา',
-                    (v) => ['วิทยาการคอมพิวเตอร์', 'เทคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจิทัล', 'วิศวกรรมซอฟต์แวร์', 'ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ'].includes(v) || 'โปรดเลือกสาขาจากรายการที่ให้ไว้'
-                  ]">
+                    (v) =>
+                      [
+                        'วิทยาการคอมพิวเตอร์',
+                        'เทคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจิทัล',
+                        'วิศวกรรมซอฟต์แวร์',
+                        'ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ',
+                      ].includes(v) || 'โปรดเลือกสาขาจากรายการที่ให้ไว้',
+                  ]"
+                >
                 </v-select>
               </v-col>
 
               <!-- Status -->
               <v-col cols="12">
-                <v-select label="สถานะภาพ" :items="['กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา']" variant="solo" v-model="userStore.editUser.status">
+                <v-select
+                  label="สถานะภาพ"
+                  :items="['กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา']"
+                  variant="solo"
+                  v-model="userStore.editUser.status"
+                >
                 </v-select>
               </v-col>
             </v-row>
@@ -232,10 +297,24 @@ function float32ArrayToBase64(float32Array: any) {
 
         <!-- Card Actions (Buttons) -->
         <v-card-actions class="justify-space-between mt-4">
-          <v-btn  color="red" rounded outlined class="ml-4" style="padding: 12px 24px; font-size: 16px;" @click="cancel">
+          <v-btn
+            color="red"
+            rounded
+            outlined
+            class="ml-4"
+            style="padding: 12px 24px; font-size: 16px"
+            @click="cancel"
+          >
             ยกเลิก
           </v-btn>
-          <v-btn color="blue" text="ยืนยัน" rounded class="mr-4" style="padding: 12px 24px; font-size: 16px;" @click="save">
+          <v-btn
+            color="blue"
+            text="ยืนยัน"
+            rounded
+            class="mr-4"
+            style="padding: 12px 24px; font-size: 16px"
+            @click="save"
+          >
             ยืนยัน
           </v-btn>
         </v-card-actions>
@@ -243,7 +322,13 @@ function float32ArrayToBase64(float32Array: any) {
     </v-row>
 
     <!-- Snackbar for showing errors -->
-    <v-snackbar v-model="snackbarVisible" :color="snackbarColor" top right :timeout="3000">
+    <v-snackbar
+      v-model="snackbarVisible"
+      :color="snackbarColor"
+      top
+      right
+      :timeout="3000"
+    >
       {{ snackbarMessage }}
       <template v-slot:actions>
         <v-btn color="white" @click="snackbarVisible = false">Close</v-btn>

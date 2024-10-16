@@ -40,6 +40,7 @@ export const useUserStore = defineStore("userStore", () => {
   const totalUsers = ref(0); // Total users count
   const currentPage = ref(1); // Current page for pagination
   const itemsPerPage = ref(20); // Items per page for pagination
+  const tab = ref(0); // 0: students, 1: teachers, 2: admins
 
   watch([searchQuery, searchDropdown2, searchDropdown3, searchDropdown4], async () => {
     await fetchPaginatedFilterUsers({
@@ -316,7 +317,6 @@ export const useUserStore = defineStore("userStore", () => {
     showEditDialog2.value = false;
     showEditDialog3.value = false;
     //getUsers
-    getUsers();
   };
 
   const closeImageDialog = () => {
@@ -637,6 +637,7 @@ export const useUserStore = defineStore("userStore", () => {
     searchDropdown5,
     logout,
     teachers,
-    fetchPaginatedFilterUsers
+    fetchPaginatedFilterUsers,
+    tab
   };
 });

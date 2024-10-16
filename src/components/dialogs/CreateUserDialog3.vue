@@ -68,6 +68,15 @@ async function save() {
     userStore.currentPage = 1;
     await userStore.getAdminPagination();
     await userStore.closeDialog();
+  userStore.tab = 2;
+
+    await  userStore.fetchPaginatedFilterUsers({
+  role: 'แอดมิน',
+    major: '',
+    status: '',
+    search: '',
+   
+});
 }
 
 async function cancel() {

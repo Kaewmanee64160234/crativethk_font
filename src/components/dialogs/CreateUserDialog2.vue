@@ -79,6 +79,15 @@ async function save() {
   userStore.currentPage = 1;
   await userStore.getTeacherPagination();
   await userStore.closeDialog();
+  userStore.tab = 1;
+
+  await  userStore.fetchPaginatedFilterUsers({
+  role: 'อาจารย์',
+    major: '',
+    status: '',
+    search: '',
+   
+});
 }
 
 // check if role is not "อาจารย์"

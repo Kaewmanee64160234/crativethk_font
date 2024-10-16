@@ -11,7 +11,6 @@ import { onMounted, ref, computed, watch } from 'vue';
 
 const userStore = useUserStore();
 const yearOptions = ref<string[]>(['']);
-const tab = ref(0); // 0: students, 1: teachers, 2: admins
 const statusTeacher = ref(['','ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง']);
 const statusStudent = ref(['','กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา']);
 const majorOptions = ref([
@@ -54,15 +53,15 @@ const updateYearOptions = () => {
 };
 
 // Watch tab selection and refetch user data accordingly
-watch(() => tab.value, async () => {
+watch(() => userStore.tab, async () => {
   params.value.page = 1; // Reset pagination to page 1 when changing tabs
   await fetchFilteredUsers();
 });
 
 // Function to get the current role based on the selected tab
 const getCurrentRole = () => {
-  if (tab.value === 0) return 'นิสิต';
-  if (tab.value === 1) return 'อาจารย์';
+  if (userStore.tab === 0) return 'นิสิต';
+  if (userStore.tab === 1) return 'อาจารย์';
   return 'แอดมิน';
 };
 
@@ -120,7 +119,7 @@ watch(params, async () => {
       
       <v-col cols="md 4">
         <v-select 
-          v-if="tab === 0" 
+          v-if="userStore.tab === 0" 
           v-model="params.status" 
           :items="statusStudent" 
           label="สถานะภาพ" 
@@ -133,7 +132,7 @@ watch(params, async () => {
       
       <v-col cols="md 4">
         <v-select 
-          v-if="tab === 1 || tab === 2" 
+          v-if="userStore.tab === 1 || userStore.tab === 2" 
           v-model="params.status" 
           :items="statusTeacher" 
           label="สถานะภาพ" 
@@ -177,7 +176,7 @@ watch(params, async () => {
 
     <!-- Tabs and Table -->
     <v-card class="my-3 emboss-effect" style="width: 100%;" elevation="2">
-      <v-tabs v-model="tab" background-color="white" dark>
+      <v-tabs v-model="userStore.tab" background-color="white" dark>
         <v-tab>นิสิต</v-tab>
         <v-tab>อาจารย์</v-tab>
         <v-tab>แอดมิน</v-tab>
