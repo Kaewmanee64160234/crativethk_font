@@ -36,7 +36,8 @@ const url = import.meta.env.VITE_API_URL;
 
 const imageUrls = ref<string[]>([]);
 const imageFiles = ref<File[]>([]);
-const fileInputKey = ref(Date.now()); // Key to reset the file input field
+const fileInputKey = ref(Date.now());
+// Key to reset the file input field
 const faceDescriptionFields = ref<Float32Array[]>([]);
 const notiStore = useNotiforupdate();
 const selectedTeacher = ref(null);
@@ -45,7 +46,6 @@ interface Teacher {
   firstName: string;
   lastName: string;
 }
-
 const teachers = ref<Teacher[]>([]);
 
 // Fetching existing images from the user store
@@ -365,160 +365,160 @@ async function save() {
   if (userStore.currentUser?.registerStatus === "confirmed") {
     if (imageUrls.value && imageUrls.value.length > 0) {
       try {
-        await notiStore.getNotiforupdateByLastId(userStore.currentUser?.userId+'');
+        await notiStore.getNotiforupdateByLastId(userStore.currentUser?.userId + '');
         console.log("currentNotiforupdate", notiStore.currentNotiforupdate);
-    
-        
-        
-        if(notiStore.currentNotiforupdate?.statusconfirmation !== "pending"){
+
+
+
+        if (notiStore.currentNotiforupdate?.statusconfirmation !== "pending") {
           await Promise.all(
-          imageUrls.value.map((url, index) => loadImageAndProcess(url, index))
-        );
+            imageUrls.value.map((url, index) => loadImageAndProcess(url, index))
+          );
 
-        // Convert the user's latest image to a face descriptor
-        const latestUserImage = images.value[0]; // Assuming the first image is the latest
-        const croppedFaceDescriptor = await extractFaceDescriptorFromImage(
-          latestUserImage
-        );
+          // Convert the user's latest image to a face descriptor
+          const latestUserImage = images.value[0]; // Assuming the first image is the latest
+          const croppedFaceDescriptor = await extractFaceDescriptorFromImage(
+            latestUserImage
+          );
 
-        if (!croppedFaceDescriptor) {
-          console.error("Failed to extract face descriptor from the latest user image.");
-          messageStore.showError("Failed to extract face descriptor.");
-          return;
-        }
-        // Convert user's saved face description from base64 string to Float32Array
-        const userFaceDescriptionBase64 = userStore.currentUser?.faceDescriptions?.[0];
-        const userFaceDescriptor = userFaceDescriptionBase64
-          ? base64ToFloat32Array(userFaceDescriptionBase64)
-          : null;
-        if (!userFaceDescriptor || !croppedFaceDescriptor) {
-          console.error("Failed to obtain face descriptors.");
-          messageStore.showError("Failed to obtain face descriptors.");
-          return;
-        }
+          if (!croppedFaceDescriptor) {
+            console.error("Failed to extract face descriptor from the latest user image.");
+            messageStore.showError("Failed to extract face descriptor.");
+            return;
+          }
+          // Convert user's saved face description from base64 string to Float32Array
+          const userFaceDescriptionBase64 = userStore.currentUser?.faceDescriptions?.[0];
+          const userFaceDescriptor = userFaceDescriptionBase64
+            ? base64ToFloat32Array(userFaceDescriptionBase64)
+            : null;
+          if (!userFaceDescriptor || !croppedFaceDescriptor) {
+            console.error("Failed to obtain face descriptors.");
+            messageStore.showError("Failed to obtain face descriptors.");
+            return;
+          }
 
-        console.log("User face descriptor (Float32Array):", userFaceDescriptor);
-        console.log("Cropped face descriptor (Float32Array):", croppedFaceDescriptor);
+          console.log("User face descriptor (Float32Array):", userFaceDescriptor);
+          console.log("Cropped face descriptor (Float32Array):", croppedFaceDescriptor);
 
-        // Compare descriptors
-        const distance = calculateEuclideanDistance(
-          userFaceDescriptor,
-          croppedFaceDescriptor
-        );
-        console.log("Distance:", distance < 0.4);
+          // Compare descriptors
+          const distance = calculateEuclideanDistance(
+            userFaceDescriptor,
+            croppedFaceDescriptor
+          );
+          console.log("Distance:", distance < 0.4);
 
-        if (distance > 0.4) {
-          await saveUserUpdate();
-          messageStore.showConfirm("อัปโหลดรูปภาพสำเร็จ");
+          if (distance > 0.4) {
+            await saveUserUpdate();
+            messageStore.showConfirm("อัปโหลดรูปภาพสำเร็จ");
 
-          await userStore.getUsersById(userStore.currentUser?.userId!);
-        } else if (selectedTeacherName.value == "" && userStore.currentUser?.registerStatus === "confirmed") {
-          showDialog.value = true;
-          showSnackbar("โปรดใส่ชื่ออาจารย์ที่ต้องการส่งรูปภาพ");
-        } else {
-          console.log("Face descriptors do not match.");
-          await close();
-          await Swal.fire({
-            title: "รูปภาพไม่ตรงกับข้อมูล",
-            text: "คุณต้องการส่งรูปภาพไปยังครูหรือไม่",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonText: "ส่ง",
-            cancelButtonText: "ยกเลิก",
-            allowOutsideClick: false,
-          }).then(async (result) => {
-            if (result.isConfirmed) {
-              try {
-                const formData = new FormData();
+            await userStore.getUsersById(userStore.currentUser?.userId!);
+          } else if (selectedTeacherName.value == "" && userStore.currentUser?.registerStatus === "confirmed") {
+            showDialog.value = true;
+            showSnackbar("โปรดใส่ชื่ออาจารย์ที่ต้องการส่งรูปภาพ");
+          } else {
+            console.log("Face descriptors do not match.");
+            await close();
+            await Swal.fire({
+              title: "รูปภาพไม่ตรงกับข้อมูล",
+              text: "คุณต้องการส่งรูปภาพไปยังครูหรือไม่",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonText: "ส่ง",
+              cancelButtonText: "ยกเลิก",
+              allowOutsideClick: false,
+            }).then(async (result) => {
+              if (result.isConfirmed) {
+                try {
+                  const formData = new FormData();
 
-                // Detect faces and get descriptors for each image file
-                for (let i = 0; i < imageFiles.value.length; i++) {
-                  const imageFile = imageFiles.value[i];
-                  const img = new Image();
-                  img.src = URL.createObjectURL(imageFile);
+                  // Detect faces and get descriptors for each image file
+                  for (let i = 0; i < imageFiles.value.length; i++) {
+                    const imageFile = imageFiles.value[i];
+                    const img = new Image();
+                    img.src = URL.createObjectURL(imageFile);
 
-                  await new Promise<void>((resolve, reject) => {
-                    img.onload = async () => {
-                      try {
-                        const detection = await faceapi
-                          .detectSingleFace(img)
-                          .withFaceLandmarks()
-                          .withFaceDescriptor();
-                        if (detection) {
-                          const descriptor = detection.descriptor;
-                          const base64Descriptor = float32ArrayToBase64(descriptor);
+                    await new Promise<void>((resolve, reject) => {
+                      img.onload = async () => {
+                        try {
+                          const detection = await faceapi
+                            .detectSingleFace(img)
+                            .withFaceLandmarks()
+                            .withFaceDescriptor();
+                          if (detection) {
+                            const descriptor = detection.descriptor;
+                            const base64Descriptor = float32ArrayToBase64(descriptor);
 
-                          // Append face descriptor to formData
-                          formData.append(`faceDescriptor${i + 1}`, base64Descriptor);
-                          console.log("Appended face descriptor:", base64Descriptor);
-                        } else {
-                          console.warn(`No face detected in image ${i + 1}`);
+                            // Append face descriptor to formData
+                            formData.append(`faceDescriptor${i + 1}`, base64Descriptor);
+                            console.log("Appended face descriptor:", base64Descriptor);
+                          } else {
+                            console.warn(`No face detected in image ${i + 1}`);
+                          }
+
+                          // Append the image file to formData
+                          formData.append("files", imageFile, imageFile.name);
+                          console.log("Appended file:", imageFile.name);
+
+                          resolve();
+                        } catch (error) {
+                          console.error("Face detection failed:", error);
+                          reject(error);
                         }
-
-                        // Append the image file to formData
-                        formData.append("files", imageFile, imageFile.name);
-                        console.log("Appended file:", imageFile.name);
-
-                        resolve();
-                      } catch (error) {
-                        console.error("Face detection failed:", error);
+                      };
+                      img.onerror = (error) => {
+                        console.error("Error loading image:", error);
                         reject(error);
-                      }
-                    };
-                    img.onerror = (error) => {
-                      console.error("Error loading image:", error);
-                      reject(error);
-                    };
-                  });
-                }
-
-                // Add userId to formData
-                formData.append("userId", String(userStore.currentUser!.userId!));
-                console.log("Sending formData to create notification...");
-                await notiStore.createNotiforupdate(formData);
-                console.log("Notification created successfully.");
-
-                // Send an email to the selected teacher
-                if (selectedTeacher.value) {
-                  const teacher = teachers.value.find(
-                    (t) => t.userId === selectedTeacher.value
-                  );
-                  if (teacher) {
-                    notiStore
-                      .sendEmailToTeacher(
-                        teacher.firstName,
-                        teacher.lastName,
-                        userStore?.currentUser!
-                      )
-                      .then(() => {
-                        showSnackbar("อีเมลถูกส่งไปยังอาจารย์แล้ว", "success");
-                      })
-                      .catch((error) => {
-                        console.error("Failed to send email:", error);
-                        showSnackbar("การส่งอีเมลล้มเหลว", "error");
-                      });
+                      };
+                    });
                   }
-                } else {
-                  showSnackbar("กรุณาเลือกอาจารย์ที่ต้องการส่งรูปภาพ", "error");
+
+                  // Add userId to formData
+                  formData.append("userId", String(userStore.currentUser!.userId!));
+                  console.log("Sending formData to create notification...");
+                  await notiStore.createNotiforupdate(formData);
+                  console.log("Notification created successfully.");
+
+                  // Send an email to the selected teacher
+                  if (selectedTeacher.value) {
+                    const teacher = teachers.value.find(
+                      (t) => t.userId === selectedTeacher.value
+                    );
+                    if (teacher) {
+                      notiStore
+                        .sendEmailToTeacher(
+                          teacher.firstName,
+                          teacher.lastName,
+                          userStore?.currentUser!
+                        )
+                        .then(() => {
+                          showSnackbar("อีเมลถูกส่งไปยังอาจารย์แล้ว", "success");
+                        })
+                        .catch((error) => {
+                          console.error("Failed to send email:", error);
+                          showSnackbar("การส่งอีเมลล้มเหลว", "error");
+                        });
+                    }
+                  } else {
+                    showSnackbar("กรุณาเลือกอาจารย์ที่ต้องการส่งรูปภาพ", "error");
+                  }
+                  Swal.fire("อัปโหลดรูปภาพสำเร็จ", "ระบบกำลังประมวลผลข้อมูล", "success");
+                } catch (error) {
+                  console.error("Failed to create notification:", error);
+                  messageStore.showError("Failed to create notification.");
                 }
-                Swal.fire("อัปโหลดรูปภาพสำเร็จ", "ระบบกำลังประมวลผลข้อมูล", "success");
-              } catch (error) {
-                console.error("Failed to create notification:", error);
-                messageStore.showError("Failed to create notification.");
+              } else {
+                showDialog.value = true;
               }
-            } else {
-              showDialog.value = true;
-            }
-          });
-        }
-        }else{
+            });
+          }
+        } else {
           // show dialog and returnm
           // show snaak notification
           showDialog.value = true;
           showSnackbar("รอการตรวจสอบจากระบบเนื่องจากคุณกำลังรออนุมัติจากคำขอก่อนหน้านี้", "error");
 
         }
-     
+
       } catch (error) {
         console.error("Error in save function:", error);
         messageStore.showError("An error occurred during the save process.");
@@ -528,15 +528,15 @@ async function save() {
     }
   } else {
     if (userStore.currentUser!.registerStatus === "reConfirmed") {
-      console.log("reConfirmed",userStore.currentUser!.registerStatus);
-            userStore.currentUser!.registerStatus = "notConfirmed";
-            await userStore.updateRegisterStatus(
-              userStore.currentUser!.userId!,
-              userStore.currentUser!
-            );
-          }
+      console.log("reConfirmed", userStore.currentUser!.registerStatus);
+      userStore.currentUser!.registerStatus = "notConfirmed";
+      await userStore.updateRegisterStatus(
+        userStore.currentUser!.userId!,
+        userStore.currentUser!
+      );
+    }
 
-    await saveUserUpdate();      
+    await saveUserUpdate();
     await close();
   }
 }
@@ -664,6 +664,7 @@ const canUpload = computed(() => imageFiles.value.length === 5);
 const deleteImage = (index: number) => {
   imageUrls.value.splice(index, 1);
   imageFiles.value.splice(index, 1);
+  fileInputKey.value = Date.now();
   // console.log("image", imageUrls.value)
 };
 const checkConfirmImage = () => {
@@ -703,145 +704,132 @@ const showTeacherSelection = computed(() => userStore.currentUser?.registerStatu
 </script>
 
 <template>
-    <v-dialog v-model="showDialog" height="800" persistent>
-      <v-card class="rounded-lg" outlined>
-        <!-- Loader Overlay -->
-        <div v-if="isLoading" class="loader-overlay">
-          <Loader></Loader>
-        </div>
-        <v-card-title class="headline"> อัปโหลดรูปภาพ </v-card-title>
-        <v-card-text>
-          <v-row v-if="!canUpload" class="mt-2">
-            <v-col cols="12" class="text-center">
-              <v-alert class="mt-3" color="#D72626">
-                <v-icon left size="30">mdi-information-outline</v-icon>
-                กรุณาอัปโหลดรูปภาพให้ครบ 5 รูป โดยรูปภาพห้ามซ้ำกัน
-              </v-alert>
-            </v-col>
-          </v-row>
+  <v-dialog v-model="showDialog" height="800" persistent>
+    <v-card class="rounded-lg" outlined>
+      <!-- Loader Overlay -->
+      <div v-if="isLoading" class="loader-overlay">
+        <Loader></Loader>
+      </div>
+      <v-card-title class="headline"> อัปโหลดรูปภาพ </v-card-title>
+      <v-card-text>
+        <v-row v-if="!canUpload" class="mt-2">
+          <v-col cols="12" class="text-center">
+            <v-alert class="mt-3" color="#D72626">
+              <v-icon left size="30">mdi-information-outline</v-icon>
+              กรุณาอัปโหลดรูปภาพให้ครบ 5 รูป โดยรูปภาพห้ามซ้ำกัน
+            </v-alert>
+          </v-col>
+        </v-row>
 
-          <!-- Existing Images -->
-          <!-- {{ images }} -->
-          <v-row>
-            <v-col v-for="(image, index) in images" :key="'existing-' + index" cols="2" md="2" lg="2"
-              class="image-container">
-              <v-img :src="image" aspect-ratio="1" class="rounded-lg d-flex align-center justify-center"></v-img>
-            </v-col>
-          </v-row>
+        <!-- Existing Images -->
+        <!-- {{ images }} -->
+        <v-row>
+          <v-col v-for="(image, index) in images" :key="'existing-' + index" cols="2" md="2" lg="2"
+            class="image-container">
+            <v-img :src="image" aspect-ratio="1" class="rounded-lg d-flex align-center justify-center"></v-img>
+          </v-col>
+        </v-row>
 
-          <!-- Uploaded Images -->
-          <v-row v-if="hasUploadedImages" class="mt-4">
-            <v-col cols="12">
-              <v-text class="font-weight-bold">รูปภาพที่อัปโหลด</v-text>
-            </v-col>
-            <v-col v-for="(image, index) in imageUrls" :key="'uploaded-' + index" cols="2" md="2" lg="2"
-              class="image-container">
-              <v-img :src="image" aspect-ratio="1" class="rounded-lg ma-2 d-flex align-center justify-center">
-                <v-icon class="remove-btn" color="red" @click="() => deleteImage(index)" size="40">mdi
-                  mdi-close-circle-outline</v-icon>
-              </v-img>
-            </v-col>
-          </v-row>
-          <!-- File Input -->
-          <v-row>
-            <v-col cols="12" class="mt-4">
-              <div style="margin-bottom: 1%; font-weight: bold">อัปโหลดรูปภาพ</div>
-              <v-file-input
-                :key="fileInputKey"
-                multiple
-                prepend-icon="mdi-camera"
-                filled
-                @change="handleFileChange"
-                accept="image/*"
-                variant="outlined"
-                :disabled="checkConfirmImage()"
-                :error-messages="imageFiles.length === 5? [] : ['ต้องอัปโหลดรูปภาพให้ครบ 5 รูป']" 
-              ></v-file-input>
-            </v-col>
-          </v-row>
-          <!-- Button to Select Teacher -->
-          <v-row class="my-4"  v-if="showTeacherSelection">
-            <v-col cols="12">
-              <v-row
-                align="center"
-              >
-                <v-col cols="auto">
-                  <v-text class="font-weight-bold" style="font-size: 16px; color: #424242">
-                    เลือกครูที่จะส่งรูปภาพ:
-                  </v-text>
-                </v-col>
-                <v-col cols="auto">
-                  <v-btn color="primary" elevation="2" rounded class="px-4" @click="showTeacherDialog = true">
-                    เลือกอาจารย์
-                  </v-btn>
-                </v-col>
-              </v-row>
-            </v-col>
-            <v-col
-              cols="12"
-              class="mt-2"
-            >
-              <v-row align="center">
-                <v-col cols="auto">
-                  <v-text class="font-weight-bold" style="font-size: 16px; color: #424242">
-                    อาจารย์ที่เลือก:
-                  </v-text>
-                </v-col>
-                <v-col>
-                  <v-text style="font-size: 16px; color: #1976d2">
-                    {{ selectedTeacherName || "ยังไม่ได้เลือกอาจารย์" }}
-                  </v-text>
-                </v-col>
-              </v-row>
-            </v-col>
-          </v-row>
-          <!-- Teacher Selection Dialog -->
-          <v-dialog v-model="showTeacherDialog" max-width="500px">
-            <v-card>
-              <v-card-title class="font-weight-bold" style="font-size: 20px">
-                เลือกอาจารย์
-              </v-card-title>
-              <v-divider></v-divider>
-              <v-card-text>
-                <v-list>
-                  <v-list-item v-for="teacher in teachers" :key="teacher.userId" @click="selectTeacher(teacher)"
-                    class="teacher-list-item" style="cursor: pointer">
-                    <v-list-item-content>
-                      <v-list-item-title class="text-body-1" style="font-weight: 500">
-                        {{ teacher.firstName }} {{ teacher.lastName }}
-                      </v-list-item-title>
-                    </v-list-item-content>
-                  </v-list-item>
-                </v-list>
-              </v-card-text>
-              <v-divider></v-divider>
-              <v-card-actions class="justify-space-between">
-                <v-btn color="red" class="font-weight-bold" @click="clearSelectedTeacher">
-                  ยกเลิก
+        <!-- Uploaded Images -->
+        <v-row v-if="hasUploadedImages" class="mt-4">
+          <v-col cols="12">
+            <v-text class="font-weight-bold">รูปภาพที่อัปโหลด</v-text>
+          </v-col>
+          <v-col v-for="(image, index) in imageUrls" :key="'uploaded-' + index" cols="2" md="2" lg="2"
+            class="image-container">
+            <v-img :src="image" aspect-ratio="1" class="rounded-lg ma-2 d-flex align-center justify-center">
+              <v-icon class="remove-btn" color="red" @click="() => deleteImage(index)" size="40">mdi
+                mdi-close-circle-outline</v-icon>
+            </v-img>
+          </v-col>
+        </v-row>
+        <!-- File Input -->
+        <v-row>
+          <v-col cols="12" class="mt-4">
+            <div style="margin-bottom: 1%; font-weight: bold">อัปโหลดรูปภาพ</div>
+            <v-file-input :key="fileInputKey" multiple prepend-icon="mdi-camera" filled @change="handleFileChange"
+              accept="image/*" variant="outlined" :disabled="checkConfirmImage()"
+              :error-messages="imageFiles.length === 5 ? [] : ['ต้องอัปโหลดรูปภาพให้ครบ 5 รูป']"></v-file-input>
+          </v-col>
+        </v-row>
+        <!-- Button to Select Teacher -->
+        <v-row class="my-4" v-if="showTeacherSelection">
+          <v-col cols="12">
+            <v-row align="center">
+              <v-col cols="auto">
+                <v-text class="font-weight-bold" style="font-size: 16px; color: #424242">
+                  เลือกครูที่จะส่งรูปภาพ:
+                </v-text>
+              </v-col>
+              <v-col cols="auto">
+                <v-btn color="primary" elevation="2" rounded class="px-4" @click="showTeacherDialog = true">
+                  เลือกอาจารย์
                 </v-btn>
-                <v-btn color="primary" class="font-weight-bold" @click="confirmTeacherSelection">
-                  ยืนยัน
-                </v-btn>
-              </v-card-actions>
-            </v-card>
-          </v-dialog>
-          <!-- Upload Button -->
-          <v-row v-if="!hasUploadedImages" style="justify-content: center; font-weight: bold">
-            <div style="color: red">ไม่มีรูปภาพ</div>
-          </v-row>
-          <v-row>
-            <v-btn color="error" style="font-size: 20px" @click="close" variant="text">
-              ยกเลิก
-            </v-btn>
-            <v-spacer></v-spacer>
-            <v-btn :disabled="!canUpload" style="font-size: 20px" color="primary" @click="save"
-              v-tooltip="'กรุณาอัปโหลดรูปภาพให้ครบ 5 รูป โดยรูปภาพห้ามซ้ำกัน'" variant="text">
-              ยืนยัน
-            </v-btn>
-          </v-row>
-        </v-card-text>
-      </v-card>
-    </v-dialog>
+              </v-col>
+            </v-row>
+          </v-col>
+          <v-col cols="12" class="mt-2">
+            <v-row align="center">
+              <v-col cols="auto">
+                <v-text class="font-weight-bold" style="font-size: 16px; color: #424242">
+                  อาจารย์ที่เลือก:
+                </v-text>
+              </v-col>
+              <v-col>
+                <v-text style="font-size: 16px; color: #1976d2">
+                  {{ selectedTeacherName || "ยังไม่ได้เลือกอาจารย์" }}
+                </v-text>
+              </v-col>
+            </v-row>
+          </v-col>
+        </v-row>
+        <!-- Teacher Selection Dialog -->
+        <v-dialog v-model="showTeacherDialog" max-width="500px">
+          <v-card>
+            <v-card-title class="font-weight-bold" style="font-size: 20px">
+              เลือกอาจารย์
+            </v-card-title>
+            <v-divider></v-divider>
+            <v-card-text>
+              <v-list>
+                <v-list-item v-for="teacher in teachers" :key="teacher.userId" @click="selectTeacher(teacher)"
+                  class="teacher-list-item" style="cursor: pointer">
+                  <v-list-item-content>
+                    <v-list-item-title class="text-body-1" style="font-weight: 500">
+                      {{ teacher.firstName }} {{ teacher.lastName }}
+                    </v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+              </v-list>
+            </v-card-text>
+            <v-divider></v-divider>
+            <v-card-actions class="justify-space-between">
+              <v-btn color="red" class="font-weight-bold" @click="clearSelectedTeacher">
+                ยกเลิก
+              </v-btn>
+              <v-btn color="primary" class="font-weight-bold" @click="confirmTeacherSelection">
+                ยืนยัน
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+        <!-- Upload Button -->
+        <v-row v-if="!hasUploadedImages" style="justify-content: center; font-weight: bold">
+          <div style="color: red">ไม่มีรูปภาพ</div>
+        </v-row>
+        <v-row>
+          <v-btn color="error" style="font-size: 20px" @click="close" variant="text">
+            ยกเลิก
+          </v-btn>
+          <v-spacer></v-spacer>
+          <v-btn :disabled="!canUpload" style="font-size: 20px" color="primary" @click="save"
+            v-tooltip="'กรุณาอัปโหลดรูปภาพให้ครบ 5 รูป โดยรูปภาพห้ามซ้ำกัน'" variant="text">
+            ยืนยัน
+          </v-btn>
+        </v-row>
+      </v-card-text>
+    </v-card>
+  </v-dialog>
   <!-- Snackbar for showing errors -->
   <v-snackbar v-model="snackbarVisible" :color="snackbarColor" top right :timeout="3000">
     {{ snackbarMessage }}
