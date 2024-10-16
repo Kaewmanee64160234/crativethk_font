@@ -160,7 +160,7 @@ function float32ArrayToBase64(float32Array: any) {
   <v-container>
     <v-row justify="center">
       <v-card class="mx-auto elevation-3" style="width: 50vw; padding: 30px; border-radius: 15px;">
-        <v-card-title class="pb-0" style="font-size: 24px; font-weight: 600;">แก้ไขข้อมูลนิสิต</v-card-title>
+        <v-card-title class="pb-0" style="font-size: 24px; font-weight: 600;text-align: center;">แก้ไขข้อมูลนิสิต</v-card-title>
         <v-divider class="my-4"></v-divider>
 
         <v-row>
@@ -169,7 +169,7 @@ function float32ArrayToBase64(float32Array: any) {
             <v-row>
               <!-- First Name -->
               <v-col cols="6">
-                <v-text-field label="ชื่อ" dense solo outlined rounded required v-model="userStore.editUser.firstName"
+                <v-text-field label="ชื่อ" variant="solo" v-model="userStore.editUser.firstName"
                   :rules="[ 
                     (v) => !!v || 'โปรดกรอกชื่อ',
                     (v) => /^[ก-๙\s]+$/.test(v) || 'ชื่อต้องไม่เป็นตัวเลขและต้องเป็นภาษาไทยเท่านั้น',
@@ -179,7 +179,7 @@ function float32ArrayToBase64(float32Array: any) {
               </v-col>
               <!-- Last Name -->
               <v-col cols="6">
-                <v-text-field label="นามสกุล" dense solo outlined rounded required v-model="userStore.editUser.lastName"
+                <v-text-field label="นามสกุล" variant="solo" v-model="userStore.editUser.lastName"
                   :rules="[ 
                     (v) => !!v || 'โปรดกรอกนามสกุล',
                     (v) => /^[ก-๙\s]+$/.test(v) || 'นามสกุลต้องไม่เป็นตัวเลขและต้องเป็นภาษาไทยเท่านั้น',
@@ -190,7 +190,7 @@ function float32ArrayToBase64(float32Array: any) {
 
               <!-- Email (disabled) -->
               <v-col cols="12">
-                <v-text-field label="อีเมล" dense solo outlined rounded required v-model="userStore.editUser.email"
+                <v-text-field label="อีเมล" variant="solo" v-model="userStore.editUser.email"
                   disabled
                   :rules="[ 
                     (v) => !!v || 'โปรดกรอกอีเมล', 
@@ -201,7 +201,7 @@ function float32ArrayToBase64(float32Array: any) {
 
               <!-- Year -->
               <v-col cols="6">
-                <v-text-field label="ชั้นปี" dense solo outlined rounded required v-model="userStore.editUser.year"
+                <v-text-field label="ชั้นปี" variant="solo" v-model="userStore.editUser.year"
                   :rules="[ 
                     (v) => !!v || 'โปรดใส่ชั้นปีเช่น 63, 64, 65',
                     (v) => /^[0-9]{2}$/.test(v) || 'โปรดกรอกข้อมูลเฉพาะตัวเลข 2 หลัก'
@@ -212,7 +212,7 @@ function float32ArrayToBase64(float32Array: any) {
               <!-- Major -->
               <v-col cols="6">
                 <v-select label="สาขา" :items="['วิทยาการคอมพิวเตอร์', 'เทคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจิทัล', 'วิศวกรรมซอฟต์แวร์', 'ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ']"
-                  dense solo outlined rounded required v-model="userStore.editUser.major" 
+                variant="solo" v-model="userStore.editUser.major" 
                   :rules="[ 
                     (v) => !!v || 'โปรดเลือกสาขา',
                     (v) => ['วิทยาการคอมพิวเตอร์', 'เทคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจิทัล', 'วิศวกรรมซอฟต์แวร์', 'ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ'].includes(v) || 'โปรดเลือกสาขาจากรายการที่ให้ไว้'
@@ -222,7 +222,7 @@ function float32ArrayToBase64(float32Array: any) {
 
               <!-- Status -->
               <v-col cols="12">
-                <v-select label="สถานะภาพ" :items="['กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา']" dense solo outlined rounded required v-model="userStore.editUser.status">
+                <v-select label="สถานะภาพ" :items="['กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา']" variant="solo" v-model="userStore.editUser.status">
                 </v-select>
               </v-col>
             </v-row>
@@ -260,7 +260,6 @@ function float32ArrayToBase64(float32Array: any) {
 
 .v-text-field,
 .v-combobox {
-  background-color: #f4f6f8;
   border-radius: 8px;
 }
 
@@ -282,12 +281,6 @@ function float32ArrayToBase64(float32Array: any) {
   background-color: #fff;
   border-radius: 15px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.v-text-field,
-.v-combobox {
-  background-color: #f4f6f8;
-  border-radius: 8px;
 }
 
 .v-btn {

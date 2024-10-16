@@ -162,7 +162,7 @@ if (!userStore.editUser.major) {
     <v-row justify="center">
       <!-- Adjusted card width to fit better -->
       <v-card class="mx-auto elevation-3" style="width: 60vw; padding: 30px; border-radius: 15px;">
-        <v-card-title class="pb-0" style="font-size: 24px; font-weight: 600;">เพิ่มผู้ใช้อาจารย์</v-card-title>
+        <v-card-title class="pb-0" style="font-size: 24px; font-weight: 600;text-align: center;">เพิ่มผู้ใช้อาจารย์</v-card-title>
         <v-divider class="my-4"></v-divider>
         <v-row>
           <!-- Form Column -->
@@ -170,14 +170,14 @@ if (!userStore.editUser.major) {
             <v-row>
               <!-- First Name and Last Name in one row -->
               <v-col cols="6">
-                <v-text-field label="ชื่อ" dense solo outlined rounded required v-model="userStore.editUser.firstName"
+                <v-text-field label="ชื่อ" variant="solo" v-model="userStore.editUser.firstName"
                   :rules="[(v) => !!v || 'โปรดกรอกชื่อ',
                   (v) => /^[ก-๙\s]+$/.test(v) || 'ชื่อต้องไม่เป็นตัวเลขและต้องเป็นภาษาไทยเท่านั้น',
                   (v) => v.length <= 50 || 'ชื่อต้องไม่เกิน 50 ตัวอักษร']">
                 </v-text-field>
               </v-col>
               <v-col cols="6">
-                <v-text-field label="นามสกุล" dense solo outlined rounded required v-model="userStore.editUser.lastName"
+                <v-text-field label="นามสกุล"  variant="solo"  v-model="userStore.editUser.lastName"
                   :rules="[(v) => !!v || 'โปรดกรอกนามสกุล',
                   (v) => /^[ก-๙\s]+$/.test(v) || 'นามสกุลต้องไม่เป็นตัวเลขและต้องเป็นภาษาไทยเท่านั้น',
                   (v) => v.length <= 50 || 'นามสกุลต้องไม่เกิน 50 ตัวอักษร']">
@@ -186,7 +186,7 @@ if (!userStore.editUser.major) {
 
               <!-- Email -->
               <v-col cols="12">
-                <v-text-field label="อีเมล" dense solo outlined rounded required v-model="userStore.editUser.email"
+                <v-text-field label="อีเมล"  variant="solo"  v-model="userStore.editUser.email"
                   :rules="[
                     (v) => !!v || 'โปรดกรอกอีเมล',
                     (v) => /^[a-zA-Z0-9._%+-]+@go\.buu\.ac\.th$/.test(v) || 'กรอกอีเมลให้ถูกต้อง (ต้องลงท้ายด้วย @go.buu.ac.th)'
@@ -199,7 +199,7 @@ if (!userStore.editUser.major) {
               <v-col cols="6">
                 <v-select label="สาขา"
                   :items="['วิทยาการคอมพิวเตอร์', 'เทคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจิทัล', 'วิศวกรรมซอฟต์แวร์', 'ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ']"
-                  dense solo outlined rounded required v-model="userStore.editUser.major" :rules="[
+                  variant="solo" v-model="userStore.editUser.major" :rules="[
                     (v: any) => !!v || 'โปรดเลือกสาขา',
                     (v: any) => ['วิทยาการคอมพิวเตอร์', 'เทคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจิทัล', 'วิศวกรรมซอฟต์แวร์', 'ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ'].includes(v) || 'โปรดเลือกสาขาจากรายการที่ให้ไว้'
                   ]">
@@ -207,7 +207,7 @@ if (!userStore.editUser.major) {
               </v-col>
 
               <v-col cols="6">
-                <v-select label="สถานะภาพ" :items="['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง']" dense solo outlined rounded
+                <v-select label="สถานะภาพ" :items="['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง']" variant="solo"
                   required v-model="userStore.editUser.status"
                   :rules="[
                     (v) => !!v || 'โปรดเลือกสถานะภาพ',
@@ -256,7 +256,6 @@ if (!userStore.editUser.major) {
 .v-text-field,
 .v-combobox,
 .v-select {
-  background-color: #f4f6f8;
   border-radius: 8px;
 }
 
