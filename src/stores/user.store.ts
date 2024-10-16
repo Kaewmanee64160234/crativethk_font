@@ -32,14 +32,24 @@ export const useUserStore = defineStore("userStore", () => {
   const currentUser = ref<User>();
   const regisUser = ref<User>();
   const notiUser = ref<User>();
-  const totalUsers = ref(0);
-  const currentPage = ref(1);
-  const itemsPerPage = ref(20);
   const teachers = ref<User[]>([]);
   const studentPage = ref(1);
   const teacherPage = ref(1);
   const adminPage = ref(1);
 
+  const totalUsers = ref(0); // Total users count
+  const currentPage = ref(1); // Current page for pagination
+  const itemsPerPage = ref(20); // Items per page for pagination
+
+  watch([searchQuery, searchDropdown2, searchDropdown3, searchDropdown4], async () => {
+    await fetchPaginatedFilterUsers({
+      role: searchDropdown2.value,   // Role (major)
+      status: searchDropdown3.value, // Status for students
+      major: searchDropdown2.value,  // Major
+      page: currentPage.value,
+      limit: itemsPerPage.value,
+    });
+  });
   const editUser = ref<User & { files: File[] }>({
     userId: 0,
     firstName: "",
@@ -546,6 +556,29 @@ export const useUserStore = defineStore("userStore", () => {
 
   };
 
+ 
+  
+  const fetchPaginatedFilterUsers = async (params: {
+    role?: string,
+    major?: string,
+    status?: string,
+    search?: string
+    page?: number,
+    limit?: number,
+  }) => {
+    try {
+      console.log("params", params);
+      
+      const response = await userService.fetchPaginatedFilterUsers(params);
+      users.value = response!.data.data; // Assign the fetched user data
+      totalUsers.value = response!.data.meta.totalItems; // Update total user count
+      currentPage.value = params.page ?? 1; // Update the current page
+      console.log("users", users.value);
+      
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+  };
 
   return {
     studentPage,
@@ -603,6 +636,7 @@ export const useUserStore = defineStore("userStore", () => {
     searchDropdown4,
     searchDropdown5,
     logout,
-    teachers
+    teachers,
+    fetchPaginatedFilterUsers
   };
 });

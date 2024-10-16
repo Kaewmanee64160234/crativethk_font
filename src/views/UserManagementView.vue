@@ -7,28 +7,45 @@ import EditUserDialog3 from '@/components/dialogs/EditUserDialog3.vue';
 import ConfirmDialog from '@/components/dialogs/ConfirmDialog.vue';
 import type { User } from '@/stores/types/User';
 import { useUserStore } from '@/stores/user.store';
-import { onMounted, ref, watch, computed } from 'vue';
+import { onMounted, ref, computed, watch } from 'vue';
+
 const userStore = useUserStore();
 const yearOptions = ref<string[]>(['']);
-const tab = ref(0);
-const statusTeacher = ref(['ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง']);
-const statusStudent = ref(['กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา']);
-const majorOptions = ref(['วิทยาการคอมพิวเตอร์', 'เทคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจิทัล', 'วิศวกรรมซอฟต์แวร์', 'ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ']);
-const confirmDlg = ref();
-const studentPage = computed(() => userStore.studentPage);
-const adminPage = computed(() => userStore.adminPage);
-const teacherPage = computed(() => userStore.teacherPage);
+const tab = ref(0); // 0: students, 1: teachers, 2: admins
+const statusTeacher = ref(['','ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง']);
+const statusStudent = ref(['','กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา']);
+const majorOptions = ref([
+  '',
+  'วิทยาการคอมพิวเตอร์',
+  'เทคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจิทัล',
+  'วิศวกรรมซอฟต์แวร์',
+  'ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ',
+]);
 
+// Define the filter params
+const params = ref({
+  page: 1,
+  limit: 20,
+  search: '',
+  major: '',
+  status: ''
+});
 
 onMounted(async () => {
-  await userStore.getUsersById(userStore.currentUser?.userId!);
-  await userStore.getCurrentUser()
-  await userStore.getUsers();
-  await userStore.fetchPaginatedUsers();
+  await userStore.getCurrentUser();
+  await fetchFilteredUsers(); // Fetch users based on initial params
   updateYearOptions();
-  userStore.searchDropdown2 = 'วิทยาการคอมพิวเตอร์';
-  userStore.searchDropdown3 = 'กำลังศึกษา';
-})
+});
+
+// Function to fetch filtered users
+const fetchFilteredUsers = async () => {
+  const role = getCurrentRole(); // Set role based on the selected tab
+  await userStore.fetchPaginatedFilterUsers({
+    ...params.value,
+    role, // Include the role in the filter parameters
+  });
+};
+
 // Function to compute and update year options dynamically
 const updateYearOptions = () => {
   const uniqueYears = Array.from(new Set(userStore.users.map(user => user.year).filter((year): year is string => Boolean(year))));
@@ -36,99 +53,35 @@ const updateYearOptions = () => {
   yearOptions.value = ['', ...uniqueYears];
 };
 
-watch(() => tab.value, () => {
-  if (tab.value === 0) {
-    userStore.itemsPerPage = 20;
-    userStore.currentPage = userStore.studentPage;
-    userStore.totalUsers = 0;
-    userStore.searchDropdown2 = 'วิทยาการคอมพิวเตอร์';
-    userStore.searchDropdown3 = 'กำลังศึกษา';
-    userStore.getStudentPagination();
-  } else if (tab.value === 1) {
-    userStore.itemsPerPage = 20;
-    userStore.currentPage = teacherPage.value;
-    userStore.totalUsers = 0;
-    userStore.searchDropdown4 = 'ดำรงตำแหน่ง';
-    userStore.getTeacherPagination();
-  } else if (tab.value === 2) {
-    userStore.itemsPerPage = 20;
-    userStore.currentPage = adminPage.value;
-    userStore.totalUsers = 0;
-    userStore.searchDropdown4 = 'ดำรงตำแหน่ง';
-    userStore.getAdminPagination();
-  }
+// Watch tab selection and refetch user data accordingly
+watch(() => tab.value, async () => {
+  params.value.page = 1; // Reset pagination to page 1 when changing tabs
+  await fetchFilteredUsers();
 });
 
-// watch(() => tab.value, () => {
-//   if (tab.value === 0) {
-//     userStore.searchDropdown2 = 'วิทยาการคอมพิวเตอร์';
-//     userStore.searchDropdown3 = 'กำลังศึกษา';
-//   } else if (tab.value === 1) {
-//     userStore.searchDropdown4 = 'ดำรงตำแหน่ง';
-//   } else if (tab.value === 2) {
-//     userStore.searchDropdown4 = 'ดำรงตำแหน่ง';
-//   }
-//   // Add any other logic you want to execute when the tab changes.
-// });
+// Function to get the current role based on the selected tab
+const getCurrentRole = () => {
+  if (tab.value === 0) return 'นิสิต';
+  if (tab.value === 1) return 'อาจารย์';
+  return 'แอดมิน';
+};
 
-
-// Watch for changes in the user array and recalculate year options whenever users are modified
-watch(() => userStore.users, () => {
-  updateYearOptions();
-}, { deep: true });
-
-
-watch(studentPage, () => {
-  if (tab.value === 0) {
-    userStore.currentPage = studentPage.value;
-    userStore.getStudentPagination();
-  }
-});
-
-
-watch(teacherPage, () => {
-  if (tab.value === 1) {
-    userStore.currentPage = teacherPage.value;
-    userStore.getTeacherPagination();
-  }
-});
-
-
-watch(adminPage, () => {
-  if (tab.value === 2) {
-    userStore.currentPage = adminPage.value;
-    userStore.getAdminPagination();
-  }
-});
-
-
-
-const paginatedStudents = computed(() => userStore.users.filter(user => user.role === 'นิสิต'));
-const paginatedTeachers = computed(() => userStore.users.filter(user => user.role === 'อาจารย์'));
-const paginatedAdmins = computed(() => userStore.users.filter(user => user.role === 'แอดมิน'));
-
-
-
+// Show edit dialog depending on user role
 const showEditedDialog = (user: User) => {
-  if (user.role == 'นิสิต') {
-    // Show the student edit dialog
+  if (user.role === 'นิสิต') {
     userStore.showEditDialog = true;
-    userStore.editUser = { ...user, files: [] };
-    console.log('Student ID user', userStore.editUser);
-  } else if (user.role == 'อาจารย์') {
-    // Show the teacher edit dialog
+  } else if (user.role === 'อาจารย์') {
     userStore.showEditDialog2 = true;
-    userStore.editUser = { ...user, files: [] };
-    console.log('Teacher ID user', userStore.editUser);
-  } else if (user.role == 'แอดมิน') {
-    // Show the admin edit dialog
+  } else if (user.role === 'แอดมิน') {
     userStore.showEditDialog3 = true;
-    userStore.editUser = { ...user, files: [] };
-    console.log('Admin ID user', userStore.editUser);
-  } else {
-    console.log('User does not have a valid ID');
   }
-}
+  userStore.editUser = { ...user, files: [] };
+};
+
+// Watch for changes in filter parameters and refetch data accordingly
+watch(params, async () => {
+  await fetchFilteredUsers();
+}, { deep: true });
 </script>
 <template>
   <v-container style="padding-top: 120px;">
@@ -138,31 +91,66 @@ const showEditedDialog = (user: User) => {
       </v-col>
     </v-row>
 
-    <!-- Search Bar and Buttons -->
+    <!-- Search Bar and Filters -->
     <v-row class="mb-6" align="center">
       <v-col cols="auto">
-        <v-text-field style="width: 200px;" v-model="userStore.searchQuery" label="ค้าหาผู้ใช้งาน"
-          append-inner-icon="mdi-magnify" hide-details dense variant="solo" class="search-bar"></v-text-field>
+        <v-text-field 
+          style="width: 200px;" 
+          v-model="params.search" 
+          label="ค้าหาผู้ใช้งาน"
+          append-inner-icon="mdi-magnify" 
+          hide-details 
+          dense 
+          variant="solo" 
+          class="search-bar"
+        ></v-text-field>
       </v-col>
-      <!-- Year Filter Dropdown -->
-      <!-- <v-col cols="auto">
-        <v-select v-if="tab === 0" v-model="userStore.searchDropdown" :items="yearOptions" label="ชั้นปี" dense
-          variant="solo" hide-details class="year-dropdown"></v-select>
-      </v-col> -->
+      
       <v-col cols="md 4">
-        <v-select v-if="tab === 0 || tab === 1" v-model="userStore.searchDropdown2" :items="majorOptions" label="สาขา" dense
-          variant="solo" hide-details class="wide-select year-dropdown "></v-select>
+        <v-select 
+          v-model="params.major" 
+          :items="majorOptions" 
+          label="สาขา" 
+          dense 
+          variant="solo" 
+          hide-details 
+          class="wide-select"
+        ></v-select>
       </v-col>
+      
       <v-col cols="md 4">
-        <v-select v-if="tab === 0" v-model="userStore.searchDropdown3" :items="statusStudent" label="สถานะภาพ" dense
-          variant="solo" hide-details class="wide-select status-dropdown"></v-select>
+        <v-select 
+          v-if="tab === 0" 
+          v-model="params.status" 
+          :items="statusStudent" 
+          label="สถานะภาพ" 
+          dense 
+          variant="solo" 
+          hide-details 
+          class="wide-select"
+        ></v-select>
       </v-col>
+      
       <v-col cols="md 4">
-        <v-select v-if="tab === 1 || tab == 2" v-model="userStore.searchDropdown4" :items="statusTeacher" label="สถานะภาพ" dense
-          variant="solo" hide-details class="wide-select status-dropdown"></v-select>
+        <v-select 
+          v-if="tab === 1 || tab === 2" 
+          v-model="params.status" 
+          :items="statusTeacher" 
+          label="สถานะภาพ" 
+          dense 
+          variant="solo" 
+          hide-details 
+          class="wide-select"
+        ></v-select>
       </v-col>
+      
       <v-col cols="auto">
-        <v-btn color="primary" variant="elevated" @click="userStore.showDialog2 = true" class="custom-btn">
+        <v-btn 
+          color="primary" 
+          variant="elevated" 
+          @click="userStore.showDialog2 = true" 
+          class="custom-btn"
+        >
           <v-icon left size="20">mdi-account-plus-outline</v-icon>
           เพิ่มผู้ใช้อาจารย์
           <v-dialog v-model="userStore.showDialog2" persistent>
@@ -170,8 +158,14 @@ const showEditedDialog = (user: User) => {
           </v-dialog>
         </v-btn>
       </v-col>
+      
       <v-col cols="auto">
-        <v-btn color="primary" variant="elevated" @click="userStore.showDialog4 = true" class="custom-btn">
+        <v-btn 
+          color="primary" 
+          variant="elevated" 
+          @click="userStore.showDialog4 = true" 
+          class="custom-btn"
+        >
           <v-icon left size="20">mdi-account-plus-outline</v-icon>
           เพิ่มผู้ใช้แอดมิน
           <v-dialog v-model="userStore.showDialog4" persistent>
@@ -189,166 +183,73 @@ const showEditedDialog = (user: User) => {
         <v-tab>แอดมิน</v-tab>
       </v-tabs>
 
-      <!-- Tab content for นิสิต -->
-      <v-tab-item v-if="tab === 0">
-        <v-table dense v-if="paginatedStudents.length">
-          <template v-slot:default>
-            <thead>
-              <tr>
-                <th class="text-left"> </th>
-                <th class="text-left">รหัสนิสิต</th>
-                <th class="text-left">ชื่อ-นามสกุล</th>
-                <th class="text-left">ชั้นปี</th>
-                <th class="text-left">สาขา</th>
-                <th class="text-left">สถานะภาพ</th>
-                <th class="text-center">ตัวเลือกเพิ่มเติม</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(item, index) in paginatedStudents" :key="index">
-                <td>{{ index + 1 }} </td>
-                <td>{{ item.studentId }}</td>
-                <td>{{ item.firstName + " " + item.lastName }}</td>
-                <td>{{ item.year }}</td>
-                <td>{{ item.major }}</td>
-                <td style="color: seagreen;">{{ item.status }}</td>
-                <td>
-                  <div class="button-container">
-                    <v-btn small class="ma-1" style="background-color: #4C515A;  color: azure;"
-                      @click="showEditedDialog(item)">
-                      <v-icon left>mdi-pencil</v-icon>
-                      แก้ไขข้อมูล
-                    </v-btn>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </template>
-        </v-table>
-        <div v-else class="no-users-message" style="text-align: center; color: red; margin-top: 20px;">
-          ไม่พบผู้ใช้งาน
-        </div>
-        <!-- Pagination student -->
-        <v-pagination
-  v-if="tab === 0"
-  v-model="userStore.studentPage"
-  :length="Math.ceil(userStore.totalUsers / userStore.itemsPerPage)"
-  :total-visible="7"
-  rounded="circle"
-  :disabled="userStore.users.length === 0 || userStore.totalUsers <= userStore.itemsPerPage || userStore.searchQuery  .length > 0"
-  size="large"
-  color="primary"
-  class="my-pagination"
-/>
-
-      </v-tab-item>
-
-      <!-- Tab content for อาจารย์ -->
-      <v-tab-item v-if="tab === 1">
-        <v-table dense v-if="paginatedTeachers.length">
-          <template v-slot:default>
-            <thead>
-              <tr>
-                <th class="text-left"></th>
-                <th class="text-left">ชื่อ-นามสกุล</th>
-                <th class="text-left">สาขา</th>
-                <th class="text-left">สถานะภาพ</th>
-                <th class="text-center">ตัวเลือกเพิ่มเติม</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(item, index) in paginatedTeachers" :key="index">
-                <td>{{ index + 1 }}</td>
-                <td>{{ item.firstName + " " + item.lastName }}</td>
-                <td>{{ item.major }}</td>
-                <td style="color: seagreen;">{{ item.status }}</td>
-                <div class="button-container">
-                  <v-btn small class="ma-1" style="background-color: #4C515A;  color: azure;"
-                    @click="showEditedDialog(item)">
-                    <v-icon left>mdi-pencil</v-icon>
-                    แก้ไขข้อมูล
-                  </v-btn>
-                </div>
-              </tr>
-            </tbody>
-          </template>
-        </v-table>
-        <div v-else class="no-users-message" style="text-align: center; color: red; margin-top: 20px;">
-          ไม่พบผู้ใช้งาน
-        </div>
-        <!-- Pagination teacher -->
-        <v-pagination
-  v-if="tab === 1"
-  v-model="teacherPage"
-  :length="Math.ceil(userStore.totalUsers / userStore.itemsPerPage)"
-  :total-visible="7"
-  rounded="circle"
-  size="large"
-  color="primary"
-  class="my-pagination"
-></v-pagination>
-      </v-tab-item>
-
-      <!-- Tab content for แอดมิน -->
-      <v-tab-item v-if="tab === 2">
-        <v-table dense v-if="paginatedAdmins.length">
-          <template v-slot:default>
-            <thead>
-              <tr>
-                <th class="text-left"></th>
-                <th class="text-left">ชื่อ-นามสกุล</th>
-                <th class="text-left">สถานะภาพ</th>
-                <th class="text-center">ตัวเลือกเพิ่มเติม</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(item, index) in paginatedAdmins" :key="index">
-                <td>{{ index + 1 }}</td>
-                <td>{{ item.firstName + " " + item.lastName }}</td>
-                <td style="color: seagreen;">{{ item.status }}</td>
-                <td>
-                  <div class="button-container">
-                    <v-btn small class="ma-1" style="background-color: #4C515A;  color: azure;"
-                      @click="showEditedDialog(item)">
-                      <v-icon left>mdi-pencil</v-icon>
-                      แก้ไขข้อมูล
-                    </v-btn>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </template>
-        </v-table>
-        <div v-else class="no-users-message" style="text-align: center; color: red; margin-top: 20px;">
-          ไม่พบผู้ใช้งาน
-        </div>
-        <!-- Pagination -->
-        <v-pagination
-  v-if="tab === 2"
-  v-model="adminPage"
-  :length="Math.ceil(userStore.totalUsers / userStore.itemsPerPage)"
-  :total-visible="7"
-  rounded="circle"
-  size="large"
-  color="primary"
-  class="my-pagination"
-></v-pagination>
-      </v-tab-item>
+      <!-- Unified table for users -->
+      <v-table dense v-if="userStore.users.length">
+        <thead>
+          <tr>
+            <th class="text-left"></th>
+            <th class="text-left">รหัส</th>
+            <th class="text-left">ชื่อ-นามสกุล</th>
+            <th class="text-left">ชั้นปี</th>
+            <th class="text-left">สาขา</th>
+            <th class="text-left">สถานะภาพ</th>
+            <th class="text-center">ตัวเลือกเพิ่มเติม</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(user, index) in userStore.users" :key="index">
+            <td>{{ index + 1 }}</td>
+            <td>{{ user.studentId || user.teacherId }}</td>
+            <td>{{ user.firstName + ' ' + user.lastName }}</td>
+            <td>{{ user.year }}</td>
+            <td>{{ user.major }}</td>
+            <td style="color: seagreen;">{{ user.status }}</td>
+            <td>
+              <v-btn 
+                small 
+                class="ma-1" 
+                style="background-color: #4C515A; color: azure;" 
+                @click="showEditedDialog(user)"
+              >
+                <v-icon left>mdi-pencil</v-icon>
+                แก้ไขข้อมูล
+              </v-btn>
+            </td>
+          </tr>
+        </tbody>
+      </v-table>
+      <div v-else class="no-users-message" style="text-align: center; color: red; margin-top: 20px;">
+        ไม่พบผู้ใช้งาน
+      </div>
+      
+      <!-- Pagination -->
+      <v-pagination
+        v-model="params.page"
+        :length="Math.ceil(userStore.totalUsers / params.limit)"
+        :total-visible="7"
+        rounded="circle"
+        size="large"
+        color="primary"
+        class="my-pagination"
+      />
     </v-card>
   </v-container>
 
   <!-- Edit and Confirm Dialogs -->
   <v-dialog v-model="userStore.showEditDialog" persistent>
-    <EditUserDialog></EditUserDialog>
+    <EditUserDialog />
   </v-dialog>
   <v-dialog v-model="userStore.showEditDialog2" persistent>
-    <EditUserDialog2></EditUserDialog2>
+    <EditUserDialog2 />
   </v-dialog>
   <v-dialog v-model="userStore.showEditDialog3" persistent>
-    <EditUserDialog3></EditUserDialog3>
+    <EditUserDialog3 />
   </v-dialog>
   <ConfirmDialog ref="confirmDlg" />
 </template>
+
+
+
 <style scoped>
 .wide-select {
   width: 250px;

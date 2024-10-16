@@ -253,6 +253,21 @@ function checkEmailDuplicate(email: string, userId?: number) {
         params: { status },
       });
     }
+    const fetchPaginatedFilterUsers = async (params: {
+      role?: string,
+      major?: string,
+      status?: string,
+      search?: string
+      page?: number,
+      limit?: number,
+    }) => {
+      try {
+        const response = await http.get(`users/filter`, { params });
+        return response;
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      }
+    };
 
 export default {
   searchUsersByMajorAndStatus,
@@ -278,5 +293,6 @@ export default {
   getFileStd,
   getStdQR,
   getUserByStdId,
-  updateRegisterStatus
+  updateRegisterStatus,
+  fetchPaginatedFilterUsers
 };
