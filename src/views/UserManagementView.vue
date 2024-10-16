@@ -13,15 +13,17 @@ import { onMounted, ref, watch } from 'vue';
 
   const userStore = useUserStore();
   const yearOptions = ref<string[]>(['']);
-  const statusTeacher = ref(['', 'ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง']);
-  const statusStudent = ref(['', 'กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา']);
+  const statusTeacher = ref(['ทั้งหมด', 'ดำรงตำแหน่ง', 'สิ้นสุดการดำรงตำแหน่ง']);
+  const statusStudent = ref(['ทั้งหมด', 'กำลังศึกษา', 'พ้นสภาพนิสิต', 'สำเร็จการศึกษา']);
   const majorOptions = ref([
-    '',
+    'ทั้งหมด',
     'วิทยาการคอมพิวเตอร์',
     'เทคโนโลยีสารสนเทศเพื่ออุตสาหกรรมดิจิทัล',
     'วิศวกรรมซอฟต์แวร์',
     'ปัญญาประดิษฐ์ประยุกต์และเทคโนโลยีอัจฉริยะ',
   ]);
+
+  //if statusTeacher is "ทั้งหมด" show 
 
   // Define the filter params
   const params = ref({
@@ -30,6 +32,20 @@ import { onMounted, ref, watch } from 'vue';
     search: '',
     major: '',
     status: ''
+  });
+
+  //check statusTeacher is "ทั้งหมด" show teacher
+  watch(() => params.value.status, (status) => {
+    if (status === 'ทั้งหมด') {
+      params.value.status = '';
+    }
+  });
+
+  //check majorStatus is ทั้งหมด show major
+  watch(() => params.value.major, (major) => {
+    if (major === 'ทั้งหมด') {
+      params.value.major = '';
+    }
   });
 
   onMounted(async () => {

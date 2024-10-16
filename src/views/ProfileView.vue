@@ -87,9 +87,7 @@ const secondPart = () => {
                     height: 200px;
                     object-fit: cover;
                     border-radius: 50%;
-                  "  :src="`${userStore.currentUser!.profileImage}`"/>
-
-              
+                  "  :src="`${userStore.currentUser!.profileImage}`"/>        
               </v-col>
               <v-col col="4" v-if="userStore.currentUser">
                 <v-row>
