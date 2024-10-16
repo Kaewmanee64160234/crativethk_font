@@ -92,7 +92,7 @@ watch(params, async () => {
 
     <!-- Search Bar and Filters -->
     <v-row class="mb-6" align="center">
-      <v-col cols="auto">
+      <v-col cols="md 4">
         <v-text-field 
           style="width: 200px;" 
           v-model="params.search" 
